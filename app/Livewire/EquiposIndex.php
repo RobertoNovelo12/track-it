@@ -202,6 +202,7 @@ class EquiposIndex extends Component
             ->select([
                 'e.id_equipo',
                 'e.codigo_inventario',
+                'e.nombre_equipo',
                 'e.numero_serie',
                 'e.service_tag',
                 'e.direccion_ip',
@@ -249,51 +250,156 @@ class EquiposIndex extends Component
         |
         */
 
-        $search = trim($this->search);
+/*
+|--------------------------------------------------------------------------
+| BÚSQUEDA GENERAL
+|--------------------------------------------------------------------------
+|
+| Busca por:
+|
+| - Nombre del equipo
+| - ID interno
+| - Código de inventario
+| - Número de serie
+| - Tipo de equipo
+| - Marca
+| - Modelo
+|
+| También permite búsquedas con varias palabras.
+|
+| Ejemplo:
+|
+|   "Lenovo ThinkPad"
+|
+| Lenovo   -> Marca
+| ThinkPad -> Modelo
+|
+*/
 
-        if ($search !== '') {
+    $search = trim($this->search);
 
-            $terms = preg_split(
-                '/\s+/',
-                $search,
-                -1,
-                PREG_SPLIT_NO_EMPTY
-            );
+    if ($search !== '') {
 
-            foreach ($terms as $term) {
+        $terms = preg_split(
+            '/\s+/',
+            $search,
+            -1,
+            PREG_SPLIT_NO_EMPTY
+        );
 
-                $like = '%' . $term . '%';
+        foreach ($terms as $term) {
 
-                $query->where(function ($sub) use ($like) {
+            $like = '%' . $term . '%';
 
-                    $sub
-                        ->where(
-                            'te.nombre',
-                            'ilike',
-                            $like
-                        )
+            $query->where(function ($sub) use ($like) {
 
-                        ->orWhere(
-                            'e.numero_serie',
-                            'ilike',
-                            $like
-                        )
+                $sub
 
-                        ->orWhere(
-                            'ma.nombre',
-                            'ilike',
-                            $like
-                        )
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Nombre registrado del equipo
+                    |--------------------------------------------------------------------------
+                    */
 
-                        ->orWhere(
-                            'mo.nombre',
-                            'ilike',
-                            $like
-                        );
+                    ->where(
+                        'e.nombre_equipo',
+                        'ilike',
+                        $like
+                    )
 
-                });
-            }
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | ID interno
+                    |--------------------------------------------------------------------------
+                    |
+                    | PostgreSQL necesita convertirlo a texto para poder
+                    | utilizar ILIKE.
+                    |
+                    | Ejemplo:
+                    |
+                    | 65
+                    |
+                    */
+
+                    ->orWhereRaw(
+                        'CAST(e.id_equipo AS TEXT) ILIKE ?',
+                        [$like]
+                    )
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Código de inventario
+                    |--------------------------------------------------------------------------
+                    |
+                    | Ejemplo:
+                    |
+                    | ACT-000065
+                    |
+                    */
+
+                    ->orWhere(
+                        'e.codigo_inventario',
+                        'ilike',
+                        $like
+                    )
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Número de serie
+                    |--------------------------------------------------------------------------
+                    */
+
+                    ->orWhere(
+                        'e.numero_serie',
+                        'ilike',
+                        $like
+                    )
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Tipo
+                    |--------------------------------------------------------------------------
+                    */
+
+                    ->orWhere(
+                        'te.nombre',
+                        'ilike',
+                        $like
+                    )
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Marca
+                    |--------------------------------------------------------------------------
+                    */
+
+                    ->orWhere(
+                        'ma.nombre',
+                        'ilike',
+                        $like
+                    )
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Modelo
+                    |--------------------------------------------------------------------------
+                    */
+
+                    ->orWhere(
+                        'mo.nombre',
+                        'ilike',
+                        $like
+                    );
+
+            });
         }
+    }
 
 
         /*

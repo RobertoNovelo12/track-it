@@ -358,16 +358,23 @@
         {{-- ========================================================
             HEADER
         ======================================================== --}}
-        <header
-            class="
-                h-16
-                bg-[#FFFCFF]
-                border-b border-[#50514F]/10
-                flex items-center justify-between
-                px-6
-                sticky top-0 z-30
-            "
-        >
+            <header
+                class="
+                    h-16
+                    bg-[#FFFCFF]
+                    border-b border-[#50514F]/10
+                    flex
+                    items-center
+                    justify-between
+                    gap-3
+                    sm:gap-5
+                    px-4
+                    sm:px-6
+                    sticky
+                    top-0
+                    z-30
+                "
+            >
 
             <div class="flex items-center gap-3 flex-1 min-w-0">
 
@@ -385,49 +392,101 @@
                     </svg>
                 </button>
 
-                {{-- Buscador: oculto en pantallas muy pequeñas --}}
-                <div class="relative hidden sm:block w-56 md:w-96">
 
-                    <svg
-                        class="absolute left-3 top-1/2 -translate-y-1/2
-                               w-4 h-4 text-[#50514F]/50"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.5"
-                    >
-                        <circle cx="11" cy="11" r="7"/>
-                        <path d="M20 20l-4-4"/>
-                    </svg>
+        {{-- ============================================================
+            BUSCADOR GLOBAL DE EQUIPOS
+        ============================================================ --}}
+        <form
+            action="{{ route('equipos.search') }}"
+            method="GET"
+            class="
+                relative
+                block
+                flex-1
+                min-w-0
+                max-w-96
+            "
+        >
 
-                    <input
-                        type="search"
-                        placeholder="Buscar por número de serie, Id o responsable..."
-                        class="
-                            w-full
-                            bg-[#50514F]/5
-                            rounded-full
-                            border-0
-                            pl-10 pr-4 py-2
-                            text-xs
-                            placeholder:text-[#50514F]/50
-                            focus:ring-1 focus:ring-[#247BA0]
-                        "
-                    >
+            {{-- Lupa --}}
+            <svg
+                class="
+                    absolute
+                    left-3
+                    top-1/2
+                    -translate-y-1/2
 
-                </div>
+                    w-4
+                    h-4
+
+                    text-[#50514F]/50
+                    pointer-events-none
+                "
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+            >
+                <circle cx="11" cy="11" r="7"/>
+                <path d="M20 20l-4-4"/>
+            </svg>
+
+
+            {{-- Campo --}}
+            <input
+                type="search"
+                name="q"
+                value="{{ request()->routeIs('equipos.search') ? request('q') : '' }}"
+                placeholder="Buscar equipos..."
+                autocomplete="off"
+                class="
+                    w-full
+
+                    bg-[#50514F]/5
+
+                    rounded-full
+                    border-0
+
+                    pl-10
+                    pr-4
+                    py-2
+
+                    text-xs
+                    text-[#50514F]
+
+                    placeholder:text-[#50514F]/50
+
+                    focus:ring-1
+                    focus:ring-[#247BA0]
+                "
+            >
+
+        </form>
 
             </div>
 
 
             {{-- Usuario --}}
-            <div class="flex items-center gap-4">
+            <div class="flex shrink-0 items-center gap-2 sm:gap-4">
 
                 {{-- Notificaciones --}}
-                <button
-                    type="button"
-                    class="relative text-[#50514F]/70 hover:text-[#247BA0]"
-                >
+            <button
+                type="button"
+                class="
+                    relative
+                    shrink-0
+                    w-9
+                    h-9
+                    flex
+                    items-center
+                    justify-center
+                    rounded-full
+                    text-[#50514F]/70
+                    hover:text-[#247BA0]
+                    hover:bg-[#247BA0]/5
+                    transition-colors
+                "
+            >
                     <svg
                         class="w-5 h-5"
                         viewBox="0 0 24 24"
@@ -442,7 +501,7 @@
 
 
                 {{-- Información usuario --}}
-                <div class="text-right">
+                <div class="hidden lg:block text-right">
 
                     <p class="text-[11px] font-medium text-[#50514F] uppercase">
                         {{ auth()->user()->nombres ?? auth()->user()->name }}

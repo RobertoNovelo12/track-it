@@ -2,9 +2,7 @@
 
 namespace App\Livewire;
 
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Livewire\Component;
 
 class EquipoShow extends Component
@@ -14,35 +12,20 @@ class EquipoShow extends Component
 
     /*
     |--------------------------------------------------------------------------
-    | Recibir ID del equipo
+    | Mount
     |--------------------------------------------------------------------------
     */
 
     public function mount(int $equipoId): void
     {
         $this->equipoId = $equipoId;
-
-        /*
-        |--------------------------------------------------------------------------
-        | Verificamos desde el inicio que el equipo exista
-        |--------------------------------------------------------------------------
-        */
-
-        $existe = DB::table('equipos')
-            ->where('id_equipo', $this->equipoId)
-            ->exists();
-
-        abort_unless($existe, 404);
     }
 
 
     /*
     |--------------------------------------------------------------------------
-    | Configuración de tablas específicas por tipo de equipo
+    | Configuración de tablas específicas
     |--------------------------------------------------------------------------
-    |
-    | Debe mantenerse alineada con EquipoCreate.php.
-    |
     */
 
     protected function childConfig(): array
@@ -197,7 +180,7 @@ class EquipoShow extends Component
 
     /*
     |--------------------------------------------------------------------------
-    | Etiquetas para especificaciones técnicas
+    | Etiquetas
     |--------------------------------------------------------------------------
     */
 
@@ -205,11 +188,14 @@ class EquipoShow extends Component
     {
         return [
 
-            'procesador' => 'Procesador',
+            'procesador' =>
+                'Procesador',
 
-            'ram_gb' => 'Memoria RAM',
+            'ram_gb' =>
+                'Memoria RAM',
 
-            'almacenamiento_gb' => 'Almacenamiento',
+            'almacenamiento_gb' =>
+                'Almacenamiento',
 
             'id_tipo_almacenamiento' =>
                 'Tipo de almacenamiento',
@@ -283,11 +269,14 @@ class EquipoShow extends Component
 
     /*
     |--------------------------------------------------------------------------
-    | Información general del equipo
+    | Cargar equipo
     |--------------------------------------------------------------------------
+    |
+    | Toda la información general se obtiene en UNA consulta.
+    |
     */
 
-    public function getEquipoProperty(): array
+    protected function cargarEquipo(): array
     {
         $equipo = DB::table('equipos as e')
 
@@ -320,6 +309,20 @@ class EquipoShow extends Component
             )
 
             ->leftJoin(
+                'estados_equipo as ee',
+                'ee.id_estado_equipo',
+                '=',
+                'e.id_estado_activo'
+            )
+
+            ->leftJoin(
+                'catalogo_valores as condicion',
+                'condicion.id_valor',
+                '=',
+                'e.id_condicion_activo'
+            )
+
+            ->leftJoin(
                 'departamentos as dep',
                 'dep.id_departamento',
                 '=',
@@ -348,44 +351,30 @@ class EquipoShow extends Component
             ->select([
 
                 'e.id_equipo',
-
                 'e.codigo_inventario',
-
                 'e.nombre_equipo',
-
                 'e.host',
-
                 'e.numero_serie',
-
                 'e.direccion_mac',
-
                 'e.numero_factura',
-
                 'e.fecha_compra',
-
                 'e.fecha_fin_garantia',
-
                 'e.comentarios',
 
                 'e.id_estado_activo',
-
                 'e.id_tipo_equipo',
-
                 'e.id_condicion_activo',
-
                 'e.id_area',
-
                 'e.id_departamento',
 
-                'e.registrado_por',
-
                 'te.nombre as tipo_equipo',
-
                 'ma.nombre as marca',
-
                 'mo.nombre as modelo',
-
                 'pr.nombre as proveedor',
+
+                'ee.nombre as estado',
+
+                'condicion.nombre as condicion',
 
                 'dep.nombre as departamento',
 
@@ -406,35 +395,7 @@ class EquipoShow extends Component
 
         /*
         |--------------------------------------------------------------------------
-        | Estado
-        |--------------------------------------------------------------------------
-        |
-        | En tu proyecto existe estados_equipo. Lo consultamos aparte para
-        | no mezclar esta vista con la estructura antigua del listado.
-        |
-        */
-
-        $data['estado'] =
-            $this->estadoNombre(
-                $data['id_estado_activo'] ?? null
-            );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Condición del activo
-        |--------------------------------------------------------------------------
-        */
-
-        $data['condicion'] =
-            $this->catalogoValorNombre(
-                $data['id_condicion_activo'] ?? null
-            );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Ubicación organizacional
+        | Ubicación
         |--------------------------------------------------------------------------
         */
 
@@ -458,56 +419,12 @@ class EquipoShow extends Component
         }
 
 
+        $data['estado'] =
+            $data['estado']
+            ?? 'Sin estado';
+
+
         return $data;
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Estado del equipo
-    |--------------------------------------------------------------------------
-    */
-
-    protected function estadoNombre(
-        int|string|null $id
-    ): string {
-
-        if (!$id) {
-            return 'Sin estado';
-        }
-
-
-        if (Schema::hasTable('estados_equipo')) {
-
-            $nombre = DB::table('estados_equipo')
-                ->where(
-                    'id_estado_equipo',
-                    (int) $id
-                )
-                ->value('nombre');
-
-            if ($nombre) {
-                return $nombre;
-            }
-        }
-
-
-        if (Schema::hasTable('catalogo_valores')) {
-
-            $nombre = DB::table('catalogo_valores')
-                ->where(
-                    'id_valor',
-                    (int) $id
-                )
-                ->value('nombre');
-
-            if ($nombre) {
-                return $nombre;
-            }
-        }
-
-
-        return 'Sin estado';
     }
 
 
@@ -517,9 +434,9 @@ class EquipoShow extends Component
     |--------------------------------------------------------------------------
     */
 
-    public function getEspecificacionesProperty(): array
-    {
-        $equipo = $this->equipo;
+    protected function cargarEspecificaciones(
+        array $equipo
+    ): array {
 
         $tipoId =
             (int) (
@@ -538,13 +455,15 @@ class EquipoShow extends Component
         }
 
 
-        $tabla = $config['table'];
+        $tabla =
+            $config['table'];
 
 
-        if (!Schema::hasTable($tabla)) {
-            return [];
-        }
-
+        /*
+        |--------------------------------------------------------------------------
+        | Consulta a la tabla específica
+        |--------------------------------------------------------------------------
+        */
 
         $row = DB::table($tabla)
             ->where(
@@ -559,15 +478,72 @@ class EquipoShow extends Component
         }
 
 
-        $row = (array) $row;
+        $row =
+            (array) $row;
 
-        $labels = $this->fieldLabels();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Obtenemos todos los IDs de catálogo de una sola vez
+        |--------------------------------------------------------------------------
+        */
+
+        $catalogIds = [];
+
+
+        foreach (
+            $config['fields'] as $campo => $tipo
+        ) {
+
+            if (
+                $tipo === 'catalog' &&
+                !empty($row[$campo])
+            ) {
+
+                $catalogIds[] =
+                    (int) $row[$campo];
+            }
+        }
+
+
+        $catalogos = [];
+
+
+        if (!empty($catalogIds)) {
+
+            $catalogos =
+                DB::table('catalogo_valores')
+
+                    ->whereIn(
+                        'id_valor',
+                        array_unique($catalogIds)
+                    )
+
+                    ->pluck(
+                        'nombre',
+                        'id_valor'
+                    )
+
+                    ->all();
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Construir especificaciones
+        |--------------------------------------------------------------------------
+        */
+
+        $labels =
+            $this->fieldLabels();
+
 
         $resultado = [];
 
 
         foreach (
-            $config['fields'] as $campo => $tipo
+            $config['fields']
+            as $campo => $tipo
         ) {
 
             $valor =
@@ -577,17 +553,19 @@ class EquipoShow extends Component
 
             $resultado[] = [
 
-                'campo' => $campo,
+                'campo' =>
+                    $campo,
 
                 'label' =>
                     $labels[$campo]
                     ?? $campo,
 
                 'value' =>
-                    $this->formatearValorEspecificacion(
+                    $this->formatearEspecificacion(
                         $campo,
                         $valor,
-                        $tipo
+                        $tipo,
+                        $catalogos
                     ),
 
             ];
@@ -600,14 +578,15 @@ class EquipoShow extends Component
 
     /*
     |--------------------------------------------------------------------------
-    | Dar formato a especificaciones
+    | Formatear especificaciones
     |--------------------------------------------------------------------------
     */
 
-    protected function formatearValorEspecificacion(
+    protected function formatearEspecificacion(
         string $campo,
         mixed $valor,
-        string $tipo
+        string $tipo,
+        array $catalogos
     ): string {
 
         if (
@@ -627,8 +606,8 @@ class EquipoShow extends Component
         if ($tipo === 'catalog') {
 
             return
-                $this->catalogoValorNombre($valor)
-                ?: '—';
+                $catalogos[(int) $valor]
+                ?? '—';
         }
 
 
@@ -659,8 +638,9 @@ class EquipoShow extends Component
 
             try {
 
-                return \Carbon\Carbon::parse($valor)
-                    ->format('d/m/Y');
+                return \Carbon\Carbon::parse(
+                    $valor
+                )->format('d/m/Y');
 
             } catch (\Throwable) {
 
@@ -671,7 +651,7 @@ class EquipoShow extends Component
 
         /*
         |--------------------------------------------------------------------------
-        | Unidades conocidas
+        | Unidades
         |--------------------------------------------------------------------------
         */
 
@@ -705,242 +685,118 @@ class EquipoShow extends Component
 
     /*
     |--------------------------------------------------------------------------
-    | Nombre de un valor de catálogo
-    |--------------------------------------------------------------------------
-    */
-
-    protected function catalogoValorNombre(
-        int|string|null $id
-    ): ?string {
-
-        if (!$id) {
-            return null;
-        }
-
-
-        return Cache::remember(
-            'catalogo.valor.' . $id,
-            now()->addMinutes(30),
-            fn () =>
-                DB::table('catalogo_valores')
-                    ->where(
-                        'id_valor',
-                        (int) $id
-                    )
-                    ->value('nombre')
-        );
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Asignación actual
-    |--------------------------------------------------------------------------
-    */
-
-    public function getAsignacionActualProperty(): ?array
-    {
-        if (!Schema::hasTable('asignaciones')) {
-            return null;
-        }
-
-
-        $asignacion =
-            DB::table('asignaciones')
-                ->where(
-                    'id_equipo',
-                    $this->equipoId
-                )
-                ->orderByDesc(
-                    'fecha_asignacion'
-                )
-                ->first();
-
-
-        if (!$asignacion) {
-            return null;
-        }
-
-
-        $data = (array) $asignacion;
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Área
-        |--------------------------------------------------------------------------
-        */
-
-        $areaNombre = null;
-
-        if (
-            !empty($data['id_area']) &&
-            Schema::hasTable('areas')
-        ) {
-
-            $areaNombre =
-                DB::table('areas')
-                    ->where(
-                        'id_area',
-                        (int) $data['id_area']
-                    )
-                    ->value('nombre');
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Departamento
-        |--------------------------------------------------------------------------
-        */
-
-        $departamentoNombre = null;
-
-        if (
-            !empty($data['id_departamento']) &&
-            Schema::hasTable('departamentos')
-        ) {
-
-            $departamentoNombre =
-                DB::table('departamentos')
-                    ->where(
-                        'id_departamento',
-                        (int) $data['id_departamento']
-                    )
-                    ->value('nombre');
-        }
-
-
-        if ($departamentoNombre) {
-
-            $data['ubicacion'] =
-                $areaNombre
-                    ? $areaNombre
-                        . ' / '
-                        . $departamentoNombre
-                    : $departamentoNombre;
-
-        } else {
-
-            $data['ubicacion'] =
-                $areaNombre
-                ?? '—';
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Tipo de asignación
-        |--------------------------------------------------------------------------
-        */
-
-        $data['tipo_asignacion'] =
-            $this->catalogoValorNombre(
-                $data['id_tipo_asignacion']
-                ?? null
-            );
-
-
-        return $data;
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Historial de movimientos
+    | Asignaciones / movimientos
     |--------------------------------------------------------------------------
     |
-    | Por ahora usamos las asignaciones conocidas como historial.
-    | Más adelante, si tienes una tabla específica de movimientos,
-    | podemos sustituir esta consulta.
+    | Antes se hacían consultas adicionales por cada movimiento.
+    | Ahora todos los datos vienen mediante JOIN en una sola consulta.
     |
     */
 
-    public function getMovimientosProperty(): array
+    protected function cargarAsignaciones(): array
     {
-        if (!Schema::hasTable('asignaciones')) {
-            return [];
-        }
+        $rows = DB::table(
+            'asignaciones as asi'
+        )
 
+            ->leftJoin(
+                'areas as a',
+                'a.id_area',
+                '=',
+                'asi.id_area'
+            )
 
-        $rows =
-            DB::table('asignaciones')
-                ->where(
-                    'id_equipo',
-                    $this->equipoId
-                )
-                ->orderByDesc(
-                    'fecha_asignacion'
-                )
-                ->limit(5)
-                ->get();
+            ->leftJoin(
+                'departamentos as dep',
+                'dep.id_departamento',
+                '=',
+                'asi.id_departamento'
+            )
+
+            ->leftJoin(
+                'catalogo_valores as tipo',
+                'tipo.id_valor',
+                '=',
+                'asi.id_tipo_asignacion'
+            )
+
+            ->where(
+                'asi.id_equipo',
+                $this->equipoId
+            )
+
+            ->orderByDesc(
+                'asi.fecha_asignacion'
+            )
+
+            ->limit(5)
+
+            ->select([
+
+                'asi.nombre_colaborador',
+                'asi.fecha_asignacion',
+                'asi.id_area',
+                'asi.id_departamento',
+                'asi.id_tipo_asignacion',
+
+                'a.nombre as area_nombre',
+
+                'dep.nombre as departamento_nombre',
+
+                'tipo.nombre as tipo_asignacion',
+
+            ])
+
+            ->get();
 
 
         return $rows
             ->map(function ($row) {
 
-                $row = (array) $row;
+                $row =
+                    (array) $row;
 
 
-                $area = null;
+                /*
+                |--------------------------------------------------------------------------
+                | Ubicación
+                |--------------------------------------------------------------------------
+                */
 
-                if (!empty($row['id_area'])) {
+                if (
+                    !empty(
+                        $row['departamento_nombre']
+                    )
+                ) {
 
-                    $area =
-                        DB::table('areas')
-                            ->where(
-                                'id_area',
-                                (int) $row['id_area']
-                            )
-                            ->value('nombre');
+                    $ubicacion =
+                        !empty($row['area_nombre'])
+                            ? $row['area_nombre']
+                                . ' / '
+                                . $row['departamento_nombre']
+                            : $row['departamento_nombre'];
+
+                } else {
+
+                    $ubicacion =
+                        $row['area_nombre']
+                        ?? '—';
                 }
-
-
-                $departamento = null;
-
-                if (!empty($row['id_departamento'])) {
-
-                    $departamento =
-                        DB::table('departamentos')
-                            ->where(
-                                'id_departamento',
-                                (int) $row['id_departamento']
-                            )
-                            ->value('nombre');
-                }
-
-
-                $ubicacion =
-                    $departamento
-                        ? (
-                            $area
-                                ? $area
-                                    . ' / '
-                                    . $departamento
-                                : $departamento
-                        )
-                        : (
-                            $area
-                            ?? '—'
-                        );
 
 
                 return [
 
-                    'fecha' =>
+                    'nombre_colaborador' =>
+                        $row['nombre_colaborador']
+                        ?? '—',
+
+                    'fecha_asignacion' =>
                         $row['fecha_asignacion']
                         ?? null,
 
-                    'operacion' =>
-                        $this->catalogoValorNombre(
-                            $row['id_tipo_asignacion']
-                            ?? null
-                        )
+                    'tipo_asignacion' =>
+                        $row['tipo_asignacion']
                         ?? 'Asignación',
-
-                    'responsable' =>
-                        $row['nombre_colaborador']
-                        ?? '—',
 
                     'ubicacion' =>
                         $ubicacion,
@@ -948,34 +804,24 @@ class EquipoShow extends Component
                 ];
 
             })
+
             ->values()
+
             ->all();
     }
 
 
     /*
     |--------------------------------------------------------------------------
-    | Mantenimientos
+    | Placeholder
     |--------------------------------------------------------------------------
-    |
-    | Todavía no conocemos la estructura exacta de tu tabla de
-    | mantenimientos. Por ahora dejamos el arreglo vacío para que la
-    | vista pueda mostrar "Sin mantenimientos registrados" sin fallar.
-    |
     */
 
-    public function getMantenimientosProperty(): array
-    {
-        return [];
-    }
-
-    /**
-     * Placeholder mostrado mientras el detalle
-     * del equipo se carga de manera lazy.
-     */
     public function placeholder()
     {
-        return view('livewire.placeholders.equipo-show');
+        return view(
+            'livewire.placeholders.equipo-show'
+        );
     }
 
 
@@ -987,24 +833,109 @@ class EquipoShow extends Component
 
     public function render()
     {
+        /*
+        |--------------------------------------------------------------------------
+        | 1. Equipo
+        |--------------------------------------------------------------------------
+        */
+
+        $equipo =
+            $this->cargarEquipo();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | 2. Especificaciones
+        |--------------------------------------------------------------------------
+        */
+
+        $especificaciones =
+            $this->cargarEspecificaciones(
+                $equipo
+            );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | 3. Asignaciones
+        |--------------------------------------------------------------------------
+        */
+
+        $asignaciones =
+            $this->cargarAsignaciones();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Asignación actual
+        |--------------------------------------------------------------------------
+        */
+
+        $asignacionActual =
+            $asignaciones[0]
+            ?? null;
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Movimientos
+        |--------------------------------------------------------------------------
+        */
+
+        $movimientos =
+            collect($asignaciones)
+
+                ->map(
+                    fn ($asignacion) => [
+
+                        'fecha' =>
+                            $asignacion[
+                                'fecha_asignacion'
+                            ]
+                            ?? null,
+
+                        'operacion' =>
+                            $asignacion[
+                                'tipo_asignacion'
+                            ]
+                            ?? 'Asignación',
+
+                        'responsable' =>
+                            $asignacion[
+                                'nombre_colaborador'
+                            ]
+                            ?? '—',
+
+                        'ubicacion' =>
+                            $asignacion[
+                                'ubicacion'
+                            ]
+                            ?? '—',
+
+                    ]
+                )
+
+                ->all();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Mantenimientos
+        |--------------------------------------------------------------------------
+        */
+
+        $mantenimientos = [];
+
+
         return view(
             'livewire.equipo-show',
-            [
-                'equipo' =>
-                    $this->equipo,
-
-                'especificaciones' =>
-                    $this->especificaciones,
-
-                'asignacionActual' =>
-                    $this->asignacionActual,
-
-                'movimientos' =>
-                    $this->movimientos,
-
-                'mantenimientos' =>
-                    $this->mantenimientos,
-            ]
+            compact(
+                'equipo',
+                'especificaciones',
+                'asignacionActual',
+                'movimientos',
+                'mantenimientos'
+            )
         );
     }
 }

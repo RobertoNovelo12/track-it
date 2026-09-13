@@ -28,6 +28,18 @@ Route::middleware('auth')->group(function () {
 
     /*
     |--------------------------------------------------------------------------
+    | Búsqueda global de equipos
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/buscar-equipos',
+        fn () => view('equipos.search')
+    )
+        ->name('equipos.search');
+
+    /*
+    |--------------------------------------------------------------------------
     | Dashboard
     |--------------------------------------------------------------------------
     */
@@ -80,6 +92,25 @@ Route::middleware('auth')->group(function () {
     )
         ->whereNumber('equipo')
         ->name('equipos.show');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Editar equipo
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/equipos/{equipo}/editar',
+        function (int $equipo) {
+
+            return view('equipos.edit', [
+                'equipoId' => $equipo,
+            ]);
+
+        }
+    )
+        ->whereNumber('equipo')
+        ->name('equipos.edit');
 
 });
 
