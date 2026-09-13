@@ -1,16 +1,15 @@
 <?php
 
 use App\Http\Controllers\DashboardController;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\EquipoController;
+use Illuminate\Support\Facades\Route;
 
-Route::middleware('auth')->group(function () {
-    Route::get('/equipos', [EquipoController::class, 'index'])->name('equipos.index');
-});
 
-Route::get('/equipos/crear', fn () => view('equipos.create'))
-    ->middleware('auth')
-    ->name('equipos.create');
+/*
+|--------------------------------------------------------------------------
+| Inicio
+|--------------------------------------------------------------------------
+*/
 
 Route::get('/', function () {
     return auth()->check()
@@ -18,9 +17,77 @@ Route::get('/', function () {
         : redirect()->route('login');
 });
 
+
+/*
+|--------------------------------------------------------------------------
+| Rutas protegidas
+|--------------------------------------------------------------------------
+*/
+
 Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])
-        ->name('dashboard');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Dashboard
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/dashboard',
+        [DashboardController::class, 'index']
+    )->name('dashboard');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Equipos tecnológicos
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/equipos',
+        [EquipoController::class, 'index']
+    )->name('equipos.index');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Crear equipo
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/equipos/crear',
+        fn () => view('equipos.create')
+    )->name('equipos.create');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Ver detalle de equipo
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/equipos/{equipo}',
+        function (int $equipo) {
+
+            return view('equipos.show', [
+                'equipoId' => $equipo,
+            ]);
+
+        }
+    )
+        ->whereNumber('equipo')
+        ->name('equipos.show');
+
 });
+
+
+/*
+|--------------------------------------------------------------------------
+| Autenticación
+|--------------------------------------------------------------------------
+*/
 
 require __DIR__.'/auth.php';
