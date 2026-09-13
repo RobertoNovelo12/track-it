@@ -8,6 +8,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/equipos', [EquipoController::class, 'index'])->name('equipos.index');
 });
 
+Route::get('/equipos/crear', fn () => view('equipos.create'))
+    ->middleware('auth')
+    ->name('equipos.create');
+
 Route::get('/', function () {
     return auth()->check()
         ? redirect()->route('dashboard')

@@ -1406,9 +1406,6 @@
 
                                         <button
                                             type="button"
-                                            onclick="confirmarBaja(
-                                                '{{ $equipo->id_equipo }}'
-                                            )"
                                             class="
                                                 w-full
                                                 block
@@ -1463,169 +1460,213 @@
         <div class="md:hidden space-y-3">
 
             @forelse ($equipos as $equipo)
+            <article
+                x-data="{ selected: false }"
+                @click="selected = !selected"
+                wire:key="equipo-card-{{ $equipo->id_equipo }}"
+                class="
+                    bg-white
+                    border
+                    rounded-xl
+                    p-4
+                    shadow-sm
+                    transition-all
+                    cursor-pointer
+                    select-none
+                "
+                :class="
+                    selected
+                        ? 'border-[#247BA0]/50 ring-1 ring-[#247BA0]/10'
+                        : 'border-[#50514F]/10'
+                "
+            >
 
-                <article
-                    wire:key="equipo-card-{{ $equipo->id_equipo }}"
+                {{-- Cabecera --}}
+                <div class="flex items-start gap-3">
+
+                    {{-- Selector visual --}}
+                <button
+                    type="button"
+                    @click.stop="selected = !selected"
                     class="
-                        bg-white
-                        border border-[#50514F]/10
-                        rounded-xl
-                        p-4
-                        shadow-sm
+                        shrink-0
+                        mt-0.5
+                        w-5 h-5
+                        rounded-full
+                        border-2
+                        flex items-center justify-center
+                        transition-all
                     "
+                    :class="
+                        selected
+                            ? 'border-[#247BA0] bg-[#247BA0]'
+                            : 'border-[#50514F]/35 bg-white'
+                    "
+                    aria-label="Seleccionar equipo"
                 >
+                    <svg
+                        x-show="selected"
+                        x-cloak
+                        class="w-3 h-3 text-white"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="3"
+                    >
+                        <path d="M5 12l4 4L19 7"/>
+                    </svg>
+                </button>
 
-                    {{-- Cabecera --}}
-                    <div class="flex items-start justify-between gap-3">
 
-                        <div class="min-w-0 flex-1">
+                    <div class="min-w-0 flex-1">
 
-                            {{-- Nombre del equipo --}}
-                            <p
+                        {{-- Nombre del equipo --}}
+                        <p
+                            class="
+                                text-sm
+                                font-semibold
+                                leading-snug
+                                text-[#25344A]
+                                break-words
+                            "
+                        >
+
+                            {{ $equipo->tipo_equipo_nombre ?? 'Equipo' }}
+
+                            @if ($equipo->marca_nombre)
+                                {{ $equipo->marca_nombre }}
+                            @endif
+
+                            @if ($equipo->modelo_nombre)
+                                {{ $equipo->modelo_nombre }}
+                            @endif
+
+                        </p>
+
+
+                        {{-- Código inventario --}}
+                        <p class="text-xs text-[#50514F]/50 mt-1">
+                            {{ $equipo->codigo_inventario }}
+                        </p>
+
+                    </div>
+
+
+                    {{-- Más acciones --}}
+                    <div class="relative shrink-0">
+
+                        <button
+                            type="button"
+                            onclick="toggleRowMenu(
+                                event,
+                                'menu-m-{{ $equipo->id_equipo }}'
+                            )"
+                            class="
+                                w-8 h-8
+                                flex items-center justify-center
+                                rounded-md
+                                text-[#25344A]/80
+                                hover:bg-[#50514F]/5
+                                transition-colors
+                            "
+                            aria-label="Más acciones"
+                        >
+
+                            <svg
+                                class="w-5 h-5"
+                                viewBox="0 0 24 24"
+                                fill="currentColor"
+                            >
+                                <circle cx="12" cy="5" r="1.5"/>
+                                <circle cx="12" cy="12" r="1.5"/>
+                                <circle cx="12" cy="19" r="1.5"/>
+                            </svg>
+
+                        </button>
+
+
+                        <div
+                            id="menu-m-{{ $equipo->id_equipo }}"
+                            class="
+                                row-menu
+                                hidden
+                                absolute
+                                right-0 top-9
+                                w-40
+                                bg-white
+                                border border-[#50514F]/10
+                                rounded-lg
+                                shadow-lg
+                                z-20
+                                overflow-hidden
+                                text-left
+                            "
+                        >
+
+                            {{-- Ver detalle --}}
+                            <a
+                                href="{{ Route::has('equipos.show')
+                                    ? route(
+                                        'equipos.show',
+                                        $equipo->id_equipo
+                                    )
+                                    : '#'
+                                }}"
                                 class="
-                                    text-sm
-                                    font-semibold
-                                    leading-snug
-                                    text-[#25344A]
-                                    break-words
+                                    block
+                                    px-4 py-2.5
+                                    text-xs
+                                    text-[#50514F]/80
+                                    hover:bg-[#50514F]/5
                                 "
                             >
-
-                                {{ $equipo->tipo_equipo_nombre ?? 'Equipo' }}
-
-                                @if ($equipo->marca_nombre)
-                                    {{ $equipo->marca_nombre }}
-                                @endif
-
-                                @if ($equipo->modelo_nombre)
-                                    {{ $equipo->modelo_nombre }}
-                                @endif
-
-                            </p>
+                                Ver detalle
+                            </a>
 
 
-                            {{-- Código inventario --}}
-                            <p class="text-xs text-[#50514F]/50 mt-1">
-                                {{ $equipo->codigo_inventario }}
-                            </p>
+                            {{-- Editar --}}
+                            <a
+                                href="{{ Route::has('equipos.edit')
+                                    ? route(
+                                        'equipos.edit',
+                                        $equipo->id_equipo
+                                    )
+                                    : '#'
+                                }}"
+                                class="
+                                    block
+                                    px-4 py-2.5
+                                    text-xs
+                                    text-[#50514F]/80
+                                    hover:bg-[#50514F]/5
+                                "
+                            >
+                                Editar
+                            </a>
 
-                        </div>
 
-
-                        {{-- Más acciones --}}
-                        <div class="relative shrink-0">
-
+                            {{-- Dar de baja: solo visual por ahora --}}
                             <button
                                 type="button"
-                                onclick="toggleRowMenu(
-                                    event,
-                                    'menu-m-{{ $equipo->id_equipo }}'
-                                )"
                                 class="
-                                    w-8 h-8
-                                    flex items-center justify-center
-                                    rounded-md
-                                    text-[#25344A]/80
-                                    hover:bg-[#50514F]/5
-                                    transition-colors
-                                "
-                                aria-label="Más acciones"
-                            >
-
-                                <svg
-                                    class="w-5 h-5"
-                                    viewBox="0 0 24 24"
-                                    fill="currentColor"
-                                >
-                                    <circle cx="12" cy="5" r="1.5"/>
-                                    <circle cx="12" cy="12" r="1.5"/>
-                                    <circle cx="12" cy="19" r="1.5"/>
-                                </svg>
-
-                            </button>
-
-
-                            <div
-                                id="menu-m-{{ $equipo->id_equipo }}"
-                                class="
-                                    row-menu
-                                    hidden
-                                    absolute
-                                    right-0 top-9
-                                    w-40
-                                    bg-white
-                                    border border-[#50514F]/10
-                                    rounded-lg
-                                    shadow-lg
-                                    z-20
-                                    overflow-hidden
+                                    w-full
+                                    block
                                     text-left
+                                    px-4 py-2.5
+                                    text-xs
+                                    text-red-600
+                                    hover:bg-red-50
+                                    cursor-default
                                 "
                             >
-
-                                <a
-                                    href="{{ Route::has('equipos.show')
-                                        ? route(
-                                            'equipos.show',
-                                            $equipo->id_equipo
-                                        )
-                                        : '#'
-                                    }}"
-                                    class="
-                                        block
-                                        px-4 py-2.5
-                                        text-xs
-                                        text-[#50514F]/80
-                                        hover:bg-[#50514F]/5
-                                    "
-                                >
-                                    Ver detalle
-                                </a>
-
-
-                                <a
-                                    href="{{ Route::has('equipos.edit')
-                                        ? route(
-                                            'equipos.edit',
-                                            $equipo->id_equipo
-                                        )
-                                        : '#'
-                                    }}"
-                                    class="
-                                        block
-                                        px-4 py-2.5
-                                        text-xs
-                                        text-[#50514F]/80
-                                        hover:bg-[#50514F]/5
-                                    "
-                                >
-                                    Editar
-                                </a>
-
-
-                                <button
-                                    type="button"
-                                    onclick="confirmarBaja(
-                                        '{{ $equipo->id_equipo }}'
-                                    )"
-                                    class="
-                                        w-full
-                                        block
-                                        text-left
-                                        px-4 py-2.5
-                                        text-xs
-                                        text-red-600
-                                        hover:bg-red-50
-                                    "
-                                >
-                                    Dar de baja
-                                </button>
-
-                            </div>
+                                Dar de baja
+                            </button>
 
                         </div>
 
                     </div>
+
+                </div>
 
 
                     {{-- =================================================
