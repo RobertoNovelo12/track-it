@@ -6,32 +6,74 @@
 
 <div>
 
-    {{-- Encabezado --}}
+    {{-- ============================================================
+        ENCABEZADO
+    ============================================================ --}}
     <div class="mb-8">
 
-        <h1 class="text-xl font-semibold text-[#50514F]">
+        <h1
+            class="
+                text-xl
+                font-semibold
+                text-[var(--theme-text-strong)]
+            "
+        >
             Módulos del Sistema
         </h1>
 
-        <p class="text-xs text-[#50514F]/60 mt-1">
-            Pantalla Principal <span class="mx-1">&gt;</span>
+        <p
+            class="
+                mt-1
+                text-xs
+                text-[var(--theme-text-muted)]
+            "
+        >
+            Pantalla Principal
+
+            <span class="mx-1">
+                &gt;
+            </span>
         </p>
 
     </div>
 
 
-    {{-- Indicadores --}}
+    {{-- ============================================================
+        INDICADORES
+    ============================================================ --}}
     <livewire:dashboard-stats lazy />
 
 
-    {{-- Título módulos --}}
-    <h2 class="text-xl font-semibold text-[#50514F] mb-6">
+    {{-- ============================================================
+        TÍTULO DE MÓDULOS
+    ============================================================ --}}
+    <h2
+        class="
+            mb-6
+
+            text-xl
+            font-semibold
+
+            text-[var(--theme-text-strong)]
+        "
+    >
         Módulos del Sistema
     </h2>
 
 
-    {{-- Tarjetas módulos --}}
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+    {{-- ============================================================
+        TARJETAS DE MÓDULOS
+    ============================================================ --}}
+    <div
+        class="
+            grid
+            grid-cols-1
+            sm:grid-cols-2
+            lg:grid-cols-3
+
+            gap-5
+        "
+    >
 
         <x-dashboard.module-card
             title="Gestión de Activos"
@@ -41,6 +83,7 @@
             icon="laptop"
         />
 
+
         <x-dashboard.module-card
             title="Asignaciones y Movimientos"
             description="Control de préstamos, entregas a personal, cambio de ubicación y bajas definitivas."
@@ -48,6 +91,7 @@
             route="asignaciones.index"
             icon="swap"
         />
+
 
         <x-dashboard.module-card
             title="Mantenimiento Técnico"
@@ -57,6 +101,7 @@
             icon="tools"
         />
 
+
         <x-dashboard.module-card
             title="Reportes"
             description="Generación de reportes ejecutivos en PDF/Excel e indicadores operativos."
@@ -65,6 +110,7 @@
             icon="report"
         />
 
+
         <x-dashboard.module-card
             title="Usuarios y Roles"
             description="Administración de usuarios internos, roles, permisos y bitácora de auditoría."
@@ -72,6 +118,7 @@
             route="usuarios.index"
             icon="users"
         />
+
 
         <x-dashboard.module-card
             title="Catálogos Base"

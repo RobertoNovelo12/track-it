@@ -10,7 +10,24 @@
     {{-- Mensaje de sesión caducada / error general --}}
     @if (session('status'))
 
-        <div class="mb-4 text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-3 py-2">
+        <div
+            class="
+                mb-4
+
+                px-3
+                py-2
+
+                rounded-md
+
+                bg-emerald-500/10
+
+                border
+                border-emerald-500/25
+
+                text-sm
+                text-emerald-500
+            "
+        >
             {{ session('status') }}
         </div>
 
@@ -42,25 +59,43 @@
                 autocomplete="username"
                 class="
                     w-full
+
+                    bg-[var(--theme-surface)]
+
                     border
-                    border-[#50514F]/25
+                    border-[var(--theme-border-strong)]
+
                     rounded-md
+
                     px-4
                     py-2.5
+
                     text-sm
-                    text-[#50514F]
-                    placeholder-[#50514F]/40
+                    text-[var(--theme-text)]
+
+                    placeholder:text-[var(--theme-text-muted)]
+
                     focus:outline-none
                     focus:ring-2
-                    focus:ring-[#247BA0]/40
-                    focus:border-[#247BA0]
+                    focus:ring-[var(--theme-primary-soft)]
+                    focus:border-[var(--theme-primary)]
+
+                    transition-colors
                 "
             >
 
             @error('login')
-                <p class="mt-1 text-xs text-red-600">
+
+                <p
+                    class="
+                        mt-1
+                        text-xs
+                        text-[var(--theme-danger)]
+                    "
+                >
                     {{ $message }}
                 </p>
+
             @enderror
 
         </div>
@@ -81,19 +116,29 @@
                     autocomplete="current-password"
                     class="
                         w-full
+
+                        bg-[var(--theme-surface)]
+
                         border
-                        border-[#50514F]/25
+                        border-[var(--theme-border-strong)]
+
                         rounded-md
+
                         px-4
                         py-2.5
                         pr-10
+
                         text-sm
-                        text-[#50514F]
-                        placeholder-[#50514F]/40
+                        text-[var(--theme-text)]
+
+                        placeholder:text-[var(--theme-text-muted)]
+
                         focus:outline-none
                         focus:ring-2
-                        focus:ring-[#247BA0]/40
-                        focus:border-[#247BA0]
+                        focus:ring-[var(--theme-primary-soft)]
+                        focus:border-[var(--theme-primary)]
+
+                        transition-colors
                     "
                 >
 
@@ -110,12 +155,14 @@
                         flex
                         items-center
 
-                        text-[#50514F]/40
+                        text-[var(--theme-text-muted)]
 
-                        hover:text-[#50514F]
+                        hover:text-[var(--theme-text)]
 
                         disabled:opacity-40
                         disabled:cursor-not-allowed
+
+                        transition-colors
                     "
                     aria-label="Mostrar u ocultar contraseña"
                 >
@@ -136,9 +183,17 @@
 
 
             @error('password')
-                <p class="mt-1 text-xs text-red-600">
+
+                <p
+                    class="
+                        mt-1
+                        text-xs
+                        text-[var(--theme-danger)]
+                    "
+                >
                     {{ $message }}
                 </p>
+
             @enderror
 
         </div>
@@ -151,7 +206,15 @@
 
             <a
                 href="{{ route('password.request') }}"
-                class="text-xs text-[#247BA0] hover:underline"
+                class="
+                    text-xs
+                    text-[var(--theme-primary)]
+
+                    hover:text-[var(--theme-primary-hover)]
+                    hover:underline
+
+                    transition-colors
+                "
             >
                 Olvidé la contraseña
             </a>
@@ -173,8 +236,8 @@
                 items-center
                 justify-center
 
-                bg-[#247BA0]
-                hover:bg-[#1d6688]
+                bg-[var(--theme-primary)]
+                hover:bg-[var(--theme-primary-hover)]
 
                 text-white
 
@@ -264,7 +327,15 @@
 
             <a
                 href="{{ route('register') }}"
-                class="text-xs text-[#247BA0] hover:underline"
+                class="
+                    text-xs
+                    text-[var(--theme-primary)]
+
+                    hover:text-[var(--theme-primary-hover)]
+                    hover:underline
+
+                    transition-colors
+                "
             >
                 No tengo una cuenta
             </a>

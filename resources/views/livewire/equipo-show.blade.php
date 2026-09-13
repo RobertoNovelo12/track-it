@@ -30,9 +30,9 @@
     ============================================================ --}}
     <section
         class="
-            bg-white
+            bg-[var(--theme-surface)]
             border
-            border-[#50514F]/10
+            border-[var(--theme-border)]
             rounded-xl
             p-4
             sm:p-5
@@ -63,11 +63,11 @@
                         w-12
                         h-12
                         rounded-xl
-                        bg-[#247BA0]/10
+                        bg-[var(--theme-primary-soft)]
                         flex
                         items-center
                         justify-center
-                        text-[#247BA0]
+                        text-[var(--theme-primary)]
                     "
                 >
                     <svg
@@ -107,7 +107,7 @@
                                 text-base
                                 sm:text-lg
                                 font-semibold
-                                text-[#25344A]
+                                text-[var(--theme-text-strong)]
                                 break-words
                             "
                         >
@@ -128,7 +128,7 @@
                             class="
                                 mt-1
                                 text-xs
-                                text-[#50514F]/60
+                                text-[var(--theme-text-muted)]
                             "
                         >
                             {{ $equipo['nombre_equipo'] }}
@@ -146,7 +146,7 @@
                             gap-y-1
                             mt-2
                             text-xs
-                            text-[#50514F]/55
+                            text-[var(--theme-text-muted)]
                         "
                     >
 
@@ -155,7 +155,7 @@
                             <span
                                 class="
                                     font-semibold
-                                    text-[#50514F]/80
+                                    text-[var(--theme-text)]
                                 "
                             >
                                 {{ $equipo['codigo_inventario'] ?? '—' }}
@@ -166,7 +166,7 @@
                         @if (!empty($equipo['numero_serie']))
                             <span>
                                 SN:
-                                <span class="text-[#50514F]/80">
+                                <span class="text-[var(--theme-text)]">
                                     {{ $equipo['numero_serie'] }}
                                 </span>
                             </span>
@@ -194,15 +194,15 @@
                     gap-2
 
                     border
-                    border-[#50514F]/20
+                    border-[var(--theme-border-strong)]
                     rounded-lg
-                    bg-white
+                    bg-[var(--theme-surface)]
 
                     px-4
 
                     text-sm
                     font-medium
-                    text-[#50514F]/65
+                    text-[var(--theme-text-muted)]
 
                     cursor-default
                 "
@@ -236,49 +236,49 @@
                 mt-5
                 pt-4
                 border-t
-                border-[#50514F]/10
+                border-[var(--theme-border)]
             "
         >
 
             <div>
-                <p class="text-[11px] text-[#50514F]/45">
+                <p class="text-[11px] text-[var(--theme-text-muted)]">
                     Tipo
                 </p>
 
-                <p class="text-xs font-medium text-[#50514F]/80 mt-1">
+                <p class="text-xs font-medium text-[var(--theme-text)] mt-1">
                     {{ $equipo['tipo_equipo'] ?? '—' }}
                 </p>
             </div>
 
 
             <div>
-                <p class="text-[11px] text-[#50514F]/45">
+                <p class="text-[11px] text-[var(--theme-text-muted)]">
                     Marca
                 </p>
 
-                <p class="text-xs font-medium text-[#50514F]/80 mt-1">
+                <p class="text-xs font-medium text-[var(--theme-text)] mt-1">
                     {{ $equipo['marca'] ?? '—' }}
                 </p>
             </div>
 
 
             <div>
-                <p class="text-[11px] text-[#50514F]/45">
+                <p class="text-[11px] text-[var(--theme-text-muted)]">
                     Modelo
                 </p>
 
-                <p class="text-xs font-medium text-[#50514F]/80 mt-1">
+                <p class="text-xs font-medium text-[var(--theme-text)] mt-1">
                     {{ $equipo['modelo'] ?? '—' }}
                 </p>
             </div>
 
 
             <div>
-                <p class="text-[11px] text-[#50514F]/45">
+                <p class="text-[11px] text-[var(--theme-text-muted)]">
                     Ubicación
                 </p>
 
-                <p class="text-xs font-medium text-[#50514F]/80 mt-1">
+                <p class="text-xs font-medium text-[var(--theme-text)] mt-1">
                     {{ $equipo['ubicacion'] ?? '—' }}
                 </p>
             </div>
@@ -308,9 +308,9 @@
         ======================================================== --}}
         <section
             class="
-                bg-white
+                bg-[var(--theme-surface)]
                 border
-                border-[#50514F]/10
+                border-[var(--theme-border)]
                 rounded-xl
                 p-4
                 sm:p-5
@@ -320,7 +320,7 @@
             <div class="flex items-center gap-2 mb-5">
 
                 <svg
-                    class="w-5 h-5 text-[#50514F]/70"
+                    class="w-5 h-5 text-[var(--theme-text)]"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -336,7 +336,7 @@
                         text-sm
                         sm:text-base
                         font-semibold
-                        text-[#50514F]
+                        text-[var(--theme-text-strong)]
                     "
                 >
                     Información general
@@ -349,7 +349,7 @@
 
                 <div class="flex justify-between gap-4">
 
-                    <dt class="text-xs text-[#50514F]/55">
+                    <dt class="text-xs text-[var(--theme-text-muted)]">
                         Nombre del activo
                     </dt>
 
@@ -357,7 +357,7 @@
                         class="
                             text-xs
                             font-medium
-                            text-[#50514F]/80
+                            text-[var(--theme-text)]
                             text-right
                             break-words
                         "
@@ -370,11 +370,11 @@
 
                 <div class="flex justify-between gap-4">
 
-                    <dt class="text-xs text-[#50514F]/55">
+                    <dt class="text-xs text-[var(--theme-text-muted)]">
                         Tipo
                     </dt>
 
-                    <dd class="text-xs font-medium text-[#50514F]/80 text-right">
+                    <dd class="text-xs font-medium text-[var(--theme-text)] text-right">
                         {{ $equipo['tipo_equipo'] ?? '—' }}
                     </dd>
 
@@ -383,11 +383,11 @@
 
                 <div class="flex justify-between gap-4">
 
-                    <dt class="text-xs text-[#50514F]/55">
+                    <dt class="text-xs text-[var(--theme-text-muted)]">
                         Marca
                     </dt>
 
-                    <dd class="text-xs font-medium text-[#50514F]/80 text-right">
+                    <dd class="text-xs font-medium text-[var(--theme-text)] text-right">
                         {{ $equipo['marca'] ?? '—' }}
                     </dd>
 
@@ -396,11 +396,11 @@
 
                 <div class="flex justify-between gap-4">
 
-                    <dt class="text-xs text-[#50514F]/55">
+                    <dt class="text-xs text-[var(--theme-text-muted)]">
                         Modelo
                     </dt>
 
-                    <dd class="text-xs font-medium text-[#50514F]/80 text-right">
+                    <dd class="text-xs font-medium text-[var(--theme-text)] text-right">
                         {{ $equipo['modelo'] ?? '—' }}
                     </dd>
 
@@ -409,7 +409,7 @@
 
                 <div class="flex justify-between gap-4">
 
-                    <dt class="text-xs text-[#50514F]/55">
+                    <dt class="text-xs text-[var(--theme-text-muted)]">
                         Número de serie
                     </dt>
 
@@ -417,7 +417,7 @@
                         class="
                             text-xs
                             font-medium
-                            text-[#50514F]/80
+                            text-[var(--theme-text)]
                             text-right
                             break-all
                         "
@@ -430,11 +430,11 @@
 
                 <div class="flex justify-between gap-4">
 
-                    <dt class="text-xs text-[#50514F]/55">
+                    <dt class="text-xs text-[var(--theme-text-muted)]">
                         Código de inventario
                     </dt>
 
-                    <dd class="text-xs font-medium text-[#50514F]/80 text-right">
+                    <dd class="text-xs font-medium text-[var(--theme-text)] text-right">
                         {{ $equipo['codigo_inventario'] ?? '—' }}
                     </dd>
 
@@ -443,11 +443,11 @@
 
                 <div class="flex justify-between gap-4">
 
-                    <dt class="text-xs text-[#50514F]/55">
+                    <dt class="text-xs text-[var(--theme-text-muted)]">
                         Estado
                     </dt>
 
-                    <dd class="text-xs font-medium text-[#50514F]/80 text-right">
+                    <dd class="text-xs font-medium text-[var(--theme-text)] text-right">
                         {{ $equipo['estado'] ?? 'Sin estado' }}
                     </dd>
 
@@ -456,11 +456,11 @@
 
                 <div class="flex justify-between gap-4">
 
-                    <dt class="text-xs text-[#50514F]/55">
+                    <dt class="text-xs text-[var(--theme-text-muted)]">
                         Condición
                     </dt>
 
-                    <dd class="text-xs font-medium text-[#50514F]/80 text-right">
+                    <dd class="text-xs font-medium text-[var(--theme-text)] text-right">
                         {{ $equipo['condicion'] ?? '—' }}
                     </dd>
 
@@ -469,11 +469,11 @@
 
                 <div class="flex justify-between gap-4">
 
-                    <dt class="text-xs text-[#50514F]/55">
+                    <dt class="text-xs text-[var(--theme-text-muted)]">
                         Host
                     </dt>
 
-                    <dd class="text-xs font-medium text-[#50514F]/80 text-right">
+                    <dd class="text-xs font-medium text-[var(--theme-text)] text-right">
                         {{ $equipo['host'] ?? '—' }}
                     </dd>
 
@@ -482,7 +482,7 @@
 
                 <div class="flex justify-between gap-4">
 
-                    <dt class="text-xs text-[#50514F]/55">
+                    <dt class="text-xs text-[var(--theme-text-muted)]">
                         Dirección MAC
                     </dt>
 
@@ -490,7 +490,7 @@
                         class="
                             text-xs
                             font-medium
-                            text-[#50514F]/80
+                            text-[var(--theme-text)]
                             text-right
                             break-all
                         "
@@ -503,11 +503,11 @@
 
                 <div class="flex justify-between gap-4">
 
-                    <dt class="text-xs text-[#50514F]/55">
+                    <dt class="text-xs text-[var(--theme-text-muted)]">
                         Factura
                     </dt>
 
-                    <dd class="text-xs font-medium text-[#50514F]/80 text-right">
+                    <dd class="text-xs font-medium text-[var(--theme-text)] text-right">
                         {{ $equipo['numero_factura'] ?? '—' }}
                     </dd>
 
@@ -516,11 +516,11 @@
 
                 <div class="flex justify-between gap-4">
 
-                    <dt class="text-xs text-[#50514F]/55">
+                    <dt class="text-xs text-[var(--theme-text-muted)]">
                         Fecha de compra
                     </dt>
 
-                    <dd class="text-xs font-medium text-[#50514F]/80 text-right">
+                    <dd class="text-xs font-medium text-[var(--theme-text)] text-right">
                         {{ $formatDate($equipo['fecha_compra'] ?? null) }}
                     </dd>
 
@@ -529,11 +529,11 @@
 
                 <div class="flex justify-between gap-4">
 
-                    <dt class="text-xs text-[#50514F]/55">
+                    <dt class="text-xs text-[var(--theme-text-muted)]">
                         Garantía
                     </dt>
 
-                    <dd class="text-xs font-medium text-[#50514F]/80 text-right">
+                    <dd class="text-xs font-medium text-[var(--theme-text)] text-right">
                         {{ $formatDate($equipo['fecha_fin_garantia'] ?? null) }}
                     </dd>
 
@@ -542,11 +542,11 @@
 
                 <div class="flex justify-between gap-4">
 
-                    <dt class="text-xs text-[#50514F]/55">
+                    <dt class="text-xs text-[var(--theme-text-muted)]">
                         Proveedor
                     </dt>
 
-                    <dd class="text-xs font-medium text-[#50514F]/80 text-right">
+                    <dd class="text-xs font-medium text-[var(--theme-text)] text-right">
                         {{ $equipo['proveedor'] ?? '—' }}
                     </dd>
 
@@ -562,9 +562,9 @@
         ======================================================== --}}
         <section
             class="
-                bg-white
+                bg-[var(--theme-surface)]
                 border
-                border-[#50514F]/10
+                border-[var(--theme-border)]
                 rounded-xl
                 p-4
                 sm:p-5
@@ -574,7 +574,7 @@
             <div class="flex items-center gap-2 mb-5">
 
                 <svg
-                    class="w-5 h-5 text-[#50514F]/70"
+                    class="w-5 h-5 text-[var(--theme-text)]"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -597,7 +597,7 @@
                         text-sm
                         sm:text-base
                         font-semibold
-                        text-[#50514F]
+                        text-[var(--theme-text-strong)]
                     "
                 >
                     Especificaciones técnicas
@@ -620,7 +620,7 @@
                             "
                         >
 
-                            <dt class="text-xs text-[#50514F]/55">
+                            <dt class="text-xs text-[var(--theme-text-muted)]">
                                 {{ $item['label'] }}
                             </dt>
 
@@ -628,7 +628,7 @@
                                 class="
                                     text-xs
                                     font-medium
-                                    text-[#50514F]/80
+                                    text-[var(--theme-text)]
                                     text-right
                                     break-words
                                 "
@@ -649,7 +649,7 @@
                         py-10
                         text-center
                         text-sm
-                        text-[#50514F]/40
+                        text-[var(--theme-text-muted)]
                     "
                 >
                     No hay especificaciones adicionales registradas.
@@ -665,9 +665,9 @@
         ======================================================== --}}
         <section
             class="
-                bg-white
+                bg-[var(--theme-surface)]
                 border
-                border-[#50514F]/10
+                border-[var(--theme-border)]
                 rounded-xl
                 p-4
                 sm:p-5
@@ -677,7 +677,7 @@
             <div class="flex items-center gap-2 mb-5">
 
                 <svg
-                    class="w-5 h-5 text-[#50514F]/70"
+                    class="w-5 h-5 text-[var(--theme-text)]"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -692,7 +692,7 @@
                         text-sm
                         sm:text-base
                         font-semibold
-                        text-[#50514F]
+                        text-[var(--theme-text-strong)]
                     "
                 >
                     Asignación actual
@@ -707,7 +707,7 @@
 
                     <div class="flex justify-between gap-4">
 
-                        <dt class="text-xs text-[#50514F]/55">
+                        <dt class="text-xs text-[var(--theme-text-muted)]">
                             Responsable
                         </dt>
 
@@ -715,7 +715,7 @@
                             class="
                                 text-xs
                                 font-medium
-                                text-[#50514F]/80
+                                text-[var(--theme-text)]
                                 text-right
                             "
                         >
@@ -727,7 +727,7 @@
 
                     <div class="flex justify-between gap-4">
 
-                        <dt class="text-xs text-[#50514F]/55">
+                        <dt class="text-xs text-[var(--theme-text-muted)]">
                             Área / Departamento
                         </dt>
 
@@ -735,7 +735,7 @@
                             class="
                                 text-xs
                                 font-medium
-                                text-[#50514F]/80
+                                text-[var(--theme-text)]
                                 text-right
                             "
                         >
@@ -747,7 +747,7 @@
 
                     <div class="flex justify-between gap-4">
 
-                        <dt class="text-xs text-[#50514F]/55">
+                        <dt class="text-xs text-[var(--theme-text-muted)]">
                             Tipo
                         </dt>
 
@@ -755,7 +755,7 @@
                             class="
                                 text-xs
                                 font-medium
-                                text-[#50514F]/80
+                                text-[var(--theme-text)]
                                 text-right
                             "
                         >
@@ -767,7 +767,7 @@
 
                     <div class="flex justify-between gap-4">
 
-                        <dt class="text-xs text-[#50514F]/55">
+                        <dt class="text-xs text-[var(--theme-text-muted)]">
                             Fecha de asignación
                         </dt>
 
@@ -775,7 +775,7 @@
                             class="
                                 text-xs
                                 font-medium
-                                text-[#50514F]/80
+                                text-[var(--theme-text)]
                                 text-right
                             "
                         >
@@ -807,12 +807,12 @@
                             w-10
                             h-10
                             rounded-full
-                            bg-[#50514F]/5
+                            bg-[var(--theme-surface-soft)]
                             flex
                             items-center
                             justify-center
                             mb-3
-                            text-[#50514F]/35
+                            text-[var(--theme-text-muted)]
                         "
                     >
                         <svg
@@ -827,11 +827,11 @@
                         </svg>
                     </div>
 
-                    <p class="text-sm text-[#50514F]/50">
+                    <p class="text-sm text-[var(--theme-text-muted)]">
                         Equipo disponible
                     </p>
 
-                    <p class="text-xs text-[#50514F]/35 mt-1">
+                    <p class="text-xs text-[var(--theme-text-muted)] mt-1">
                         No tiene una asignación registrada.
                     </p>
 
@@ -862,9 +862,9 @@
         ======================================================== --}}
         <section
             class="
-                bg-white
+                bg-[var(--theme-surface)]
                 border
-                border-[#50514F]/10
+                border-[var(--theme-border)]
                 rounded-xl
                 overflow-hidden
             "
@@ -878,12 +878,12 @@
                     p-4
                     sm:p-5
                     border-b
-                    border-[#50514F]/10
+                    border-[var(--theme-border)]
                 "
             >
 
                 <svg
-                    class="w-5 h-5 text-[#50514F]/70"
+                    class="w-5 h-5 text-[var(--theme-text)]"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -900,7 +900,7 @@
                         text-sm
                         sm:text-base
                         font-semibold
-                        text-[#50514F]
+                        text-[var(--theme-text-strong)]
                     "
                 >
                     Historial de movimientos
@@ -917,12 +917,13 @@
                     <table class="w-full text-xs">
 
                         <thead>
+
                             <tr
                                 class="
                                     text-left
-                                    text-[#50514F]/50
+                                    text-[var(--theme-text-muted)]
                                     border-b
-                                    border-[#50514F]/10
+                                    border-[var(--theme-border)]
                                 "
                             >
                                 <th class="px-5 py-3 font-medium">
@@ -941,6 +942,7 @@
                                     Ubicación
                                 </th>
                             </tr>
+
                         </thead>
 
 
@@ -951,27 +953,27 @@
                                 <tr
                                     class="
                                         border-b
-                                        border-[#50514F]/5
+                                        border-[var(--theme-border)]
                                         last:border-0
                                     "
                                 >
 
-                                    <td class="px-5 py-3 text-[#50514F]/70">
+                                    <td class="px-5 py-3 text-[var(--theme-text)]">
                                         {{ $formatDate(
                                             $movimiento['fecha']
                                             ?? null
                                         ) }}
                                     </td>
 
-                                    <td class="px-3 py-3 text-[#50514F]/70">
+                                    <td class="px-3 py-3 text-[var(--theme-text)]">
                                         {{ $movimiento['operacion'] ?? '—' }}
                                     </td>
 
-                                    <td class="px-3 py-3 text-[#50514F]/70">
+                                    <td class="px-3 py-3 text-[var(--theme-text)]">
                                         {{ $movimiento['responsable'] ?? '—' }}
                                     </td>
 
-                                    <td class="px-5 py-3 text-[#50514F]/70">
+                                    <td class="px-5 py-3 text-[var(--theme-text)]">
                                         {{ $movimiento['ubicacion'] ?? '—' }}
                                     </td>
 
@@ -987,7 +989,7 @@
 
 
                 {{-- Móvil --}}
-                <div class="md:hidden divide-y divide-[#50514F]/10">
+                <div class="md:hidden divide-y divide-[var(--theme-border)]">
 
                     @foreach ($movimientos as $movimiento)
 
@@ -1006,7 +1008,7 @@
                                     class="
                                         text-sm
                                         font-medium
-                                        text-[#50514F]
+                                        text-[var(--theme-text-strong)]
                                     "
                                 >
                                     {{ $movimiento['operacion'] ?? 'Movimiento' }}
@@ -1016,7 +1018,7 @@
                                     class="
                                         shrink-0
                                         text-xs
-                                        text-[#50514F]/45
+                                        text-[var(--theme-text-muted)]
                                     "
                                 >
                                     {{ $formatDate(
@@ -1030,16 +1032,16 @@
 
                             <div class="mt-2 space-y-1">
 
-                                <p class="text-xs text-[#50514F]/60">
-                                    <span class="text-[#50514F]/40">
+                                <p class="text-xs text-[var(--theme-text-muted)]">
+                                    <span class="text-[var(--theme-text-muted)]">
                                         Responsable:
                                     </span>
 
                                     {{ $movimiento['responsable'] ?? '—' }}
                                 </p>
 
-                                <p class="text-xs text-[#50514F]/60">
-                                    <span class="text-[#50514F]/40">
+                                <p class="text-xs text-[var(--theme-text-muted)]">
+                                    <span class="text-[var(--theme-text-muted)]">
                                         Ubicación:
                                     </span>
 
@@ -1062,7 +1064,7 @@
                         py-10
                         text-center
                         text-sm
-                        text-[#50514F]/40
+                        text-[var(--theme-text-muted)]
                     "
                 >
                     No hay movimientos registrados.
@@ -1078,9 +1080,9 @@
         ======================================================== --}}
         <section
             class="
-                bg-white
+                bg-[var(--theme-surface)]
                 border
-                border-[#50514F]/10
+                border-[var(--theme-border)]
                 rounded-xl
                 overflow-hidden
             "
@@ -1094,12 +1096,12 @@
                     p-4
                     sm:p-5
                     border-b
-                    border-[#50514F]/10
+                    border-[var(--theme-border)]
                 "
             >
 
                 <svg
-                    class="w-5 h-5 text-[#50514F]/70"
+                    class="w-5 h-5 text-[var(--theme-text)]"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -1116,7 +1118,7 @@
                         text-sm
                         sm:text-base
                         font-semibold
-                        text-[#50514F]
+                        text-[var(--theme-text-strong)]
                     "
                 >
                     Mantenimiento e intervenciones
@@ -1127,13 +1129,19 @@
 
             @if (count($mantenimientos) > 0)
 
-                <div class="divide-y divide-[#50514F]/10">
+                <div class="divide-y divide-[var(--theme-border)]">
 
                     @foreach ($mantenimientos as $mantenimiento)
 
                         <div class="p-4">
 
-                            <p class="text-sm font-medium text-[#50514F]">
+                            <p
+                                class="
+                                    text-sm
+                                    font-medium
+                                    text-[var(--theme-text-strong)]
+                                "
+                            >
                                 {{ $mantenimiento['tipo'] ?? 'Mantenimiento' }}
                             </p>
 
@@ -1151,8 +1159,10 @@
                         flex-col
                         items-center
                         justify-center
+
                         px-5
                         py-10
+
                         text-center
                     "
                 >
@@ -1161,13 +1171,18 @@
                         class="
                             w-10
                             h-10
+
                             rounded-full
-                            bg-[#50514F]/5
+
+                            bg-[var(--theme-surface-soft)]
+
                             flex
                             items-center
                             justify-center
+
                             mb-3
-                            text-[#50514F]/35
+
+                            text-[var(--theme-text-muted)]
                         "
                     >
                         <svg
@@ -1184,7 +1199,7 @@
                         </svg>
                     </div>
 
-                    <p class="text-sm text-[#50514F]/50">
+                    <p class="text-sm text-[var(--theme-text-muted)]">
                         Sin mantenimientos registrados
                     </p>
 
@@ -1192,7 +1207,7 @@
                         class="
                             mt-1
                             text-xs
-                            text-[#50514F]/35
+                            text-[var(--theme-text-muted)]
                         "
                     >
                         Los mantenimientos del equipo aparecerán aquí.
@@ -1217,9 +1232,11 @@
                 mt-4
                 sm:mt-6
 
-                bg-[#247BA0]/5
+                bg-[var(--theme-primary-soft-subtle)]
+
                 border
-                border-[#247BA0]/10
+                border-[var(--theme-primary-border)]
+
                 rounded-xl
 
                 px-4
@@ -1231,7 +1248,7 @@
                 class="
                     text-xs
                     font-semibold
-                    text-[#247BA0]
+                    text-[var(--theme-primary)]
                     mb-1
                 "
             >
@@ -1242,7 +1259,7 @@
                 class="
                     text-xs
                     leading-relaxed
-                    text-[#50514F]/70
+                    text-[var(--theme-text)]
                 "
             >
                 {{ $equipo['comentarios'] }}

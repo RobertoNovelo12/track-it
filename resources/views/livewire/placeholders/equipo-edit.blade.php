@@ -7,10 +7,13 @@
         class="
             flex
             flex-col
+
             sm:flex-row
             sm:items-center
             sm:justify-end
+
             gap-3
+
             mb-4
         "
     >
@@ -18,20 +21,27 @@
         <div
             class="
                 h-10
+
                 w-full
                 sm:w-32
+
                 rounded-lg
-                bg-[#50514F]/10
+
+                bg-[var(--theme-surface-soft)]
             "
         ></div>
+
 
         <div
             class="
                 h-10
+
                 w-full
                 sm:w-28
+
                 rounded-lg
-                bg-red-100/70
+
+                bg-[var(--theme-danger-soft)]
             "
         ></div>
 
@@ -45,10 +55,13 @@
         ======================================================== --}}
         <section
             class="
-                bg-white
+                bg-[var(--theme-surface)]
+
                 border
-                border-[#50514F]/10
+                border-[var(--theme-border)]
+
                 rounded-xl
+
                 p-4
                 sm:p-6
             "
@@ -59,10 +72,13 @@
                 class="
                     flex
                     flex-col
+
                     gap-2
+
                     sm:flex-row
                     sm:items-center
                     sm:justify-between
+
                     mb-5
                 "
             >
@@ -71,8 +87,10 @@
                     class="
                         h-4
                         w-36
+
                         rounded
-                        bg-[#50514F]/10
+
+                        bg-[var(--theme-surface-soft)]
                     "
                 ></div>
 
@@ -83,17 +101,22 @@
                         class="
                             h-3
                             w-28
+
                             rounded
-                            bg-[#50514F]/10
+
+                            bg-[var(--theme-surface-soft)]
                         "
                     ></div>
+
 
                     <div
                         class="
                             h-6
                             w-24
+
                             rounded-md
-                            bg-[#247BA0]/10
+
+                            bg-[var(--theme-primary-soft)]
                         "
                     ></div>
 
@@ -107,8 +130,10 @@
                 class="
                     grid
                     grid-cols-1
+
                     md:grid-cols-2
                     xl:grid-cols-3
+
                     gap-4
                 "
             >
@@ -120,19 +145,29 @@
                         <div
                             class="
                                 h-3
-                                {{ $i % 3 === 0 ? 'w-32' : 'w-24' }}
+
+                                {{ $i % 3 === 0
+                                    ? 'w-32'
+                                    : 'w-24'
+                                }}
+
                                 rounded
-                                bg-[#50514F]/10
+
+                                bg-[var(--theme-surface-soft)]
+
                                 mb-2
                             "
                         ></div>
+
 
                         <div
                             class="
                                 h-10
                                 w-full
+
                                 rounded-md
-                                bg-[#50514F]/10
+
+                                bg-[var(--theme-surface-soft)]
                             "
                         ></div>
 
@@ -150,10 +185,13 @@
         ======================================================== --}}
         <section
             class="
-                bg-white
+                bg-[var(--theme-surface)]
+
                 border
-                border-[#50514F]/10
+                border-[var(--theme-border)]
+
                 rounded-xl
+
                 p-4
                 sm:p-6
             "
@@ -163,8 +201,11 @@
                 class="
                     h-4
                     w-40
+
                     rounded
-                    bg-[#50514F]/10
+
+                    bg-[var(--theme-surface-soft)]
+
                     mb-5
                 "
             ></div>
@@ -174,8 +215,10 @@
                 class="
                     grid
                     grid-cols-1
+
                     md:grid-cols-2
                     xl:grid-cols-3
+
                     gap-4
                 "
             >
@@ -188,18 +231,24 @@
                             class="
                                 h-3
                                 w-28
+
                                 rounded
-                                bg-[#50514F]/10
+
+                                bg-[var(--theme-surface-soft)]
+
                                 mb-2
                             "
                         ></div>
+
 
                         <div
                             class="
                                 h-10
                                 w-full
+
                                 rounded-md
-                                bg-[#50514F]/10
+
+                                bg-[var(--theme-surface-soft)]
                             "
                         ></div>
 
@@ -217,10 +266,13 @@
         ======================================================== --}}
         <section
             class="
-                bg-white
+                bg-[var(--theme-surface)]
+
                 border
-                border-[#50514F]/10
+                border-[var(--theme-border)]
+
                 rounded-xl
+
                 p-4
                 sm:p-6
             "
@@ -230,8 +282,11 @@
                 class="
                     h-4
                     w-40
+
                     rounded
-                    bg-[#50514F]/10
+
+                    bg-[var(--theme-surface-soft)]
+
                     mb-5
                 "
             ></div>
@@ -241,9 +296,12 @@
                 class="
                     grid
                     grid-cols-1
+
                     md:grid-cols-2
                     xl:grid-cols-3
+
                     gap-4
+
                     mb-5
                 "
             >
@@ -255,19 +313,29 @@
                         <div
                             class="
                                 h-3
-                                {{ $i === 0 ? 'w-36' : 'w-24' }}
+
+                                {{ $i === 0
+                                    ? 'w-36'
+                                    : 'w-24'
+                                }}
+
                                 rounded
-                                bg-[#50514F]/10
+
+                                bg-[var(--theme-surface-soft)]
+
                                 mb-2
                             "
                         ></div>
+
 
                         <div
                             class="
                                 h-10
                                 w-full
+
                                 rounded-md
-                                bg-[#50514F]/10
+
+                                bg-[var(--theme-surface-soft)]
                             "
                         ></div>
 
@@ -278,8 +346,11 @@
                                 class="
                                     h-2.5
                                     w-3/4
+
                                     rounded
-                                    bg-[#50514F]/10
+
+                                    bg-[var(--theme-surface-soft)]
+
                                     mt-2
                                 "
                             ></div>
@@ -300,18 +371,24 @@
                     class="
                         h-3
                         w-20
+
                         rounded
-                        bg-[#50514F]/10
+
+                        bg-[var(--theme-surface-soft)]
+
                         mb-2
                     "
                 ></div>
+
 
                 <div
                     class="
                         h-24
                         w-full
+
                         rounded-md
-                        bg-[#50514F]/10
+
+                        bg-[var(--theme-surface-soft)]
                     "
                 ></div>
 
@@ -327,32 +404,44 @@
             class="
                 flex
                 flex-col-reverse
+
                 sm:flex-row
                 sm:items-center
                 sm:justify-end
+
                 gap-3
+
                 pt-1
                 pb-2
             "
         >
 
+            {{-- Cancelar --}}
             <div
                 class="
                     h-11
+
                     w-full
                     sm:w-24
+
                     rounded-lg
-                    bg-[#50514F]/10
+
+                    bg-[var(--theme-surface-soft)]
                 "
             ></div>
 
+
+            {{-- Guardar --}}
             <div
                 class="
                     h-11
+
                     w-full
                     sm:w-36
+
                     rounded-lg
-                    bg-[#247BA0]/15
+
+                    bg-[var(--theme-primary-soft)]
                 "
             ></div>
 

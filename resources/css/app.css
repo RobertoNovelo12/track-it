@@ -7,3 +7,210 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+/* ============================================================
+   TEMA GLOBAL
+============================================================ */
+
+:root {
+    /* Fondo general */
+    --theme-bg: #FFFCFF;
+
+    /* Tarjetas, modales, inputs */
+    --theme-surface: #FFFFFF;
+
+    /* Superficie secundaria */
+    --theme-surface-soft: #F6F6F6;
+
+    /* Texto principal */
+    --theme-text: #50514F;
+
+    /* Texto fuerte / títulos */
+    --theme-text-strong: #25344A;
+
+    /* Texto secundario */
+    --theme-text-muted: #7A7B79;
+
+    /* Bordes */
+    --theme-border: rgba(80, 81, 79, 0.10);
+
+    /* Bordes un poco más visibles */
+    --theme-border-strong: rgba(80, 81, 79, 0.20);
+
+    /* Azul principal */
+    --theme-primary: #247BA0;
+
+    /* Hover azul */
+    --theme-primary-hover: #1D6688;
+
+    /* Fondo azul suave */
+    --theme-primary-soft: rgba(36, 123, 160, 0.10);
+
+    /* Fondo azul todavía más sutil */
+    --theme-primary-soft-subtle: rgba(36, 123, 160, 0.05);
+
+    /* Bordes azules */
+    --theme-primary-border: rgba(36, 123, 160, 0.30);
+    --theme-primary-border-strong: rgba(36, 123, 160, 0.50);
+
+    /* Estados de peligro */
+    --theme-danger: #EF4444;
+    --theme-danger-soft: rgba(239, 68, 68, 0.08);
+
+    /* Overlay móvil / modal */
+    --theme-overlay: rgba(0, 0, 0, 0.40);
+
+    /* Sombras */
+    --theme-shadow: rgba(0, 0, 0, 0.10);
+
+    /* Estados informativos */
+    --theme-warning: #CB8B2A;
+    --theme-warning-soft: rgba(203, 139, 42, 0.15);
+    --theme-warning-border: rgba(203, 139, 42, 0.22);
+
+    --theme-success: #16A34A;
+    --theme-success-soft: rgba(22, 163, 74, 0.14);
+    --theme-success-border: rgba(22, 163, 74, 0.24);
+}
+
+
+/* ============================================================
+   MODO OSCURO
+============================================================ */
+
+html.dark {
+    /* Fondo general */
+    --theme-bg: #111416;
+
+    /* Tarjetas, modales, inputs */
+    --theme-surface: #181C1F;
+
+    /* Superficie secundaria */
+    --theme-surface-soft: #202529;
+
+    /* Texto principal */
+    --theme-text: #D5D8D9;
+
+    /* Texto fuerte / títulos */
+    --theme-text-strong: #F3F5F6;
+
+    /* Texto secundario */
+    --theme-text-muted: #969DA1;
+
+    /* Bordes */
+    --theme-border: rgba(255, 255, 255, 0.08);
+
+    /* Bordes un poco más visibles */
+    --theme-border-strong: rgba(255, 255, 255, 0.15);
+
+    /* Azul principal */
+    --theme-primary: #3694BC;
+
+    /* Hover azul */
+    --theme-primary-hover: #46A4CC;
+
+    /* Fondo azul suave */
+    --theme-primary-soft: rgba(54, 148, 188, 0.12);
+
+    /* Fondo azul todavía más sutil */
+    --theme-primary-soft-subtle: rgba(54, 148, 188, 0.08);
+
+    /* Bordes azules */
+    --theme-primary-border: rgba(54, 148, 188, 0.38);
+    --theme-primary-border-strong: rgba(54, 148, 188, 0.58);
+
+    /* Estados de peligro */
+    --theme-danger: #F87171;
+    --theme-danger-soft: rgba(248, 113, 113, 0.12);
+
+    /* Overlay móvil / modal */
+    --theme-overlay: rgba(0, 0, 0, 0.58);
+
+    /* Sombras */
+    --theme-shadow: rgba(0, 0, 0, 0.35);
+
+    /* Estados informativos */
+    --theme-warning: #E0A84A;
+    --theme-warning-soft: rgba(224, 168, 74, 0.14);
+    --theme-warning-border: rgba(224, 168, 74, 0.24);
+
+    --theme-success: #4ADE80;
+    --theme-success-soft: rgba(74, 222, 128, 0.12);
+    --theme-success-border: rgba(74, 222, 128, 0.22);
+}
+
+
+/* ============================================================
+   CLASES SEMÁNTICAS
+============================================================ */
+
+.theme-bg {
+    background-color: var(--theme-bg);
+}
+
+.theme-surface {
+    background-color: var(--theme-surface);
+}
+
+.theme-surface-soft {
+    background-color: var(--theme-surface-soft);
+}
+
+.theme-text {
+    color: var(--theme-text);
+}
+
+.theme-text-strong {
+    color: var(--theme-text-strong);
+}
+
+.theme-text-muted {
+    color: var(--theme-text-muted);
+}
+
+.theme-border {
+    border-color: var(--theme-border);
+}
+
+.theme-border-strong {
+    border-color: var(--theme-border-strong);
+}
+
+.theme-primary {
+    color: var(--theme-primary);
+}
+
+.theme-primary-bg {
+    background-color: var(--theme-primary);
+}
+
+.theme-primary-bg:hover {
+    background-color: var(--theme-primary-hover);
+}
+
+/*
+ * Sombra semántica para dropdowns/modales.
+ * Así también cambia de intensidad entre tema claro y oscuro.
+ */
+.theme-shadow-xl {
+    box-shadow:
+        0 20px 25px -5px var(--theme-shadow),
+        0 8px 10px -6px var(--theme-shadow);
+}
+
+/* ============================================================
+   LOGO - PANTALLAS DE AUTENTICACIÓN
+============================================================ */
+
+#guestLogo {
+    transition:
+        filter 200ms ease,
+        opacity 200ms ease;
+}
+
+
+/* Modo oscuro */
+html.dark #guestLogo {
+    filter: brightness(0) invert(1);
+    opacity: 0.92;
+}

@@ -66,9 +66,9 @@
             items-start
             gap-3
 
-            bg-emerald-50
+            bg-[var(--theme-surface)]
             border
-            border-emerald-200
+            border-emerald-500/30
             rounded-xl
             shadow-lg
 
@@ -84,11 +84,11 @@
                 w-8
                 h-8
                 rounded-full
-                bg-emerald-100
+                bg-emerald-500/15
                 flex
                 items-center
                 justify-center
-                text-emerald-600
+                text-emerald-500
             "
         >
             <svg
@@ -106,12 +106,12 @@
         {{-- Texto --}}
         <div class="min-w-0 flex-1">
 
-            <p class="text-sm font-semibold text-emerald-800">
+            <p class="text-sm font-semibold text-emerald-500">
                 Registro completado
             </p>
 
             <p
-                class="mt-0.5 text-xs text-emerald-700"
+                class="mt-0.5 text-xs text-[var(--theme-text)]"
                 x-text="successMessage"
             ></p>
 
@@ -124,8 +124,8 @@
             @click="successVisible = false"
             class="
                 shrink-0
-                text-emerald-600/60
-                hover:text-emerald-700
+                text-emerald-500/60
+                hover:text-emerald-500
                 transition-colors
             "
             aria-label="Cerrar mensaje"
@@ -176,9 +176,9 @@
             ==================================================== --}}
             <section
                 class="
-                    bg-white
+                    bg-[var(--theme-surface)]
                     border
-                    border-[#50514F]/10
+                    border-[var(--theme-border)]
                     rounded-xl
                     p-4
                     sm:p-6
@@ -204,7 +204,7 @@
                         class="
                             text-sm
                             font-semibold
-                            text-[#50514F]
+                            text-[var(--theme-text-strong)]
                         "
                     >
                         Información general
@@ -218,7 +218,7 @@
                             items-center
                             gap-2
                             text-xs
-                            text-[#50514F]/55
+                            text-[var(--theme-text-muted)]
                         "
                     >
 
@@ -231,11 +231,11 @@
                                 inline-flex
                                 items-center
                                 rounded-md
-                                bg-[#247BA0]/10
+                                bg-[var(--theme-primary-soft)]
                                 px-2.5
                                 py-1
                                 font-semibold
-                                text-[#247BA0]
+                                text-[var(--theme-primary)]
                             "
                         >
                             {{ $this->codigoInventarioPreview }}
@@ -263,7 +263,7 @@
                             class="
                                 block
                                 text-xs
-                                text-[#50514F]/60
+                                text-[var(--theme-text-muted)]
                                 mb-1.5
                             "
                         >
@@ -278,20 +278,24 @@
                                 w-full
                                 min-w-0
                                 text-sm
+                                text-[var(--theme-text)]
+                                bg-[var(--theme-surface)]
                                 border
-                                border-[#50514F]/15
+                                border-[var(--theme-border-strong)]
                                 rounded-md
                                 px-3
                                 py-2.5
-                                placeholder:text-[#50514F]/40
+                                placeholder:text-[var(--theme-text-muted)]
                                 focus:ring-1
-                                focus:ring-[#247BA0]
-                                focus:border-[#247BA0]
+                                focus:ring-[var(--theme-primary)]
+                                focus:border-[var(--theme-primary)]
+                                outline-none
+                                transition-colors
                             "
                         >
 
                         @error('nombreEquipo')
-                            <p class="mt-1 text-xs text-red-600">
+                            <p class="mt-1 text-xs text-[var(--theme-danger)]">
                                 {{ $message }}
                             </p>
                         @enderror
@@ -306,7 +310,7 @@
                             class="
                                 block
                                 text-xs
-                                text-[#50514F]/60
+                                text-[var(--theme-text-muted)]
                                 mb-1.5
                             "
                         >
@@ -321,15 +325,19 @@
                                 w-full
                                 min-w-0
                                 text-sm
+                                text-[var(--theme-text)]
+                                bg-[var(--theme-surface)]
                                 border
-                                border-[#50514F]/15
+                                border-[var(--theme-border-strong)]
                                 rounded-md
                                 px-3
                                 py-2.5
-                                placeholder:text-[#50514F]/40
+                                placeholder:text-[var(--theme-text-muted)]
                                 focus:ring-1
-                                focus:ring-[#247BA0]
-                                focus:border-[#247BA0]
+                                focus:ring-[var(--theme-primary)]
+                                focus:border-[var(--theme-primary)]
+                                outline-none
+                                transition-colors
                             "
                         >
 
@@ -350,7 +358,7 @@
                         />
 
                         @error('idEstadoActivo')
-                            <p class="mt-1 text-xs text-red-600">
+                            <p class="mt-1 text-xs text-[var(--theme-danger)]">
                                 {{ $message }}
                             </p>
                         @enderror
@@ -372,7 +380,7 @@
                         />
 
                         @error('idTipoEquipo')
-                            <p class="mt-1 text-xs text-red-600">
+                            <p class="mt-1 text-xs text-[var(--theme-danger)]">
                                 {{ $message }}
                             </p>
                         @enderror
@@ -394,7 +402,7 @@
                         />
 
                         @error('idMarca')
-                            <p class="mt-1 text-xs text-red-600">
+                            <p class="mt-1 text-xs text-[var(--theme-danger)]">
                                 {{ $message }}
                             </p>
                         @enderror
@@ -433,7 +441,7 @@
                             class="
                                 block
                                 text-xs
-                                text-[#50514F]/60
+                                text-[var(--theme-text-muted)]
                                 mb-1.5
                             "
                         >
@@ -448,15 +456,19 @@
                                 w-full
                                 min-w-0
                                 text-sm
+                                text-[var(--theme-text)]
+                                bg-[var(--theme-surface)]
                                 border
-                                border-[#50514F]/15
+                                border-[var(--theme-border-strong)]
                                 rounded-md
                                 px-3
                                 py-2.5
-                                placeholder:text-[#50514F]/40
+                                placeholder:text-[var(--theme-text-muted)]
                                 focus:ring-1
-                                focus:ring-[#247BA0]
-                                focus:border-[#247BA0]
+                                focus:ring-[var(--theme-primary)]
+                                focus:border-[var(--theme-primary)]
+                                outline-none
+                                transition-colors
                             "
                         >
 
@@ -470,7 +482,7 @@
                             class="
                                 block
                                 text-xs
-                                text-[#50514F]/60
+                                text-[var(--theme-text-muted)]
                                 mb-1.5
                             "
                         >
@@ -484,14 +496,18 @@
                                 w-full
                                 min-w-0
                                 text-sm
+                                text-[var(--theme-text)]
+                                bg-[var(--theme-surface)]
                                 border
-                                border-[#50514F]/15
+                                border-[var(--theme-border-strong)]
                                 rounded-md
                                 px-3
                                 py-2.5
                                 focus:ring-1
-                                focus:ring-[#247BA0]
-                                focus:border-[#247BA0]
+                                focus:ring-[var(--theme-primary)]
+                                focus:border-[var(--theme-primary)]
+                                outline-none
+                                transition-colors
                             "
                         >
 
@@ -505,7 +521,7 @@
                             class="
                                 block
                                 text-xs
-                                text-[#50514F]/60
+                                text-[var(--theme-text-muted)]
                                 mb-1.5
                             "
                         >
@@ -520,20 +536,24 @@
                                 w-full
                                 min-w-0
                                 text-sm
+                                text-[var(--theme-text)]
+                                bg-[var(--theme-surface)]
                                 border
-                                border-[#50514F]/15
+                                border-[var(--theme-border-strong)]
                                 rounded-md
                                 px-3
                                 py-2.5
-                                placeholder:text-[#50514F]/40
+                                placeholder:text-[var(--theme-text-muted)]
                                 focus:ring-1
-                                focus:ring-[#247BA0]
-                                focus:border-[#247BA0]
+                                focus:ring-[var(--theme-primary)]
+                                focus:border-[var(--theme-primary)]
+                                outline-none
+                                transition-colors
                             "
                         >
 
                         @error('numeroFactura')
-                            <p class="mt-1 text-xs text-red-600">
+                            <p class="mt-1 text-xs text-[var(--theme-danger)]">
                                 {{ $message }}
                             </p>
                         @enderror
@@ -548,7 +568,7 @@
                             class="
                                 block
                                 text-xs
-                                text-[#50514F]/60
+                                text-[var(--theme-text-muted)]
                                 mb-1.5
                             "
                         >
@@ -563,20 +583,24 @@
                                 w-full
                                 min-w-0
                                 text-sm
+                                text-[var(--theme-text)]
+                                bg-[var(--theme-surface)]
                                 border
-                                border-[#50514F]/15
+                                border-[var(--theme-border-strong)]
                                 rounded-md
                                 px-3
                                 py-2.5
-                                placeholder:text-[#50514F]/40
+                                placeholder:text-[var(--theme-text-muted)]
                                 focus:ring-1
-                                focus:ring-[#247BA0]
-                                focus:border-[#247BA0]
+                                focus:ring-[var(--theme-primary)]
+                                focus:border-[var(--theme-primary)]
+                                outline-none
+                                transition-colors
                             "
                         >
 
                         @error('numeroSerie')
-                            <p class="mt-1 text-xs text-red-600">
+                            <p class="mt-1 text-xs text-[var(--theme-danger)]">
                                 {{ $message }}
                             </p>
                         @enderror
@@ -615,9 +639,9 @@
                 <section
                     wire:key="child-fields-{{ $idTipoEquipo }}"
                     class="
-                        bg-white
+                        bg-[var(--theme-surface)]
                         border
-                        border-[#50514F]/10
+                        border-[var(--theme-border)]
                         rounded-xl
                         p-4
                         sm:p-6
@@ -628,7 +652,7 @@
                         class="
                             text-sm
                             font-semibold
-                            text-[#50514F]
+                            text-[var(--theme-text-strong)]
                             mb-5
                         "
                     >
@@ -671,15 +695,16 @@
                                         id="cf_{{ $field }}"
                                         class="
                                             rounded
-                                            border-[#50514F]/30
-                                            text-[#247BA0]
-                                            focus:ring-[#247BA0]
+                                            border-[var(--theme-border-strong)]
+                                            bg-[var(--theme-surface)]
+                                            text-[var(--theme-primary)]
+                                            focus:ring-[var(--theme-primary)]
                                         "
                                     >
 
                                     <label
                                         for="cf_{{ $field }}"
-                                        class="text-sm text-[#50514F]"
+                                        class="text-sm text-[var(--theme-text)]"
                                     >
                                         {{ $this->fieldLabels[$field] ?? $field }}
                                     </label>
@@ -713,7 +738,7 @@
                                         class="
                                             block
                                             text-xs
-                                            text-[#50514F]/60
+                                            text-[var(--theme-text-muted)]
                                             mb-1.5
                                         "
                                     >
@@ -730,14 +755,18 @@
                                                 w-full
                                                 min-w-0
                                                 text-sm
+                                                text-[var(--theme-text)]
+                                                bg-[var(--theme-surface)]
                                                 border
-                                                border-[#50514F]/15
+                                                border-[var(--theme-border-strong)]
                                                 rounded-md
                                                 px-3
                                                 py-2.5
                                                 focus:ring-1
-                                                focus:ring-[#247BA0]
-                                                focus:border-[#247BA0]
+                                                focus:ring-[var(--theme-primary)]
+                                                focus:border-[var(--theme-primary)]
+                                                outline-none
+                                                transition-colors
                                             "
                                         >
 
@@ -751,14 +780,18 @@
                                                 w-full
                                                 min-w-0
                                                 text-sm
+                                                text-[var(--theme-text)]
+                                                bg-[var(--theme-surface)]
                                                 border
-                                                border-[#50514F]/15
+                                                border-[var(--theme-border-strong)]
                                                 rounded-md
                                                 px-3
                                                 py-2.5
                                                 focus:ring-1
-                                                focus:ring-[#247BA0]
-                                                focus:border-[#247BA0]
+                                                focus:ring-[var(--theme-primary)]
+                                                focus:border-[var(--theme-primary)]
+                                                outline-none
+                                                transition-colors
                                             "
                                         >
 
@@ -772,14 +805,18 @@
                                                 w-full
                                                 min-w-0
                                                 text-sm
+                                                text-[var(--theme-text)]
+                                                bg-[var(--theme-surface)]
                                                 border
-                                                border-[#50514F]/15
+                                                border-[var(--theme-border-strong)]
                                                 rounded-md
                                                 px-3
                                                 py-2.5
                                                 focus:ring-1
-                                                focus:ring-[#247BA0]
-                                                focus:border-[#247BA0]
+                                                focus:ring-[var(--theme-primary)]
+                                                focus:border-[var(--theme-primary)]
+                                                outline-none
+                                                transition-colors
                                             "
                                         >
 
@@ -803,9 +840,9 @@
             ==================================================== --}}
             <section
                 class="
-                    bg-white
+                    bg-[var(--theme-surface)]
                     border
-                    border-[#50514F]/10
+                    border-[var(--theme-border)]
                     rounded-xl
                     p-4
                     sm:p-6
@@ -816,7 +853,7 @@
                     class="
                         text-sm
                         font-semibold
-                        text-[#50514F]
+                        text-[var(--theme-text-strong)]
                         mb-5
                     "
                 >
@@ -842,7 +879,7 @@
                             class="
                                 block
                                 text-xs
-                                text-[#50514F]/60
+                                text-[var(--theme-text-muted)]
                                 mb-1.5
                             "
                         >
@@ -857,15 +894,19 @@
                                 w-full
                                 min-w-0
                                 text-sm
+                                text-[var(--theme-text)]
+                                bg-[var(--theme-surface)]
                                 border
-                                border-[#50514F]/15
+                                border-[var(--theme-border-strong)]
                                 rounded-md
                                 px-3
                                 py-2.5
-                                placeholder:text-[#50514F]/40
+                                placeholder:text-[var(--theme-text-muted)]
                                 focus:ring-1
-                                focus:ring-[#247BA0]
-                                focus:border-[#247BA0]
+                                focus:ring-[var(--theme-primary)]
+                                focus:border-[var(--theme-primary)]
+                                outline-none
+                                transition-colors
                             "
                         >
 
@@ -874,7 +915,7 @@
                                 mt-1.5
                                 text-[11px]
                                 leading-relaxed
-                                text-[#50514F]/50
+                                text-[var(--theme-text-muted)]
                             "
                         >
                             Si lo dejas vacío, el equipo queda como stock disponible.
@@ -906,7 +947,7 @@
                             class="
                                 block
                                 text-xs
-                                text-[#50514F]/60
+                                text-[var(--theme-text-muted)]
                                 mb-1.5
                             "
                         >
@@ -920,14 +961,18 @@
                                 w-full
                                 min-w-0
                                 text-sm
+                                text-[var(--theme-text)]
+                                bg-[var(--theme-surface)]
                                 border
-                                border-[#50514F]/15
+                                border-[var(--theme-border-strong)]
                                 rounded-md
                                 px-3
                                 py-2.5
                                 focus:ring-1
-                                focus:ring-[#247BA0]
-                                focus:border-[#247BA0]
+                                focus:ring-[var(--theme-primary)]
+                                focus:border-[var(--theme-primary)]
+                                outline-none
+                                transition-colors
                             "
                         >
 
@@ -948,7 +993,7 @@
                         />
 
                         @error('idArea')
-                            <p class="mt-1 text-xs text-red-600">
+                            <p class="mt-1 text-xs text-[var(--theme-danger)]">
                                 {{ $message }}
                             </p>
                         @enderror
@@ -986,7 +1031,7 @@
                         class="
                             block
                             text-xs
-                            text-[#50514F]/60
+                            text-[var(--theme-text-muted)]
                             mb-1.5
                         "
                     >
@@ -1001,16 +1046,20 @@
                             w-full
                             min-w-0
                             text-sm
+                            text-[var(--theme-text)]
+                            bg-[var(--theme-surface)]
                             border
-                            border-[#50514F]/15
+                            border-[var(--theme-border-strong)]
                             rounded-md
                             px-3
                             py-2.5
-                            placeholder:text-[#50514F]/40
+                            placeholder:text-[var(--theme-text-muted)]
                             resize-y
                             focus:ring-1
-                            focus:ring-[#247BA0]
-                            focus:border-[#247BA0]
+                            focus:ring-[var(--theme-primary)]
+                            focus:border-[var(--theme-primary)]
+                            outline-none
+                            transition-colors
                         "
                     ></textarea>
 
@@ -1049,16 +1098,17 @@
                         justify-center
 
                         border
-                        border-[#50514F]/20
+                        border-[var(--theme-border-strong)]
                         rounded-lg
                         px-5
 
                         text-sm
                         font-medium
-                        text-[#50514F]/70
+                        text-[var(--theme-text-muted)]
 
-                        bg-white
-                        hover:bg-[#50514F]/5
+                        bg-[var(--theme-surface)]
+                        hover:bg-[var(--theme-surface-soft)]
+                        hover:text-[var(--theme-text)]
 
                         transition-colors
                     "
@@ -1081,8 +1131,8 @@
                         justify-center
                         gap-2
 
-                        bg-[#247BA0]
-                        hover:bg-[#1d6688]
+                        bg-[var(--theme-primary)]
+                        hover:bg-[var(--theme-primary-hover)]
 
                         disabled:opacity-60
                         disabled:cursor-not-allowed
@@ -1172,7 +1222,7 @@
                 items-center
                 justify-center
 
-                bg-white/55
+                bg-[var(--theme-overlay)]
                 backdrop-blur-[1px]
             "
         >
@@ -1183,9 +1233,9 @@
                     items-center
                     gap-3
 
-                    bg-white
+                    bg-[var(--theme-surface)]
                     border
-                    border-[#50514F]/10
+                    border-[var(--theme-border)]
                     rounded-xl
                     shadow-lg
 
@@ -1199,7 +1249,7 @@
                         w-5
                         h-5
                         animate-spin
-                        text-[#247BA0]
+                        text-[var(--theme-primary)]
                     "
                     viewBox="0 0 24 24"
                     fill="none"
@@ -1228,7 +1278,7 @@
                         class="
                             text-sm
                             font-semibold
-                            text-[#50514F]
+                            text-[var(--theme-text-strong)]
                         "
                     >
                         Guardando equipo...
@@ -1237,7 +1287,7 @@
                     <p
                         class="
                             text-xs
-                            text-[#50514F]/50
+                            text-[var(--theme-text-muted)]
                             mt-0.5
                         "
                     >

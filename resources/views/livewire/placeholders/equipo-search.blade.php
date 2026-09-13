@@ -1,82 +1,31 @@
 <div class="animate-pulse">
 
     {{-- ============================================================
-        BUSCADOR
+        ACCIONES
     ============================================================ --}}
-    <section
+    <div
         class="
-            bg-white
-            border border-[#50514F]/10
-            rounded-xl
-            p-4
-            sm:p-5
+            flex
+            justify-end
+
             mb-4
             sm:mb-6
         "
     >
 
+        {{-- Botón Inventario --}}
         <div
             class="
-                flex
-                flex-col
-                gap-3
-                sm:flex-row
-                sm:items-center
-                sm:justify-between
+                h-10
+                w-28
+
+                rounded-lg
+
+                bg-[var(--theme-surface-soft)]
             "
-        >
+        ></div>
 
-            {{-- Campo de búsqueda --}}
-            <div
-                class="
-                    relative
-                    w-full
-                    sm:max-w-xl
-                "
-            >
-
-                <div
-                    class="
-                        h-12
-                        w-full
-                        rounded-lg
-                        bg-[#50514F]/10
-                    "
-                ></div>
-
-                {{-- Lupa --}}
-                <div
-                    class="
-                        absolute
-                        left-4
-                        top-1/2
-                        -translate-y-1/2
-
-                        w-5
-                        h-5
-
-                        rounded-full
-                        bg-[#50514F]/10
-                    "
-                ></div>
-
-            </div>
-
-
-            {{-- Botón inventario --}}
-            <div
-                class="
-                    h-10
-                    w-full
-                    sm:w-28
-                    rounded-lg
-                    bg-[#50514F]/10
-                "
-            ></div>
-
-        </div>
-
-    </section>
+    </div>
 
 
     {{-- ============================================================
@@ -87,29 +36,39 @@
             flex
             items-center
             justify-between
+
             gap-3
+
             mb-4
         "
     >
 
         <div>
 
+            {{-- Título --}}
             <div
                 class="
                     h-4
                     w-40
+
                     rounded
-                    bg-[#50514F]/10
+
+                    bg-[var(--theme-surface-soft)]
                 "
             ></div>
 
+
+            {{-- Cantidad de resultados --}}
             <div
                 class="
                     h-3
                     w-52
                     max-w-full
+
                     rounded
-                    bg-[#50514F]/10
+
+                    bg-[var(--theme-surface-soft)]
+
                     mt-2
                 "
             ></div>
@@ -127,6 +86,7 @@
             grid
             grid-cols-1
             lg:grid-cols-2
+
             gap-3
             sm:gap-4
         "
@@ -136,20 +96,27 @@
 
             <article
                 class="
-                    bg-white
-                    border border-[#50514F]/10
+                    bg-[var(--theme-surface)]
+
+                    border
+                    border-[var(--theme-border)]
+
                     rounded-xl
+
                     p-4
                     sm:p-5
                 "
             >
 
-                {{-- Cabecera --}}
+                {{-- ====================================================
+                    CABECERA
+                ==================================================== --}}
                 <div
                     class="
                         flex
                         items-start
                         justify-between
+
                         gap-3
                     "
                 >
@@ -161,8 +128,10 @@
                             class="
                                 h-4
                                 w-3/4
+
                                 rounded
-                                bg-[#50514F]/10
+
+                                bg-[var(--theme-surface-soft)]
                             "
                         ></div>
 
@@ -172,8 +141,11 @@
                             class="
                                 h-3
                                 w-40
+
                                 rounded
-                                bg-[#50514F]/10
+
+                                bg-[var(--theme-surface-soft)]
+
                                 mt-2
                             "
                         ></div>
@@ -185,10 +157,13 @@
                     <div
                         class="
                             shrink-0
+
                             h-6
                             w-16
+
                             rounded-full
-                            bg-[#50514F]/10
+
+                            bg-[var(--theme-surface-soft)]
                         "
                     ></div>
 
@@ -203,8 +178,10 @@
                         grid
                         grid-cols-1
                         sm:grid-cols-2
+
                         gap-x-5
                         gap-y-4
+
                         mt-5
                     "
                 >
@@ -217,9 +194,12 @@
                             <div
                                 class="
                                     h-2.5
+
                                     {{ $j % 2 === 0 ? 'w-24' : 'w-16' }}
+
                                     rounded
-                                    bg-[#50514F]/10
+
+                                    bg-[var(--theme-surface-soft)]
                                 "
                             ></div>
 
@@ -228,9 +208,13 @@
                             <div
                                 class="
                                     h-3
+
                                     {{ $j % 3 === 0 ? 'w-28' : 'w-20' }}
+
                                     rounded
-                                    bg-[#50514F]/10
+
+                                    bg-[var(--theme-surface-soft)]
+
                                     mt-2
                                 "
                             ></div>
@@ -249,37 +233,45 @@
                     class="
                         flex
                         flex-col
+
                         sm:flex-row
                         sm:items-center
                         sm:justify-end
+
                         gap-2
 
                         mt-5
                         pt-4
 
                         border-t
-                        border-[#50514F]/10
+                        border-[var(--theme-border)]
                     "
                 >
 
+                    {{-- Ver detalle --}}
                     <div
                         class="
                             h-9
                             w-full
                             sm:w-28
+
                             rounded-lg
-                            bg-[#50514F]/10
+
+                            bg-[var(--theme-surface-soft)]
                         "
                     ></div>
 
 
+                    {{-- Editar --}}
                     <div
                         class="
                             h-9
                             w-full
                             sm:w-24
+
                             rounded-lg
-                            bg-[#247BA0]/15
+
+                            bg-[var(--theme-primary-soft)]
                         "
                     ></div>
 
@@ -300,49 +292,64 @@
             flex
             items-center
             justify-between
+
             md:justify-end
+
             gap-2
+
             mt-5
             sm:mt-6
         "
     >
 
+        {{-- Anterior --}}
         <div
             class="
                 h-9
                 w-20
+
                 rounded-lg
-                bg-[#50514F]/10
+
+                bg-[var(--theme-surface-soft)]
             "
         ></div>
 
 
+        {{-- Página --}}
         <div
             class="
                 h-9
                 w-9
+
                 rounded-lg
-                bg-[#50514F]/10
+
+                bg-[var(--theme-surface-soft)]
             "
         ></div>
 
 
+        {{-- Página --}}
         <div
             class="
                 h-9
                 w-9
+
                 rounded-lg
-                bg-[#50514F]/10
+
+                bg-[var(--theme-surface-soft)]
             "
         ></div>
 
 
+        {{-- Siguiente --}}
         <div
             class="
                 h-9
                 w-20
+
                 rounded-lg
-                bg-[#50514F]/10
+
+                bg-[var(--theme-surface-soft)]
             "
         ></div>
 

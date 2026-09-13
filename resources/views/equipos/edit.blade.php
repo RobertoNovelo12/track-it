@@ -14,8 +14,10 @@
             flex
             items-start
             justify-between
+
             gap-3
             sm:gap-4
+
             mb-5
             sm:mb-6
         "
@@ -29,7 +31,8 @@
                     text-xl
                     font-semibold
                     leading-tight
-                    text-[#50514F]
+
+                    text-[var(--theme-text-strong)]
                 "
             >
                 Editar equipo
@@ -39,8 +42,10 @@
             <p
                 class="
                     text-xs
-                    text-[#50514F]/60
+                    text-[var(--theme-text-muted)]
+
                     mt-1
+
                     leading-relaxed
                 "
             >
@@ -48,14 +53,19 @@
                 <a
                     href="{{ route('equipos.index') }}"
                     class="
-                        hover:text-[#247BA0]
+                        hover:text-[var(--theme-primary)]
                         transition-colors
                     "
                 >
                     Equipos Tecnológicos
                 </a>
 
-                <span class="mx-1">
+                <span
+                    class="
+                        mx-1
+                        text-[var(--theme-text-muted)]
+                    "
+                >
                     ›
                 </span>
 
@@ -63,18 +73,23 @@
                 <a
                     href="{{ route('equipos.show', $equipoId) }}"
                     class="
-                        hover:text-[#247BA0]
+                        hover:text-[var(--theme-primary)]
                         transition-colors
                     "
                 >
                     Detalle del equipo
                 </a>
 
-                <span class="mx-1">
+                <span
+                    class="
+                        mx-1
+                        text-[var(--theme-text-muted)]
+                    "
+                >
                     ›
                 </span>
 
-                <span>
+                <span class="text-[var(--theme-text)]">
                     Editar
                 </span>
 
@@ -88,6 +103,7 @@
             href="{{ route('equipos.show', $equipoId) }}"
             class="
                 shrink-0
+
                 h-10
 
                 flex
@@ -96,18 +112,23 @@
                 gap-2
 
                 border
-                border-[#50514F]/20
+                border-[var(--theme-border-strong)]
+
                 rounded-md
-                bg-white
+
+                bg-[var(--theme-surface)]
 
                 px-3
                 sm:px-4
 
                 text-sm
                 font-medium
-                text-[#50514F]/70
+                text-[var(--theme-text-muted)]
 
-                hover:bg-[#50514F]/5
+                hover:bg-[var(--theme-surface-soft)]
+                hover:text-[var(--theme-text)]
+                hover:border-[var(--theme-primary-border)]
+
                 transition-colors
             "
         >

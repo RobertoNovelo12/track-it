@@ -63,9 +63,11 @@
             items-start
             gap-3
 
-            bg-emerald-50
+            bg-[var(--theme-surface)]
+
             border
-            border-emerald-200
+            border-emerald-500/30
+
             rounded-xl
             shadow-lg
 
@@ -77,14 +79,18 @@
         <div
             class="
                 shrink-0
+
                 w-8
                 h-8
+
                 rounded-full
-                bg-emerald-100
+
+                bg-emerald-500/15
+                text-emerald-500
+
                 flex
                 items-center
                 justify-center
-                text-emerald-600
             "
         >
             <svg
@@ -101,12 +107,22 @@
 
         <div class="min-w-0 flex-1">
 
-            <p class="text-sm font-semibold text-emerald-800">
+            <p
+                class="
+                    text-sm
+                    font-semibold
+                    text-[var(--theme-text-strong)]
+                "
+            >
                 Cambios guardados
             </p>
 
             <p
-                class="mt-0.5 text-xs text-emerald-700"
+                class="
+                    mt-0.5
+                    text-xs
+                    text-[var(--theme-text)]
+                "
                 x-text="successMessage"
             ></p>
 
@@ -118,8 +134,11 @@
             @click="successVisible = false"
             class="
                 shrink-0
-                text-emerald-600/60
-                hover:text-emerald-700
+
+                text-[var(--theme-text-muted)]
+
+                hover:text-[var(--theme-text)]
+
                 transition-colors
             "
             aria-label="Cerrar mensaje"
@@ -146,10 +165,13 @@
         class="
             flex
             flex-col
+
             sm:flex-row
             sm:items-center
             sm:justify-end
+
             gap-3
+
             mb-4
         "
     >
@@ -160,6 +182,7 @@
             class="
                 w-full
                 sm:w-auto
+
                 h-10
 
                 flex
@@ -168,15 +191,17 @@
                 gap-2
 
                 border
-                border-[#50514F]/20
+                border-[var(--theme-border-strong)]
+
                 rounded-lg
-                bg-white
+
+                bg-[var(--theme-surface)]
 
                 px-4
 
                 text-sm
                 font-medium
-                text-[#50514F]/65
+                text-[var(--theme-text-muted)]
 
                 cursor-default
             "
@@ -204,6 +229,7 @@
             class="
                 w-full
                 sm:w-auto
+
                 h-10
 
                 flex
@@ -212,15 +238,17 @@
                 gap-2
 
                 border
-                border-red-200
+                border-[var(--theme-danger)]
+
                 rounded-lg
-                bg-red-50
+
+                bg-[var(--theme-danger-soft)]
 
                 px-4
 
                 text-sm
                 font-medium
-                text-red-600
+                text-[var(--theme-danger)]
 
                 cursor-default
             "
@@ -260,6 +288,7 @@
             class="
                 space-y-4
                 sm:space-y-6
+
                 transition-opacity
                 duration-150
             "
@@ -270,10 +299,13 @@
             ==================================================== --}}
             <section
                 class="
-                    bg-white
+                    bg-[var(--theme-surface)]
+
                     border
-                    border-[#50514F]/10
+                    border-[var(--theme-border)]
+
                     rounded-xl
+
                     p-4
                     sm:p-6
                 "
@@ -283,10 +315,13 @@
                     class="
                         flex
                         flex-col
+
                         gap-2
+
                         sm:flex-row
                         sm:items-center
                         sm:justify-between
+
                         mb-5
                     "
                 >
@@ -295,7 +330,7 @@
                         class="
                             text-sm
                             font-semibold
-                            text-[#50514F]
+                            text-[var(--theme-text-strong)]
                         "
                     >
                         Información general
@@ -307,8 +342,9 @@
                             flex
                             items-center
                             gap-2
+
                             text-xs
-                            text-[#50514F]/55
+                            text-[var(--theme-text-muted)]
                         "
                     >
 
@@ -320,12 +356,16 @@
                             class="
                                 inline-flex
                                 items-center
+
                                 rounded-md
-                                bg-[#247BA0]/10
+
+                                bg-[var(--theme-primary-soft)]
+
                                 px-2.5
                                 py-1
+
                                 font-semibold
-                                text-[#247BA0]
+                                text-[var(--theme-primary)]
                             "
                         >
                             {{ $codigoInventario }}
@@ -340,8 +380,10 @@
                     class="
                         grid
                         grid-cols-1
+
                         md:grid-cols-2
                         xl:grid-cols-3
+
                         gap-4
                     "
                 >
@@ -353,7 +395,7 @@
                             class="
                                 block
                                 text-xs
-                                text-[#50514F]/60
+                                text-[var(--theme-text-muted)]
                                 mb-1.5
                             "
                         >
@@ -367,21 +409,33 @@
                             class="
                                 w-full
                                 min-w-0
+
                                 text-sm
+                                text-[var(--theme-text)]
+
+                                bg-[var(--theme-surface)]
+
                                 border
-                                border-[#50514F]/15
+                                border-[var(--theme-border-strong)]
+
                                 rounded-md
+
                                 px-3
                                 py-2.5
-                                placeholder:text-[#50514F]/40
+
+                                placeholder:text-[var(--theme-text-muted)]
+
                                 focus:ring-1
-                                focus:ring-[#247BA0]
-                                focus:border-[#247BA0]
+                                focus:ring-[var(--theme-primary)]
+                                focus:border-[var(--theme-primary)]
+
+                                outline-none
+                                transition-colors
                             "
                         >
 
                         @error('nombreEquipo')
-                            <p class="mt-1 text-xs text-red-600">
+                            <p class="mt-1 text-xs text-[var(--theme-danger)]">
                                 {{ $message }}
                             </p>
                         @enderror
@@ -396,7 +450,7 @@
                             class="
                                 block
                                 text-xs
-                                text-[#50514F]/60
+                                text-[var(--theme-text-muted)]
                                 mb-1.5
                             "
                         >
@@ -410,16 +464,28 @@
                             class="
                                 w-full
                                 min-w-0
+
                                 text-sm
+                                text-[var(--theme-text)]
+
+                                bg-[var(--theme-surface)]
+
                                 border
-                                border-[#50514F]/15
+                                border-[var(--theme-border-strong)]
+
                                 rounded-md
+
                                 px-3
                                 py-2.5
-                                placeholder:text-[#50514F]/40
+
+                                placeholder:text-[var(--theme-text-muted)]
+
                                 focus:ring-1
-                                focus:ring-[#247BA0]
-                                focus:border-[#247BA0]
+                                focus:ring-[var(--theme-primary)]
+                                focus:border-[var(--theme-primary)]
+
+                                outline-none
+                                transition-colors
                             "
                         >
 
@@ -440,7 +506,7 @@
                         />
 
                         @error('idEstadoActivo')
-                            <p class="mt-1 text-xs text-red-600">
+                            <p class="mt-1 text-xs text-[var(--theme-danger)]">
                                 {{ $message }}
                             </p>
                         @enderror
@@ -462,7 +528,7 @@
                         />
 
                         @error('idTipoEquipo')
-                            <p class="mt-1 text-xs text-red-600">
+                            <p class="mt-1 text-xs text-[var(--theme-danger)]">
                                 {{ $message }}
                             </p>
                         @enderror
@@ -484,7 +550,7 @@
                         />
 
                         @error('idMarca')
-                            <p class="mt-1 text-xs text-red-600">
+                            <p class="mt-1 text-xs text-[var(--theme-danger)]">
                                 {{ $message }}
                             </p>
                         @enderror
@@ -523,7 +589,7 @@
                             class="
                                 block
                                 text-xs
-                                text-[#50514F]/60
+                                text-[var(--theme-text-muted)]
                                 mb-1.5
                             "
                         >
@@ -539,15 +605,21 @@
                                 class="
                                     w-full
                                     min-w-0
+
                                     text-sm
+                                    text-[var(--theme-text-muted)]
+
                                     border
-                                    border-[#50514F]/10
+                                    border-[var(--theme-border)]
+
                                     rounded-md
+
                                     px-3
                                     py-2.5
                                     pr-9
-                                    bg-[#50514F]/5
-                                    text-[#50514F]/50
+
+                                    bg-[var(--theme-surface-soft)]
+
                                     cursor-not-allowed
                                 "
                             >
@@ -558,9 +630,11 @@
                                     right-3
                                     top-1/2
                                     -translate-y-1/2
+
                                     w-4
                                     h-4
-                                    text-[#50514F]/35
+
+                                    text-[var(--theme-text-muted)]
                                 "
                                 viewBox="0 0 24 24"
                                 fill="none"
@@ -583,7 +657,7 @@
                             class="
                                 block
                                 text-xs
-                                text-[#50514F]/60
+                                text-[var(--theme-text-muted)]
                                 mb-1.5
                             "
                         >
@@ -596,15 +670,26 @@
                             class="
                                 w-full
                                 min-w-0
+
                                 text-sm
+                                text-[var(--theme-text)]
+
+                                bg-[var(--theme-surface)]
+
                                 border
-                                border-[#50514F]/15
+                                border-[var(--theme-border-strong)]
+
                                 rounded-md
+
                                 px-3
                                 py-2.5
+
                                 focus:ring-1
-                                focus:ring-[#247BA0]
-                                focus:border-[#247BA0]
+                                focus:ring-[var(--theme-primary)]
+                                focus:border-[var(--theme-primary)]
+
+                                outline-none
+                                transition-colors
                             "
                         >
 
@@ -618,7 +703,7 @@
                             class="
                                 block
                                 text-xs
-                                text-[#50514F]/60
+                                text-[var(--theme-text-muted)]
                                 mb-1.5
                             "
                         >
@@ -632,21 +717,33 @@
                             class="
                                 w-full
                                 min-w-0
+
                                 text-sm
+                                text-[var(--theme-text)]
+
+                                bg-[var(--theme-surface)]
+
                                 border
-                                border-[#50514F]/15
+                                border-[var(--theme-border-strong)]
+
                                 rounded-md
+
                                 px-3
                                 py-2.5
-                                placeholder:text-[#50514F]/40
+
+                                placeholder:text-[var(--theme-text-muted)]
+
                                 focus:ring-1
-                                focus:ring-[#247BA0]
-                                focus:border-[#247BA0]
+                                focus:ring-[var(--theme-primary)]
+                                focus:border-[var(--theme-primary)]
+
+                                outline-none
+                                transition-colors
                             "
                         >
 
                         @error('numeroFactura')
-                            <p class="mt-1 text-xs text-red-600">
+                            <p class="mt-1 text-xs text-[var(--theme-danger)]">
                                 {{ $message }}
                             </p>
                         @enderror
@@ -661,7 +758,7 @@
                             class="
                                 block
                                 text-xs
-                                text-[#50514F]/60
+                                text-[var(--theme-text-muted)]
                                 mb-1.5
                             "
                         >
@@ -675,21 +772,33 @@
                             class="
                                 w-full
                                 min-w-0
+
                                 text-sm
+                                text-[var(--theme-text)]
+
+                                bg-[var(--theme-surface)]
+
                                 border
-                                border-[#50514F]/15
+                                border-[var(--theme-border-strong)]
+
                                 rounded-md
+
                                 px-3
                                 py-2.5
-                                placeholder:text-[#50514F]/40
+
+                                placeholder:text-[var(--theme-text-muted)]
+
                                 focus:ring-1
-                                focus:ring-[#247BA0]
-                                focus:border-[#247BA0]
+                                focus:ring-[var(--theme-primary)]
+                                focus:border-[var(--theme-primary)]
+
+                                outline-none
+                                transition-colors
                             "
                         >
 
                         @error('numeroSerie')
-                            <p class="mt-1 text-xs text-red-600">
+                            <p class="mt-1 text-xs text-[var(--theme-danger)]">
                                 {{ $message }}
                             </p>
                         @enderror
@@ -736,7 +845,7 @@
                             class="
                                 block
                                 text-xs
-                                text-[#50514F]/60
+                                text-[var(--theme-text-muted)]
                                 mb-1.5
                             "
                         >
@@ -750,16 +859,28 @@
                             class="
                                 w-full
                                 min-w-0
+
                                 text-sm
+                                text-[var(--theme-text)]
+
+                                bg-[var(--theme-surface)]
+
                                 border
-                                border-[#50514F]/15
+                                border-[var(--theme-border-strong)]
+
                                 rounded-md
+
                                 px-3
                                 py-2.5
-                                placeholder:text-[#50514F]/40
+
+                                placeholder:text-[var(--theme-text-muted)]
+
                                 focus:ring-1
-                                focus:ring-[#247BA0]
-                                focus:border-[#247BA0]
+                                focus:ring-[var(--theme-primary)]
+                                focus:border-[var(--theme-primary)]
+
+                                outline-none
+                                transition-colors
                             "
                         >
 
@@ -781,10 +902,13 @@
                 <section
                     wire:key="edit-child-fields-{{ $idTipoEquipo }}"
                     class="
-                        bg-white
+                        bg-[var(--theme-surface)]
+
                         border
-                        border-[#50514F]/10
+                        border-[var(--theme-border)]
+
                         rounded-xl
+
                         p-4
                         sm:p-6
                     "
@@ -794,7 +918,7 @@
                         class="
                             text-sm
                             font-semibold
-                            text-[#50514F]
+                            text-[var(--theme-text-strong)]
                             mb-5
                         "
                     >
@@ -810,8 +934,10 @@
                         class="
                             grid
                             grid-cols-1
+
                             md:grid-cols-2
                             xl:grid-cols-3
+
                             gap-4
                         "
                     >
@@ -837,15 +963,22 @@
                                         id="edit_cf_{{ $field }}"
                                         class="
                                             rounded
-                                            border-[#50514F]/30
-                                            text-[#247BA0]
-                                            focus:ring-[#247BA0]
+
+                                            border-[var(--theme-border-strong)]
+                                            bg-[var(--theme-surface)]
+
+                                            text-[var(--theme-primary)]
+
+                                            focus:ring-[var(--theme-primary)]
                                         "
                                     >
 
                                     <label
                                         for="edit_cf_{{ $field }}"
-                                        class="text-sm text-[#50514F]"
+                                        class="
+                                            text-sm
+                                            text-[var(--theme-text)]
+                                        "
                                     >
                                         {{ $this->fieldLabels[$field] ?? $field }}
                                     </label>
@@ -879,7 +1012,7 @@
                                         class="
                                             block
                                             text-xs
-                                            text-[#50514F]/60
+                                            text-[var(--theme-text-muted)]
                                             mb-1.5
                                         "
                                     >
@@ -895,15 +1028,26 @@
                                             class="
                                                 w-full
                                                 min-w-0
+
                                                 text-sm
+                                                text-[var(--theme-text)]
+
+                                                bg-[var(--theme-surface)]
+
                                                 border
-                                                border-[#50514F]/15
+                                                border-[var(--theme-border-strong)]
+
                                                 rounded-md
+
                                                 px-3
                                                 py-2.5
+
                                                 focus:ring-1
-                                                focus:ring-[#247BA0]
-                                                focus:border-[#247BA0]
+                                                focus:ring-[var(--theme-primary)]
+                                                focus:border-[var(--theme-primary)]
+
+                                                outline-none
+                                                transition-colors
                                             "
                                         >
 
@@ -916,15 +1060,26 @@
                                             class="
                                                 w-full
                                                 min-w-0
+
                                                 text-sm
+                                                text-[var(--theme-text)]
+
+                                                bg-[var(--theme-surface)]
+
                                                 border
-                                                border-[#50514F]/15
+                                                border-[var(--theme-border-strong)]
+
                                                 rounded-md
+
                                                 px-3
                                                 py-2.5
+
                                                 focus:ring-1
-                                                focus:ring-[#247BA0]
-                                                focus:border-[#247BA0]
+                                                focus:ring-[var(--theme-primary)]
+                                                focus:border-[var(--theme-primary)]
+
+                                                outline-none
+                                                transition-colors
                                             "
                                         >
 
@@ -937,15 +1092,26 @@
                                             class="
                                                 w-full
                                                 min-w-0
+
                                                 text-sm
+                                                text-[var(--theme-text)]
+
+                                                bg-[var(--theme-surface)]
+
                                                 border
-                                                border-[#50514F]/15
+                                                border-[var(--theme-border-strong)]
+
                                                 rounded-md
+
                                                 px-3
                                                 py-2.5
+
                                                 focus:ring-1
-                                                focus:ring-[#247BA0]
-                                                focus:border-[#247BA0]
+                                                focus:ring-[var(--theme-primary)]
+                                                focus:border-[var(--theme-primary)]
+
+                                                outline-none
+                                                transition-colors
                                             "
                                         >
 
@@ -969,10 +1135,13 @@
             ==================================================== --}}
             <section
                 class="
-                    bg-white
+                    bg-[var(--theme-surface)]
+
                     border
-                    border-[#50514F]/10
+                    border-[var(--theme-border)]
+
                     rounded-xl
+
                     p-4
                     sm:p-6
                 "
@@ -982,7 +1151,7 @@
                     class="
                         text-sm
                         font-semibold
-                        text-[#50514F]
+                        text-[var(--theme-text-strong)]
                         mb-5
                     "
                 >
@@ -994,9 +1163,12 @@
                     class="
                         grid
                         grid-cols-1
+
                         md:grid-cols-2
                         xl:grid-cols-3
+
                         gap-4
+
                         mb-5
                     "
                 >
@@ -1008,7 +1180,7 @@
                             class="
                                 block
                                 text-xs
-                                text-[#50514F]/60
+                                text-[var(--theme-text-muted)]
                                 mb-1.5
                             "
                         >
@@ -1023,14 +1195,22 @@
                             class="
                                 w-full
                                 min-w-0
+
                                 text-sm
+                                text-[var(--theme-text-muted)]
+
                                 border
-                                border-[#50514F]/10
+                                border-[var(--theme-border)]
+
                                 rounded-md
+
                                 px-3
                                 py-2.5
-                                bg-[#50514F]/5
-                                text-[#50514F]/55
+
+                                bg-[var(--theme-surface-soft)]
+
+                                placeholder:text-[var(--theme-text-muted)]
+
                                 cursor-not-allowed
                             "
                         >
@@ -1038,9 +1218,11 @@
                         <p
                             class="
                                 mt-1.5
+
                                 text-[11px]
                                 leading-relaxed
-                                text-[#50514F]/45
+
+                                text-[var(--theme-text-muted)]
                             "
                         >
                             El responsable se modifica desde Asignación / Movimientos.
@@ -1063,7 +1245,7 @@
                         />
 
                         @error('idArea')
-                            <p class="mt-1 text-xs text-red-600">
+                            <p class="mt-1 text-xs text-[var(--theme-danger)]">
                                 {{ $message }}
                             </p>
                         @enderror
@@ -1099,7 +1281,7 @@
                             class="
                                 block
                                 text-xs
-                                text-[#50514F]/60
+                                text-[var(--theme-text-muted)]
                                 mb-1.5
                             "
                         >
@@ -1112,15 +1294,26 @@
                             class="
                                 w-full
                                 min-w-0
+
                                 text-sm
+                                text-[var(--theme-text)]
+
+                                bg-[var(--theme-surface)]
+
                                 border
-                                border-[#50514F]/15
+                                border-[var(--theme-border-strong)]
+
                                 rounded-md
+
                                 px-3
                                 py-2.5
+
                                 focus:ring-1
-                                focus:ring-[#247BA0]
-                                focus:border-[#247BA0]
+                                focus:ring-[var(--theme-primary)]
+                                focus:border-[var(--theme-primary)]
+
+                                outline-none
+                                transition-colors
                             "
                         >
 
@@ -1136,7 +1329,7 @@
                         class="
                             block
                             text-xs
-                            text-[#50514F]/60
+                            text-[var(--theme-text-muted)]
                             mb-1.5
                         "
                     >
@@ -1150,17 +1343,30 @@
                         class="
                             w-full
                             min-w-0
+
                             text-sm
+                            text-[var(--theme-text)]
+
+                            bg-[var(--theme-surface)]
+
                             border
-                            border-[#50514F]/15
+                            border-[var(--theme-border-strong)]
+
                             rounded-md
+
                             px-3
                             py-2.5
-                            placeholder:text-[#50514F]/40
+
+                            placeholder:text-[var(--theme-text-muted)]
+
                             resize-y
+
                             focus:ring-1
-                            focus:ring-[#247BA0]
-                            focus:border-[#247BA0]
+                            focus:ring-[var(--theme-primary)]
+                            focus:border-[var(--theme-primary)]
+
+                            outline-none
+                            transition-colors
                         "
                     ></textarea>
 
@@ -1182,6 +1388,7 @@
                     sm:justify-end
 
                     gap-3
+
                     pt-1
                     pb-2
                 "
@@ -1195,6 +1402,7 @@
                     class="
                         w-full
                         sm:w-auto
+
                         h-11
 
                         flex
@@ -1202,18 +1410,22 @@
                         justify-center
 
                         border
-                        border-[#50514F]/20
+                        border-[var(--theme-border-strong)]
+
                         rounded-lg
 
                         px-5
 
-                        bg-white
+                        bg-[var(--theme-surface)]
 
                         text-sm
                         font-medium
-                        text-[#50514F]/70
+                        text-[var(--theme-text-muted)]
 
-                        hover:bg-[#50514F]/5
+                        hover:bg-[var(--theme-surface-soft)]
+                        hover:text-[var(--theme-text)]
+                        hover:border-[var(--theme-primary-border)]
+
                         transition-colors
                     "
                 >
@@ -1228,6 +1440,7 @@
                     class="
                         w-full
                         sm:w-auto
+
                         h-11
 
                         flex
@@ -1235,13 +1448,14 @@
                         justify-center
                         gap-2
 
-                        bg-[#247BA0]
-                        hover:bg-[#1d6688]
+                        bg-[var(--theme-primary)]
+                        hover:bg-[var(--theme-primary-hover)]
 
                         disabled:opacity-60
                         disabled:cursor-not-allowed
 
                         rounded-lg
+
                         px-5
 
                         text-sm
@@ -1333,7 +1547,8 @@
                 items-center
                 justify-center
 
-                bg-white/55
+                bg-[var(--theme-overlay)]
+
                 backdrop-blur-[1px]
             "
         >
@@ -1344,9 +1559,11 @@
                     items-center
                     gap-3
 
-                    bg-white
+                    bg-[var(--theme-surface)]
+
                     border
-                    border-[#50514F]/10
+                    border-[var(--theme-border)]
+
                     rounded-xl
                     shadow-lg
 
@@ -1359,8 +1576,10 @@
                     class="
                         w-5
                         h-5
+
                         animate-spin
-                        text-[#247BA0]
+
+                        text-[var(--theme-primary)]
                     "
                     viewBox="0 0 24 24"
                     fill="none"
@@ -1389,7 +1608,7 @@
                         class="
                             text-sm
                             font-semibold
-                            text-[#50514F]
+                            text-[var(--theme-text-strong)]
                         "
                     >
                         Guardando cambios...
@@ -1398,7 +1617,7 @@
                     <p
                         class="
                             text-xs
-                            text-[#50514F]/50
+                            text-[var(--theme-text-muted)]
                             mt-0.5
                         "
                     >

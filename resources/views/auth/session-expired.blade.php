@@ -10,14 +10,15 @@
         w-full
         max-w-md
 
-        bg-[#FFFCFF]
+        bg-[var(--theme-surface)]
 
         border
-        border-[#50514F]/15
+        border-[var(--theme-border-strong)]
 
         rounded-lg
 
         shadow-lg
+        shadow-[var(--theme-shadow)]
 
         px-6
         sm:px-10
@@ -62,7 +63,7 @@
 
                     rounded-full
 
-                    bg-[#247BA0]/5
+                    bg-[var(--theme-primary-soft-subtle)]
                 "
             ></div>
 
@@ -71,10 +72,11 @@
             <svg
                 class="
                     relative
+
                     w-16
                     h-16
 
-                    text-[#50514F]
+                    text-[var(--theme-text)]
                 "
                 viewBox="0 0 24 24"
                 fill="none"
@@ -104,10 +106,10 @@
 
                     rounded-full
 
-                    bg-[#247BA0]
+                    bg-[var(--theme-primary)]
 
                     border-[3px]
-                    border-[#FFFCFF]
+                    border-[var(--theme-surface)]
 
                     flex
                     items-center
@@ -138,7 +140,7 @@
                 text-base
                 font-semibold
 
-                text-[#50514F]
+                text-[var(--theme-text-strong)]
 
                 mb-2
             "
@@ -155,7 +157,7 @@
                 max-w-sm
 
                 text-xs
-                text-[#50514F]/70
+                text-[var(--theme-text-muted)]
 
                 leading-relaxed
 
@@ -178,7 +180,10 @@
                 items-start
                 gap-3
 
-                bg-[#247BA0]/10
+                bg-[var(--theme-primary-soft)]
+
+                border
+                border-[var(--theme-primary-border)]
 
                 rounded-md
 
@@ -200,7 +205,7 @@
 
                     mt-0.5
 
-                    text-[#247BA0]
+                    text-[var(--theme-primary)]
                 "
                 viewBox="0 0 24 24"
                 fill="none"
@@ -228,7 +233,7 @@
             <p
                 class="
                     text-xs
-                    text-[#50514F]/80
+                    text-[var(--theme-text)]
 
                     leading-relaxed
                 "
@@ -253,8 +258,8 @@
                 justify-center
                 gap-2
 
-                bg-[#247BA0]
-                hover:bg-[#1d6688]
+                bg-[var(--theme-primary)]
+                hover:bg-[var(--theme-primary-hover)]
 
                 text-white
 

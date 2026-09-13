@@ -25,7 +25,7 @@
                 sm:text-xl
                 font-semibold
                 leading-tight
-                text-[#50514F]
+                text-[var(--theme-text-strong)]
             "
         >
             Nueva Alta de equipo
@@ -34,14 +34,21 @@
         <p
             class="
                 text-xs
-                text-[#50514F]/60
+                text-[var(--theme-text-muted)]
                 mt-1
                 leading-relaxed
             "
         >
-            <span>Equipos Tecnológicos</span>
+            <span>
+                Equipos Tecnológicos
+            </span>
 
-            <span class="mx-1">
+            <span
+                class="
+                    mx-1
+                    text-[var(--theme-text-muted)]
+                "
+            >
                 ›
             </span>
 
@@ -58,21 +65,31 @@
         type="button"
         class="
             shrink-0
+
             flex
             items-center
             justify-center
             gap-2
+
             h-10
             px-3
             sm:px-4
+
             border
-            border-[#50514F]/20
+            border-[var(--theme-border-strong)]
+
             rounded-md
-            bg-white
+
+            bg-[var(--theme-surface)]
+
             text-sm
             font-medium
-            text-[#50514F]/70
-            hover:bg-[#50514F]/5
+            text-[var(--theme-text-muted)]
+
+            hover:bg-[var(--theme-surface-soft)]
+            hover:text-[var(--theme-text)]
+            hover:border-[var(--theme-primary-border)]
+
             transition-colors
         "
     >

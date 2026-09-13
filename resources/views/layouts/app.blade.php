@@ -15,6 +15,130 @@
         rel="stylesheet"
     >
 
+    <script>
+    (() => {
+        const storageKey = 'trackit_theme';
+
+        function getThemePreference() {
+            try {
+                const saved = localStorage.getItem(storageKey);
+
+                if (
+                    saved === 'light' ||
+                    saved === 'dark' ||
+                    saved === 'system'
+                ) {
+                    return saved;
+                }
+            } catch (error) {
+                // Si localStorage no está disponible,
+                // utilizamos el tema del sistema.
+            }
+
+            return 'system';
+        }
+
+
+        function resolveTheme(preference) {
+            if (preference === 'system') {
+                return window.matchMedia(
+                    '(prefers-color-scheme: dark)'
+                ).matches
+                    ? 'dark'
+                    : 'light';
+            }
+
+            return preference;
+        }
+
+
+        function applyTheme(preference = getThemePreference()) {
+            const resolved = resolveTheme(preference);
+            const html = document.documentElement;
+
+            html.classList.toggle(
+                'dark',
+                resolved === 'dark'
+            );
+
+            html.dataset.themePreference = preference;
+
+            html.style.colorScheme = resolved;
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Disponible para el botón que agregaremos después
+        |--------------------------------------------------------------------------
+        */
+
+        window.setTrackItTheme = function (preference) {
+            if (
+                !['light', 'dark', 'system'].includes(preference)
+            ) {
+                return;
+            }
+
+            try {
+                localStorage.setItem(
+                    storageKey,
+                    preference
+                );
+            } catch (error) {
+                // Continuamos aunque no pueda guardarse.
+            }
+
+            applyTheme(preference);
+
+            window.dispatchEvent(
+                new CustomEvent(
+                    'trackit-theme-changed',
+                    {
+                        detail: {
+                            preference: preference
+                        }
+                    }
+                )
+            );
+        };
+
+
+        window.getTrackItTheme = getThemePreference;
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Aplicar ANTES de pintar la página
+        |--------------------------------------------------------------------------
+        */
+
+        applyTheme();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Si está en "Sistema", reaccionar al cambio del SO
+        |--------------------------------------------------------------------------
+        */
+
+        const systemTheme = window.matchMedia(
+            '(prefers-color-scheme: dark)'
+        );
+
+        systemTheme.addEventListener(
+            'change',
+            () => {
+                if (
+                    getThemePreference() === 'system'
+                ) {
+                    applyTheme('system');
+                }
+            }
+        );
+    })();
+</script>
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     @stack('styles')
@@ -26,9 +150,126 @@
         w-20 md:ml-20 hidden justify-center justify-start
         -translate-x-full translate-x-0
     --}}
+
+<style>
+    @media (min-width: 768px) {
+
+        /*
+        |--------------------------------------------------------------------------
+        | Hamburguesa siempre en la misma posición
+        |--------------------------------------------------------------------------
+        */
+
+        #sidebarHeader {
+            position: relative;
+        }
+
+        #sidebarHeader > button {
+            position: absolute;
+
+            left: 2.5rem;
+            top: 50%;
+
+            transform: translate(-50%, -50%);
+
+            flex-shrink: 0;
+
+            z-index: 10;
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Logo
+        |--------------------------------------------------------------------------
+        */
+
+        #sidebarLogoWrap {
+            margin-left: 3.5rem;
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Sidebar cerrado
+        |--------------------------------------------------------------------------
+        */
+
+        html.sidebar-collapsed #sidebar {
+            width: 5rem !important;
+        }
+
+        html.sidebar-collapsed #mainContent {
+            margin-left: 5rem !important;
+        }
+
+        html.sidebar-collapsed .sidebar-label,
+        html.sidebar-collapsed #sidebarLogoWrap {
+            display: none !important;
+        }
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Iconos del menú
+    |--------------------------------------------------------------------------
+    */
+
+    .sidebar-nav-link > svg {
+        flex-shrink: 0;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Logo según el tema
+    |--------------------------------------------------------------------------
+    */
+
+    #sidebarLogo {
+        transition:
+            filter 200ms ease,
+            opacity 200ms ease;
+    }
+
+    html.dark #sidebarLogo {
+        filter: brightness(0) invert(1);
+        opacity: 0.92;
+    }
+</style>
+
+
+<script>
+    /*
+    |--------------------------------------------------------------------------
+    | Aplicar estado ANTES de que se pinte la página
+    |--------------------------------------------------------------------------
+    */
+
+    try {
+
+        const desktop =
+            window.matchMedia('(min-width: 768px)').matches;
+
+        const collapsed =
+            localStorage.getItem('sidebarCollapsed') === 'true';
+
+        if (desktop && collapsed) {
+
+            document.documentElement
+                .classList
+                .add('sidebar-collapsed');
+
+        }
+
+    } catch (error) {
+        // Si localStorage no está disponible,
+        // simplemente usamos el sidebar abierto.
+    }
+</script>
 </head>
 
-<body class="bg-[#FFFCFF] text-[#50514F] font-['Poppins']">
+<body class="theme-bg theme-text font-['Poppins']">
 
 <div class="min-h-screen flex">
 
@@ -38,24 +279,29 @@
     <aside
         id="sidebar"
         class="fixed left-0 top-0 bottom-0
-               w-64 bg-[#FFFCFF]
-               border-r border-[#50514F]/10
+               w-64 theme-bg
+               border-r border-[var(--theme-border)]
                flex flex-col z-40
                -translate-x-full md:translate-x-0
-               transition-all duration-300 ease-in-out overflow-hidden"
+               transition-transform md:transition-[width] duration-300 ease-in-out"
     >
 
         {{-- Encabezado sidebar: hamburguesa + logo --}}
         <div
             id="sidebarHeader"
-            class="h-28 flex items-center justify-start gap-10 px-4 border-b border-[#50514F]/10 shrink-0"
+            class="h-28 flex items-center justify-start gap-10 px-4 border-b border-[var(--theme-border)] shrink-0"
         >
 
             {{-- Botón hamburguesa (colapsar sidebar) --}}
             <button
                 type="button"
                 onclick="toggleSidebar()"
-                class="shrink-0 text-[#50514F]/70 hover:text-[#247BA0]"
+                class="
+                    shrink-0
+                    text-[var(--theme-text-muted)]
+                    hover:text-[var(--theme-primary)]
+                    transition-colors
+                "
                 aria-label="Colapsar menú"
             >
                 <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -98,8 +344,8 @@
                     text-sm transition-colors border-l-4
 
                     {{ request()->routeIs('dashboard')
-                        ? 'bg-[#247BA0]/10 text-[#247BA0] font-medium border-[#247BA0]'
-                        : 'text-[#50514F]/80 hover:bg-[#50514F]/5 border-transparent'
+                        ? 'bg-[var(--theme-primary-soft)] text-[var(--theme-primary)] font-medium border-[var(--theme-primary)]'
+                        : 'text-[var(--theme-text-muted)] hover:bg-[var(--theme-surface-soft)] border-transparent'
                     }}
                 "
             >
@@ -128,8 +374,8 @@
                     text-sm transition-colors border-l-4
 
                     {{ request()->routeIs('equipos.*')
-                        ? 'bg-[#247BA0]/10 text-[#247BA0] font-medium border-[#247BA0]'
-                        : 'text-[#50514F]/80 hover:bg-[#50514F]/5 border-transparent'
+                        ? 'bg-[var(--theme-primary-soft)] text-[var(--theme-primary)] font-medium border-[var(--theme-primary)]'
+                        : 'text-[var(--theme-text-muted)] hover:bg-[var(--theme-surface-soft)] border-transparent'
                     }}
                 "
             >
@@ -157,8 +403,8 @@
                     text-sm transition-colors border-l-4
 
                     {{ request()->routeIs('asignaciones.*')
-                        ? 'bg-[#247BA0]/10 text-[#247BA0] font-medium border-[#247BA0]'
-                        : 'text-[#50514F]/80 hover:bg-[#50514F]/5 border-transparent'
+                        ? 'bg-[var(--theme-primary-soft)] text-[var(--theme-primary)] font-medium border-[var(--theme-primary)]'
+                        : 'text-[var(--theme-text-muted)] hover:bg-[var(--theme-surface-soft)] border-transparent'
                     }}
                 "
             >
@@ -188,8 +434,8 @@
                     text-sm transition-colors border-l-4
 
                     {{ request()->routeIs('mantenimientos.*')
-                        ? 'bg-[#247BA0]/10 text-[#247BA0] font-medium border-[#247BA0]'
-                        : 'text-[#50514F]/80 hover:bg-[#50514F]/5 border-transparent'
+                        ? 'bg-[var(--theme-primary-soft)] text-[var(--theme-primary)] font-medium border-[var(--theme-primary)]'
+                        : 'text-[var(--theme-text-muted)] hover:bg-[var(--theme-surface-soft)] border-transparent'
                     }}
                 "
             >
@@ -216,8 +462,8 @@
                     text-sm transition-colors border-l-4
 
                     {{ request()->routeIs('reportes.*')
-                        ? 'bg-[#247BA0]/10 text-[#247BA0] font-medium border-[#247BA0]'
-                        : 'text-[#50514F]/80 hover:bg-[#50514F]/5 border-transparent'
+                        ? 'bg-[var(--theme-primary-soft)] text-[var(--theme-primary)] font-medium border-[var(--theme-primary)]'
+                        : 'text-[var(--theme-text-muted)] hover:bg-[var(--theme-surface-soft)] border-transparent'
                     }}
                 "
             >
@@ -247,8 +493,8 @@
                     text-sm transition-colors border-l-4
 
                     {{ request()->routeIs('usuarios.*')
-                        ? 'bg-[#247BA0]/10 text-[#247BA0] font-medium border-[#247BA0]'
-                        : 'text-[#50514F]/80 hover:bg-[#50514F]/5 border-transparent'
+                        ? 'bg-[var(--theme-primary-soft)] text-[var(--theme-primary)] font-medium border-[var(--theme-primary)]'
+                        : 'text-[var(--theme-text-muted)] hover:bg-[var(--theme-surface-soft)] border-transparent'
                     }}
                 "
             >
@@ -277,8 +523,8 @@
                     text-sm transition-colors border-l-4
 
                     {{ request()->routeIs('catalogos.*')
-                        ? 'bg-[#247BA0]/10 text-[#247BA0] font-medium border-[#247BA0]'
-                        : 'text-[#50514F]/80 hover:bg-[#50514F]/5 border-transparent'
+                        ? 'bg-[var(--theme-primary-soft)] text-[var(--theme-primary)] font-medium border-[var(--theme-primary)]'
+                        : 'text-[var(--theme-text-muted)] hover:bg-[var(--theme-surface-soft)] border-transparent'
                     }}
                 "
             >
@@ -304,7 +550,7 @@
 
 
         {{-- Cerrar sesión --}}
-        <div class="p-4 border-t border-[#50514F]/10 shrink-0">
+        <div class="p-4 border-t border-[var(--theme-border)] shrink-0">
 
             <form action="{{ route('logout') }}" method="POST">
                 @csrf
@@ -316,8 +562,8 @@
                         w-full
                         flex items-center gap-3
                         px-3 py-3
-                        text-sm text-[#50514F]/70
-                        hover:text-[#247BA0]
+                        text-sm text-[var(--theme-text-muted)]
+                        hover:text-[var(--theme-primary)]
                         transition-colors
                     "
                 >
@@ -346,14 +592,17 @@
     <div
         id="sidebarOverlay"
         onclick="toggleSidebar()"
-        class="fixed inset-0 bg-black/40 z-30 hidden md:hidden"
+        class="fixed inset-0 bg-[var(--theme-overlay)] z-30 hidden md:hidden"
     ></div>
 
 
     {{-- ============================================================
         CONTENIDO DERECHO
     ============================================================ --}}
-    <div id="mainContent" class="ml-0 md:ml-64 flex-1 min-h-screen transition-all duration-300 ease-in-out">
+    <div
+    id="mainContent"
+    class="ml-0 md:ml-64 flex-1 min-h-screen transition-[margin-left] duration-300 ease-in-out"
+    >
 
         {{-- ========================================================
             HEADER
@@ -361,8 +610,8 @@
             <header
                 class="
                     h-16
-                    bg-[#FFFCFF]
-                    border-b border-[#50514F]/10
+                    theme-bg
+                    border-b border-[var(--theme-border)]
                     flex
                     items-center
                     justify-between
@@ -382,7 +631,7 @@
                 <button
                     type="button"
                     onclick="toggleSidebar()"
-                    class="md:hidden shrink-0 text-[#50514F]/70 hover:text-[#247BA0]"
+                    class="md:hidden shrink-0 text-[var(--theme-text-muted)] hover:text-[var(--theme-primary)]"
                     aria-label="Abrir menú"
                 >
                     <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -419,7 +668,7 @@
                     w-4
                     h-4
 
-                    text-[#50514F]/50
+                    text-[var(--theme-text-muted)]
                     pointer-events-none
                 "
                 viewBox="0 0 24 24"
@@ -442,7 +691,7 @@
                 class="
                     w-full
 
-                    bg-[#50514F]/5
+                    bg-[var(--theme-surface-soft)]
 
                     rounded-full
                     border-0
@@ -452,12 +701,12 @@
                     py-2
 
                     text-xs
-                    text-[#50514F]
+                    text-[var(--theme-text)]
 
-                    placeholder:text-[#50514F]/50
+                    placeholder:text-[var(--theme-text-muted)]
 
                     focus:ring-1
-                    focus:ring-[#247BA0]
+                    focus:ring-[var(--theme-primary)]
                 "
             >
 
@@ -489,10 +738,10 @@
 
                     rounded-full
 
-                    text-[#50514F]/70
+                    text-[var(--theme-text-muted)]
 
-                    hover:text-[#247BA0]
-                    hover:bg-[#247BA0]/5
+                    hover:text-[var(--theme-primary)]
+                    hover:bg-[var(--theme-primary-soft)]
 
                     transition-colors
                 "
@@ -519,7 +768,7 @@
                         w-1.5
                         h-1.5
 
-                        bg-red-500
+                        bg-[var(--theme-danger)]
                         rounded-full
                     "
                 ></span>
@@ -530,12 +779,23 @@
             {{-- ====================================================
                 MENÚ DE PERFIL
             ==================================================== --}}
-            <div
-                x-data="{ open: false }"
-                @click.outside="open = false"
-                @keydown.escape.window="open = false"
-                class="relative"
-            >
+                <div
+                    x-data="{
+                        open: false,
+                        theme: window.getTrackItTheme
+                            ? window.getTrackItTheme()
+                            : 'system'
+                    }"
+
+                    @trackit-theme-changed.window="
+                        theme = $event.detail.preference
+                    "
+
+                    @click.outside="open = false"
+                    @keydown.escape.window="open = false"
+
+                    class="relative"
+                >
 
                 {{-- =================================================
                     CÁPSULA
@@ -553,16 +813,16 @@
                         rounded-full
 
                         border
-                        border-[#50514F]/10
+                        border-[var(--theme-border)]
 
-                        bg-white
+                        bg-[var(--theme-surface)]
 
                         p-1
 
                         sm:pl-3
 
-                        hover:border-[#247BA0]/30
-                        hover:bg-[#247BA0]/[0.03]
+                        hover:border-[var(--theme-primary-border)]
+                        hover:bg-[var(--theme-primary-soft-subtle)]
 
                         transition-all
                     "
@@ -592,7 +852,7 @@
                                 leading-tight
                                 font-semibold
                                 uppercase
-                                text-[#25344A]
+                                text-[var(--theme-text-strong)]
                             "
                         >
                             {{ auth()->user()->nombres ?? auth()->user()->name }}
@@ -607,7 +867,7 @@
                                 md:text-[9px]
 
                                 leading-tight
-                                text-[#50514F]/45
+                                text-[var(--theme-text-muted)]
                             "
                         >
                             {{ auth()->user()->propiedad ?? 'Grand Palladium' }}
@@ -627,16 +887,16 @@
                             rounded-full
 
                             border
-                            border-[#247BA0]/50
+                            border-[var(--theme-primary-border-strong)]
 
                             flex
                             items-center
                             justify-center
 
-                            bg-[#247BA0]/5
-                            text-[#25344A]
+                            bg-[var(--theme-primary-soft-subtle)]
+                            text-[var(--theme-text-strong)]
 
-                            group-hover:border-[#247BA0]
+                            group-hover:border-[var(--theme-primary)]
 
                             transition-colors
                         "
@@ -665,7 +925,7 @@
 
                             mr-1
 
-                            text-[#50514F]/40
+                            text-[var(--theme-text-muted)]
 
                             transition-transform
                             duration-200
@@ -708,15 +968,14 @@
                         w-[300px]
                         max-w-[calc(100vw-2rem)]
 
-                        bg-white
+                        bg-[var(--theme-surface)]
 
                         border
-                        border-[#50514F]/10
+                        border-[var(--theme-border)]
 
                         rounded-2xl
 
-                        shadow-xl
-                        shadow-black/10
+                        theme-shadow-xl
 
                         overflow-hidden
 
@@ -751,8 +1010,8 @@
                                     items-center
                                     justify-center
 
-                                    bg-[#247BA0]/10
-                                    text-[#247BA0]
+                                    bg-[var(--theme-primary-soft)]
+                                    text-[var(--theme-primary)]
                                 "
                             >
                                 <svg
@@ -776,7 +1035,7 @@
                                         text-sm
                                         font-semibold
                                         uppercase
-                                        text-[#25344A]
+                                        text-[var(--theme-text-strong)]
 
                                         truncate
                                     "
@@ -790,7 +1049,7 @@
                                     class="
                                         mt-0.5
                                         text-xs
-                                        text-[#50514F]/65
+                                        text-[var(--theme-text-muted)]
                                         truncate
                                     "
                                 >
@@ -802,7 +1061,7 @@
                                     class="
                                         mt-0.5
                                         text-xs
-                                        text-[#50514F]/55
+                                        text-[var(--theme-text-muted)]
                                         truncate
                                     "
                                 >
@@ -816,7 +1075,7 @@
                                         class="
                                             mt-0.5
                                             text-[11px]
-                                            text-[#50514F]/45
+                                            text-[var(--theme-text-muted)]
                                             truncate
                                         "
                                     >
@@ -833,7 +1092,7 @@
 
 
 
-                    <div class="h-px bg-[#50514F]/10 mx-4"></div>
+                    <div class="h-px bg-[var(--theme-border)] mx-4"></div>
 
 
 
@@ -858,10 +1117,10 @@
                                 rounded-lg
 
                                 text-sm
-                                text-[#25344A]
+                                text-[var(--theme-text-strong)]
 
-                                hover:bg-[#247BA0]/5
-                                hover:text-[#247BA0]
+                                hover:bg-[var(--theme-primary-soft)]
+                                hover:text-[var(--theme-primary)]
 
                                 transition-colors
                             "
@@ -897,10 +1156,10 @@
                                 rounded-lg
 
                                 text-sm
-                                text-[#25344A]
+                                text-[var(--theme-text-strong)]
 
-                                hover:bg-[#247BA0]/5
-                                hover:text-[#247BA0]
+                                hover:bg-[var(--theme-primary-soft)]
+                                hover:text-[var(--theme-primary)]
 
                                 transition-colors
                             "
@@ -925,49 +1184,241 @@
                                     w-2
                                     h-2
                                     rounded-full
-                                    bg-red-500
+                                    bg-[var(--theme-danger)]
                                 "
                             ></span>
                         </button>
 
-
-                        {{-- Preferencias --}}
-                        <button
-                            type="button"
+                        {{-- ============================================================
+                            APARIENCIA
+                        ============================================================ --}}
+                        <div
                             class="
-                                w-full
-
-                                flex
-                                items-center
-                                gap-3
-
                                 px-3
                                 py-2.5
-
-                                rounded-lg
-
-                                text-sm
-                                text-[#25344A]
-
-                                hover:bg-[#247BA0]/5
-                                hover:text-[#247BA0]
-
-                                transition-colors
                             "
                         >
-                            <svg
-                                class="w-5 h-5 shrink-0"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="1.5"
-                            >
-                                <circle cx="12" cy="12" r="3"/>
-                                <path d="M19.4 15a1.7 1.7 0 00.34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0015 19.4a1.7 1.7 0 00-1 .6 1.7 1.7 0 00-.4 1.1V21H9.6v-.1A1.7 1.7 0 009 19.4a1.7 1.7 0 00-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 004.6 15a1.7 1.7 0 00-.6-1 1.7 1.7 0 00-1.1-.4H3V9.6h.1A1.7 1.7 0 004.6 9a1.7 1.7 0 00-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 009 4.6a1.7 1.7 0 001-.6 1.7 1.7 0 00.4-1.1V3h4v.1A1.7 1.7 0 0015 4.6a1.7 1.7 0 001.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0019.4 9a1.7 1.7 0 00.6 1 1.7 1.7 0 001.1.4h.1v4h-.1a1.7 1.7 0 00-1.7.6z"/>
-                            </svg>
 
-                            <span>Preferencias</span>
-                        </button>
+                            {{-- Título --}}
+                            <div
+                                class="
+                                    flex
+                                    items-center
+                                    gap-3
+
+                                    text-sm
+                                    text-[var(--theme-text-strong)]
+                                "
+                            >
+
+                                {{-- Icono --}}
+                                <svg
+                                    class="w-5 h-5 shrink-0"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="1.5"
+                                >
+                                    <circle cx="12" cy="12" r="3"/>
+
+                                    <path d="M12 2v2"/>
+                                    <path d="M12 20v2"/>
+
+                                    <path d="M4.93 4.93l1.41 1.41"/>
+                                    <path d="M17.66 17.66l1.41 1.41"/>
+
+                                    <path d="M2 12h2"/>
+                                    <path d="M20 12h2"/>
+
+                                    <path d="M4.93 19.07l1.41-1.41"/>
+                                    <path d="M17.66 6.34l1.41-1.41"/>
+                                </svg>
+                                <span>
+                                    Apariencia
+                                </span>
+
+                            </div>
+
+
+                            {{-- ========================================================
+                                OPCIONES
+                            ======================================================== --}}
+                            <div
+                                class="
+                                    grid
+                                    grid-cols-3
+
+                                    gap-2
+
+                                    mt-3
+                                "
+                            >
+
+                                {{-- Claro --}}
+                                <button
+                                    type="button"
+
+                                    @click="
+                                        window.setTrackItTheme('light');
+                                        theme = 'light';
+                                    "
+
+                                    :class="
+                                        theme === 'light'
+                                            ? 'border-[var(--theme-primary)] bg-[var(--theme-primary-soft)] text-[var(--theme-primary)]'
+                                            : 'border-[var(--theme-border)] bg-[var(--theme-surface)] text-[var(--theme-text-muted)] hover:bg-[var(--theme-surface-soft)]'
+                                    "
+
+                                    class="
+                                        h-9
+
+                                        flex
+                                        items-center
+                                        justify-center
+                                        gap-1.5
+
+                                        border
+                                        rounded-lg
+
+                                        text-[11px]
+                                        font-medium
+
+                                        transition-colors
+                                    "
+                                >
+
+                                    <svg
+                                        class="w-3.5 h-3.5"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="1.6"
+                                    >
+                                        <circle cx="12" cy="12" r="4"/>
+
+                                        <path d="M12 2v2"/>
+                                        <path d="M12 20v2"/>
+                                        <path d="M4.93 4.93l1.41 1.41"/>
+                                        <path d="M17.66 17.66l1.41 1.41"/>
+                                        <path d="M2 12h2"/>
+                                        <path d="M20 12h2"/>
+                                    </svg>
+
+                                    Claro
+                                </button>
+
+
+                                {{-- Oscuro --}}
+                                <button
+                                    type="button"
+
+                                    @click="
+                                        window.setTrackItTheme('dark');
+                                        theme = 'dark';
+                                    "
+
+                                    :class="
+                                        theme === 'dark'
+                                            ? 'border-[var(--theme-primary)] bg-[var(--theme-primary-soft)] text-[var(--theme-primary)]'
+                                            : 'border-[var(--theme-border)] bg-[var(--theme-surface)] text-[var(--theme-text-muted)] hover:bg-[var(--theme-surface-soft)]'
+                                    "
+
+                                    class="
+                                        h-9
+
+                                        flex
+                                        items-center
+                                        justify-center
+                                        gap-1.5
+
+                                        border
+                                        rounded-lg
+
+                                        text-[11px]
+                                        font-medium
+
+                                        transition-colors
+                                    "
+                                >
+
+                                    <svg
+                                        class="w-3.5 h-3.5"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="1.6"
+                                    >
+                                        <path
+                                            d="
+                                                M20 15.5
+                                                A8 8 0 0 1 8.5 4
+                                                A8 8 0 1 0 20 15.5
+                                            "
+                                        />
+                                    </svg>
+
+                                    Oscuro
+                                </button>
+
+
+                                {{-- Sistema --}}
+                                <button
+                                    type="button"
+
+                                    @click="
+                                        window.setTrackItTheme('system');
+                                        theme = 'system';
+                                    "
+
+                                    :class="
+                                        theme === 'system'
+                                            ? 'border-[var(--theme-primary)] bg-[var(--theme-primary-soft)] text-[var(--theme-primary)]'
+                                            : 'border-[var(--theme-border)] bg-[var(--theme-surface)] text-[var(--theme-text-muted)] hover:bg-[var(--theme-surface-soft)]'
+                                    "
+
+                                    class="
+                                        h-9
+
+                                        flex
+                                        items-center
+                                        justify-center
+                                        gap-1.5
+
+                                        border
+                                        rounded-lg
+
+                                        text-[11px]
+                                        font-medium
+
+                                        transition-colors
+                                    "
+                                >
+
+                                    <svg
+                                        class="w-3.5 h-3.5"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="1.6"
+                                    >
+                                        <rect
+                                            x="3"
+                                            y="4"
+                                            width="18"
+                                            height="13"
+                                            rx="1.5"
+                                        />
+
+                                        <path d="M8 21h8"/>
+                                        <path d="M12 17v4"/>
+                                    </svg>
+
+                                    Sistema
+                                </button>
+
+                            </div>
+
+                        </div>
 
 
                         {{-- Seguridad --}}
@@ -986,10 +1437,10 @@
                                 rounded-lg
 
                                 text-sm
-                                text-[#25344A]
+                                text-[var(--theme-text-strong)]
 
-                                hover:bg-[#247BA0]/5
-                                hover:text-[#247BA0]
+                                hover:bg-[var(--theme-primary-soft)]
+                                hover:text-[var(--theme-primary)]
 
                                 transition-colors
                             "
@@ -1005,23 +1456,10 @@
                             </svg>
 
                             <span>Seguridad</span>
-                        </button>
+                            </button>
 
-                    </div>
-
-
-
-                    <div class="h-px bg-[#50514F]/10 mx-4"></div>
-
-
-
-                    {{-- =============================================
-                        OPCIONES SECUNDARIAS
-                    ============================================== --}}
-                    <div class="p-2">
-
-                        {{-- Cambiar propiedad --}}
-                        <button
+                            {{-- Ayuda --}}
+                            <button
                             type="button"
                             class="
                                 w-full
@@ -1036,53 +1474,10 @@
                                 rounded-lg
 
                                 text-sm
-                                text-[#25344A]
+                                text-[var(--theme-text-strong)]
 
-                                hover:bg-[#247BA0]/5
-                                hover:text-[#247BA0]
-
-                                transition-colors
-                            "
-                        >
-                            <svg
-                                class="w-5 h-5 shrink-0"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="1.5"
-                            >
-                                <path d="M4 21h16"/>
-                                <path d="M6 21V7l6-4 6 4v14"/>
-                                <path d="M9 10h2"/>
-                                <path d="M13 10h2"/>
-                                <path d="M9 14h2"/>
-                                <path d="M13 14h2"/>
-                            </svg>
-
-                            <span>Cambiar propiedad</span>
-                        </button>
-
-
-                        {{-- Ayuda --}}
-                        <button
-                            type="button"
-                            class="
-                                w-full
-
-                                flex
-                                items-center
-                                gap-3
-
-                                px-3
-                                py-2.5
-
-                                rounded-lg
-
-                                text-sm
-                                text-[#25344A]
-
-                                hover:bg-[#247BA0]/5
-                                hover:text-[#247BA0]
+                                hover:bg-[var(--theme-primary-soft)]
+                                hover:text-[var(--theme-primary)]
 
                                 transition-colors
                             "
@@ -1100,13 +1495,13 @@
                             </svg>
 
                             <span>Ayuda y soporte</span>
-                        </button>
+                            </button>
 
-                    </div>
+                            </div>
 
 
 
-                    <div class="h-px bg-[#50514F]/10 mx-4"></div>
+                    <div class="h-px bg-[var(--theme-border)] mx-4"></div>
 
 
 
@@ -1137,9 +1532,9 @@
 
                                     text-sm
                                     font-medium
-                                    text-red-500
+                                    text-[var(--theme-danger)]
 
-                                    hover:bg-red-50
+                                    hover:bg-[var(--theme-danger-soft)]
 
                                     transition-colors
                                 "
@@ -1190,62 +1585,70 @@
         return window.matchMedia('(max-width: 767px)').matches;
     }
 
-    function applyDesktopSidebarState(collapsed) {
-        const sidebar = document.getElementById('sidebar');
-        const main = document.getElementById('mainContent');
-        const header = document.getElementById('sidebarHeader');
-        const labels = document.querySelectorAll('.sidebar-label');
-        const navLinks = document.querySelectorAll('.sidebar-nav-link');
-        const logoWrap = document.getElementById('sidebarLogoWrap');
+function applyDesktopSidebarState(collapsed) {
+    const sidebar = document.getElementById('sidebar');
+    const main = document.getElementById('mainContent');
 
-        if (collapsed) {
-            sidebar.classList.remove('w-64');
-            sidebar.classList.add('w-20');
+    /*
+    |--------------------------------------------------------------------------
+    | Estado global
+    |--------------------------------------------------------------------------
+    */
 
-            main.classList.remove('md:ml-64');
-            main.classList.add('md:ml-20');
+    document.documentElement.classList.toggle(
+        'sidebar-collapsed',
+        collapsed
+    );
 
-            header.classList.remove('justify-start');
-            header.classList.add('justify-center');
 
-            labels.forEach(el => el.classList.add('hidden'));
-            navLinks.forEach(el => el.classList.add('justify-center'));
-            logoWrap.classList.add('hidden');
-        } else {
-            sidebar.classList.remove('w-20');
-            sidebar.classList.add('w-64');
+    /*
+    |--------------------------------------------------------------------------
+    | Sidebar
+    |--------------------------------------------------------------------------
+    */
 
-            main.classList.remove('md:ml-20');
-            main.classList.add('md:ml-64');
+    if (collapsed) {
 
-            header.classList.remove('justify-center');
-            header.classList.add('justify-start');
+        sidebar.classList.remove('w-64');
+        sidebar.classList.add('w-20');
 
-            labels.forEach(el => el.classList.remove('hidden'));
-            navLinks.forEach(el => el.classList.remove('justify-center'));
-            logoWrap.classList.remove('hidden');
-        }
-    }
+        main.classList.remove('md:ml-64');
+        main.classList.add('md:ml-20');
 
-    function normalizeMobileSidebar() {
-        const sidebar = document.getElementById('sidebar');
-        const header = document.getElementById('sidebarHeader');
-        const labels = document.querySelectorAll('.sidebar-label');
-        const navLinks = document.querySelectorAll('.sidebar-nav-link');
-        const logoWrap = document.getElementById('sidebarLogoWrap');
+    } else {
 
-        // En móvil el drawer siempre usa su ancho completo,
-        // aunque en escritorio se haya guardado como colapsado.
         sidebar.classList.remove('w-20');
         sidebar.classList.add('w-64');
 
-        header.classList.remove('justify-center');
-        header.classList.add('justify-start');
+        main.classList.remove('md:ml-20');
+        main.classList.add('md:ml-64');
 
-        labels.forEach(el => el.classList.remove('hidden'));
-        navLinks.forEach(el => el.classList.remove('justify-center'));
-        logoWrap.classList.remove('hidden');
     }
+}
+
+function normalizeMobileSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const labels = document.querySelectorAll('.sidebar-label');
+    const logoWrap = document.getElementById('sidebarLogoWrap');
+
+    /*
+     * En móvil el drawer siempre utiliza
+     * el ancho completo.
+     */
+
+    sidebar.classList.remove('w-20');
+    sidebar.classList.add('w-64');
+
+    /*
+     * Restauramos textos y logo.
+     */
+
+    labels.forEach(el => {
+        el.classList.remove('hidden');
+    });
+
+    logoWrap.classList.remove('hidden');
+}
 
     function applyMobileSidebarState(open) {
         const sidebar = document.getElementById('sidebar');

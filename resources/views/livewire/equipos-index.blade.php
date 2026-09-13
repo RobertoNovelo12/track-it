@@ -117,7 +117,7 @@
                     left-4 top-1/2
                     -translate-y-1/2
                     w-5 h-5
-                    text-[#50514F]/45
+                    text-[var(--theme-text-muted)]
                     pointer-events-none
                 "
                 viewBox="0 0 24 24"
@@ -140,14 +140,14 @@
                     h-12
                     pl-12 pr-10
                     rounded-lg
-                    border border-[#50514F]/15
-                    bg-white
+                    border border-[var(--theme-border-strong)]
+                    bg-[var(--theme-surface)]
                     text-sm
-                    text-[#50514F]
-                    placeholder:text-[#50514F]/40
-                    focus:border-[#247BA0]
+                    text-[var(--theme-text)]
+                    placeholder:text-[var(--theme-text-muted)]
+                    focus:border-[var(--theme-primary)]
                     focus:ring-1
-                    focus:ring-[#247BA0]
+                    focus:ring-[var(--theme-primary)]
                 "
             >
 
@@ -164,9 +164,9 @@
                         w-7 h-7
                         flex items-center justify-center
                         rounded-full
-                        text-[#50514F]/45
-                        hover:text-[#50514F]
-                        hover:bg-[#50514F]/5
+                        text-[var(--theme-text-muted)]
+                        hover:text-[var(--theme-text-strong)]
+                        hover:bg-[var(--theme-surface-soft)]
                         transition-colors
                     "
                     aria-label="Limpiar búsqueda"
@@ -209,8 +209,8 @@
                     transition-colors
 
                     {{ count($activeFilters) > 0
-                        ? 'border-[#247BA0] text-[#247BA0] bg-[#247BA0]/5'
-                        : 'border-[#50514F]/15 bg-white text-[#50514F]/80 hover:bg-[#50514F]/5'
+                        ? 'border-[var(--theme-primary)] text-[var(--theme-primary)] bg-[var(--theme-primary-soft-subtle)]'
+                        : 'border-[var(--theme-border-strong)] bg-[var(--theme-surface)] text-[var(--theme-text)] hover:bg-[var(--theme-surface-soft)]'
                     }}
                 "
             >
@@ -250,11 +250,11 @@
                     flex items-center gap-2
                     px-4
                     rounded-lg
-                    border border-[#50514F]/15
-                    bg-white
+                    border border-[var(--theme-border-strong)]
+                    bg-[var(--theme-surface)]
                     text-sm font-medium
-                    text-[#50514F]/80
-                    hover:bg-[#50514F]/5
+                    text-[var(--theme-text)]
+                    hover:bg-[var(--theme-surface-soft)]
                     transition-colors
                 "
             >
@@ -305,8 +305,8 @@
                             flex items-center gap-1.5
                             px-3 py-1.5
                             rounded-full
-                            bg-[#247BA0]/10
-                            text-[#247BA0]
+                            bg-[var(--theme-primary-soft)]
+                            text-[var(--theme-primary)]
                             text-xs font-medium
                         "
                     >
@@ -338,7 +338,7 @@
                         shrink-0
                         px-2 py-1.5
                         text-xs font-medium
-                        text-[#247BA0]
+                        text-[var(--theme-primary)]
                     "
                 >
                     Limpiar
@@ -367,7 +367,7 @@
             @click="filtersOpen = false"
             class="
                 absolute inset-0
-                bg-[#25344A]/40
+                bg-[var(--theme-overlay)]
                 backdrop-blur-[1px]
             "
         ></div>
@@ -389,7 +389,7 @@
                 absolute
                 left-0 right-0 bottom-0
                 max-h-[90vh]
-                bg-white
+                bg-[var(--theme-surface)]
                 rounded-t-[24px]
                 shadow-2xl
                 flex flex-col
@@ -404,7 +404,7 @@
                     class="
                         w-12 h-1
                         rounded-full
-                        bg-[#50514F]/25
+                        bg-[var(--theme-border-strong)]
                     "
                 ></div>
 
@@ -420,7 +420,7 @@
                 "
             >
 
-                <h2 class="text-xl font-semibold text-[#25344A]">
+                <h2 class="text-xl font-semibold text-[var(--theme-text-strong)]">
                     Filtros de búsqueda
                 </h2>
 
@@ -432,8 +432,8 @@
                         w-9 h-9
                         flex items-center justify-center
                         rounded-full
-                        text-[#25344A]
-                        hover:bg-[#50514F]/5
+                        text-[var(--theme-text-strong)]
+                        hover:bg-[var(--theme-surface-soft)]
                         transition-colors
                     "
                     aria-label="Cerrar filtros"
@@ -519,7 +519,7 @@
                                 class="
                                     block
                                     text-xs
-                                    text-[#50514F]/60
+                                    text-[var(--theme-text-muted)]
                                     mb-1.5
                                 "
                             >
@@ -534,13 +534,13 @@
                                 class="
                                     w-full
                                     text-sm
-                                    border border-[#50514F]/15
+                                    border border-[var(--theme-border-strong)]
                                     rounded-md
                                     px-3 py-2
-                                    placeholder:text-[#50514F]/40
+                                    placeholder:text-[var(--theme-text-muted)]
                                     focus:ring-1
-                                    focus:ring-[#247BA0]
-                                    focus:border-[#247BA0]
+                                    focus:ring-[var(--theme-primary)]
+                                    focus:border-[var(--theme-primary)]
                                 "
                             >
 
@@ -554,7 +554,7 @@
                                 class="
                                     block
                                     text-xs
-                                    text-[#50514F]/60
+                                    text-[var(--theme-text-muted)]
                                     mb-1.5
                                 "
                             >
@@ -569,13 +569,13 @@
                                 class="
                                     w-full
                                     text-sm
-                                    border border-[#50514F]/15
+                                    border border-[var(--theme-border-strong)]
                                     rounded-md
                                     px-3 py-2
-                                    placeholder:text-[#50514F]/40
+                                    placeholder:text-[var(--theme-text-muted)]
                                     focus:ring-1
-                                    focus:ring-[#247BA0]
-                                    focus:border-[#247BA0]
+                                    focus:ring-[var(--theme-primary)]
+                                    focus:border-[var(--theme-primary)]
                                 "
                             >
 
@@ -589,7 +589,7 @@
                                 class="
                                     block
                                     text-xs
-                                    text-[#50514F]/60
+                                    text-[var(--theme-text-muted)]
                                     mb-1.5
                                 "
                             >
@@ -604,13 +604,13 @@
                                 class="
                                     w-full
                                     text-sm
-                                    border border-[#50514F]/15
+                                    border border-[var(--theme-border-strong)]
                                     rounded-md
                                     px-3 py-2
-                                    placeholder:text-[#50514F]/40
+                                    placeholder:text-[var(--theme-text-muted)]
                                     focus:ring-1
-                                    focus:ring-[#247BA0]
-                                    focus:border-[#247BA0]
+                                    focus:ring-[var(--theme-primary)]
+                                    focus:border-[var(--theme-primary)]
                                 "
                             >
 
@@ -654,8 +654,8 @@
                         grid grid-cols-2
                         gap-3
                         p-5
-                        bg-white
-                        border-t border-[#50514F]/10
+                        bg-[var(--theme-surface)]
+                        border-t border-[var(--theme-border)]
                     "
                 >
 
@@ -665,10 +665,10 @@
                         class="
                             h-12
                             rounded-lg
-                            border border-[#247BA0]/40
+                            border border-[var(--theme-primary-border)]
                             text-sm font-medium
-                            text-[#247BA0]
-                            hover:bg-[#247BA0]/5
+                            text-[var(--theme-primary)]
+                            hover:bg-[var(--theme-primary-soft-subtle)]
                             transition-colors
                         "
                     >
@@ -681,10 +681,10 @@
                         class="
                             h-12
                             rounded-lg
-                            bg-[#247BA0]
+                            bg-[var(--theme-primary)]
                             text-sm font-medium
                             text-white
-                            hover:bg-[#1d6688]
+                            hover:bg-[var(--theme-primary-hover)]
                             transition-colors
                         "
                     >
@@ -707,8 +707,8 @@
         wire:submit.prevent="$refresh"
         class="
             hidden md:block
-            bg-white
-            border border-[#50514F]/10
+            bg-[var(--theme-surface)]
+            border border-[var(--theme-border)]
             rounded-lg
             p-6 mb-6
         "
@@ -718,7 +718,7 @@
         <div class="flex items-center gap-2 mb-5">
 
             <svg
-                class="w-4 h-4 text-[#50514F]/70"
+                class="w-4 h-4 text-[var(--theme-text-muted)]"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -730,7 +730,7 @@
                 <path d="M9 18v-2a2 2 0 012-2h2a2 2 0 012 2v2"/>
             </svg>
 
-            <span class="text-sm font-semibold text-[#50514F]">
+            <span class="text-sm font-semibold text-[var(--theme-text)]">
                 Filtros de búsqueda
             </span>
 
@@ -752,7 +752,7 @@
                 class="
                     w-4 h-4
                     animate-spin
-                    text-[#247BA0]
+                    text-[var(--theme-primary)]
                     ml-1
                 "
                 viewBox="0 0 24 24"
@@ -828,7 +828,7 @@
                     class="
                         block
                         text-xs
-                        text-[#50514F]/60
+                        text-[var(--theme-text-muted)]
                         mb-1.5
                     "
                 >
@@ -842,13 +842,13 @@
                     class="
                         w-full
                         text-sm
-                        border border-[#50514F]/15
+                        border border-[var(--theme-border-strong)]
                         rounded-md
                         px-3 py-2
-                        placeholder:text-[#50514F]/40
+                        placeholder:text-[var(--theme-text-muted)]
                         focus:ring-1
-                        focus:ring-[#247BA0]
-                        focus:border-[#247BA0]
+                        focus:ring-[var(--theme-primary)]
+                        focus:border-[var(--theme-primary)]
                     "
                 >
 
@@ -874,7 +874,7 @@
                     class="
                         block
                         text-xs
-                        text-[#50514F]/60
+                        text-[var(--theme-text-muted)]
                         mb-1.5
                     "
                 >
@@ -888,13 +888,13 @@
                     class="
                         w-full
                         text-sm
-                        border border-[#50514F]/15
+                        border border-[var(--theme-border-strong)]
                         rounded-md
                         px-3 py-2
-                        placeholder:text-[#50514F]/40
+                        placeholder:text-[var(--theme-text-muted)]
                         focus:ring-1
-                        focus:ring-[#247BA0]
-                        focus:border-[#247BA0]
+                        focus:ring-[var(--theme-primary)]
+                        focus:border-[var(--theme-primary)]
                     "
                 >
 
@@ -907,7 +907,7 @@
                     class="
                         block
                         text-xs
-                        text-[#50514F]/60
+                        text-[var(--theme-text-muted)]
                         mb-1.5
                     "
                 >
@@ -921,13 +921,13 @@
                     class="
                         w-full
                         text-sm
-                        border border-[#50514F]/15
+                        border border-[var(--theme-border-strong)]
                         rounded-md
                         px-3 py-2
-                        placeholder:text-[#50514F]/40
+                        placeholder:text-[var(--theme-text-muted)]
                         focus:ring-1
-                        focus:ring-[#247BA0]
-                        focus:border-[#247BA0]
+                        focus:ring-[var(--theme-primary)]
+                        focus:border-[var(--theme-primary)]
                     "
                 >
 
@@ -965,12 +965,12 @@
                 type="button"
                 wire:click="resetFilters"
                 class="
-                    border border-[#50514F]/20
+                    border border-[var(--theme-border-strong)]
                     rounded-md
                     px-4 py-2
                     text-sm font-medium
-                    text-[#50514F]/70
-                    hover:bg-[#50514F]/5
+                    text-[var(--theme-text-muted)]
+                    hover:bg-[var(--theme-surface-soft)]
                     transition-colors
                 "
             >
@@ -982,12 +982,12 @@
                 type="submit"
                 class="
                     flex items-center gap-2
-                    bg-[#247BA0]
+                    bg-[var(--theme-primary)]
                     rounded-md
                     px-4 py-2
                     text-sm font-medium
                     text-white
-                    hover:bg-[#1d6688]
+                    hover:bg-[var(--theme-primary-hover)]
                     transition-colors
                 "
             >
@@ -1024,9 +1024,9 @@
             rounded-none
             overflow-visible
 
-            md:bg-white
+            md:bg-[var(--theme-surface)]
             md:border
-            md:border-[#50514F]/10
+            md:border-[var(--theme-border)]
             md:rounded-lg
             md:overflow-hidden
         "
@@ -1037,7 +1037,7 @@
             wire:loading.delay
             class="
                 absolute inset-0
-                bg-white/50
+                bg-[var(--theme-surface)] opacity-50
                 z-10
                 pointer-events-none
             "
@@ -1052,11 +1052,11 @@
                 hidden md:flex
                 items-center justify-between
                 px-5 py-4
-                border-b border-[#50514F]/10
+                border-b border-[var(--theme-border)]
             "
         >
 
-            <p class="text-sm text-[#50514F]/80">
+            <p class="text-sm text-[var(--theme-text)]">
 
                 Resultados:
 
@@ -1073,7 +1073,7 @@
 
                 <div class="flex items-center gap-2">
 
-                    <span class="text-xs text-[#50514F]/60">
+                    <span class="text-xs text-[var(--theme-text-muted)]">
                         Mostrar
                     </span>
 
@@ -1081,12 +1081,12 @@
                         wire:model.live="perPage"
                         class="
                             text-xs
-                            border border-[#50514F]/15
+                            border border-[var(--theme-border-strong)]
                             rounded-md
                             px-2 py-1.5
-                            bg-white
+                            bg-[var(--theme-surface)]
                             focus:ring-1
-                            focus:ring-[#247BA0]
+                            focus:ring-[var(--theme-primary)]
                         "
                     >
 
@@ -1100,7 +1100,7 @@
 
                     </select>
 
-                    <span class="text-xs text-[#50514F]/60">
+                    <span class="text-xs text-[var(--theme-text-muted)]">
                         Por página
                     </span>
 
@@ -1111,13 +1111,13 @@
                     wire:model.live="sort"
                     class="
                         text-xs
-                        border border-[#50514F]/15
+                        border border-[var(--theme-border-strong)]
                         rounded-md
                         px-2 py-1.5
-                        bg-white
+                        bg-[var(--theme-surface)]
                         uppercase
                         focus:ring-1
-                        focus:ring-[#247BA0]
+                        focus:ring-[var(--theme-primary)]
                     "
                 >
                     <option value="asc">
@@ -1145,7 +1145,7 @@
 
                     <tr
                         class="
-                            border-b border-[#50514F]/10
+                            border-b border-[var(--theme-border)]
                             text-left
                         "
                     >
@@ -1155,45 +1155,45 @@
                             <input
                                 type="checkbox"
                                 onclick="toggleAllRows(this)"
-                                class="rounded border-[#50514F]/30"
+                                class="rounded border-[var(--theme-border-strong)]"
                             >
 
                         </th>
 
 
-                        <th class="px-3 py-3 font-medium text-[#50514F]/70">
+                        <th class="px-3 py-3 font-medium text-[var(--theme-text-muted)]">
                             ID Equipo
                         </th>
 
-                        <th class="px-3 py-3 font-medium text-[#50514F]/70">
+                        <th class="px-3 py-3 font-medium text-[var(--theme-text-muted)]">
                             Tipo de Equipo
                         </th>
 
-                        <th class="px-3 py-3 font-medium text-[#50514F]/70">
+                        <th class="px-3 py-3 font-medium text-[var(--theme-text-muted)]">
                             Marca
                         </th>
 
-                        <th class="px-3 py-3 font-medium text-[#50514F]/70">
+                        <th class="px-3 py-3 font-medium text-[var(--theme-text-muted)]">
                             Modelo
                         </th>
 
-                        <th class="px-3 py-3 font-medium text-[#50514F]/70">
+                        <th class="px-3 py-3 font-medium text-[var(--theme-text-muted)]">
                             Número de serie
                         </th>
 
-                        <th class="px-3 py-3 font-medium text-[#50514F]/70">
+                        <th class="px-3 py-3 font-medium text-[var(--theme-text-muted)]">
                             Service Tag
                         </th>
 
-                        <th class="px-3 py-3 font-medium text-[#50514F]/70">
+                        <th class="px-3 py-3 font-medium text-[var(--theme-text-muted)]">
                             Dirección IP
                         </th>
 
-                        <th class="px-3 py-3 font-medium text-[#50514F]/70">
+                        <th class="px-3 py-3 font-medium text-[var(--theme-text-muted)]">
                             Estado
                         </th>
 
-                        <th class="px-3 py-3 font-medium text-[#50514F]/70">
+                        <th class="px-3 py-3 font-medium text-[var(--theme-text-muted)]">
                             Área / Departamento
                         </th>
 
@@ -1201,7 +1201,7 @@
                             class="
                                 px-3 py-3
                                 font-medium
-                                text-[#50514F]/70
+                                text-[var(--theme-text-muted)]
                                 text-right
                             "
                         >
@@ -1220,8 +1220,8 @@
                         <tr
                             wire:key="equipo-{{ $equipo->id_equipo }}"
                             class="
-                                border-b border-[#50514F]/5
-                                hover:bg-[#247BA0]/5
+                                border-b border-[var(--theme-border)]
+                                hover:bg-[var(--theme-primary-soft-subtle)]
                                 transition-colors
                             "
                         >
@@ -1235,7 +1235,7 @@
                                     class="
                                         row-checkbox
                                         rounded
-                                        border-[#50514F]/30
+                                        border-[var(--theme-border-strong)]
                                     "
                                 >
 
@@ -1246,39 +1246,39 @@
                                 class="
                                     px-3 py-3
                                     font-medium
-                                    text-[#50514F]
+                                    text-[var(--theme-text)]
                                 "
                             >
                                 {{ $equipo->codigo_inventario }}
                             </td>
 
 
-                            <td class="px-3 py-3 text-[#50514F]/80">
+                            <td class="px-3 py-3 text-[var(--theme-text)]">
                                 {{ $equipo->tipo_equipo_nombre ?? '—' }}
                             </td>
 
 
-                            <td class="px-3 py-3 text-[#50514F]/80">
+                            <td class="px-3 py-3 text-[var(--theme-text)]">
                                 {{ $equipo->marca_nombre ?? '—' }}
                             </td>
 
 
-                            <td class="px-3 py-3 text-[#50514F]/80">
+                            <td class="px-3 py-3 text-[var(--theme-text)]">
                                 {{ $equipo->modelo_nombre ?? 'N/A' }}
                             </td>
 
 
-                            <td class="px-3 py-3 text-[#50514F]/80">
+                            <td class="px-3 py-3 text-[var(--theme-text)]">
                                 {{ $equipo->numero_serie ?? 'NA' }}
                             </td>
 
 
-                            <td class="px-3 py-3 text-[#50514F]/80">
+                            <td class="px-3 py-3 text-[var(--theme-text)]">
                                 {{ $equipo->service_tag ?? 'NA' }}
                             </td>
 
 
-                            <td class="px-3 py-3 text-[#50514F]/80">
+                            <td class="px-3 py-3 text-[var(--theme-text)]">
                                 {{ $equipo->direccion_ip ?? 'NA' }}
                             </td>
 
@@ -1292,7 +1292,7 @@
                             </td>
 
 
-                            <td class="px-3 py-3 text-[#50514F]/80">
+                            <td class="px-3 py-3 text-[var(--theme-text)]">
                                 {{ $equipo->ubicacion_organizacional ?? '—' }}
                             </td>
 
@@ -1317,8 +1317,8 @@
                                             : '#'
                                         }}"
                                         class="
-                                            text-[#247BA0]
-                                            hover:text-[#1d6688]
+                                            text-[var(--theme-primary)]
+                                            hover:text-[var(--theme-primary-hover)]
                                         "
                                         title="Ver detalle"
                                     >
@@ -1347,8 +1347,8 @@
                                             'menu-{{ $equipo->id_equipo }}'
                                         )"
                                         class="
-                                            text-[#50514F]/60
-                                            hover:text-[#50514F]
+                                            text-[var(--theme-text-muted)]
+                                            hover:text-[var(--theme-text-strong)]
                                         "
                                         title="Más acciones"
                                     >
@@ -1375,8 +1375,8 @@
                                             absolute
                                             right-0 top-6
                                             w-40
-                                            bg-white
-                                            border border-[#50514F]/10
+                                            bg-[var(--theme-surface)]
+                                            border border-[var(--theme-border)]
                                             rounded-md
                                             shadow-md
                                             z-20
@@ -1396,8 +1396,8 @@
                                                 block
                                                 px-4 py-2
                                                 text-xs
-                                                text-[#50514F]/80
-                                                hover:bg-[#50514F]/5
+                                                text-[var(--theme-text)]
+                                                hover:bg-[var(--theme-surface-soft)]
                                             "
                                         >
                                             Editar
@@ -1412,8 +1412,8 @@
                                                 text-left
                                                 px-4 py-2
                                                 text-xs
-                                                text-red-600
-                                                hover:bg-red-50
+                                                text-[var(--theme-danger)]
+                                                hover:bg-[var(--theme-danger-soft)]
                                             "
                                         >
                                             Dar de baja
@@ -1437,7 +1437,7 @@
                                     px-5 py-12
                                     text-center
                                     text-sm
-                                    text-[#50514F]/50
+                                    text-[var(--theme-text-muted)]
                                 "
                             >
                                 No se encontraron equipos con los filtros seleccionados.
@@ -1465,7 +1465,7 @@
                 @click="selected = !selected"
                 wire:key="equipo-card-{{ $equipo->id_equipo }}"
                 class="
-                    bg-white
+                    bg-[var(--theme-surface)]
                     border
                     rounded-xl
                     p-4
@@ -1476,8 +1476,8 @@
                 "
                 :class="
                     selected
-                        ? 'border-[#247BA0]/50 ring-1 ring-[#247BA0]/10'
-                        : 'border-[#50514F]/10'
+                        ? 'border-[var(--theme-primary-border-strong)] ring-1 ring-[var(--theme-primary-soft)]'
+                        : 'border-[var(--theme-border)]'
                 "
             >
 
@@ -1499,8 +1499,8 @@
                     "
                     :class="
                         selected
-                            ? 'border-[#247BA0] bg-[#247BA0]'
-                            : 'border-[#50514F]/35 bg-white'
+                            ? 'border-[var(--theme-primary)] bg-[var(--theme-primary)]'
+                            : 'border-[var(--theme-border-strong)] bg-[var(--theme-surface)]'
                     "
                     aria-label="Seleccionar equipo"
                 >
@@ -1526,7 +1526,7 @@
                                 text-sm
                                 font-semibold
                                 leading-snug
-                                text-[#25344A]
+                                text-[var(--theme-text-strong)]
                                 break-words
                             "
                         >
@@ -1545,7 +1545,7 @@
 
 
                         {{-- Código inventario --}}
-                        <p class="text-xs text-[#50514F]/50 mt-1">
+                        <p class="text-xs text-[var(--theme-text-muted)] mt-1">
                             {{ $equipo->codigo_inventario }}
                         </p>
 
@@ -1565,8 +1565,8 @@
                                 w-8 h-8
                                 flex items-center justify-center
                                 rounded-md
-                                text-[#25344A]/80
-                                hover:bg-[#50514F]/5
+                                text-[var(--theme-text)]
+                                hover:bg-[var(--theme-surface-soft)]
                                 transition-colors
                             "
                             aria-label="Más acciones"
@@ -1593,8 +1593,8 @@
                                 absolute
                                 right-0 top-9
                                 w-40
-                                bg-white
-                                border border-[#50514F]/10
+                                bg-[var(--theme-surface)]
+                                border border-[var(--theme-border)]
                                 rounded-lg
                                 shadow-lg
                                 z-20
@@ -1616,8 +1616,8 @@
                                     block
                                     px-4 py-2.5
                                     text-xs
-                                    text-[#50514F]/80
-                                    hover:bg-[#50514F]/5
+                                    text-[var(--theme-text)]
+                                    hover:bg-[var(--theme-surface-soft)]
                                 "
                             >
                                 Ver detalle
@@ -1637,8 +1637,8 @@
                                     block
                                     px-4 py-2.5
                                     text-xs
-                                    text-[#50514F]/80
-                                    hover:bg-[#50514F]/5
+                                    text-[var(--theme-text)]
+                                    hover:bg-[var(--theme-surface-soft)]
                                 "
                             >
                                 Editar
@@ -1654,8 +1654,8 @@
                                     text-left
                                     px-4 py-2.5
                                     text-xs
-                                    text-red-600
-                                    hover:bg-red-50
+                                    text-[var(--theme-danger)]
+                                    hover:bg-[var(--theme-danger-soft)]
                                     cursor-default
                                 "
                             >
@@ -1675,9 +1675,9 @@
                     <div class="mt-3 space-y-2">
 
                         {{-- Número de serie --}}
-                        <p class="text-xs text-[#50514F]/70">
+                        <p class="text-xs text-[var(--theme-text-muted)]">
 
-                            <span class="text-[#50514F]/45">
+                            <span class="text-[var(--theme-text-muted)]">
                                 SN:
                             </span>
 
@@ -1689,9 +1689,9 @@
 
 
                         {{-- Service Tag --}}
-                        <p class="text-xs text-[#50514F]/70">
+                        <p class="text-xs text-[var(--theme-text-muted)]">
 
-                            <span class="text-[#50514F]/45">
+                            <span class="text-[var(--theme-text-muted)]">
                                 Service Tag:
                             </span>
 
@@ -1705,9 +1705,9 @@
                         {{-- IP --}}
                         @if ($equipo->direccion_ip)
 
-                            <p class="text-xs text-[#50514F]/70">
+                            <p class="text-xs text-[var(--theme-text-muted)]">
 
-                                <span class="text-[#50514F]/45">
+                                <span class="text-[var(--theme-text-muted)]">
                                     IP:
                                 </span>
 
@@ -1721,7 +1721,7 @@
                         {{-- Estado --}}
                         <div class="flex items-center gap-2">
 
-                            <span class="text-xs text-[#50514F]/45">
+                            <span class="text-xs text-[var(--theme-text-muted)]">
                                 Estado:
                             </span>
 
@@ -1733,9 +1733,9 @@
 
 
                         {{-- Área --}}
-                        <p class="text-xs text-[#50514F]/70">
+                        <p class="text-xs text-[var(--theme-text-muted)]">
 
-                            <span class="text-[#50514F]/45">
+                            <span class="text-[var(--theme-text-muted)]">
                                 Área:
                             </span>
 
@@ -1752,8 +1752,8 @@
                 {{-- Sin resultados --}}
                 <div
                     class="
-                        bg-white
-                        border border-[#50514F]/10
+                        bg-[var(--theme-surface)]
+                        border border-[var(--theme-border)]
                         rounded-xl
                         px-5 py-12
                         text-center
@@ -1764,7 +1764,7 @@
                         class="
                             w-9 h-9
                             mx-auto mb-3
-                            text-[#50514F]/35
+                            text-[var(--theme-text-muted)]
                         "
                         viewBox="0 0 24 24"
                         fill="none"
@@ -1779,7 +1779,7 @@
                     </svg>
 
 
-                    <p class="text-sm text-[#50514F]/50">
+                    <p class="text-sm text-[var(--theme-text-muted)]">
                         No se encontraron resultados
                     </p>
 
@@ -1804,7 +1804,7 @@
                     items-center justify-end
                     gap-1
                     px-5 py-4
-                    border-t border-[#50514F]/10
+                    border-t border-[var(--theme-border)]
                 "
             >
 
@@ -1817,11 +1817,11 @@
                         w-8 h-8
                         flex items-center justify-center
                         rounded-md
-                        text-[#50514F]/50
+                        text-[var(--theme-text-muted)]
 
                         {{ $equipos->onFirstPage()
                             ? 'opacity-40'
-                            : 'hover:bg-[#50514F]/5'
+                            : 'hover:bg-[var(--theme-surface-soft)]'
                         }}
                     "
                 >
@@ -1859,8 +1859,8 @@
                             text-xs font-medium
 
                             {{ $page === $current
-                                ? 'bg-[#247BA0] text-white'
-                                : 'text-[#50514F]/70 hover:bg-[#50514F]/5'
+                                ? 'bg-[var(--theme-primary)] text-white'
+                                : 'text-[var(--theme-text-muted)] hover:bg-[var(--theme-surface-soft)]'
                             }}
                         "
                     >
@@ -1877,7 +1877,7 @@
                             w-8 h-8
                             flex items-center justify-center
                             text-xs
-                            text-[#50514F]/40
+                            text-[var(--theme-text-muted)]
                         "
                     >
                         ...
@@ -1903,8 +1903,8 @@
                             text-xs font-medium
 
                             {{ $page === $current
-                                ? 'bg-[#247BA0] text-white'
-                                : 'text-[#50514F]/70 hover:bg-[#50514F]/5'
+                                ? 'bg-[var(--theme-primary)] text-white'
+                                : 'text-[var(--theme-text-muted)] hover:bg-[var(--theme-surface-soft)]'
                             }}
                         "
                     >
@@ -1921,7 +1921,7 @@
                             w-8 h-8
                             flex items-center justify-center
                             text-xs
-                            text-[#50514F]/40
+                            text-[var(--theme-text-muted)]
                         "
                     >
                         ...
@@ -1947,8 +1947,8 @@
                             text-xs font-medium
 
                             {{ $page === $current
-                                ? 'bg-[#247BA0] text-white'
-                                : 'text-[#50514F]/70 hover:bg-[#50514F]/5'
+                                ? 'bg-[var(--theme-primary)] text-white'
+                                : 'text-[var(--theme-text-muted)] hover:bg-[var(--theme-surface-soft)]'
                             }}
                         "
                     >
@@ -1967,10 +1967,10 @@
                         w-8 h-8
                         flex items-center justify-center
                         rounded-md
-                        text-[#50514F]/50
+                        text-[var(--theme-text-muted)]
 
                         {{ $equipos->hasMorePages()
-                            ? 'hover:bg-[#50514F]/5'
+                            ? 'hover:bg-[var(--theme-surface-soft)]'
                             : 'opacity-40'
                         }}
                     "
@@ -2012,13 +2012,13 @@
                         h-9
                         px-3
                         rounded-lg
-                        border border-[#50514F]/15
-                        bg-white
+                        border border-[var(--theme-border-strong)]
+                        bg-[var(--theme-surface)]
                         text-xs font-medium
 
                         {{ $equipos->onFirstPage()
-                            ? 'opacity-40 cursor-not-allowed text-[#50514F]/50'
-                            : 'text-[#50514F]/70'
+                            ? 'opacity-40 cursor-not-allowed text-[var(--theme-text-muted)]'
+                            : 'text-[var(--theme-text-muted)]'
                         }}
                     "
                 >
@@ -2029,20 +2029,20 @@
                 <span
                     class="
                         text-xs
-                        text-[#50514F]/55
+                        text-[var(--theme-text-muted)]
                         text-center
                     "
                 >
 
                     Página
 
-                    <span class="font-medium text-[#50514F]/80">
+                    <span class="font-medium text-[var(--theme-text)]">
                         {{ $equipos->currentPage() }}
                     </span>
 
                     de
 
-                    <span class="font-medium text-[#50514F]/80">
+                    <span class="font-medium text-[var(--theme-text)]">
                         {{ $equipos->lastPage() }}
                     </span>
 
@@ -2057,13 +2057,13 @@
                         h-9
                         px-3
                         rounded-lg
-                        border border-[#50514F]/15
-                        bg-white
+                        border border-[var(--theme-border-strong)]
+                        bg-[var(--theme-surface)]
                         text-xs font-medium
 
                         {{ $equipos->hasMorePages()
-                            ? 'text-[#50514F]/70'
-                            : 'opacity-40 cursor-not-allowed text-[#50514F]/50'
+                            ? 'text-[var(--theme-text-muted)]'
+                            : 'opacity-40 cursor-not-allowed text-[var(--theme-text-muted)]'
                         }}
                     "
                 >

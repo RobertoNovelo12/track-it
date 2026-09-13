@@ -1,18 +1,52 @@
 @props(['status'])
 
 @php
-    $normalized = \Illuminate\Support\Str::of($status)->lower()->ascii()->toString();
+    $normalized = \Illuminate\Support\Str::of($status)
+        ->lower()
+        ->ascii()
+        ->toString();
 
     $styles = match (true) {
-        str_contains($normalized, 'activo') && !str_contains($normalized, 'inactivo') => 'bg-green-100 text-green-700',
-        str_contains($normalized, 'mantenimiento') => 'bg-[#50514F]/10 text-[#50514F]/70',
-        str_contains($normalized, 'almacen') || str_contains($normalized, 'stock') => 'bg-[#247BA0]/10 text-[#247BA0]',
-        str_contains($normalized, 'baja') || str_contains($normalized, 'inactivo') => 'bg-red-100 text-red-600',
-        str_contains($normalized, 'asignado') || str_contains($normalized, 'prestamo') => 'bg-[#CB8B2A]/15 text-[#CB8B2A]',
-        default => 'bg-[#50514F]/10 text-[#50514F]/70',
+
+        str_contains($normalized, 'activo')
+            && !str_contains($normalized, 'inactivo')
+                => 'bg-emerald-500/15 text-emerald-500',
+
+        str_contains($normalized, 'mantenimiento')
+                => 'bg-[var(--theme-surface-soft)] text-[var(--theme-text-muted)]',
+
+        str_contains($normalized, 'almacen')
+            || str_contains($normalized, 'stock')
+                => 'bg-[var(--theme-primary-soft)] text-[var(--theme-primary)]',
+
+        str_contains($normalized, 'baja')
+            || str_contains($normalized, 'inactivo')
+                => 'bg-[var(--theme-danger-soft)] text-[var(--theme-danger)]',
+
+        str_contains($normalized, 'asignado')
+            || str_contains($normalized, 'prestamo')
+                => 'bg-amber-500/15 text-amber-500',
+
+        default
+                => 'bg-[var(--theme-surface-soft)] text-[var(--theme-text-muted)]',
     };
 @endphp
 
-<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ $styles }}">
+<span
+    class="
+        inline-flex
+        items-center
+
+        px-2.5
+        py-1
+
+        rounded-full
+
+        text-xs
+        font-medium
+
+        {{ $styles }}
+    "
+>
     {{ $status }}
 </span>

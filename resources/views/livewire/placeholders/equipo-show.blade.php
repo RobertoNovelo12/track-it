@@ -5,8 +5,8 @@
     ============================================================ --}}
     <section
         class="
-            bg-white
-            border border-[#50514F]/10
+            bg-[var(--theme-surface)]
+            border border-[var(--theme-border)]
             rounded-xl
             p-4
             sm:p-5
@@ -35,7 +35,7 @@
                         shrink-0
                         w-12 h-12
                         rounded-xl
-                        bg-[#50514F]/10
+                        bg-[var(--theme-surface-soft)]
                     "
                 ></div>
 
@@ -48,7 +48,7 @@
                             h-5
                             w-3/4
                             sm:w-64
-                            bg-[#50514F]/10
+                            bg-[var(--theme-surface-soft)]
                             rounded
                         "
                     ></div>
@@ -59,7 +59,7 @@
                         class="
                             h-3
                             w-40
-                            bg-[#50514F]/10
+                            bg-[var(--theme-surface-soft)]
                             rounded
                             mt-2
                         "
@@ -73,7 +73,7 @@
                             class="
                                 h-3
                                 w-24
-                                bg-[#50514F]/10
+                                bg-[var(--theme-surface-soft)]
                                 rounded
                             "
                         ></div>
@@ -82,7 +82,7 @@
                             class="
                                 h-3
                                 w-28
-                                bg-[#50514F]/10
+                                bg-[var(--theme-surface-soft)]
                                 rounded
                             "
                         ></div>
@@ -101,7 +101,7 @@
                     w-full
                     sm:w-28
                     rounded-lg
-                    bg-[#50514F]/10
+                    bg-[var(--theme-surface-soft)]
                 "
             ></div>
 
@@ -117,7 +117,7 @@
                 gap-4
                 mt-5
                 pt-4
-                border-t border-[#50514F]/10
+                border-t border-[var(--theme-border)]
             "
         >
 
@@ -129,7 +129,7 @@
                         class="
                             h-2.5
                             w-12
-                            bg-[#50514F]/10
+                            bg-[var(--theme-surface-soft)]
                             rounded
                             mb-2
                         "
@@ -139,7 +139,7 @@
                         class="
                             h-3
                             {{ $i === 3 ? 'w-28' : 'w-20' }}
-                            bg-[#50514F]/10
+                            bg-[var(--theme-surface-soft)]
                             rounded
                         "
                     ></div>
@@ -171,8 +171,8 @@
         {{-- Información general --}}
         <section
             class="
-                bg-white
-                border border-[#50514F]/10
+                bg-[var(--theme-surface)]
+                border border-[var(--theme-border)]
                 rounded-xl
                 p-4
                 sm:p-5
@@ -185,7 +185,7 @@
                 <div
                     class="
                         w-5 h-5
-                        bg-[#50514F]/10
+                        bg-[var(--theme-surface-soft)]
                         rounded
                     "
                 ></div>
@@ -194,7 +194,7 @@
                     class="
                         h-4
                         w-36
-                        bg-[#50514F]/10
+                        bg-[var(--theme-surface-soft)]
                         rounded
                     "
                 ></div>
@@ -220,7 +220,7 @@
                             class="
                                 h-3
                                 w-24
-                                bg-[#50514F]/10
+                                bg-[var(--theme-surface-soft)]
                                 rounded
                             "
                         ></div>
@@ -229,7 +229,7 @@
                             class="
                                 h-3
                                 {{ $i % 3 === 0 ? 'w-28' : 'w-20' }}
-                                bg-[#50514F]/10
+                                bg-[var(--theme-surface-soft)]
                                 rounded
                             "
                         ></div>
@@ -246,8 +246,8 @@
         {{-- Especificaciones --}}
         <section
             class="
-                bg-white
-                border border-[#50514F]/10
+                bg-[var(--theme-surface)]
+                border border-[var(--theme-border)]
                 rounded-xl
                 p-4
                 sm:p-5
@@ -259,7 +259,7 @@
                 <div
                     class="
                         w-5 h-5
-                        bg-[#50514F]/10
+                        bg-[var(--theme-surface-soft)]
                         rounded
                     "
                 ></div>
@@ -268,7 +268,7 @@
                     class="
                         h-4
                         w-44
-                        bg-[#50514F]/10
+                        bg-[var(--theme-surface-soft)]
                         rounded
                     "
                 ></div>
@@ -293,7 +293,7 @@
                             class="
                                 h-3
                                 w-28
-                                bg-[#50514F]/10
+                                bg-[var(--theme-surface-soft)]
                                 rounded
                             "
                         ></div>
@@ -302,7 +302,7 @@
                             class="
                                 h-3
                                 w-20
-                                bg-[#50514F]/10
+                                bg-[var(--theme-surface-soft)]
                                 rounded
                             "
                         ></div>
@@ -319,8 +319,8 @@
         {{-- Asignación --}}
         <section
             class="
-                bg-white
-                border border-[#50514F]/10
+                bg-[var(--theme-surface)]
+                border border-[var(--theme-border)]
                 rounded-xl
                 p-4
                 sm:p-5
@@ -332,7 +332,7 @@
                 <div
                     class="
                         w-5 h-5
-                        bg-[#50514F]/10
+                        bg-[var(--theme-surface-soft)]
                         rounded
                     "
                 ></div>
@@ -341,7 +341,7 @@
                     class="
                         h-4
                         w-32
-                        bg-[#50514F]/10
+                        bg-[var(--theme-surface-soft)]
                         rounded
                     "
                 ></div>
@@ -366,7 +366,7 @@
                             class="
                                 h-3
                                 w-24
-                                bg-[#50514F]/10
+                                bg-[var(--theme-surface-soft)]
                                 rounded
                             "
                         ></div>
@@ -375,7 +375,7 @@
                             class="
                                 h-3
                                 w-28
-                                bg-[#50514F]/10
+                                bg-[var(--theme-surface-soft)]
                                 rounded
                             "
                         ></div>
@@ -407,8 +407,8 @@
         {{-- Movimientos --}}
         <section
             class="
-                bg-white
-                border border-[#50514F]/10
+                bg-[var(--theme-surface)]
+                border border-[var(--theme-border)]
                 rounded-xl
                 overflow-hidden
             "
@@ -421,14 +421,14 @@
                     gap-2
                     p-4
                     sm:p-5
-                    border-b border-[#50514F]/10
+                    border-b border-[var(--theme-border)]
                 "
             >
 
                 <div
                     class="
                         w-5 h-5
-                        bg-[#50514F]/10
+                        bg-[var(--theme-surface-soft)]
                         rounded
                     "
                 ></div>
@@ -437,7 +437,7 @@
                     class="
                         h-4
                         w-40
-                        bg-[#50514F]/10
+                        bg-[var(--theme-surface-soft)]
                         rounded
                     "
                 ></div>
@@ -464,7 +464,7 @@
                                 class="
                                     h-3
                                     w-32
-                                    bg-[#50514F]/10
+                                    bg-[var(--theme-surface-soft)]
                                     rounded
                                 "
                             ></div>
@@ -473,7 +473,7 @@
                                 class="
                                     h-2.5
                                     w-24
-                                    bg-[#50514F]/10
+                                    bg-[var(--theme-surface-soft)]
                                     rounded
                                 "
                             ></div>
@@ -485,7 +485,7 @@
                             class="
                                 h-3
                                 w-16
-                                bg-[#50514F]/10
+                                bg-[var(--theme-surface-soft)]
                                 rounded
                             "
                         ></div>
@@ -502,8 +502,8 @@
         {{-- Mantenimiento --}}
         <section
             class="
-                bg-white
-                border border-[#50514F]/10
+                bg-[var(--theme-surface)]
+                border border-[var(--theme-border)]
                 rounded-xl
                 overflow-hidden
             "
@@ -516,14 +516,14 @@
                     gap-2
                     p-4
                     sm:p-5
-                    border-b border-[#50514F]/10
+                    border-b border-[var(--theme-border)]
                 "
             >
 
                 <div
                     class="
                         w-5 h-5
-                        bg-[#50514F]/10
+                        bg-[var(--theme-surface-soft)]
                         rounded
                     "
                 ></div>
@@ -532,7 +532,7 @@
                     class="
                         h-4
                         w-48
-                        bg-[#50514F]/10
+                        bg-[var(--theme-surface-soft)]
                         rounded
                     "
                 ></div>
@@ -556,7 +556,7 @@
                         w-10
                         h-10
                         rounded-full
-                        bg-[#50514F]/10
+                        bg-[var(--theme-surface-soft)]
                         mb-3
                     "
                 ></div>
@@ -565,7 +565,7 @@
                     class="
                         h-3
                         w-44
-                        bg-[#50514F]/10
+                        bg-[var(--theme-surface-soft)]
                         rounded
                     "
                 ></div>
@@ -575,7 +575,7 @@
                         h-2.5
                         w-52
                         max-w-full
-                        bg-[#50514F]/10
+                        bg-[var(--theme-surface-soft)]
                         rounded
                         mt-2
                     "

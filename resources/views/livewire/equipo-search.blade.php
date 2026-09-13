@@ -1,206 +1,38 @@
 <div>
 
     {{-- ============================================================
-        BUSCADOR
+        SIN TEXTO DE BÚSQUEDA
     ============================================================ --}}
-    <section
-        class="
-            bg-white
-            border border-[#50514F]/10
-            rounded-xl
-            p-4
-            sm:p-5
-            mb-4
-            sm:mb-6
-        "
-    >
+    @if (trim($search) === '')
 
-        <div
-            class="
-                flex
-                flex-col
-                gap-3
-                sm:flex-row
-                sm:items-center
-                sm:justify-between
-            "
-        >
+        {{-- Volver al inventario --}}
+        <div class="flex justify-end mb-4 sm:mb-6">
 
-            {{-- Campo de búsqueda --}}
-            <div
-                class="
-                    relative
-                    w-full
-                    sm:max-w-xl
-                "
-            >
-
-                {{-- Lupa --}}
-                <svg
-                    class="
-                        absolute
-                        left-4
-                        top-1/2
-                        -translate-y-1/2
-                        w-5
-                        h-5
-                        text-[#50514F]/40
-                        pointer-events-none
-                    "
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.7"
-                >
-                    <circle cx="11" cy="11" r="7"/>
-                    <path d="M20 20l-4-4"/>
-                </svg>
-
-
-                <input
-                    type="text"
-                    wire:model.live.debounce.350ms="search"
-                    placeholder="Buscar por nombre, ID, código, marca o modelo..."
-                    autocomplete="off"
-                    class="
-                        w-full
-                        h-12
-                        pl-12
-                        pr-11
-
-                        border
-                        border-[#50514F]/15
-                        rounded-lg
-
-                        bg-white
-
-                        text-sm
-                        text-[#50514F]
-
-                        placeholder:text-[#50514F]/40
-
-                        focus:ring-1
-                        focus:ring-[#247BA0]
-                        focus:border-[#247BA0]
-                    "
-                >
-
-
-                {{-- Limpiar --}}
-                @if ($search !== '')
-
-                    <button
-                        type="button"
-                        wire:click="clearSearch"
-                        class="
-                            absolute
-                            right-3
-                            top-1/2
-                            -translate-y-1/2
-
-                            w-7
-                            h-7
-
-                            flex
-                            items-center
-                            justify-center
-
-                            rounded-full
-
-                            text-[#50514F]/40
-
-                            hover:text-[#50514F]/70
-                            hover:bg-[#50514F]/5
-
-                            transition-colors
-                        "
-                        aria-label="Limpiar búsqueda"
-                    >
-                        <svg
-                            class="w-4 h-4"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.8"
-                        >
-                            <path d="M6 6l12 12"/>
-                            <path d="M18 6L6 18"/>
-                        </svg>
-                    </button>
-
-                @endif
-
-
-                {{-- Indicador de carga --}}
-                <div
-                    wire:loading.flex
-                    wire:target="search"
-                    class="
-                        absolute
-                        right-11
-                        top-1/2
-                        -translate-y-1/2
-
-                        items-center
-                        justify-center
-                    "
-                >
-                    <svg
-                        class="
-                            w-4
-                            h-4
-                            animate-spin
-                            text-[#247BA0]
-                        "
-                        viewBox="0 0 24 24"
-                        fill="none"
-                    >
-                        <circle
-                            cx="12"
-                            cy="12"
-                            r="9"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            opacity="0.2"
-                        />
-
-                        <path
-                            d="M21 12a9 9 0 0 0-9-9"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                        />
-                    </svg>
-                </div>
-
-            </div>
-
-
-            {{-- Volver al inventario --}}
             <a
                 href="{{ route('equipos.index') }}"
                 class="
-                    shrink-0
                     h-10
+                    px-4
 
-                    flex
+                    inline-flex
                     items-center
                     justify-center
                     gap-2
 
                     border
-                    border-[#50514F]/20
+                    border-[var(--theme-border-strong)]
+
                     rounded-lg
 
-                    px-4
-
-                    bg-white
+                    bg-[var(--theme-surface)]
 
                     text-sm
                     font-medium
-                    text-[#50514F]/65
+                    text-[var(--theme-text-muted)]
 
-                    hover:bg-[#50514F]/5
+                    hover:bg-[var(--theme-surface-soft)]
+                    hover:text-[var(--theme-text)]
+                    hover:border-[var(--theme-primary-border)]
 
                     transition-colors
                 "
@@ -220,18 +52,15 @@
 
         </div>
 
-    </section>
 
-
-    {{-- ============================================================
-        SIN TEXTO DE BÚSQUEDA
-    ============================================================ --}}
-    @if (trim($search) === '')
-
+        {{-- Estado inicial --}}
         <section
             class="
-                bg-white
-                border border-[#50514F]/10
+                bg-[var(--theme-surface)]
+
+                border
+                border-[var(--theme-border)]
+
                 rounded-xl
 
                 px-5
@@ -244,6 +73,7 @@
             <div
                 class="
                     mx-auto
+
                     w-14
                     h-14
 
@@ -253,8 +83,8 @@
                     items-center
                     justify-center
 
-                    bg-[#247BA0]/10
-                    text-[#247BA0]
+                    bg-[var(--theme-primary-soft)]
+                    text-[var(--theme-primary)]
                 "
             >
                 <svg
@@ -273,9 +103,11 @@
             <h2
                 class="
                     mt-4
+
                     text-base
                     font-semibold
-                    text-[#50514F]
+
+                    text-[var(--theme-text-strong)]
                 "
             >
                 Buscar equipos
@@ -285,30 +117,39 @@
             <p
                 class="
                     mt-2
+
                     text-sm
                     leading-relaxed
-                    text-[#50514F]/50
+
+                    text-[var(--theme-text-muted)]
                 "
             >
-                Escribe un nombre, ID, código de inventario, número de serie,
-                marca o modelo.
+                Utiliza el buscador superior para localizar un equipo por nombre,
+                ID, código de inventario, número de serie, marca o modelo.
             </p>
 
         </section>
 
 
     {{-- ============================================================
-        RESULTADOS
+        HAY TEXTO DE BÚSQUEDA
     ============================================================ --}}
     @else
 
-        {{-- Cabecera de resultados --}}
+        {{-- ========================================================
+            CABECERA DE RESULTADOS
+        ======================================================== --}}
         <div
             class="
                 flex
-                items-center
-                justify-between
+                flex-col
+
+                sm:flex-row
+                sm:items-center
+                sm:justify-between
+
                 gap-3
+
                 mb-4
             "
         >
@@ -319,7 +160,7 @@
                     class="
                         text-base
                         font-semibold
-                        text-[#50514F]
+                        text-[var(--theme-text-strong)]
                     "
                 >
                     Resultados de búsqueda
@@ -330,7 +171,7 @@
                     class="
                         mt-1
                         text-xs
-                        text-[#50514F]/50
+                        text-[var(--theme-text-muted)]
                     "
                 >
                     {{ number_format($equipos->total()) }}
@@ -342,7 +183,7 @@
                     <span
                         class="
                             font-medium
-                            text-[#50514F]/75
+                            text-[var(--theme-text)]
                         "
                     >
                         “{{ $search }}”
@@ -351,19 +192,67 @@
 
             </div>
 
+
+            {{-- Volver al inventario --}}
+            <a
+                href="{{ route('equipos.index') }}"
+                class="
+                    shrink-0
+
+                    h-10
+                    px-4
+
+                    inline-flex
+                    items-center
+                    justify-center
+                    gap-2
+
+                    border
+                    border-[var(--theme-border-strong)]
+
+                    rounded-lg
+
+                    bg-[var(--theme-surface)]
+
+                    text-sm
+                    font-medium
+                    text-[var(--theme-text-muted)]
+
+                    hover:bg-[var(--theme-surface-soft)]
+                    hover:text-[var(--theme-text)]
+                    hover:border-[var(--theme-primary-border)]
+
+                    transition-colors
+                "
+            >
+                <svg
+                    class="w-4 h-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.7"
+                >
+                    <path d="M15 6l-6 6 6 6"/>
+                </svg>
+
+                Inventario
+            </a>
+
         </div>
 
 
+        {{-- ========================================================
+            RESULTADOS ENCONTRADOS
+        ======================================================== --}}
         @if ($equipos->count() > 0)
 
-            {{-- ====================================================
-                TARJETAS
-            ==================================================== --}}
             <div
                 class="
                     grid
                     grid-cols-1
+
                     lg:grid-cols-2
+
                     gap-3
                     sm:gap-4
                 "
@@ -387,22 +276,26 @@
                     <article
                         wire:key="search-equipo-{{ $equipo->id_equipo }}"
                         class="
-                            bg-white
+                            bg-[var(--theme-surface)]
+
                             border
-                            border-[#50514F]/10
+                            border-[var(--theme-border)]
+
                             rounded-xl
 
                             p-4
                             sm:p-5
 
-                            hover:border-[#247BA0]/25
+                            hover:border-[var(--theme-primary-border)]
                             hover:shadow-sm
 
                             transition-all
                         "
                     >
 
-                        {{-- Cabecera --}}
+                        {{-- ====================================================
+                            CABECERA DE TARJETA
+                        ==================================================== --}}
                         <div
                             class="
                                 flex
@@ -414,7 +307,6 @@
 
                             <div class="min-w-0 flex-1">
 
-                                {{-- Nombre --}}
                                 <h3
                                     class="
                                         text-sm
@@ -423,7 +315,7 @@
                                         font-semibold
                                         leading-snug
 
-                                        text-[#25344A]
+                                        text-[var(--theme-text-strong)]
 
                                         break-words
                                     "
@@ -432,7 +324,6 @@
                                 </h3>
 
 
-                                {{-- Nombre registrado --}}
                                 @if (
                                     !empty($equipo->nombre_equipo) &&
                                     $equipo->nombre_equipo !== $nombre
@@ -442,7 +333,7 @@
                                         class="
                                             mt-1
                                             text-xs
-                                            text-[#50514F]/50
+                                            text-[var(--theme-text-muted)]
                                         "
                                     >
                                         {{ $equipo->nombre_equipo }}
@@ -453,7 +344,6 @@
                             </div>
 
 
-                            {{-- Estado --}}
                             <div class="shrink-0">
 
                                 <x-status-badge
@@ -465,7 +355,9 @@
                         </div>
 
 
-                        {{-- Datos principales --}}
+                        {{-- ====================================================
+                            DATOS
+                        ==================================================== --}}
                         <div
                             class="
                                 grid
@@ -479,19 +371,26 @@
                             "
                         >
 
-                            {{-- Código --}}
+                            {{-- Código de inventario --}}
                             <div>
 
-                                <p class="text-[11px] text-[#50514F]/40">
+                                <p
+                                    class="
+                                        text-[11px]
+                                        text-[var(--theme-text-muted)]
+                                    "
+                                >
                                     Código de inventario
                                 </p>
 
                                 <p
                                     class="
                                         mt-1
+
                                         text-xs
                                         font-medium
-                                        text-[#50514F]/75
+
+                                        text-[var(--theme-text)]
                                     "
                                 >
                                     {{ $equipo->codigo_inventario ?? '—' }}
@@ -503,16 +402,23 @@
                             {{-- ID --}}
                             <div>
 
-                                <p class="text-[11px] text-[#50514F]/40">
+                                <p
+                                    class="
+                                        text-[11px]
+                                        text-[var(--theme-text-muted)]
+                                    "
+                                >
                                     ID interno
                                 </p>
 
                                 <p
                                     class="
                                         mt-1
+
                                         text-xs
                                         font-medium
-                                        text-[#50514F]/75
+
+                                        text-[var(--theme-text)]
                                     "
                                 >
                                     {{ $equipo->id_equipo }}
@@ -524,16 +430,24 @@
                             {{-- Número de serie --}}
                             <div>
 
-                                <p class="text-[11px] text-[#50514F]/40">
+                                <p
+                                    class="
+                                        text-[11px]
+                                        text-[var(--theme-text-muted)]
+                                    "
+                                >
                                     Número de serie
                                 </p>
 
                                 <p
                                     class="
                                         mt-1
+
                                         text-xs
                                         font-medium
-                                        text-[#50514F]/75
+
+                                        text-[var(--theme-text)]
+
                                         break-all
                                     "
                                 >
@@ -546,16 +460,23 @@
                             {{-- Host --}}
                             <div>
 
-                                <p class="text-[11px] text-[#50514F]/40">
+                                <p
+                                    class="
+                                        text-[11px]
+                                        text-[var(--theme-text-muted)]
+                                    "
+                                >
                                     Host
                                 </p>
 
                                 <p
                                     class="
                                         mt-1
+
                                         text-xs
                                         font-medium
-                                        text-[#50514F]/75
+
+                                        text-[var(--theme-text)]
                                     "
                                 >
                                     {{ $equipo->host ?? '—' }}
@@ -564,19 +485,26 @@
                             </div>
 
 
-                            {{-- Marca --}}
+                            {{-- Marca / Modelo --}}
                             <div>
 
-                                <p class="text-[11px] text-[#50514F]/40">
+                                <p
+                                    class="
+                                        text-[11px]
+                                        text-[var(--theme-text-muted)]
+                                    "
+                                >
                                     Marca / Modelo
                                 </p>
 
                                 <p
                                     class="
                                         mt-1
+
                                         text-xs
                                         font-medium
-                                        text-[#50514F]/75
+
+                                        text-[var(--theme-text)]
                                     "
                                 >
                                     {{ $equipo->marca ?? '—' }}
@@ -592,16 +520,23 @@
                             {{-- Ubicación --}}
                             <div>
 
-                                <p class="text-[11px] text-[#50514F]/40">
+                                <p
+                                    class="
+                                        text-[11px]
+                                        text-[var(--theme-text-muted)]
+                                    "
+                                >
                                     Ubicación
                                 </p>
 
                                 <p
                                     class="
                                         mt-1
+
                                         text-xs
                                         font-medium
-                                        text-[#50514F]/75
+
+                                        text-[var(--theme-text)]
                                     "
                                 >
                                     {{ $equipo->ubicacion ?? '—' }}
@@ -612,11 +547,14 @@
                         </div>
 
 
-                        {{-- Acciones --}}
+                        {{-- ====================================================
+                            ACCIONES
+                        ==================================================== --}}
                         <div
                             class="
                                 flex
                                 flex-col
+
                                 sm:flex-row
                                 sm:items-center
                                 sm:justify-end
@@ -627,16 +565,13 @@
                                 pt-4
 
                                 border-t
-                                border-[#50514F]/10
+                                border-[var(--theme-border)]
                             "
                         >
 
                             {{-- Ver detalle --}}
                             <a
-                                href="{{ route(
-                                    'equipos.show',
-                                    $equipo->id_equipo
-                                ) }}"
+                                href="{{ route('equipos.show', $equipo->id_equipo) }}"
                                 class="
                                     h-9
                                     px-4
@@ -647,16 +582,19 @@
                                     gap-2
 
                                     border
-                                    border-[#50514F]/15
+                                    border-[var(--theme-border-strong)]
+
                                     rounded-lg
 
-                                    bg-white
+                                    bg-[var(--theme-surface)]
 
                                     text-xs
                                     font-medium
-                                    text-[#50514F]/70
+                                    text-[var(--theme-text-muted)]
 
-                                    hover:bg-[#50514F]/5
+                                    hover:bg-[var(--theme-surface-soft)]
+                                    hover:text-[var(--theme-text)]
+                                    hover:border-[var(--theme-primary-border)]
 
                                     transition-colors
                                 "
@@ -678,10 +616,7 @@
 
                             {{-- Editar --}}
                             <a
-                                href="{{ route(
-                                    'equipos.edit',
-                                    $equipo->id_equipo
-                                ) }}"
+                                href="{{ route('equipos.edit', $equipo->id_equipo) }}"
                                 class="
                                     h-9
                                     px-4
@@ -693,8 +628,8 @@
 
                                     rounded-lg
 
-                                    bg-[#247BA0]
-                                    hover:bg-[#1d6688]
+                                    bg-[var(--theme-primary)]
+                                    hover:bg-[var(--theme-primary-hover)]
 
                                     text-xs
                                     font-medium
@@ -731,12 +666,7 @@
             ==================================================== --}}
             @if ($equipos->hasPages())
 
-                <div
-                    class="
-                        mt-5
-                        sm:mt-6
-                    "
-                >
+                <div class="mt-5 sm:mt-6">
 
                     {{-- Escritorio --}}
                     <div class="hidden md:block">
@@ -752,10 +682,12 @@
                             flex
                             items-center
                             justify-between
+
                             gap-3
                         "
                     >
 
+                        {{-- Anterior --}}
                         @if ($equipos->onFirstPage())
 
                             <span
@@ -768,13 +700,16 @@
                                     justify-center
 
                                     border
-                                    border-[#50514F]/10
+                                    border-[var(--theme-border)]
+
                                     rounded-lg
 
-                                    bg-white
+                                    bg-[var(--theme-surface-soft)]
 
                                     text-xs
-                                    text-[#50514F]/30
+                                    text-[var(--theme-text-muted)]
+
+                                    opacity-50
                                 "
                             >
                                 Anterior
@@ -794,13 +729,19 @@
                                     justify-center
 
                                     border
-                                    border-[#50514F]/15
+                                    border-[var(--theme-border-strong)]
+
                                     rounded-lg
 
-                                    bg-white
+                                    bg-[var(--theme-surface)]
 
                                     text-xs
-                                    text-[#50514F]/70
+                                    text-[var(--theme-text-muted)]
+
+                                    hover:bg-[var(--theme-surface-soft)]
+                                    hover:text-[var(--theme-text)]
+
+                                    transition-colors
                                 "
                             >
                                 Anterior
@@ -809,10 +750,11 @@
                         @endif
 
 
+                        {{-- Página --}}
                         <span
                             class="
                                 text-xs
-                                text-[#50514F]/50
+                                text-[var(--theme-text-muted)]
                             "
                         >
                             {{ $equipos->currentPage() }}
@@ -821,6 +763,7 @@
                         </span>
 
 
+                        {{-- Siguiente --}}
                         @if ($equipos->hasMorePages())
 
                             <button
@@ -835,13 +778,19 @@
                                     justify-center
 
                                     border
-                                    border-[#50514F]/15
+                                    border-[var(--theme-border-strong)]
+
                                     rounded-lg
 
-                                    bg-white
+                                    bg-[var(--theme-surface)]
 
                                     text-xs
-                                    text-[#50514F]/70
+                                    text-[var(--theme-text-muted)]
+
+                                    hover:bg-[var(--theme-surface-soft)]
+                                    hover:text-[var(--theme-text)]
+
+                                    transition-colors
                                 "
                             >
                                 Siguiente
@@ -859,13 +808,16 @@
                                     justify-center
 
                                     border
-                                    border-[#50514F]/10
+                                    border-[var(--theme-border)]
+
                                     rounded-lg
 
-                                    bg-white
+                                    bg-[var(--theme-surface-soft)]
 
                                     text-xs
-                                    text-[#50514F]/30
+                                    text-[var(--theme-text-muted)]
+
+                                    opacity-50
                                 "
                             >
                                 Siguiente
@@ -887,8 +839,11 @@
 
             <section
                 class="
-                    bg-white
-                    border border-[#50514F]/10
+                    bg-[var(--theme-surface)]
+
+                    border
+                    border-[var(--theme-border)]
+
                     rounded-xl
 
                     px-5
@@ -901,6 +856,7 @@
                 <div
                     class="
                         mx-auto
+
                         w-14
                         h-14
 
@@ -910,8 +866,8 @@
                         items-center
                         justify-center
 
-                        bg-[#50514F]/5
-                        text-[#50514F]/30
+                        bg-[var(--theme-surface-soft)]
+                        text-[var(--theme-text-muted)]
                     "
                 >
                     <svg
@@ -930,9 +886,11 @@
                 <h3
                     class="
                         mt-4
+
                         text-base
                         font-semibold
-                        text-[#50514F]
+
+                        text-[var(--theme-text-strong)]
                     "
                 >
                     No encontramos equipos
@@ -942,22 +900,31 @@
                 <p
                     class="
                         mt-2
+
                         text-sm
-                        text-[#50514F]/50
+                        text-[var(--theme-text-muted)]
                     "
                 >
+
                     No hay resultados para
-                    <span class="font-medium">
+
+                    <span
+                        class="
+                            font-medium
+                            text-[var(--theme-text)]
+                        "
+                    >
                         “{{ $search }}”
                     </span>.
+
                 </p>
 
 
-                <button
-                    type="button"
-                    wire:click="clearSearch"
+                <a
+                    href="{{ route('equipos.search') }}"
                     class="
                         mt-5
+
                         h-10
                         px-4
 
@@ -966,20 +933,25 @@
                         justify-center
 
                         border
-                        border-[#50514F]/15
+                        border-[var(--theme-border-strong)]
+
                         rounded-lg
+
+                        bg-[var(--theme-surface)]
 
                         text-sm
                         font-medium
-                        text-[#50514F]/65
+                        text-[var(--theme-text-muted)]
 
-                        hover:bg-[#50514F]/5
+                        hover:bg-[var(--theme-surface-soft)]
+                        hover:text-[var(--theme-text)]
+                        hover:border-[var(--theme-primary-border)]
 
                         transition-colors
                     "
                 >
                     Limpiar búsqueda
-                </button>
+                </a>
 
             </section>
 

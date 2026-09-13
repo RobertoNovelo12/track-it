@@ -25,7 +25,7 @@
                         h-3
                         w-20
                         rounded
-                        bg-[#50514F]/10
+                        bg-[var(--theme-surface-soft)]
                     "
                 ></div>
 
@@ -34,7 +34,7 @@
                         h-3
                         w-3
                         rounded
-                        bg-[#50514F]/10
+                        bg-[var(--theme-surface-soft)]
                     "
                 ></div>
 
@@ -43,7 +43,7 @@
                         h-3
                         w-36
                         rounded
-                        bg-[#50514F]/10
+                        bg-[var(--theme-surface-soft)]
                     "
                 ></div>
 
@@ -57,7 +57,7 @@
                     w-64
                     max-w-full
                     rounded
-                    bg-[#50514F]/10
+                    bg-[var(--theme-surface-soft)]
                 "
             ></div>
 
@@ -70,7 +70,7 @@
                     w-[520px]
                     max-w-full
                     rounded
-                    bg-[#50514F]/10
+                    bg-[var(--theme-surface-soft)]
                 "
             ></div>
 
@@ -88,30 +88,33 @@
             "
         >
 
+            {{-- Asignar --}}
             <div
                 class="
                     h-9
                     w-24
                     rounded-md
-                    bg-[#247BA0]/15
+                    bg-[var(--theme-primary-soft)]
                 "
             ></div>
 
+            {{-- Reasignar --}}
             <div
                 class="
                     h-9
                     w-28
                     rounded-md
-                    bg-[#50514F]/10
+                    bg-[var(--theme-surface-soft)]
                 "
             ></div>
 
+            {{-- Historial --}}
             <div
                 class="
                     h-9
                     w-24
                     rounded-md
-                    bg-[#50514F]/10
+                    bg-[var(--theme-surface-soft)]
                 "
             ></div>
 
@@ -128,8 +131,10 @@
             grid
             grid-cols-1
             md:grid-cols-3
+
             gap-3
             sm:gap-4
+
             mb-5
         "
     >
@@ -138,9 +143,11 @@
 
             <div
                 class="
-                    bg-white
+                    bg-[var(--theme-surface)]
+
                     border
-                    border-[#50514F]/10
+                    border-[var(--theme-border)]
+
                     rounded-xl
 
                     px-4
@@ -157,10 +164,13 @@
                 <div
                     class="
                         shrink-0
+
                         w-14
                         h-14
+
                         rounded-xl
-                        bg-[#50514F]/10
+
+                        bg-[var(--theme-surface-soft)]
                     "
                 ></div>
 
@@ -172,28 +182,36 @@
                         class="
                             h-3
                             w-32
+
                             rounded
-                            bg-[#50514F]/10
+
+                            bg-[var(--theme-surface-soft)]
                         "
                     ></div>
 
                     <div
                         class="
                             mt-2
+
                             h-6
                             w-10
+
                             rounded
-                            bg-[#50514F]/10
+
+                            bg-[var(--theme-surface-soft)]
                         "
                     ></div>
 
                     <div
                         class="
                             mt-2
+
                             h-2.5
                             w-24
+
                             rounded
-                            bg-[#50514F]/10
+
+                            bg-[var(--theme-surface-soft)]
                         "
                     ></div>
 
@@ -204,10 +222,13 @@
                 <div
                     class="
                         shrink-0
+
                         w-4
                         h-4
+
                         rounded
-                        bg-[#50514F]/10
+
+                        bg-[var(--theme-surface-soft)]
                     "
                 ></div>
 
@@ -235,10 +256,13 @@
         ======================================================== --}}
         <section
             class="
-                bg-white
+                bg-[var(--theme-surface)]
+
                 border
-                border-[#50514F]/10
+                border-[var(--theme-border)]
+
                 rounded-xl
+
                 p-4
                 sm:p-5
             "
@@ -260,8 +284,10 @@
                         class="
                             w-5
                             h-5
+
                             rounded
-                            bg-[#50514F]/10
+
+                            bg-[var(--theme-surface-soft)]
                         "
                     ></div>
 
@@ -272,19 +298,24 @@
                             class="
                                 h-4
                                 w-44
+
                                 rounded
-                                bg-[#50514F]/10
+
+                                bg-[var(--theme-surface-soft)]
                             "
                         ></div>
 
                         <div
                             class="
                                 mt-2
+
                                 h-3
                                 w-64
                                 max-w-full
+
                                 rounded
-                                bg-[#50514F]/10
+
+                                bg-[var(--theme-surface-soft)]
                             "
                         ></div>
 
@@ -297,10 +328,13 @@
                     class="
                         hidden
                         sm:block
+
                         h-9
                         w-32
+
                         rounded-lg
-                        bg-[#50514F]/10
+
+                        bg-[var(--theme-surface-soft)]
                     "
                 ></div>
 
@@ -337,7 +371,7 @@
                         rounded-full
 
                         border-[42px]
-                        border-[#247BA0]/10
+                        border-[var(--theme-primary-soft)]
                     "
                 >
 
@@ -357,18 +391,23 @@
                             class="
                                 h-7
                                 w-12
+
                                 rounded
-                                bg-[#50514F]/10
+
+                                bg-[var(--theme-surface-soft)]
                             "
                         ></div>
 
                         <div
                             class="
                                 mt-2
+
                                 h-3
                                 w-20
+
                                 rounded
-                                bg-[#50514F]/10
+
+                                bg-[var(--theme-surface-soft)]
                             "
                         ></div>
 
@@ -399,10 +438,13 @@
                             <div
                                 class="
                                     shrink-0
+
                                     w-2.5
                                     h-2.5
+
                                     rounded-full
-                                    bg-[#50514F]/10
+
+                                    bg-[var(--theme-surface-soft)]
                                 "
                             ></div>
 
@@ -410,8 +452,10 @@
                                 class="
                                     h-3
                                     flex-1
+
                                     rounded
-                                    bg-[#50514F]/10
+
+                                    bg-[var(--theme-surface-soft)]
                                 "
                             ></div>
 
@@ -419,8 +463,10 @@
                                 class="
                                     h-3
                                     w-6
+
                                     rounded
-                                    bg-[#50514F]/10
+
+                                    bg-[var(--theme-surface-soft)]
                                 "
                             ></div>
 
@@ -440,10 +486,13 @@
         ======================================================== --}}
         <section
             class="
-                bg-white
+                bg-[var(--theme-surface)]
+
                 border
-                border-[#50514F]/10
+                border-[var(--theme-border)]
+
                 rounded-xl
+
                 overflow-hidden
             "
         >
@@ -466,8 +515,10 @@
                             class="
                                 w-5
                                 h-5
+
                                 rounded
-                                bg-[#50514F]/10
+
+                                bg-[var(--theme-surface-soft)]
                             "
                         ></div>
 
@@ -477,19 +528,24 @@
                                 class="
                                     h-4
                                     w-40
+
                                     rounded
-                                    bg-[#50514F]/10
+
+                                    bg-[var(--theme-surface-soft)]
                                 "
                             ></div>
 
                             <div
                                 class="
                                     mt-2
+
                                     h-3
                                     w-56
                                     max-w-full
+
                                     rounded
-                                    bg-[#50514F]/10
+
+                                    bg-[var(--theme-surface-soft)]
                                 "
                             ></div>
 
@@ -506,7 +562,9 @@
                         grid
                         grid-cols-2
                         sm:grid-cols-4
+
                         gap-2
+
                         mt-5
                     "
                 >
@@ -516,8 +574,12 @@
                         <div
                             class="
                                 border
-                                border-[#50514F]/10
+                                border-[var(--theme-border)]
+
                                 rounded-xl
+
+                                bg-[var(--theme-surface)]
+
                                 p-3
                             "
                         >
@@ -528,8 +590,10 @@
                                     class="
                                         w-7
                                         h-7
+
                                         rounded-lg
-                                        bg-[#50514F]/10
+
+                                        bg-[var(--theme-surface-soft)]
                                     "
                                 ></div>
 
@@ -537,8 +601,10 @@
                                     class="
                                         h-5
                                         w-7
+
                                         rounded
-                                        bg-[#50514F]/10
+
+                                        bg-[var(--theme-surface-soft)]
                                     "
                                 ></div>
 
@@ -547,10 +613,13 @@
                             <div
                                 class="
                                     mt-2
+
                                     h-2.5
                                     w-20
+
                                     rounded
-                                    bg-[#50514F]/10
+
+                                    bg-[var(--theme-surface-soft)]
                                 "
                             ></div>
 
@@ -571,7 +640,7 @@
                     py-3
 
                     border-y
-                    border-[#50514F]/10
+                    border-[var(--theme-border)]
 
                     flex
                     justify-between
@@ -583,8 +652,10 @@
                     class="
                         h-4
                         w-32
+
                         rounded
-                        bg-[#50514F]/10
+
+                        bg-[var(--theme-surface-soft)]
                     "
                 ></div>
 
@@ -592,8 +663,10 @@
                     class="
                         h-3
                         w-24
+
                         rounded
-                        bg-[#50514F]/10
+
+                        bg-[var(--theme-surface-soft)]
                     "
                 ></div>
 
@@ -616,7 +689,7 @@
                         py-3
 
                         border-b
-                        border-[#50514F]/10
+                        border-[var(--theme-border)]
 
                         last:border-b-0
                     "
@@ -626,8 +699,10 @@
                         class="
                             w-8
                             h-7
+
                             rounded-lg
-                            bg-[#50514F]/10
+
+                            bg-[var(--theme-surface-soft)]
                         "
                     ></div>
 
@@ -638,18 +713,23 @@
                             class="
                                 h-3
                                 w-3/4
+
                                 rounded
-                                bg-[#50514F]/10
+
+                                bg-[var(--theme-surface-soft)]
                             "
                         ></div>
 
                         <div
                             class="
                                 mt-2
+
                                 h-2
                                 w-24
+
                                 rounded
-                                bg-[#50514F]/10
+
+                                bg-[var(--theme-surface-soft)]
                             "
                         ></div>
 
@@ -660,8 +740,10 @@
                         class="
                             h-2.5
                             w-full
+
                             rounded
-                            bg-[#50514F]/10
+
+                            bg-[var(--theme-surface-soft)]
                         "
                     ></div>
 

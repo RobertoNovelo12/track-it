@@ -65,7 +65,7 @@
 
         $chartGradient = count($gradientParts)
             ? implode(', ', $gradientParts)
-            : '#E5E7EB 0% 100%';
+            : 'var(--theme-surface-soft) 0% 100%';
 
     @endphp
 
@@ -85,13 +85,13 @@
 
             z-[100]
 
-            w-[calc(100%-2rem)]
+            w-[calc(100%_-_2rem)]
             max-w-sm
 
-            bg-white
+            bg-[var(--theme-surface)]
 
             border
-            border-emerald-200
+            border-emerald-500/30
 
             rounded-xl
             shadow-lg
@@ -114,8 +114,8 @@
 
                 rounded-full
 
-                bg-emerald-50
-                text-emerald-600
+                bg-emerald-500/10
+                text-emerald-500
 
                 flex
                 items-center
@@ -140,7 +140,7 @@
                 class="
                     text-sm
                     font-semibold
-                    text-[#25344A]
+                    text-[var(--theme-text-strong)]
                 "
             >
                 Asignación realizada
@@ -150,7 +150,7 @@
                 class="
                     mt-0.5
                     text-xs
-                    text-[#50514F]/60
+                    text-[var(--theme-text-muted)]
                 "
                 x-text="toastMessage"
             ></p>
@@ -192,13 +192,13 @@
                     mb-2
 
                     text-xs
-                    text-[#50514F]/50
+                    text-[var(--theme-text-muted)]
                 "
             >
                 <a
                     href="{{ route('dashboard') }}"
                     class="
-                        hover:text-[#247BA0]
+                        hover:text-[var(--theme-primary)]
                         transition-colors
                     "
                 >
@@ -226,176 +226,166 @@
                     text-xl
                     font-semibold
                     leading-tight
-                    text-[#50514F]
+                    text-[var(--theme-text-strong)]
                 "
             >
                 Asignación y Movimientos
             </h1>
 
-
-            <p
-                class="
-                    mt-1
-                    max-w-3xl
-                    text-xs
-                    leading-relaxed
-                    text-[#50514F]/55
-                "
-            >
-
         </div>
 
 
-{{-- ========================================================
-    ACCIONES SUPERIORES
-======================================================== --}}
-<div
-    class="
-        flex
-        flex-wrap
-        items-center
-        gap-2
+        {{-- ========================================================
+            ACCIONES SUPERIORES
+        ======================================================== --}}
+        <div
+            class="
+                flex
+                flex-wrap
+                items-center
+                gap-2
 
-        xl:justify-end
-    "
->
-
-    {{-- ASIGNAR: visual por ahora --}}
-    <button
-        type="button"
-        class="
-            h-9
-            px-4
-
-            inline-flex
-            items-center
-            justify-center
-            gap-2
-
-            rounded-md
-
-            bg-[#247BA0]
-            hover:bg-[#1f6f91]
-
-            text-sm
-            font-medium
-            text-white
-
-            transition-colors
-        "
-    >
-        <svg
-            class="w-4 h-4"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.7"
+                xl:justify-end
+            "
         >
-            <path d="M12 5v14"/>
-            <path d="M5 12h14"/>
-        </svg>
 
-        Asignar
-    </button>
+            {{-- ASIGNAR --}}
+            <button
+                type="button"
+                class="
+                    h-9
+                    px-4
 
+                    inline-flex
+                    items-center
+                    justify-center
+                    gap-2
 
-    {{-- Reasignar --}}
-    <button
-        type="button"
-        class="
-            h-9
-            px-4
+                    rounded-md
 
-            inline-flex
-            items-center
-            justify-center
-            gap-2
+                    bg-[var(--theme-primary)]
+                    hover:bg-[var(--theme-primary-hover)]
 
-            rounded-md
+                    text-sm
+                    font-medium
+                    text-white
 
-            bg-white
+                    transition-colors
+                "
+            >
+                <svg
+                    class="w-4 h-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.7"
+                >
+                    <path d="M12 5v14"/>
+                    <path d="M5 12h14"/>
+                </svg>
 
-            border
-            border-[#50514F]/20
-
-            text-sm
-            font-medium
-            text-[#50514F]/75
-
-            hover:bg-[#50514F]/5
-
-            transition-colors
-        "
-    >
-        <svg
-            class="w-4 h-4"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.6"
-        >
-            <path d="M4 7h15"/>
-            <path d="M16 4l3 3-3 3"/>
-            <path d="M20 17H5"/>
-            <path d="M8 14l-3 3 3 3"/>
-        </svg>
-
-        Reasignar
-    </button>
+                Asignar
+            </button>
 
 
-    {{-- Historial --}}
-    <button
-        type="button"
-        class="
-            h-9
-            px-4
+            {{-- Reasignar --}}
+            <button
+                type="button"
+                class="
+                    h-9
+                    px-4
 
-            inline-flex
-            items-center
-            justify-center
-            gap-2
+                    inline-flex
+                    items-center
+                    justify-center
+                    gap-2
 
-            rounded-md
+                    rounded-md
 
-            bg-white
+                    bg-[var(--theme-surface)]
 
-            border
-            border-[#50514F]/20
+                    border
+                    border-[var(--theme-border-strong)]
 
-            text-sm
-            font-medium
-            text-[#50514F]/75
+                    text-sm
+                    font-medium
+                    text-[var(--theme-text)]
 
-            hover:bg-[#50514F]/5
+                    hover:bg-[var(--theme-surface-soft)]
+                    hover:border-[var(--theme-primary-border)]
 
-            transition-colors
-        "
-    >
-        <svg
-            class="w-4 h-4"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.6"
-        >
-            <circle cx="12" cy="12" r="8"/>
-            <path d="M12 7v5l3 2"/>
-        </svg>
+                    transition-colors
+                "
+            >
+                <svg
+                    class="w-4 h-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                >
+                    <path d="M4 7h15"/>
+                    <path d="M16 4l3 3-3 3"/>
+                    <path d="M20 17H5"/>
+                    <path d="M8 14l-3 3 3 3"/>
+                </svg>
 
-        Historial
-    </button>
-
-</div>
-
-
-        </section>
+                Reasignar
+            </button>
 
 
-        {{-- ============================================================
-            MÉTRICAS PRINCIPALES
-        ============================================================ --}}
-        <section
+            {{-- Historial --}}
+            <button
+                type="button"
+                class="
+                    h-9
+                    px-4
+
+                    inline-flex
+                    items-center
+                    justify-center
+                    gap-2
+
+                    rounded-md
+
+                    bg-[var(--theme-surface)]
+
+                    border
+                    border-[var(--theme-border-strong)]
+
+                    text-sm
+                    font-medium
+                    text-[var(--theme-text)]
+
+                    hover:bg-[var(--theme-surface-soft)]
+                    hover:border-[var(--theme-primary-border)]
+
+                    transition-colors
+                "
+            >
+                <svg
+                    class="w-4 h-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                >
+                    <circle cx="12" cy="12" r="8"/>
+                    <path d="M12 7v5l3 2"/>
+                </svg>
+
+                Historial
+            </button>
+
+        </div>
+
+    </section>
+
+
+    {{-- ============================================================
+        MÉTRICAS PRINCIPALES
+    ============================================================ --}}
+    <section
         class="
             grid
             grid-cols-1
@@ -413,10 +403,10 @@
         ======================================================== --}}
         <div
             class="
-                bg-white
+                bg-[var(--theme-surface)]
 
                 border
-                border-[#50514F]/10
+                border-[var(--theme-border)]
 
                 rounded-xl
 
@@ -439,8 +429,8 @@
 
                     rounded-xl
 
-                    bg-emerald-50
-                    text-emerald-600
+                    bg-emerald-500/10
+                    text-emerald-500
 
                     flex
                     items-center
@@ -482,7 +472,7 @@
                     class="
                         text-sm
                         font-medium
-                        text-[#50514F]/65
+                        text-[var(--theme-text-muted)]
                     "
                 >
                     Equipos Asignados
@@ -491,12 +481,9 @@
                 <p
                     class="
                         mt-0.5
-
                         text-2xl
                         font-bold
-
-                        text-emerald-600
-
+                        text-emerald-500
                         leading-none
                     "
                 >
@@ -506,9 +493,8 @@
                 <p
                     class="
                         mt-1
-
                         text-[11px]
-                        text-[#50514F]/45
+                        text-[var(--theme-text-muted)]
                     "
                 >
                     Equipos en uso
@@ -520,11 +506,9 @@
             <svg
                 class="
                     shrink-0
-
                     w-5
                     h-5
-
-                    text-[#50514F]/35
+                    text-[var(--theme-text-muted)]
                 "
                 viewBox="0 0 24 24"
                 fill="none"
@@ -542,10 +526,10 @@
         ======================================================== --}}
         <div
             class="
-                bg-white
+                bg-[var(--theme-surface)]
 
                 border
-                border-red-200/70
+                border-red-500/25
 
                 rounded-xl
 
@@ -568,7 +552,7 @@
 
                     rounded-xl
 
-                    bg-red-50
+                    bg-red-500/10
                     text-red-500
 
                     flex
@@ -596,7 +580,7 @@
                     class="
                         text-sm
                         font-medium
-                        text-[#50514F]/65
+                        text-[var(--theme-text-muted)]
                     "
                 >
                     Equipos No Asignados
@@ -605,12 +589,9 @@
                 <p
                     class="
                         mt-0.5
-
                         text-2xl
                         font-bold
-
                         text-red-500
-
                         leading-none
                     "
                 >
@@ -620,9 +601,8 @@
                 <p
                     class="
                         mt-1
-
                         text-[11px]
-                        text-[#50514F]/45
+                        text-[var(--theme-text-muted)]
                     "
                 >
                     Equipos disponibles
@@ -634,11 +614,9 @@
             <svg
                 class="
                     shrink-0
-
                     w-5
                     h-5
-
-                    text-[#50514F]/35
+                    text-[var(--theme-text-muted)]
                 "
                 viewBox="0 0 24 24"
                 fill="none"
@@ -656,10 +634,10 @@
         ======================================================== --}}
         <div
             class="
-                bg-white
+                bg-[var(--theme-surface)]
 
                 border
-                border-[#247BA0]/15
+                border-[var(--theme-primary-border)]
 
                 rounded-xl
 
@@ -682,8 +660,8 @@
 
                     rounded-xl
 
-                    bg-[#247BA0]/10
-                    text-[#247BA0]
+                    bg-[var(--theme-primary-soft)]
+                    text-[var(--theme-primary)]
 
                     flex
                     items-center
@@ -711,7 +689,7 @@
                     class="
                         text-sm
                         font-medium
-                        text-[#50514F]/65
+                        text-[var(--theme-text-muted)]
                     "
                 >
                     Movimientos recientes
@@ -720,12 +698,9 @@
                 <p
                     class="
                         mt-0.5
-
                         text-2xl
                         font-bold
-
-                        text-[#247BA0]
-
+                        text-[var(--theme-primary)]
                         leading-none
                     "
                 >
@@ -735,9 +710,8 @@
                 <p
                     class="
                         mt-1
-
                         text-[11px]
-                        text-[#50514F]/45
+                        text-[var(--theme-text-muted)]
                     "
                 >
                     Últimos 7 días
@@ -749,11 +723,9 @@
             <svg
                 class="
                     shrink-0
-
                     w-5
                     h-5
-
-                    text-[#50514F]/35
+                    text-[var(--theme-text-muted)]
                 "
                 viewBox="0 0 24 24"
                 fill="none"
@@ -786,10 +758,10 @@
         ======================================================== --}}
         <section
             class="
-                bg-white
+                bg-[var(--theme-surface)]
 
                 border
-                border-[#50514F]/10
+                border-[var(--theme-border)]
 
                 rounded-xl
 
@@ -823,13 +795,10 @@
                     <svg
                         class="
                             shrink-0
-
                             w-5
                             h-5
-
                             mt-0.5
-
-                            text-[#25344A]
+                            text-[var(--theme-text-strong)]
                         "
                         viewBox="0 0 24 24"
                         fill="none"
@@ -848,7 +817,7 @@
                             class="
                                 text-sm
                                 font-semibold
-                                text-[#50514F]
+                                text-[var(--theme-text-strong)]
                             "
                         >
                             Equipos asignados por área
@@ -857,9 +826,8 @@
                         <p
                             class="
                                 mt-1
-
                                 text-xs
-                                text-[#50514F]/50
+                                text-[var(--theme-text-muted)]
                             "
                         >
                             Distribución de equipos en uso por área de la organización.
@@ -885,14 +853,14 @@
                         gap-4
 
                         border
-                        border-[#50514F]/15
+                        border-[var(--theme-border-strong)]
 
                         rounded-lg
 
-                        bg-white
+                        bg-[var(--theme-surface)]
 
                         text-xs
-                        text-[#50514F]/65
+                        text-[var(--theme-text-muted)]
                     "
                 >
                     Todas las áreas
@@ -949,7 +917,6 @@
                             class="
                                 absolute
                                 inset-0
-
                                 rounded-full
                             "
                             style="
@@ -968,7 +935,7 @@
 
                                 rounded-full
 
-                                bg-white
+                                bg-[var(--theme-surface)]
 
                                 flex
                                 flex-col
@@ -985,7 +952,7 @@
                                     sm:text-3xl
 
                                     font-bold
-                                    text-[#25344A]
+                                    text-[var(--theme-text-strong)]
                                 "
                             >
                                 {{ number_format($totalPorArea) }}
@@ -998,7 +965,7 @@
                                     text-[10px]
                                     sm:text-xs
 
-                                    text-[#50514F]/45
+                                    text-[var(--theme-text-muted)]
                                 "
                             >
                                 Equipos asignados
@@ -1016,7 +983,6 @@
                         class="
                             w-full
                             max-w-xs
-
                             space-y-2.5
                         "
                     >
@@ -1024,12 +990,10 @@
                         @foreach ($equiposPorArea as $index => $item)
 
                             @php
-
                                 $color =
                                     $chartColors[
                                         $index % count($chartColors)
                                     ];
-
                             @endphp
 
 
@@ -1044,10 +1008,8 @@
                                 <span
                                     class="
                                         shrink-0
-
                                         w-2.5
                                         h-2.5
-
                                         rounded-full
                                     "
                                     style="background-color: {{ $color }};"
@@ -1058,11 +1020,9 @@
                                     class="
                                         min-w-0
                                         flex-1
-
                                         truncate
-
                                         text-xs
-                                        text-[#50514F]/65
+                                        text-[var(--theme-text-muted)]
                                     "
                                 >
                                     {{ $item->area }}
@@ -1073,7 +1033,7 @@
                                     class="
                                         text-xs
                                         font-medium
-                                        text-[#50514F]
+                                        text-[var(--theme-text-strong)]
                                     "
                                 >
                                     {{ number_format($item->total) }}
@@ -1109,8 +1069,8 @@
 
                             rounded-full
 
-                            bg-[#247BA0]/5
-                            text-[#247BA0]/50
+                            bg-[var(--theme-primary-soft-subtle)]
+                            text-[var(--theme-primary)]
 
                             flex
                             items-center
@@ -1132,10 +1092,9 @@
                     <p
                         class="
                             mt-3
-
                             text-sm
                             font-medium
-                            text-[#50514F]/55
+                            text-[var(--theme-text-muted)]
                         "
                     >
                         Sin equipos asignados
@@ -1154,10 +1113,10 @@
         <section
             id="actividad-reciente"
             class="
-                bg-white
+                bg-[var(--theme-surface)]
 
                 border
-                border-[#50514F]/10
+                border-[var(--theme-border)]
 
                 rounded-xl
 
@@ -1180,7 +1139,6 @@
                         flex
                         items-start
                         justify-between
-
                         gap-4
                     "
                 >
@@ -1196,13 +1154,10 @@
                         <svg
                             class="
                                 shrink-0
-
                                 w-5
                                 h-5
-
                                 mt-0.5
-
-                                text-[#25344A]
+                                text-[var(--theme-text-strong)]
                             "
                             viewBox="0 0 24 24"
                             fill="none"
@@ -1219,7 +1174,7 @@
                                 class="
                                     text-sm
                                     font-semibold
-                                    text-[#50514F]
+                                    text-[var(--theme-text-strong)]
                                 "
                             >
                                 Resumen de actividad
@@ -1228,9 +1183,8 @@
                             <p
                                 class="
                                     mt-1
-
                                     text-xs
-                                    text-[#50514F]/50
+                                    text-[var(--theme-text-muted)]
                                 "
                             >
                                 Información general de movimientos y asignaciones.
@@ -1252,7 +1206,7 @@
 
                             text-xs
                             font-medium
-                            text-[#247BA0]
+                            text-[var(--theme-primary)]
                         "
                     >
                         Ver reporte completo
@@ -1294,9 +1248,9 @@
                             rounded-xl
 
                             border
-                            border-emerald-100
+                            border-emerald-500/20
 
-                            bg-emerald-50/40
+                            bg-emerald-500/10
 
                             p-3
                         "
@@ -1319,8 +1273,8 @@
 
                                     rounded-lg
 
-                                    bg-emerald-100
-                                    text-emerald-600
+                                    bg-emerald-500/15
+                                    text-emerald-500
 
                                     flex
                                     items-center
@@ -1344,7 +1298,7 @@
                                 class="
                                     text-xl
                                     font-bold
-                                    text-emerald-600
+                                    text-emerald-500
                                 "
                             >
                                 {{ number_format($asignacionesHoy) }}
@@ -1356,11 +1310,9 @@
                         <p
                             class="
                                 mt-2
-
                                 text-[10px]
                                 leading-snug
-
-                                text-[#50514F]/55
+                                text-[var(--theme-text-muted)]
                             "
                         >
                             Asignaciones hoy
@@ -1375,9 +1327,9 @@
                             rounded-xl
 
                             border
-                            border-[#247BA0]/10
+                            border-[var(--theme-primary-border)]
 
-                            bg-[#247BA0]/[0.03]
+                            bg-[var(--theme-primary-soft-subtle)]
 
                             p-3
                         "
@@ -1400,8 +1352,8 @@
 
                                     rounded-lg
 
-                                    bg-[#247BA0]/10
-                                    text-[#247BA0]
+                                    bg-[var(--theme-primary-soft)]
+                                    text-[var(--theme-primary)]
 
                                     flex
                                     items-center
@@ -1426,7 +1378,7 @@
                                 class="
                                     text-xl
                                     font-bold
-                                    text-[#247BA0]
+                                    text-[var(--theme-primary)]
                                 "
                             >
                                 {{ number_format($reasignacionesHoy) }}
@@ -1438,11 +1390,9 @@
                         <p
                             class="
                                 mt-2
-
                                 text-[10px]
                                 leading-snug
-
-                                text-[#50514F]/55
+                                text-[var(--theme-text-muted)]
                             "
                         >
                             Reasignaciones hoy
@@ -1457,9 +1407,9 @@
                             rounded-xl
 
                             border
-                            border-amber-100
+                            border-amber-500/20
 
-                            bg-amber-50/40
+                            bg-amber-500/10
 
                             p-3
                         "
@@ -1482,8 +1432,8 @@
 
                                     rounded-lg
 
-                                    bg-amber-100
-                                    text-amber-600
+                                    bg-amber-500/15
+                                    text-amber-500
 
                                     flex
                                     items-center
@@ -1506,7 +1456,7 @@
                                 class="
                                     text-xl
                                     font-bold
-                                    text-amber-600
+                                    text-amber-500
                                 "
                             >
                                 {{ number_format($asignacionesMes) }}
@@ -1518,11 +1468,9 @@
                         <p
                             class="
                                 mt-2
-
                                 text-[10px]
                                 leading-snug
-
-                                text-[#50514F]/55
+                                text-[var(--theme-text-muted)]
                             "
                         >
                             Asignaciones este mes
@@ -1537,9 +1485,9 @@
                             rounded-xl
 
                             border
-                            border-violet-100
+                            border-violet-500/20
 
-                            bg-violet-50/40
+                            bg-violet-500/10
 
                             p-3
                         "
@@ -1562,8 +1510,8 @@
 
                                     rounded-lg
 
-                                    bg-violet-100
-                                    text-violet-600
+                                    bg-violet-500/15
+                                    text-violet-500
 
                                     flex
                                     items-center
@@ -1587,7 +1535,7 @@
                                 class="
                                     text-xl
                                     font-bold
-                                    text-violet-600
+                                    text-violet-500
                                 "
                             >
                                 {{ number_format($reasignacionesMes) }}
@@ -1599,11 +1547,9 @@
                         <p
                             class="
                                 mt-2
-
                                 text-[10px]
                                 leading-snug
-
-                                text-[#50514F]/55
+                                text-[var(--theme-text-muted)]
                             "
                         >
                             Reasignaciones este mes
@@ -1628,7 +1574,7 @@
                         py-3
 
                         border-y
-                        border-[#50514F]/10
+                        border-[var(--theme-border)]
 
                         flex
                         items-center
@@ -1650,8 +1596,7 @@
                             class="
                                 w-4
                                 h-4
-
-                                text-[#25344A]
+                                text-[var(--theme-text-strong)]
                             "
                             viewBox="0 0 24 24"
                             fill="none"
@@ -1670,7 +1615,7 @@
                             class="
                                 text-sm
                                 font-semibold
-                                text-[#50514F]
+                                text-[var(--theme-text-strong)]
                             "
                         >
                             Actividad reciente
@@ -1683,7 +1628,7 @@
                         class="
                             text-xs
                             font-medium
-                            text-[#247BA0]
+                            text-[var(--theme-primary)]
                         "
                     >
                         Últimos movimientos
@@ -1705,17 +1650,17 @@
                         px-5
                         py-2
 
-                        bg-[#50514F]/[0.025]
+                        bg-[var(--theme-surface-soft)]
 
                         border-b
-                        border-[#50514F]/10
+                        border-[var(--theme-border)]
 
                         text-[9px]
                         font-medium
                         uppercase
                         tracking-wide
 
-                        text-[#50514F]/45
+                        text-[var(--theme-text-muted)]
                     "
                 >
                     <div>Acción</div>
@@ -1769,7 +1714,7 @@
                             py-2.5
 
                             border-b
-                            border-[#50514F]/10
+                            border-[var(--theme-border)]
 
                             last:border-b-0
                         "
@@ -1790,8 +1735,8 @@
                                     justify-center
 
                                     {{ $item->tipo === 'asignacion'
-                                        ? 'bg-emerald-100 text-emerald-600'
-                                        : 'bg-[#247BA0]/10 text-[#247BA0]'
+                                        ? 'bg-emerald-500/15 text-emerald-500'
+                                        : 'bg-[var(--theme-primary-soft)] text-[var(--theme-primary)]'
                                     }}
                                 "
                             >
@@ -1839,7 +1784,7 @@
                                 class="
                                     text-xs
                                     leading-relaxed
-                                    text-[#50514F]/70
+                                    text-[var(--theme-text)]
                                 "
                             >
 
@@ -1861,7 +1806,7 @@
                                 <span
                                     class="
                                         font-medium
-                                        text-[#25344A]
+                                        text-[var(--theme-text-strong)]
                                     "
                                 >
                                     {{ $codigo }}
@@ -1885,10 +1830,8 @@
                                 <p
                                     class="
                                         mt-0.5
-
                                         text-[9px]
-                                        text-[#50514F]/35
-
+                                        text-[var(--theme-text-muted)]
                                         truncate
                                     "
                                 >
@@ -1906,7 +1849,7 @@
                             <p
                                 class="
                                     text-[10px]
-                                    text-[#50514F]/55
+                                    text-[var(--theme-text-muted)]
                                 "
                             >
                                 {{ $horaActividad }}
@@ -1915,11 +1858,9 @@
                             <p
                                 class="
                                     sm:hidden
-
                                     mt-0.5
-
                                     text-[9px]
-                                    text-[#50514F]/35
+                                    text-[var(--theme-text-muted)]
                                 "
                             >
                                 {{ $fechaTexto }}
@@ -1948,7 +1889,7 @@
                         <p
                             class="
                                 text-sm
-                                text-[#50514F]/45
+                                text-[var(--theme-text-muted)]
                             "
                         >
                             Todavía no hay actividad registrada.
