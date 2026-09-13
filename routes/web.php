@@ -38,6 +38,7 @@ Route::middleware('auth')->group(function () {
     )
         ->name('equipos.search');
 
+
     /*
     |--------------------------------------------------------------------------
     | Dashboard
@@ -93,6 +94,7 @@ Route::middleware('auth')->group(function () {
         ->whereNumber('equipo')
         ->name('equipos.show');
 
+
     /*
     |--------------------------------------------------------------------------
     | Editar equipo
@@ -111,6 +113,18 @@ Route::middleware('auth')->group(function () {
     )
         ->whereNumber('equipo')
         ->name('equipos.edit');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Asignaciones y movimientos
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/asignaciones',
+        fn () => view('asignaciones.index')
+    )->name('asignaciones.index');
 
 });
 

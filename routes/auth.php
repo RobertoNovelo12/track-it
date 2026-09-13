@@ -5,20 +5,109 @@ use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use Illuminate\Support\Facades\Route;
 
+
+/*
+|--------------------------------------------------------------------------
+| Rutas para invitados
+|--------------------------------------------------------------------------
+*/
+
 Route::middleware('guest')->group(function () {
 
-    Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
-    Route::post('/login', [AuthenticatedSessionController::class, 'store']);
+    /*
+    |--------------------------------------------------------------------------
+    | Login
+    |--------------------------------------------------------------------------
+    */
 
-    Route::get('/registro', [RegisteredUserController::class, 'create'])->name('register');
-    Route::post('/registro', [RegisteredUserController::class, 'store']);
+    Route::get(
+        '/login',
+        [AuthenticatedSessionController::class, 'create']
+    )->name('login');
 
-    Route::get('/olvide-mi-contrasena', [PasswordResetLinkController::class, 'create'])->name('password.request');
-    Route::post('/olvide-mi-contrasena', [PasswordResetLinkController::class, 'store'])->name('password.email');
+    Route::post(
+        '/login',
+        [AuthenticatedSessionController::class, 'store']
+    );
 
-    Route::view('/registro/pendiente', 'auth.pending-approval')->name('register.pending');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Registro
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/registro',
+        [RegisteredUserController::class, 'create']
+    )->name('register');
+
+    Route::post(
+        '/registro',
+        [RegisteredUserController::class, 'store']
+    );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Recuperar contraseña
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/olvide-mi-contrasena',
+        [PasswordResetLinkController::class, 'create']
+    )->name('password.request');
+
+    Route::post(
+        '/olvide-mi-contrasena',
+        [PasswordResetLinkController::class, 'store']
+    )->name('password.email');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Cuenta pendiente de aprobación
+    |--------------------------------------------------------------------------
+    */
+
+    Route::view(
+        '/registro/pendiente',
+        'auth.pending-approval'
+    )->name('register.pending');
+
+
+    Route::view(
+        '/pending-approval',
+        'auth.pending-approval'
+    )->name('pending.approval');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Sesión caducada
+    |--------------------------------------------------------------------------
+    */
+
+    Route::view(
+        '/sesion-caducada',
+        'auth.session-expired'
+    )->name('session.expired');
+
 });
 
+
+/*
+|--------------------------------------------------------------------------
+| Rutas autenticadas
+|--------------------------------------------------------------------------
+*/
+
 Route::middleware('auth')->group(function () {
-    Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
+
+    Route::post(
+        '/logout',
+        [AuthenticatedSessionController::class, 'destroy']
+    )->name('logout');
+
 });
