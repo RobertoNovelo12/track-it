@@ -1,4 +1,4 @@
-FROM php:8.3-cli
+FROM php:8.4-cli
 
 # Dependencias del sistema + extensiones de PHP que Laravel necesita
 # (pdo_pgsql es la que importa para conectar a Supabase).
