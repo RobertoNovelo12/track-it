@@ -466,91 +466,722 @@
             </div>
 
 
-            {{-- Usuario --}}
-            <div class="flex shrink-0 items-center gap-2 sm:gap-4">
+        {{-- ========================================================
+            USUARIO / PERFIL
+        ======================================================== --}}
+        <div class="flex shrink-0 items-center gap-2 sm:gap-3">
 
-                {{-- Notificaciones --}}
+            {{-- ====================================================
+                NOTIFICACIONES
+            ==================================================== --}}
             <button
                 type="button"
                 class="
                     relative
                     shrink-0
+
                     w-9
                     h-9
+
                     flex
                     items-center
                     justify-center
+
                     rounded-full
+
                     text-[#50514F]/70
+
                     hover:text-[#247BA0]
                     hover:bg-[#247BA0]/5
+
                     transition-colors
                 "
+                aria-label="Notificaciones"
             >
+                <svg
+                    class="w-5 h-5"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                >
+                    <path d="M18 8a6 6 0 00-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/>
+                    <path d="M10 21h4"/>
+                </svg>
+
+                {{-- Punto de notificación --}}
+                <span
+                    class="
+                        absolute
+                        top-1.5
+                        right-1.5
+
+                        w-1.5
+                        h-1.5
+
+                        bg-red-500
+                        rounded-full
+                    "
+                ></span>
+            </button>
+
+
+
+            {{-- ====================================================
+                MENÚ DE PERFIL
+            ==================================================== --}}
+            <div
+                x-data="{ open: false }"
+                @click.outside="open = false"
+                @keydown.escape.window="open = false"
+                class="relative"
+            >
+
+                {{-- =================================================
+                    CÁPSULA
+                ================================================= --}}
+                <button
+                    type="button"
+                    @click="open = !open"
+                    class="
+                        group
+
+                        flex
+                        items-center
+                        gap-2
+
+                        rounded-full
+
+                        border
+                        border-[#50514F]/10
+
+                        bg-white
+
+                        p-1
+
+                        sm:pl-3
+
+                        hover:border-[#247BA0]/30
+                        hover:bg-[#247BA0]/[0.03]
+
+                        transition-all
+                    "
+                    :aria-expanded="open"
+                    aria-haspopup="true"
+                >
+
+                    {{-- Nombre + propiedad --}}
+                    <div
+                        class="
+                            hidden
+                            sm:block
+
+                            text-right
+                            pl-1
+                        "
+                    >
+
+                        <p
+                            class="
+                                max-w-36
+                                truncate
+
+                                text-[10px]
+                                md:text-[11px]
+
+                                leading-tight
+                                font-semibold
+                                uppercase
+                                text-[#25344A]
+                            "
+                        >
+                            {{ auth()->user()->nombres ?? auth()->user()->name }}
+                            {{ auth()->user()->apellido_paterno ?? '' }}
+                        </p>
+
+                        <p
+                            class="
+                                mt-0.5
+
+                                text-[8px]
+                                md:text-[9px]
+
+                                leading-tight
+                                text-[#50514F]/45
+                            "
+                        >
+                            {{ auth()->user()->propiedad ?? 'Grand Palladium' }}
+                        </p>
+
+                    </div>
+
+
+                    {{-- Avatar --}}
+                    <div
+                        class="
+                            shrink-0
+
+                            w-9
+                            h-9
+
+                            rounded-full
+
+                            border
+                            border-[#247BA0]/50
+
+                            flex
+                            items-center
+                            justify-center
+
+                            bg-[#247BA0]/5
+                            text-[#25344A]
+
+                            group-hover:border-[#247BA0]
+
+                            transition-colors
+                        "
+                    >
+                        <svg
+                            class="w-6 h-6"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.5"
+                        >
+                            <circle cx="12" cy="8" r="4"/>
+                            <path d="M4 21c0-5 3-8 8-8s8 3 8 8"/>
+                        </svg>
+                    </div>
+
+
+                    {{-- Flecha --}}
                     <svg
-                        class="w-5 h-5"
+                        class="
+                            hidden
+                            md:block
+
+                            w-3.5
+                            h-3.5
+
+                            mr-1
+
+                            text-[#50514F]/40
+
+                            transition-transform
+                            duration-200
+                        "
+                        :class="open ? 'rotate-180' : ''"
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
-                        stroke-width="1.5"
+                        stroke-width="1.7"
                     >
-                        <path d="M18 8a6 6 0 00-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/>
-                        <path d="M10 21h4"/>
+                        <path d="M6 9l6 6 6-6"/>
                     </svg>
+
                 </button>
 
 
-                {{-- Información usuario --}}
-                <div class="hidden lg:block text-right">
 
-                    <p class="text-[11px] font-medium text-[#50514F] uppercase">
-                        {{ auth()->user()->nombres ?? auth()->user()->name }}
-                        {{ auth()->user()->apellido_paterno ?? '' }}
-                    </p>
-
-                    <p class="text-[9px] text-[#50514F]/50">
-                        {{ auth()->user()->puesto ?? 'Grand Palladium' }}
-                    </p>
-
-                </div>
-
-
-                {{-- Avatar --}}
+                {{-- =================================================
+                    DROPDOWN
+                ================================================= --}}
                 <div
+                    x-show="open"
+                    x-cloak
+
+                    x-transition:enter="transition ease-out duration-150"
+                    x-transition:enter-start="opacity-0 translate-y-1 scale-[0.98]"
+                    x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+
+                    x-transition:leave="transition ease-in duration-100"
+                    x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                    x-transition:leave-end="opacity-0 translate-y-1 scale-[0.98]"
+
                     class="
-                        w-9 h-9
-                        rounded-full
-                        border border-[#50514F]
-                        flex items-center justify-center
+                        absolute
+                        right-0
+                        top-full
+
+                        mt-2
+
+                        w-[300px]
+                        max-w-[calc(100vw-2rem)]
+
+                        bg-white
+
+                        border
+                        border-[#50514F]/10
+
+                        rounded-2xl
+
+                        shadow-xl
+                        shadow-black/10
+
+                        overflow-hidden
+
+                        z-50
                     "
                 >
-                    <svg
-                        class="w-6 h-6"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.5"
-                    >
-                        <circle cx="12" cy="8" r="4"/>
-                        <path d="M4 21c0-5 3-8 8-8s8 3 8 8"/>
-                    </svg>
+
+                    {{-- =============================================
+                        CABECERA DEL PERFIL
+                    ============================================== --}}
+                    <div class="p-4">
+
+                        <div
+                            class="
+                                flex
+                                items-center
+                                gap-3
+                            "
+                        >
+
+                            {{-- Avatar grande --}}
+                            <div
+                                class="
+                                    shrink-0
+
+                                    w-12
+                                    h-12
+
+                                    rounded-full
+
+                                    flex
+                                    items-center
+                                    justify-center
+
+                                    bg-[#247BA0]/10
+                                    text-[#247BA0]
+                                "
+                            >
+                                <svg
+                                    class="w-7 h-7"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="1.5"
+                                >
+                                    <circle cx="12" cy="8" r="4"/>
+                                    <path d="M4 21c0-5 3-8 8-8s8 3 8 8"/>
+                                </svg>
+                            </div>
+
+
+                            {{-- Datos --}}
+                            <div class="min-w-0">
+
+                                <p
+                                    class="
+                                        text-sm
+                                        font-semibold
+                                        uppercase
+                                        text-[#25344A]
+
+                                        truncate
+                                    "
+                                >
+                                    {{ auth()->user()->nombres ?? auth()->user()->name }}
+                                    {{ auth()->user()->apellido_paterno ?? '' }}
+                                </p>
+
+
+                                <p
+                                    class="
+                                        mt-0.5
+                                        text-xs
+                                        text-[#50514F]/65
+                                        truncate
+                                    "
+                                >
+                                    {{ auth()->user()->puesto ?? 'Administrador TI' }}
+                                </p>
+
+
+                                <p
+                                    class="
+                                        mt-0.5
+                                        text-xs
+                                        text-[#50514F]/55
+                                        truncate
+                                    "
+                                >
+                                    {{ auth()->user()->propiedad ?? 'Grand Palladium' }}
+                                </p>
+
+
+                                @if (!empty(auth()->user()->email))
+
+                                    <p
+                                        class="
+                                            mt-0.5
+                                            text-[11px]
+                                            text-[#50514F]/45
+                                            truncate
+                                        "
+                                    >
+                                        {{ auth()->user()->email }}
+                                    </p>
+
+                                @endif
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="h-px bg-[#50514F]/10 mx-4"></div>
+
+
+
+                    {{-- =============================================
+                        OPCIONES PRINCIPALES
+                    ============================================== --}}
+                    <div class="p-2">
+
+                        {{-- Mi perfil --}}
+                        <button
+                            type="button"
+                            class="
+                                w-full
+
+                                flex
+                                items-center
+                                gap-3
+
+                                px-3
+                                py-2.5
+
+                                rounded-lg
+
+                                text-sm
+                                text-[#25344A]
+
+                                hover:bg-[#247BA0]/5
+                                hover:text-[#247BA0]
+
+                                transition-colors
+                            "
+                        >
+                            <svg
+                                class="w-5 h-5 shrink-0"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.5"
+                            >
+                                <circle cx="12" cy="8" r="4"/>
+                                <path d="M4 21c0-5 3-8 8-8s8 3 8 8"/>
+                            </svg>
+
+                            <span>Mi perfil</span>
+                        </button>
+
+
+                        {{-- Notificaciones --}}
+                        <button
+                            type="button"
+                            class="
+                                w-full
+
+                                flex
+                                items-center
+                                gap-3
+
+                                px-3
+                                py-2.5
+
+                                rounded-lg
+
+                                text-sm
+                                text-[#25344A]
+
+                                hover:bg-[#247BA0]/5
+                                hover:text-[#247BA0]
+
+                                transition-colors
+                            "
+                        >
+                            <svg
+                                class="w-5 h-5 shrink-0"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.5"
+                            >
+                                <path d="M18 8a6 6 0 00-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/>
+                                <path d="M10 21h4"/>
+                            </svg>
+
+                            <span class="flex-1 text-left">
+                                Notificaciones
+                            </span>
+
+                            <span
+                                class="
+                                    w-2
+                                    h-2
+                                    rounded-full
+                                    bg-red-500
+                                "
+                            ></span>
+                        </button>
+
+
+                        {{-- Preferencias --}}
+                        <button
+                            type="button"
+                            class="
+                                w-full
+
+                                flex
+                                items-center
+                                gap-3
+
+                                px-3
+                                py-2.5
+
+                                rounded-lg
+
+                                text-sm
+                                text-[#25344A]
+
+                                hover:bg-[#247BA0]/5
+                                hover:text-[#247BA0]
+
+                                transition-colors
+                            "
+                        >
+                            <svg
+                                class="w-5 h-5 shrink-0"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.5"
+                            >
+                                <circle cx="12" cy="12" r="3"/>
+                                <path d="M19.4 15a1.7 1.7 0 00.34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0015 19.4a1.7 1.7 0 00-1 .6 1.7 1.7 0 00-.4 1.1V21H9.6v-.1A1.7 1.7 0 009 19.4a1.7 1.7 0 00-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 004.6 15a1.7 1.7 0 00-.6-1 1.7 1.7 0 00-1.1-.4H3V9.6h.1A1.7 1.7 0 004.6 9a1.7 1.7 0 00-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 009 4.6a1.7 1.7 0 001-.6 1.7 1.7 0 00.4-1.1V3h4v.1A1.7 1.7 0 0015 4.6a1.7 1.7 0 001.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0019.4 9a1.7 1.7 0 00.6 1 1.7 1.7 0 001.1.4h.1v4h-.1a1.7 1.7 0 00-1.7.6z"/>
+                            </svg>
+
+                            <span>Preferencias</span>
+                        </button>
+
+
+                        {{-- Seguridad --}}
+                        <button
+                            type="button"
+                            class="
+                                w-full
+
+                                flex
+                                items-center
+                                gap-3
+
+                                px-3
+                                py-2.5
+
+                                rounded-lg
+
+                                text-sm
+                                text-[#25344A]
+
+                                hover:bg-[#247BA0]/5
+                                hover:text-[#247BA0]
+
+                                transition-colors
+                            "
+                        >
+                            <svg
+                                class="w-5 h-5 shrink-0"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.5"
+                            >
+                                <path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6l7-3z"/>
+                            </svg>
+
+                            <span>Seguridad</span>
+                        </button>
+
+                    </div>
+
+
+
+                    <div class="h-px bg-[#50514F]/10 mx-4"></div>
+
+
+
+                    {{-- =============================================
+                        OPCIONES SECUNDARIAS
+                    ============================================== --}}
+                    <div class="p-2">
+
+                        {{-- Cambiar propiedad --}}
+                        <button
+                            type="button"
+                            class="
+                                w-full
+
+                                flex
+                                items-center
+                                gap-3
+
+                                px-3
+                                py-2.5
+
+                                rounded-lg
+
+                                text-sm
+                                text-[#25344A]
+
+                                hover:bg-[#247BA0]/5
+                                hover:text-[#247BA0]
+
+                                transition-colors
+                            "
+                        >
+                            <svg
+                                class="w-5 h-5 shrink-0"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.5"
+                            >
+                                <path d="M4 21h16"/>
+                                <path d="M6 21V7l6-4 6 4v14"/>
+                                <path d="M9 10h2"/>
+                                <path d="M13 10h2"/>
+                                <path d="M9 14h2"/>
+                                <path d="M13 14h2"/>
+                            </svg>
+
+                            <span>Cambiar propiedad</span>
+                        </button>
+
+
+                        {{-- Ayuda --}}
+                        <button
+                            type="button"
+                            class="
+                                w-full
+
+                                flex
+                                items-center
+                                gap-3
+
+                                px-3
+                                py-2.5
+
+                                rounded-lg
+
+                                text-sm
+                                text-[#25344A]
+
+                                hover:bg-[#247BA0]/5
+                                hover:text-[#247BA0]
+
+                                transition-colors
+                            "
+                        >
+                            <svg
+                                class="w-5 h-5 shrink-0"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.5"
+                            >
+                                <circle cx="12" cy="12" r="9"/>
+                                <path d="M9.8 9a2.4 2.4 0 114.4 1.3c-.7.9-2.2 1.2-2.2 2.7"/>
+                                <path d="M12 17h.01"/>
+                            </svg>
+
+                            <span>Ayuda y soporte</span>
+                        </button>
+
+                    </div>
+
+
+
+                    <div class="h-px bg-[#50514F]/10 mx-4"></div>
+
+
+
+                    {{-- =============================================
+                        CERRAR SESIÓN
+                    ============================================== --}}
+                    <div class="p-2">
+
+                        <form
+                            action="{{ route('logout') }}"
+                            method="POST"
+                        >
+                            @csrf
+
+                            <button
+                                type="submit"
+                                class="
+                                    w-full
+
+                                    flex
+                                    items-center
+                                    gap-3
+
+                                    px-3
+                                    py-2.5
+
+                                    rounded-lg
+
+                                    text-sm
+                                    font-medium
+                                    text-red-500
+
+                                    hover:bg-red-50
+
+                                    transition-colors
+                                "
+                            >
+                                <svg
+                                    class="w-5 h-5 shrink-0"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="1.5"
+                                >
+                                    <path d="M10 17l5-5-5-5"/>
+                                    <path d="M15 12H3"/>
+                                    <path d="M14 4h7v16h-7"/>
+                                </svg>
+
+                                <span>Cerrar sesión</span>
+                            </button>
+
+                        </form>
+
+                    </div>
+
                 </div>
 
             </div>
 
-        </header>
+        </div>
+
+            </header>
 
 
-        {{-- ========================================================
-            CONTENIDO ESPECÍFICO DE CADA PÁGINA
-        ======================================================== --}}
-        <main class="p-6">
+            {{-- ========================================================
+                CONTENIDO ESPECÍFICO DE CADA PÁGINA
+            ======================================================== --}}
+            <main class="p-6">
 
-            @yield('content')
+                @yield('content')
 
-        </main>
+            </main>
 
-    </div>
+        </div>
 
 </div>
 
