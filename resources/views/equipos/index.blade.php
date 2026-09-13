@@ -63,7 +63,7 @@
     </div>
 
     {{-- Filtros, tabla y paginación: todo esto ahora vive en el componente Livewire --}}
-    <livewire:equipos-index />
+    <livewire:equipos-index defer />
 
 </div>
 

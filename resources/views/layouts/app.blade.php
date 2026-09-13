@@ -20,11 +20,11 @@
     @stack('styles')
 
     {{--
-        Nota: las clases w-20, ml-20, hidden y justify-center se aplican
-        vía JavaScript (toggleSidebar). Este comentario asegura que
-        Tailwind las incluya en el build y no las elimine al purgar
-        clases no usadas en el HTML estático.
-        w-20 ml-20 hidden justify-center justify-start
+        Nota: algunas clases se aplican vía JavaScript (toggleSidebar).
+        Se dejan también aquí como referencia para que Tailwind pueda
+        detectarlas durante el build.
+        w-20 md:ml-20 hidden justify-center justify-start
+        -translate-x-full translate-x-0
     --}}
 </head>
 
@@ -41,6 +41,7 @@
                w-64 bg-[#FFFCFF]
                border-r border-[#50514F]/10
                flex flex-col z-40
+               -translate-x-full md:translate-x-0
                transition-all duration-300 ease-in-out overflow-hidden"
     >
 
@@ -341,11 +342,18 @@
 
     </aside>
 
+    {{-- Overlay del drawer móvil --}}
+    <div
+        id="sidebarOverlay"
+        onclick="toggleSidebar()"
+        class="fixed inset-0 bg-black/40 z-30 hidden md:hidden"
+    ></div>
+
 
     {{-- ============================================================
         CONTENIDO DERECHO
     ============================================================ --}}
-    <div id="mainContent" class="ml-64 flex-1 min-h-screen transition-all duration-300 ease-in-out">
+    <div id="mainContent" class="ml-0 md:ml-64 flex-1 min-h-screen transition-all duration-300 ease-in-out">
 
         {{-- ========================================================
             HEADER
@@ -361,35 +369,53 @@
             "
         >
 
-            {{-- Buscador --}}
-            <div class="relative w-96">
+            <div class="flex items-center gap-3 flex-1 min-w-0">
 
-                <svg
-                    class="absolute left-3 top-1/2 -translate-y-1/2
-                           w-4 h-4 text-[#50514F]/50"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.5"
+                {{-- Hamburguesa móvil: abre el drawer --}}
+                <button
+                    type="button"
+                    onclick="toggleSidebar()"
+                    class="md:hidden shrink-0 text-[#50514F]/70 hover:text-[#247BA0]"
+                    aria-label="Abrir menú"
                 >
-                    <circle cx="11" cy="11" r="7"/>
-                    <path d="M20 20l-4-4"/>
-                </svg>
+                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M4 6h16"/>
+                        <path d="M4 12h16"/>
+                        <path d="M4 18h16"/>
+                    </svg>
+                </button>
 
-                <input
-                    type="search"
-                    placeholder="Buscar por número de serie, Id o responsable..."
-                    class="
-                        w-full
-                        bg-[#50514F]/5
-                        rounded-full
-                        border-0
-                        pl-10 pr-4 py-2
-                        text-xs
-                        placeholder:text-[#50514F]/50
-                        focus:ring-1 focus:ring-[#247BA0]
-                    "
-                >
+                {{-- Buscador: oculto en pantallas muy pequeñas --}}
+                <div class="relative hidden sm:block w-56 md:w-96">
+
+                    <svg
+                        class="absolute left-3 top-1/2 -translate-y-1/2
+                               w-4 h-4 text-[#50514F]/50"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                    >
+                        <circle cx="11" cy="11" r="7"/>
+                        <path d="M20 20l-4-4"/>
+                    </svg>
+
+                    <input
+                        type="search"
+                        placeholder="Buscar por número de serie, Id o responsable..."
+                        class="
+                            w-full
+                            bg-[#50514F]/5
+                            rounded-full
+                            border-0
+                            pl-10 pr-4 py-2
+                            text-xs
+                            placeholder:text-[#50514F]/50
+                            focus:ring-1 focus:ring-[#247BA0]
+                        "
+                    >
+
+                </div>
 
             </div>
 
@@ -470,7 +496,11 @@
 </div>
 
 <script>
-    function applySidebarState(collapsed) {
+    function isMobileViewport() {
+        return window.matchMedia('(max-width: 767px)').matches;
+    }
+
+    function applyDesktopSidebarState(collapsed) {
         const sidebar = document.getElementById('sidebar');
         const main = document.getElementById('mainContent');
         const header = document.getElementById('sidebarHeader');
@@ -481,36 +511,122 @@
         if (collapsed) {
             sidebar.classList.remove('w-64');
             sidebar.classList.add('w-20');
-            main.classList.remove('ml-64');
-            main.classList.add('ml-20');
+
+            main.classList.remove('md:ml-64');
+            main.classList.add('md:ml-20');
+
             header.classList.remove('justify-start');
             header.classList.add('justify-center');
+
             labels.forEach(el => el.classList.add('hidden'));
             navLinks.forEach(el => el.classList.add('justify-center'));
             logoWrap.classList.add('hidden');
         } else {
             sidebar.classList.remove('w-20');
             sidebar.classList.add('w-64');
-            main.classList.remove('ml-20');
-            main.classList.add('ml-64');
+
+            main.classList.remove('md:ml-20');
+            main.classList.add('md:ml-64');
+
             header.classList.remove('justify-center');
             header.classList.add('justify-start');
+
             labels.forEach(el => el.classList.remove('hidden'));
             navLinks.forEach(el => el.classList.remove('justify-center'));
             logoWrap.classList.remove('hidden');
         }
     }
 
+    function normalizeMobileSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const header = document.getElementById('sidebarHeader');
+        const labels = document.querySelectorAll('.sidebar-label');
+        const navLinks = document.querySelectorAll('.sidebar-nav-link');
+        const logoWrap = document.getElementById('sidebarLogoWrap');
+
+        // En móvil el drawer siempre usa su ancho completo,
+        // aunque en escritorio se haya guardado como colapsado.
+        sidebar.classList.remove('w-20');
+        sidebar.classList.add('w-64');
+
+        header.classList.remove('justify-center');
+        header.classList.add('justify-start');
+
+        labels.forEach(el => el.classList.remove('hidden'));
+        navLinks.forEach(el => el.classList.remove('justify-center'));
+        logoWrap.classList.remove('hidden');
+    }
+
+    function applyMobileSidebarState(open) {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+
+        if (open) {
+            sidebar.classList.remove('-translate-x-full');
+            sidebar.classList.add('translate-x-0');
+            overlay.classList.remove('hidden');
+        } else {
+            sidebar.classList.add('-translate-x-full');
+            sidebar.classList.remove('translate-x-0');
+            overlay.classList.add('hidden');
+        }
+    }
+
     function toggleSidebar() {
+        if (isMobileViewport()) {
+            const sidebar = document.getElementById('sidebar');
+            const isOpen = sidebar.classList.contains('translate-x-0');
+
+            normalizeMobileSidebar();
+            applyMobileSidebarState(!isOpen);
+            return;
+        }
+
         const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
         const next = !isCollapsed;
+
         localStorage.setItem('sidebarCollapsed', next);
-        applySidebarState(next);
+        applyDesktopSidebarState(next);
     }
 
     document.addEventListener('DOMContentLoaded', function () {
-        const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
-        applySidebarState(isCollapsed);
+        let wasMobile = isMobileViewport();
+
+        if (wasMobile) {
+            normalizeMobileSidebar();
+            applyMobileSidebarState(false);
+        } else {
+            const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+            applyDesktopSidebarState(isCollapsed);
+        }
+
+        // Cierra el drawer al tocar un enlace del menú en móvil.
+        document.getElementById('sidebarNav').addEventListener('click', function (e) {
+            if (isMobileViewport() && e.target.closest('a')) {
+                applyMobileSidebarState(false);
+            }
+        });
+
+        // Solo reajusta cuando realmente se cruza el breakpoint md.
+        window.addEventListener('resize', function () {
+            const nowMobile = isMobileViewport();
+
+            if (nowMobile === wasMobile) {
+                return;
+            }
+
+            wasMobile = nowMobile;
+
+            if (nowMobile) {
+                normalizeMobileSidebar();
+                applyMobileSidebarState(false);
+            } else {
+                applyMobileSidebarState(false);
+
+                const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+                applyDesktopSidebarState(isCollapsed);
+            }
+        });
     });
 </script>
 
