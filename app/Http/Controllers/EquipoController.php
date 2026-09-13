@@ -10,11 +10,25 @@ use App\Models\Modelo;
 use App\Models\TipoEquipo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class EquipoController extends Controller
 {
     public function index(Request $request)
     {
+        // ------------------------------------------------------------
+        // INSTRUMENTACIÓN TEMPORAL — quítala una vez que encontremos
+        // el cuello de botella. Registra cada consulta con su tiempo
+        // real en los logs (en Render: pestaña "Logs" de tu servicio).
+        // ------------------------------------------------------------
+        $queryLog = [];
+        DB::listen(function ($query) use (&$queryLog) {
+            $queryLog[] = round($query->time, 2) . 'ms: ' . $query->sql;
+        });
+
+        $tInicio = microtime(true);
+
         $query = Equipo::query()->with([
             'tipoEquipo',
             'marca',
@@ -70,11 +84,27 @@ class EquipoController extends Controller
         $perPage = (int) $request->input('per_page', 10);
         $perPage = in_array($perPage, [10, 25, 50, 100]) ? $perPage : 10;
 
+        $tAntesQuery = microtime(true);
         $equipos = $query->paginate($perPage)->withQueryString();
+        $tDespuesQuery = microtime(true);
+
+        $opciones = $this->opcionesDeFiltros();
+        $tDespuesFiltros = microtime(true);
+
+        Log::info('[TIMING] /equipos', [
+            'total_hasta_aqui_ms' => round(($tDespuesFiltros - $tInicio) * 1000, 1),
+            'query_principal_ms' => round(($tDespuesQuery - $tAntesQuery) * 1000, 1),
+            'opciones_filtros_ms' => round(($tDespuesFiltros - $tDespuesQuery) * 1000, 1),
+            'numero_de_queries' => count($queryLog),
+            'detalle_queries' => $queryLog,
+        ]);
+        // ------------------------------------------------------------
+        // FIN INSTRUMENTACIÓN TEMPORAL
+        // ------------------------------------------------------------
 
         return view('equipos.index', array_merge(
             ['equipos' => $equipos],
-            $this->opcionesDeFiltros()
+            $opciones
         ));
     }
 
