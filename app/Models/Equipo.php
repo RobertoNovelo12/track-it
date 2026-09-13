@@ -117,10 +117,27 @@ class Equipo extends Model
 
     /**
      * Etiqueta combinada "Área / Departamento" que se muestra en la tabla.
-     * Ajusta esta lógica si tu jerarquía real es distinta.
+     *
+     * Soporta dos escenarios:
+     * 1. Cuando la consulta trae columnas planas vía JOIN (listado de
+     *    equipos, para minimizar viajes de red): usa esas columnas.
+     * 2. Cuando el modelo se cargó con ->with('area', 'departamento.area')
+     *    (otras pantallas): usa las relaciones normalmente.
      */
     public function getUbicacionOrganizacionalAttribute(): string
     {
+        if (array_key_exists('departamento_nombre', $this->attributes)
+            || array_key_exists('area_nombre', $this->attributes)) {
+            if (!empty($this->attributes['departamento_nombre'] ?? null)) {
+                $areaNombre = $this->attributes['departamento_area_nombre'] ?? null;
+                return $areaNombre
+                    ? "{$areaNombre} / {$this->attributes['departamento_nombre']}"
+                    : $this->attributes['departamento_nombre'];
+            }
+
+            return $this->attributes['area_nombre'] ?? '—';
+        }
+
         if ($this->departamento) {
             $areaNombre = $this->departamento->area?->nombre;
             return $areaNombre
