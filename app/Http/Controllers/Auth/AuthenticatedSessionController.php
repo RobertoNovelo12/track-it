@@ -242,7 +242,7 @@ class AuthenticatedSessionController extends Controller
                 minutes: 60 * 24 * 30,
                 path: '/',
                 domain: null,
-                secure: false,
+                secure: true,
                 httpOnly: true,
                 raw: false,
                 sameSite: 'lax'
