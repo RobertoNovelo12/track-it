@@ -132,6 +132,17 @@ Route::middleware([
         fn () => view('seguridad.index')
     )->name('usuarios.index');
 
+    /*
+    |--------------------------------------------------------------------------
+    | Ajustes
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/ajustes',
+        fn () => view('ajustes.index')
+    )->name('ajustes.index');
+
 });
 
 /*

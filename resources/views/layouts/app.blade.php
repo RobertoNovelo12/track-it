@@ -600,8 +600,21 @@
         CONTENIDO DERECHO
     ============================================================ --}}
     <div
-    id="mainContent"
-    class="ml-0 md:ml-64 flex-1 min-h-screen transition-[margin-left] duration-300 ease-in-out"
+        id="mainContent"
+        class="
+            ml-0
+            md:ml-64
+
+            min-w-0
+            flex-1
+            min-h-screen
+
+            overflow-x-hidden
+
+            transition-[margin-left]
+            duration-300
+            ease-in-out
+        "
     >
 
         {{-- ========================================================
