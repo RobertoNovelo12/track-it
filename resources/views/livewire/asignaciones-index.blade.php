@@ -931,7 +931,7 @@
                         <div
                             class="
                                 absolute
-                                inset-[29%]
+                                inset-[25%]
 
                                 rounded-full
 

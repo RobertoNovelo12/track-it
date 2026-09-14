@@ -15,14 +15,20 @@
         "
     >
 
-        <div class="min-w-0 flex-1">
+        <div class="min-w-0">
 
             {{-- Breadcrumb --}}
-            <div class="flex items-center gap-2 mb-2">
-
+            <div
+                class="
+                    flex
+                    items-center
+                    gap-2
+                    mb-3
+                "
+            >
                 <div
                     class="
-                        h-3
+                        h-2.5
                         w-20
                         rounded
                         bg-[var(--theme-surface-soft)]
@@ -31,8 +37,8 @@
 
                 <div
                     class="
-                        h-3
-                        w-3
+                        h-2.5
+                        w-2
                         rounded
                         bg-[var(--theme-surface-soft)]
                     "
@@ -40,13 +46,12 @@
 
                 <div
                     class="
-                        h-3
-                        w-36
+                        h-2.5
+                        w-32
                         rounded
                         bg-[var(--theme-surface-soft)]
                     "
                 ></div>
-
             </div>
 
 
@@ -54,20 +59,7 @@
             <div
                 class="
                     h-6
-                    w-64
-                    max-w-full
-                    rounded
-                    bg-[var(--theme-surface-soft)]
-                "
-            ></div>
-
-
-            {{-- Descripción --}}
-            <div
-                class="
-                    mt-2
-                    h-3
-                    w-[520px]
+                    w-56
                     max-w-full
                     rounded
                     bg-[var(--theme-surface-soft)]
@@ -84,21 +76,18 @@
                 flex-wrap
                 items-center
                 gap-2
-                xl:justify-end
             "
         >
 
-            {{-- Asignar --}}
             <div
                 class="
                     h-9
                     w-24
                     rounded-md
-                    bg-[var(--theme-primary-soft)]
+                    bg-[var(--theme-surface-soft)]
                 "
             ></div>
 
-            {{-- Reasignar --}}
             <div
                 class="
                     h-9
@@ -108,7 +97,6 @@
                 "
             ></div>
 
-            {{-- Historial --}}
             <div
                 class="
                     h-9
@@ -123,6 +111,7 @@
     </section>
 
 
+
     {{-- ============================================================
         MÉTRICAS
     ============================================================ --}}
@@ -131,10 +120,8 @@
             grid
             grid-cols-1
             md:grid-cols-3
-
             gap-3
             sm:gap-4
-
             mb-5
         "
     >
@@ -144,47 +131,37 @@
             <div
                 class="
                     bg-[var(--theme-surface)]
-
                     border
                     border-[var(--theme-border)]
-
                     rounded-xl
-
                     px-4
                     sm:px-5
                     py-4
-
                     flex
                     items-center
                     gap-4
                 "
             >
 
-                {{-- Icono --}}
                 <div
                     class="
                         shrink-0
-
                         w-14
                         h-14
-
                         rounded-xl
-
                         bg-[var(--theme-surface-soft)]
                     "
                 ></div>
 
 
-                {{-- Texto --}}
                 <div class="flex-1 min-w-0">
 
                     <div
                         class="
                             h-3
-                            w-32
-
+                            w-36
+                            max-w-full
                             rounded
-
                             bg-[var(--theme-surface-soft)]
                         "
                     ></div>
@@ -192,12 +169,9 @@
                     <div
                         class="
                             mt-2
-
                             h-6
-                            w-10
-
+                            w-12
                             rounded
-
                             bg-[var(--theme-surface-soft)]
                         "
                     ></div>
@@ -205,12 +179,9 @@
                     <div
                         class="
                             mt-2
-
                             h-2.5
                             w-24
-
                             rounded
-
                             bg-[var(--theme-surface-soft)]
                         "
                     ></div>
@@ -218,16 +189,12 @@
                 </div>
 
 
-                {{-- Flecha --}}
                 <div
                     class="
                         shrink-0
-
-                        w-4
-                        h-4
-
+                        w-5
+                        h-5
                         rounded
-
                         bg-[var(--theme-surface-soft)]
                     "
                 ></div>
@@ -237,6 +204,7 @@
         @endfor
 
     </section>
+
 
 
     {{-- ============================================================
@@ -252,55 +220,59 @@
     >
 
         {{-- ========================================================
-            GRÁFICA
+            EQUIPOS ASIGNADOS POR ÁREA
         ======================================================== --}}
         <section
             class="
                 bg-[var(--theme-surface)]
-
                 border
                 border-[var(--theme-border)]
-
                 rounded-xl
-
                 p-4
                 sm:p-5
             "
         >
 
-            {{-- Header --}}
+            {{-- Cabecera --}}
             <div
                 class="
                     flex
-                    items-start
-                    justify-between
-                    gap-4
+                    flex-col
+                    sm:flex-row
+                    sm:items-start
+                    sm:justify-between
+                    gap-3
                 "
             >
 
-                <div class="flex items-start gap-3">
+                <div
+                    class="
+                        flex
+                        items-start
+                        gap-3
+                        min-w-0
+                    "
+                >
 
                     <div
                         class="
+                            shrink-0
                             w-5
                             h-5
-
                             rounded
-
                             bg-[var(--theme-surface-soft)]
                         "
                     ></div>
 
 
-                    <div>
+                    <div class="min-w-0 flex-1">
 
                         <div
                             class="
-                                h-4
-                                w-44
-
+                                h-3.5
+                                w-40
+                                max-w-full
                                 rounded
-
                                 bg-[var(--theme-surface-soft)]
                             "
                         ></div>
@@ -308,13 +280,10 @@
                         <div
                             class="
                                 mt-2
-
-                                h-3
+                                h-2.5
                                 w-64
                                 max-w-full
-
                                 rounded
-
                                 bg-[var(--theme-surface-soft)]
                             "
                         ></div>
@@ -326,14 +295,10 @@
 
                 <div
                     class="
-                        hidden
-                        sm:block
-
                         h-9
-                        w-32
-
+                        w-full
+                        sm:w-32
                         rounded-lg
-
                         bg-[var(--theme-surface-soft)]
                     "
                 ></div>
@@ -341,21 +306,16 @@
             </div>
 
 
-            {{-- Gráfica --}}
+            {{-- Donut y leyenda --}}
             <div
                 class="
-                    min-h-[330px]
-
+                    mt-7
                     flex
                     flex-col
-                    sm:flex-row
-
+                    lg:flex-row
                     items-center
                     justify-center
-
                     gap-8
-
-                    mt-5
                 "
             >
 
@@ -364,54 +324,23 @@
                     class="
                         relative
                         shrink-0
-
-                        w-56
-                        h-56
-
+                        w-48
+                        h-48
+                        sm:w-56
+                        sm:h-56
                         rounded-full
-
-                        border-[42px]
-                        border-[var(--theme-primary-soft)]
+                        bg-[var(--theme-surface-soft)]
                     "
                 >
 
                     <div
                         class="
                             absolute
-                            inset-0
-
-                            flex
-                            flex-col
-                            items-center
-                            justify-center
+                            inset-[28%]
+                            rounded-full
+                            bg-[var(--theme-surface)]
                         "
-                    >
-
-                        <div
-                            class="
-                                h-7
-                                w-12
-
-                                rounded
-
-                                bg-[var(--theme-surface-soft)]
-                            "
-                        ></div>
-
-                        <div
-                            class="
-                                mt-2
-
-                                h-3
-                                w-20
-
-                                rounded
-
-                                bg-[var(--theme-surface-soft)]
-                            "
-                        ></div>
-
-                    </div>
+                    ></div>
 
                 </div>
 
@@ -431,41 +360,36 @@
                             class="
                                 flex
                                 items-center
-                                gap-2
+                                gap-2.5
                             "
                         >
 
                             <div
                                 class="
                                     shrink-0
-
                                     w-2.5
                                     h-2.5
-
                                     rounded-full
-
                                     bg-[var(--theme-surface-soft)]
                                 "
                             ></div>
 
+
                             <div
                                 class="
-                                    h-3
+                                    h-2.5
                                     flex-1
-
                                     rounded
-
                                     bg-[var(--theme-surface-soft)]
                                 "
                             ></div>
 
+
                             <div
                                 class="
-                                    h-3
+                                    h-2.5
                                     w-6
-
                                     rounded
-
                                     bg-[var(--theme-surface-soft)]
                                 "
                             ></div>
@@ -481,25 +405,30 @@
         </section>
 
 
+
         {{-- ========================================================
             RESUMEN DE ACTIVIDAD
         ======================================================== --}}
         <section
             class="
                 bg-[var(--theme-surface)]
-
                 border
                 border-[var(--theme-border)]
-
                 rounded-xl
-
                 overflow-hidden
             "
         >
 
-            <div class="p-4 sm:p-5">
+            {{-- Cabecera --}}
+            <div
+                class="
+                    px-4
+                    sm:px-5
+                    pt-4
+                    sm:pt-5
+                "
+            >
 
-                {{-- Cabecera --}}
                 <div
                     class="
                         flex
@@ -509,28 +438,33 @@
                     "
                 >
 
-                    <div class="flex items-start gap-3">
+                    <div
+                        class="
+                            flex
+                            items-start
+                            gap-3
+                            min-w-0
+                        "
+                    >
 
                         <div
                             class="
+                                shrink-0
                                 w-5
                                 h-5
-
                                 rounded
-
                                 bg-[var(--theme-surface-soft)]
                             "
                         ></div>
 
-                        <div>
+
+                        <div class="min-w-0">
 
                             <div
                                 class="
-                                    h-4
-                                    w-40
-
+                                    h-3.5
+                                    w-36
                                     rounded
-
                                     bg-[var(--theme-surface-soft)]
                                 "
                             ></div>
@@ -538,13 +472,10 @@
                             <div
                                 class="
                                     mt-2
-
-                                    h-3
+                                    h-2.5
                                     w-56
                                     max-w-full
-
                                     rounded
-
                                     bg-[var(--theme-surface-soft)]
                                 "
                             ></div>
@@ -552,6 +483,18 @@
                         </div>
 
                     </div>
+
+
+                    <div
+                        class="
+                            hidden
+                            sm:block
+                            h-3
+                            w-28
+                            rounded
+                            bg-[var(--theme-surface-soft)]
+                        "
+                    ></div>
 
                 </div>
 
@@ -562,10 +505,9 @@
                         grid
                         grid-cols-2
                         sm:grid-cols-4
-
                         gap-2
-
                         mt-5
+                        mb-5
                     "
                 >
 
@@ -573,53 +515,53 @@
 
                         <div
                             class="
+                                rounded-xl
                                 border
                                 border-[var(--theme-border)]
-
-                                rounded-xl
-
-                                bg-[var(--theme-surface)]
-
+                                bg-[var(--theme-surface-soft)]
                                 p-3
                             "
                         >
 
-                            <div class="flex items-center gap-2">
+                            <div
+                                class="
+                                    flex
+                                    items-center
+                                    gap-2
+                                "
+                            >
 
                                 <div
                                     class="
+                                        shrink-0
                                         w-7
                                         h-7
-
                                         rounded-lg
-
-                                        bg-[var(--theme-surface-soft)]
+                                        bg-[var(--theme-border)]
                                     "
                                 ></div>
+
 
                                 <div
                                     class="
                                         h-5
-                                        w-7
-
+                                        w-8
                                         rounded
-
-                                        bg-[var(--theme-surface-soft)]
+                                        bg-[var(--theme-border)]
                                     "
                                 ></div>
 
                             </div>
 
+
                             <div
                                 class="
                                     mt-2
-
                                     h-2.5
                                     w-20
-
+                                    max-w-full
                                     rounded
-
-                                    bg-[var(--theme-surface-soft)]
+                                    bg-[var(--theme-border)]
                                 "
                             ></div>
 
@@ -632,103 +574,45 @@
             </div>
 
 
-            {{-- Actividad --}}
-            <div
-                class="
-                    px-4
-                    sm:px-5
-                    py-3
-
-                    border-y
-                    border-[var(--theme-border)]
-
-                    flex
-                    justify-between
-                    items-center
-                "
-            >
+            {{-- Actividad reciente --}}
+            <div>
 
                 <div
                     class="
-                        h-4
-                        w-32
-
-                        rounded
-
-                        bg-[var(--theme-surface-soft)]
-                    "
-                ></div>
-
-                <div
-                    class="
-                        h-3
-                        w-24
-
-                        rounded
-
-                        bg-[var(--theme-surface-soft)]
-                    "
-                ></div>
-
-            </div>
-
-
-            {{-- Filas --}}
-            @for ($i = 0; $i < 5; $i++)
-
-                <div
-                    class="
-                        grid
-                        grid-cols-[36px_1fr_60px]
-
-                        gap-3
-                        items-center
-
                         px-4
                         sm:px-5
                         py-3
-
-                        border-b
+                        border-y
                         border-[var(--theme-border)]
-
-                        last:border-b-0
+                        flex
+                        items-center
+                        justify-between
+                        gap-3
                     "
                 >
 
                     <div
                         class="
-                            w-8
-                            h-7
-
-                            rounded-lg
-
-                            bg-[var(--theme-surface-soft)]
+                            flex
+                            items-center
+                            gap-2
                         "
-                    ></div>
-
-
-                    <div>
+                    >
 
                         <div
                             class="
-                                h-3
-                                w-3/4
-
+                                w-4
+                                h-4
                                 rounded
-
                                 bg-[var(--theme-surface-soft)]
                             "
                         ></div>
 
                         <div
                             class="
-                                mt-2
-
-                                h-2
-                                w-24
-
+                                h-3
+                                w-28
                                 rounded
-
                                 bg-[var(--theme-surface-soft)]
                             "
                         ></div>
@@ -739,17 +623,84 @@
                     <div
                         class="
                             h-2.5
-                            w-full
-
+                            w-20
                             rounded
-
                             bg-[var(--theme-surface-soft)]
                         "
                     ></div>
 
                 </div>
 
-            @endfor
+
+                {{-- En móvil son filas compactas, no tabla --}}
+                @for ($i = 0; $i < 5; $i++)
+
+                    <div
+                        class="
+                            grid
+                            grid-cols-[36px_1fr_auto]
+                            sm:grid-cols-[80px_1fr_90px]
+                            items-center
+                            gap-3
+                            px-4
+                            sm:px-5
+                            py-3
+                            border-b
+                            border-[var(--theme-border)]
+                            last:border-b-0
+                        "
+                    >
+
+                        <div
+                            class="
+                                w-8
+                                h-7
+                                rounded-lg
+                                bg-[var(--theme-surface-soft)]
+                            "
+                        ></div>
+
+
+                        <div class="min-w-0">
+
+                            <div
+                                class="
+                                    h-2.5
+                                    w-full
+                                    max-w-44
+                                    rounded
+                                    bg-[var(--theme-surface-soft)]
+                                "
+                            ></div>
+
+                            <div
+                                class="
+                                    mt-2
+                                    h-2
+                                    w-20
+                                    rounded
+                                    bg-[var(--theme-surface-soft)]
+                                "
+                            ></div>
+
+                        </div>
+
+
+                        <div
+                            class="
+                                justify-self-end
+                                h-2.5
+                                w-12
+                                rounded
+                                bg-[var(--theme-surface-soft)]
+                            "
+                        ></div>
+
+                    </div>
+
+                @endfor
+
+            </div>
 
         </section>
 

@@ -233,7 +233,7 @@
                 alt="Grand Palladium Hotels & Resorts"
                 class="
                     h-[135px]
-                    sm:h-[164px]
+                    sm:h-[110px]
                     w-auto
 
                     object-contain

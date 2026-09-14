@@ -4,7 +4,6 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EquipoController;
 use Illuminate\Support\Facades\Route;
 
-
 /*
 |--------------------------------------------------------------------------
 | Inicio
@@ -16,7 +15,6 @@ Route::get('/', function () {
         ? redirect()->route('dashboard')
         : redirect()->route('login');
 });
-
 
 /*
 |--------------------------------------------------------------------------
@@ -41,7 +39,6 @@ Route::middleware([
     )
         ->name('equipos.search');
 
-
     /*
     |--------------------------------------------------------------------------
     | Dashboard
@@ -52,7 +49,6 @@ Route::middleware([
         '/dashboard',
         [DashboardController::class, 'index']
     )->name('dashboard');
-
 
     /*
     |--------------------------------------------------------------------------
@@ -65,7 +61,6 @@ Route::middleware([
         [EquipoController::class, 'index']
     )->name('equipos.index');
 
-
     /*
     |--------------------------------------------------------------------------
     | Crear equipo
@@ -76,7 +71,6 @@ Route::middleware([
         '/equipos/crear',
         fn () => view('equipos.create')
     )->name('equipos.create');
-
 
     /*
     |--------------------------------------------------------------------------
@@ -97,7 +91,6 @@ Route::middleware([
         ->whereNumber('equipo')
         ->name('equipos.show');
 
-
     /*
     |--------------------------------------------------------------------------
     | Editar equipo
@@ -117,7 +110,6 @@ Route::middleware([
         ->whereNumber('equipo')
         ->name('equipos.edit');
 
-
     /*
     |--------------------------------------------------------------------------
     | Asignaciones y movimientos
@@ -129,8 +121,18 @@ Route::middleware([
         fn () => view('asignaciones.index')
     )->name('asignaciones.index');
 
-});
+    /*
+    |--------------------------------------------------------------------------
+    | Seguridad y roles
+    |--------------------------------------------------------------------------
+    */
 
+    Route::get(
+        '/seguridad',
+        fn () => view('seguridad.index')
+    )->name('usuarios.index');
+
+});
 
 /*
 |--------------------------------------------------------------------------
