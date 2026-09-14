@@ -3,11 +3,14 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
+use App\Services\AuthSessionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
@@ -31,8 +34,10 @@ class AuthenticatedSessionController extends Controller
     |--------------------------------------------------------------------------
     */
 
-    public function store(Request $request): RedirectResponse
-    {
+    public function store(
+        Request $request,
+        AuthSessionService $authSession
+    ): RedirectResponse {
         $credentials = $request->validate([
             'login' => [
                 'required',
@@ -62,32 +67,44 @@ class AuthenticatedSessionController extends Controller
 
         /*
         |--------------------------------------------------------------------------
+        | Buscar usuario
+        |--------------------------------------------------------------------------
+        |
+        | IMPORTANTE:
+        |
+        | Ya no utilizamos Auth::attempt() aquí.
+        |
+        | Auth::attempt() iniciaría la sesión antes
+        | de verificar el segundo factor.
+        |
+        */
+
+        $user = User::query()
+            ->where(
+                $field,
+                $credentials['login']
+            )
+            ->first();
+
+
+        /*
+        |--------------------------------------------------------------------------
         | Validar credenciales
         |--------------------------------------------------------------------------
         */
 
-        if (! Auth::attempt(
-            [
-                $field => $credentials['login'],
-                'password' => $credentials['password'],
-            ],
-            $request->boolean('remember')
-        )) {
-
+        if (
+            ! $user ||
+            ! Hash::check(
+                $credentials['password'],
+                $user->getAuthPassword()
+            )
+        ) {
             throw ValidationException::withMessages([
                 'login' =>
                     'Las credenciales no coinciden con nuestros registros.',
             ]);
         }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Obtener usuario autenticado
-        |--------------------------------------------------------------------------
-        */
-
-        $user = Auth::user();
 
 
         /*
@@ -111,12 +128,6 @@ class AuthenticatedSessionController extends Controller
         */
 
         if ($estado === 'PENDIENTE') {
-
-            Auth::logout();
-
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
-
             return redirect()
                 ->route('pending.approval');
         }
@@ -129,12 +140,6 @@ class AuthenticatedSessionController extends Controller
         */
 
         if ($estado === 'INACTIVO') {
-
-            Auth::logout();
-
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
-
             throw ValidationException::withMessages([
                 'login' =>
                     'Tu cuenta está deshabilitada temporalmente. Contacta a un administrador.',
@@ -149,12 +154,6 @@ class AuthenticatedSessionController extends Controller
         */
 
         if ($estado === 'BAJA') {
-
-            Auth::logout();
-
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
-
             throw ValidationException::withMessages([
                 'login' =>
                     'Tu cuenta fue dada de baja del sistema.',
@@ -169,12 +168,6 @@ class AuthenticatedSessionController extends Controller
         */
 
         if ($estado !== 'ACTIVO') {
-
-            Auth::logout();
-
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
-
             throw ValidationException::withMessages([
                 'login' =>
                     'Tu cuenta no está habilitada para iniciar sesión.',
@@ -184,69 +177,58 @@ class AuthenticatedSessionController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | Usuario activo
+        | ¿Requiere 2FA?
         |--------------------------------------------------------------------------
         */
 
-        $request->session()->regenerate();
+        if ($user->hasTwoFactorEnabled()) {
+
+            /*
+             * Rotamos el ID de sesión después de
+             * superar correctamente la contraseña.
+             *
+             * El usuario todavía NO está autenticado.
+             */
+            $request->session()->regenerate();
+
+
+            /*
+             * Guardamos solamente la información
+             * necesaria para completar el challenge.
+             */
+            $request->session()->put([
+                'two_factor.login.user_id' =>
+                    $user->id_usuario,
+
+                'two_factor.login.remember' =>
+                    $request->boolean('remember'),
+
+                /*
+                 * El challenge solamente será válido
+                 * durante 10 minutos.
+                 */
+                'two_factor.login.expires_at' =>
+                    now()
+                        ->addMinutes(10)
+                        ->timestamp,
+            ]);
+
+
+            return redirect()
+                ->route('two-factor.challenge');
+        }
 
 
         /*
         |--------------------------------------------------------------------------
-        | Guardar inicio absoluto de sesión
-        |--------------------------------------------------------------------------
-        |
-        | Se usa para limitar la sesión a un máximo de 24 horas.
-        |
-        */
-
-        $request->session()->put(
-            'auth_started_at',
-            now()->timestamp
-        );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Redirección
+        | Usuario sin 2FA
         |--------------------------------------------------------------------------
         */
 
-        $response = redirect()->intended(
-            route('dashboard')
-        );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Cookie indicadora de sesión previa
-        |--------------------------------------------------------------------------
-        |
-        | No contiene información sensible.
-        |
-        | Solamente permite distinguir:
-        |
-        | Nunca inició sesión
-        |       vs
-        | Tenía una sesión y ésta desapareció.
-        |
-        | La dejamos 30 días para que sobreviva a la expiración
-        | de la sesión de Laravel.
-        |
-        */
-
-        return $response->withCookie(
-            cookie(
-                name: 'trackit_auth_session',
-                value: '1',
-                minutes: 60 * 24 * 30,
-                path: '/',
-                domain: null,
-                secure: true,
-                httpOnly: true,
-                raw: false,
-                sameSite: 'lax'
-            )
+        return $authSession->complete(
+            $request,
+            $user,
+            $request->boolean('remember')
         );
     }
 
@@ -257,32 +239,21 @@ class AuthenticatedSessionController extends Controller
     |--------------------------------------------------------------------------
     */
 
-    public function destroy(Request $request): RedirectResponse
-    {
+    public function destroy(
+        Request $request
+    ): RedirectResponse {
         Auth::guard('web')->logout();
 
+
         $request->session()->invalidate();
+
         $request->session()->regenerateToken();
 
 
         /*
-         * Muy importante:
-         *
-         * Al cerrar sesión voluntariamente eliminamos la cookie.
-         *
-         * De esta forma:
-         *
-         * Cerrar sesión
-         *      ↓
-         * Login normal
-         *
-         * y NO:
-         *
-         * Cerrar sesión
-         *      ↓
-         * Sesión caducada
+         * Al cerrar sesión voluntariamente
+         * eliminamos la cookie indicadora.
          */
-
         return redirect('/')
             ->withCookie(
                 Cookie::forget(

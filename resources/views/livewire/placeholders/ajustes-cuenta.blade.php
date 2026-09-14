@@ -4,65 +4,6 @@
         NAVEGACIÓN
     ============================================================ --}}
 
-    {{-- Móvil --}}
-    <div
-        class="
-            sm:hidden
-            mb-5
-        "
-    >
-        <div
-            class="
-                h-11
-                w-full
-
-                rounded-xl
-
-                bg-[var(--theme-surface)]
-
-                border
-                border-[var(--theme-border)]
-            "
-        >
-            <div
-                class="
-                    h-full
-
-                    px-3
-
-                    flex
-                    items-center
-                    gap-3
-                "
-            >
-
-                <div
-                    class="
-                        w-7
-                        h-7
-
-                        rounded-lg
-
-                        bg-[var(--theme-surface-soft)]
-                    "
-                ></div>
-
-                <div
-                    class="
-                        h-3
-                        w-20
-
-                        rounded
-
-                        bg-[var(--theme-surface-soft)]
-                    "
-                ></div>
-
-            </div>
-        </div>
-    </div>
-
-
     {{-- Escritorio --}}
     <div
         class="

@@ -2,6 +2,8 @@
 
 namespace App\Livewire;
 
+use Livewire\Attributes\Url;
+use App\Services\TwoFactorAuthService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -11,10 +13,39 @@ class AjustesCuenta extends Component
 {
     /*
     |--------------------------------------------------------------------------
+    | Secciones disponibles
+    |--------------------------------------------------------------------------
+    */
+
+    private const SECTIONS = [
+        'cuenta',
+        'seguridad',
+        'notificaciones',
+        'preferencias',
+    ];
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Claves de sesión
+    |--------------------------------------------------------------------------
+    */
+
+    private const TWO_FACTOR_SETUP_SESSION_KEY =
+        'two_factor.setup_secret';
+
+
+    /*
+    |--------------------------------------------------------------------------
     | Sección activa
     |--------------------------------------------------------------------------
     */
 
+    #[Url(
+        as: 'section',
+        history: true,
+        keep: true
+    )]
     public string $section = 'cuenta';
 
 
@@ -23,8 +54,6 @@ class AjustesCuenta extends Component
     | Edición de perfil
     |--------------------------------------------------------------------------
     */
-
-    public bool $editProfileModalOpen = false;
 
     public string $editNombres = '';
 
@@ -50,17 +79,39 @@ class AjustesCuenta extends Component
 
     /*
     |--------------------------------------------------------------------------
+    | Seguridad - Autenticación en dos pasos
+    |--------------------------------------------------------------------------
+    */
+
+    public bool $twoFactorEnabled = false;
+
+    public string $twoFactorCode = '';
+
+    public string $twoFactorManualKey = '';
+
+    public string $twoFactorQrCode = '';
+
+    public array $twoFactorRecoveryCodes = [];
+
+    public string $twoFactorManagementPassword = '';
+
+
+    /*
+    |--------------------------------------------------------------------------
     | Montaje
     |--------------------------------------------------------------------------
     */
 
     public function mount(): void
     {
+
+
         $usuario = auth()->user();
 
         if (! $usuario) {
             return;
         }
+
 
         $this->editNombres =
             $usuario->nombres ?? '';
@@ -73,6 +124,10 @@ class AjustesCuenta extends Component
 
         $this->editTelefono =
             $usuario->telefono ?? '';
+
+
+        $this->twoFactorEnabled =
+            $usuario->hasTwoFactorEnabled();
     }
 
 
@@ -84,14 +139,23 @@ class AjustesCuenta extends Component
 
     public function setSection(string $section): void
     {
-        if (! in_array($section, [
-            'cuenta',
-            'seguridad',
-            'notificaciones',
-            'preferencias',
-        ], true)) {
+        if (
+            ! in_array(
+                $section,
+                self::SECTIONS,
+                true
+            )
+        ) {
             return;
         }
+
+
+        /*
+         * Evitar que errores de una sección
+         * permanezcan al cambiar a otra.
+         */
+        $this->resetValidation();
+
 
         $this->section = $section;
     }
@@ -106,8 +170,6 @@ class AjustesCuenta extends Component
     public function closeEditProfileModal(): void
     {
         $this->resetValidation();
-
-        $this->editProfileModalOpen = false;
     }
 
 
@@ -154,6 +216,9 @@ class AjustesCuenta extends Component
 
         DB::transaction(function () use ($validated) {
 
+            /*
+             * Actualizar datos personales.
+             */
             DB::table('usuarios')
                 ->where(
                     'id_usuario',
@@ -190,6 +255,9 @@ class AjustesCuenta extends Component
                 ]);
 
 
+            /*
+             * Registrar en bitácora.
+             */
             DB::table('bitacora_auditoria')
                 ->insert([
                     'id_usuario' =>
@@ -210,6 +278,15 @@ class AjustesCuenta extends Component
         });
 
 
+        /*
+         * Limpiar posibles errores anteriores.
+         */
+        $this->resetValidation();
+
+
+        /*
+         * Cerrar modal y mostrar toast.
+         */
         $this->dispatch(
             'perfil-actualizado',
             message:
@@ -227,6 +304,7 @@ class AjustesCuenta extends Component
     public function resetPasswordForm(): void
     {
         $this->resetValidation();
+
 
         $this->currentPassword = '';
 
@@ -375,6 +453,7 @@ class AjustesCuenta extends Component
 
         $this->newPasswordConfirmation = '';
 
+
         $this->resetValidation();
 
 
@@ -392,15 +471,705 @@ class AjustesCuenta extends Component
 
     /*
     |--------------------------------------------------------------------------
+    | Iniciar configuración 2FA
+    |--------------------------------------------------------------------------
+    */
+
+    public function startTwoFactorSetup(): void
+    {
+        $usuario = auth()->user();
+
+        if (! $usuario) {
+            return;
+        }
+
+
+        /*
+         * Si 2FA ya está activo no debemos
+         * iniciar una nueva configuración.
+         */
+        if ($usuario->hasTwoFactorEnabled()) {
+            $this->twoFactorEnabled = true;
+
+            return;
+        }
+
+
+        /*
+         * Limpiar estado anterior.
+         */
+        $this->resetValidation();
+
+
+        $this->twoFactorCode = '';
+
+        $this->twoFactorManualKey = '';
+
+        $this->twoFactorQrCode = '';
+
+        $this->twoFactorRecoveryCodes = [];
+
+
+        $twoFactor = app(
+            TwoFactorAuthService::class
+        );
+
+
+        /*
+         * Generar un nuevo secreto.
+         *
+         * Todavía NO se guarda en la base
+         * de datos porque el usuario primero
+         * debe demostrar que configuró
+         * correctamente su autenticador.
+         */
+        $secret =
+            $twoFactor->generateSecret();
+
+
+        /*
+         * Guardar temporalmente en sesión.
+         */
+        session()->put(
+            self::TWO_FACTOR_SETUP_SESSION_KEY,
+            $secret
+        );
+
+
+        /*
+         * Clave manual.
+         */
+        $this->twoFactorManualKey =
+            $twoFactor->formatSecret(
+                $secret
+            );
+
+
+        /*
+         * Código QR.
+         */
+        $this->twoFactorQrCode =
+            $twoFactor->generateQrCode(
+                $usuario,
+                $secret
+            );
+
+
+        /*
+         * Avisar a Alpine que puede abrir
+         * el modal de configuración.
+         */
+        $this->dispatch(
+            'two-factor-setup-started'
+        );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Cancelar configuración 2FA
+    |--------------------------------------------------------------------------
+    */
+
+    public function cancelTwoFactorSetup(): void
+    {
+        /*
+         * Eliminar secreto temporal.
+         */
+        session()->forget(
+            self::TWO_FACTOR_SETUP_SESSION_KEY
+        );
+
+
+        /*
+         * Limpiar estado sensible.
+         */
+        $this->twoFactorCode = '';
+
+        $this->twoFactorManualKey = '';
+
+        $this->twoFactorQrCode = '';
+
+        $this->twoFactorRecoveryCodes = [];
+
+
+        $this->resetValidation(
+            'twoFactorCode'
+        );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Confirmar configuración 2FA
+    |--------------------------------------------------------------------------
+    */
+
+    public function confirmTwoFactorSetup(): void
+    {
+        $validated = $this->validate([
+            'twoFactorCode' => [
+                'required',
+                'digits:6',
+            ],
+        ], [
+            'twoFactorCode.required' =>
+                'Ingresa el código de verificación.',
+
+            'twoFactorCode.digits' =>
+                'El código debe contener 6 dígitos.',
+        ]);
+
+
+        $usuario = auth()->user();
+
+        if (! $usuario) {
+            return;
+        }
+
+
+        /*
+         * Evitar volver a confirmar si 2FA
+         * ya estaba habilitado.
+         */
+        if ($usuario->hasTwoFactorEnabled()) {
+            $this->twoFactorEnabled = true;
+
+            session()->forget(
+                self::TWO_FACTOR_SETUP_SESSION_KEY
+            );
+
+            return;
+        }
+
+
+        /*
+         * Recuperar el secreto temporal.
+         */
+        $secret = session(
+            self::TWO_FACTOR_SETUP_SESSION_KEY
+        );
+
+
+        if (! $secret) {
+            $this->addError(
+                'twoFactorCode',
+                'La configuración expiró. Vuelve a iniciar el proceso.'
+            );
+
+            return;
+        }
+
+
+        $twoFactor = app(
+            TwoFactorAuthService::class
+        );
+
+
+        /*
+         * Comprobar código generado por
+         * la aplicación autenticadora.
+         */
+        if (
+            ! $twoFactor->verifyCode(
+                $secret,
+                $validated['twoFactorCode']
+            )
+        ) {
+            $this->addError(
+                'twoFactorCode',
+                'El código de verificación no es válido.'
+            );
+
+            return;
+        }
+
+
+        /*
+         * Generar códigos de recuperación.
+         *
+         * Los códigos originales solamente
+         * se mostrarán una vez.
+         */
+        $recoveryCodes =
+            $twoFactor->generateRecoveryCodes();
+
+
+        /*
+         * Guardaremos únicamente sus hashes.
+         */
+        $hashedRecoveryCodes =
+            $twoFactor->hashRecoveryCodes(
+                $recoveryCodes
+            );
+
+
+        DB::transaction(
+            function () use (
+                $usuario,
+                $secret,
+                $hashedRecoveryCodes
+            ) {
+
+                /*
+                 * El modelo User tiene el cast:
+                 *
+                 * two_factor_secret => encrypted
+                 *
+                 * por lo que Laravel cifra el
+                 * secreto antes de almacenarlo.
+                 */
+                $usuario->two_factor_secret =
+                    $secret;
+
+
+                /*
+                 * Este campo determina que
+                 * 2FA quedó completamente activo.
+                 */
+                $usuario->two_factor_confirmed_at =
+                    now();
+
+
+                /*
+                 * Son hashes, no códigos
+                 * recuperables en texto plano.
+                 */
+                $usuario->two_factor_recovery_codes =
+                    $hashedRecoveryCodes;
+
+
+                $usuario->save();
+
+
+                /*
+                 * Registrar activación.
+                 */
+                DB::table('bitacora_auditoria')
+                    ->insert([
+                        'id_usuario' =>
+                            $usuario->id_usuario,
+
+                        'accion' =>
+                            'DOS_FACTORES_ACTIVADO',
+
+                        'modulo' =>
+                            'AJUSTES',
+
+                        'descripcion' =>
+                            'El usuario activó la autenticación en dos pasos.',
+
+                        'fecha_hora' =>
+                            now(),
+                    ]);
+            }
+        );
+
+
+        /*
+         * Ya no necesitamos conservar
+         * el secreto temporal.
+         */
+        session()->forget(
+            self::TWO_FACTOR_SETUP_SESSION_KEY
+        );
+
+
+        /*
+         * Estos son los códigos originales.
+         *
+         * Permanecen temporalmente en el
+         * estado de Livewire para mostrarlos
+         * al usuario una sola vez.
+         */
+        $this->twoFactorRecoveryCodes =
+            $recoveryCodes;
+
+
+        /*
+         * Reflejar nuevo estado.
+         */
+        $this->twoFactorEnabled = true;
+
+
+        /*
+         * Limpiar los demás datos sensibles
+         * de la configuración.
+         */
+        $this->twoFactorCode = '';
+
+        $this->twoFactorManualKey = '';
+
+        $this->twoFactorQrCode = '';
+
+
+        $this->resetValidation();
+
+
+        /*
+         * El modal podrá pasar de la pantalla
+         * de QR a códigos de recuperación.
+         */
+        $this->dispatch(
+            'two-factor-enabled',
+            message:
+                'La autenticación en dos pasos se activó correctamente.'
+        );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Finalizar configuración 2FA
+    |--------------------------------------------------------------------------
+    */
+
+    public function finishTwoFactorSetup(): void
+    {
+        /*
+         * A partir de este momento los
+         * recovery codes originales dejan
+         * de existir en el estado de Livewire.
+         */
+        $this->twoFactorRecoveryCodes = [];
+
+
+        $this->twoFactorCode = '';
+
+        $this->twoFactorManualKey = '';
+
+        $this->twoFactorQrCode = '';
+
+
+        /*
+         * Por seguridad eliminamos también
+         * cualquier secreto temporal que
+         * pudiera permanecer en sesión.
+         */
+        session()->forget(
+            self::TWO_FACTOR_SETUP_SESSION_KEY
+        );
+
+
+        $this->resetValidation();
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Limpiar administración 2FA
+    |--------------------------------------------------------------------------
+    */
+
+    public function resetTwoFactorManagement(): void
+    {
+        $this->twoFactorManagementPassword = '';
+
+        /*
+        * Los códigos originales nunca deben permanecer
+        * en el estado del componente más de lo necesario.
+        */
+        $this->twoFactorRecoveryCodes = [];
+
+        $this->resetValidation();
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Regenerar códigos de recuperación 2FA
+    |--------------------------------------------------------------------------
+    */
+
+    public function regenerateTwoFactorRecoveryCodes(): void
+    {
+        $validated = $this->validate([
+            'twoFactorManagementPassword' => [
+                'required',
+                'string',
+            ],
+        ], [
+            'twoFactorManagementPassword.required' =>
+                'Ingresa tu contraseña para continuar.',
+        ]);
+
+
+        $usuario = auth()->user();
+
+        if (! $usuario) {
+            return;
+        }
+
+
+        /*
+        * La cuenta debe tener 2FA activo.
+        */
+        if (! $usuario->hasTwoFactorEnabled()) {
+            $this->twoFactorEnabled = false;
+
+            $this->addError(
+                'twoFactorManagementPassword',
+                'La autenticación en dos pasos ya no está activa.'
+            );
+
+            return;
+        }
+
+
+        /*
+        * Reautenticación antes de una acción sensible.
+        */
+        if (
+            ! Hash::check(
+                $validated['twoFactorManagementPassword'],
+                $usuario->getAuthPassword()
+            )
+        ) {
+            $this->addError(
+                'twoFactorManagementPassword',
+                'La contraseña no es correcta.'
+            );
+
+            return;
+        }
+
+
+        $twoFactor = app(
+            TwoFactorAuthService::class
+        );
+
+
+        /*
+        * Generamos códigos nuevos.
+        *
+        * Los anteriores dejarán de funcionar.
+        */
+        $recoveryCodes =
+            $twoFactor->generateRecoveryCodes();
+
+
+        $hashedRecoveryCodes =
+            $twoFactor->hashRecoveryCodes(
+                $recoveryCodes
+            );
+
+
+        DB::transaction(
+            function () use (
+                $usuario,
+                $hashedRecoveryCodes
+            ) {
+                $usuario->two_factor_recovery_codes =
+                    $hashedRecoveryCodes;
+
+                $usuario->save();
+
+
+                DB::table('bitacora_auditoria')
+                    ->insert([
+                        'id_usuario' =>
+                            $usuario->id_usuario,
+
+                        'accion' =>
+                            'CODIGOS_RECUPERACION_REGENERADOS',
+
+                        'modulo' =>
+                            'AJUSTES',
+
+                        'descripcion' =>
+                            'El usuario regeneró sus códigos de recuperación de autenticación en dos pasos.',
+
+                        'fecha_hora' =>
+                            now(),
+                    ]);
+            }
+        );
+
+
+        /*
+        * Los originales solamente estarán disponibles
+        * temporalmente para mostrarlos una vez.
+        */
+        $this->twoFactorRecoveryCodes =
+            $recoveryCodes;
+
+
+        $this->twoFactorManagementPassword = '';
+
+        $this->resetValidation();
+
+
+        $this->dispatch(
+            'two-factor-recovery-codes-regenerated',
+            message:
+                'Se generaron nuevos códigos de recuperación.'
+        );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Desactivar autenticación en dos pasos
+    |--------------------------------------------------------------------------
+    */
+
+    public function disableTwoFactor(): void
+    {
+        $validated = $this->validate([
+            'twoFactorManagementPassword' => [
+                'required',
+                'string',
+            ],
+        ], [
+            'twoFactorManagementPassword.required' =>
+                'Ingresa tu contraseña para continuar.',
+        ]);
+
+
+        $usuario = auth()->user();
+
+        if (! $usuario) {
+            return;
+        }
+
+
+        /*
+        * Si ya estaba desactivado simplemente
+        * sincronizamos la interfaz.
+        */
+        if (! $usuario->hasTwoFactorEnabled()) {
+            $this->twoFactorEnabled = false;
+
+            $this->resetTwoFactorManagement();
+
+            return;
+        }
+
+
+        /*
+        * Confirmar identidad.
+        */
+        if (
+            ! Hash::check(
+                $validated['twoFactorManagementPassword'],
+                $usuario->getAuthPassword()
+            )
+        ) {
+            $this->addError(
+                'twoFactorManagementPassword',
+                'La contraseña no es correcta.'
+            );
+
+            return;
+        }
+
+
+        DB::transaction(
+            function () use ($usuario) {
+
+                /*
+                * Eliminar completamente la configuración 2FA.
+                */
+                $usuario->two_factor_secret = null;
+
+                $usuario->two_factor_confirmed_at = null;
+
+                $usuario->two_factor_recovery_codes = null;
+
+                $usuario->save();
+
+
+                /*
+                * Auditoría.
+                */
+                DB::table('bitacora_auditoria')
+                    ->insert([
+                        'id_usuario' =>
+                            $usuario->id_usuario,
+
+                        'accion' =>
+                            'DOS_FACTORES_DESACTIVADO',
+
+                        'modulo' =>
+                            'AJUSTES',
+
+                        'descripcion' =>
+                            'El usuario desactivó la autenticación en dos pasos.',
+
+                        'fecha_hora' =>
+                            now(),
+                    ]);
+            }
+        );
+
+
+        /*
+        * Limpiar cualquier configuración pendiente.
+        */
+        session()->forget(
+            self::TWO_FACTOR_SETUP_SESSION_KEY
+        );
+
+
+        $this->twoFactorEnabled = false;
+
+        $this->twoFactorManagementPassword = '';
+
+        $this->twoFactorRecoveryCodes = [];
+
+        $this->twoFactorCode = '';
+
+        $this->twoFactorManualKey = '';
+
+        $this->twoFactorQrCode = '';
+
+        $this->resetValidation();
+
+
+        $this->dispatch(
+            'two-factor-disabled',
+            message:
+                'La autenticación en dos pasos se desactivó correctamente.'
+        );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
     | Placeholder
     |--------------------------------------------------------------------------
     */
 
     public function placeholder(): View
     {
-        return view(
-            'livewire.placeholders.ajustes-cuenta'
+        $section = request()->query(
+            'section',
+            'cuenta'
         );
+
+
+        if (
+            ! is_string($section) ||
+            ! in_array(
+                $section,
+                self::SECTIONS,
+                true
+            )
+        ) {
+            $section = 'cuenta';
+        }
+
+
+        return match ($section) {
+            'seguridad' =>
+                view(
+                    'livewire.placeholders.ajustes-seguridad'
+                ),
+
+            default =>
+                view(
+                    'livewire.placeholders.ajustes-cuenta'
+                ),
+        };
     }
 
 
@@ -489,6 +1258,9 @@ class AjustesCuenta extends Component
         );
 
 
+        /*
+         * Nombre completo para la vista.
+         */
         $nombreCompleto = trim(
             implode(
                 ' ',

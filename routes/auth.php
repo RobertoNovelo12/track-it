@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\TwoFactorChallengeController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
@@ -29,6 +30,23 @@ Route::middleware('guest')->group(function () {
         '/login',
         [AuthenticatedSessionController::class, 'store']
     );
+
+    /*
+    |--------------------------------------------------------------------------
+    | Challenge 2FA
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/two-factor-challenge',
+        [TwoFactorChallengeController::class, 'create']
+    )->name('two-factor.challenge');
+
+
+    Route::post(
+        '/two-factor-challenge',
+        [TwoFactorChallengeController::class, 'store']
+    )->name('two-factor.verify');
 
 
     /*

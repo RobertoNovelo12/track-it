@@ -1115,8 +1115,8 @@
                     <div class="p-2">
 
                         {{-- Mi perfil --}}
-                        <button
-                            type="button"
+                        <a
+                            href="{{ route('ajustes.index', ['section' => 'cuenta']) }}"
                             class="
                                 w-full
 
@@ -1149,8 +1149,8 @@
                                 <path d="M4 21c0-5 3-8 8-8s8 3 8 8"/>
                             </svg>
 
-                            <span>Mi perfil</span>
-                        </button>
+                            <span>Cuenta</span>
+                        </a>
 
 
                         {{-- Notificaciones --}}
@@ -1435,8 +1435,8 @@
 
 
                         {{-- Seguridad --}}
-                        <button
-                            type="button"
+                        <a
+                            href="{{ route('ajustes.index', ['section' => 'seguridad']) }}"
                             class="
                                 w-full
 
@@ -1465,11 +1465,13 @@
                                 stroke="currentColor"
                                 stroke-width="1.5"
                             >
-                                <path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6l7-3z"/>
+                                <path
+                                    d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6l7-3z"
+                                />
                             </svg>
 
                             <span>Seguridad</span>
-                            </button>
+                        </a>
 
                             {{-- Ayuda --}}
                             <button
