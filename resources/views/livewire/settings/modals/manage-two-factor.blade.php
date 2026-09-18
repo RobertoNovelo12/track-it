@@ -737,6 +737,8 @@
                     wire:target="regenerateTwoFactorRecoveryCodes"
 
                     class="
+                        relative
+
                         h-9
                         px-4
 
@@ -757,18 +759,50 @@
                     "
                 >
                     <span
-                        wire:loading.remove
+                        wire:loading.class="invisible"
                         wire:target="regenerateTwoFactorRecoveryCodes"
                     >
                         Regenerar códigos
                     </span>
 
-
                     <span
-                        wire:loading
+                        wire:loading.flex
                         wire:target="regenerateTwoFactorRecoveryCodes"
+
+                        class="
+                            absolute
+                            inset-0
+
+                            items-center
+                            justify-center
+                        "
                     >
-                        Generando...
+                        <svg
+                            class="w-5 h-5 animate-spin"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            aria-hidden="true"
+                        >
+                            <circle
+                                cx="12"
+                                cy="12"
+                                r="9"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                opacity="0.25"
+                            />
+
+                            <path
+                                d="M21 12a9 9 0 0 0-9-9"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                            />
+                        </svg>
+
+                        <span class="sr-only">
+                            Generando códigos...
+                        </span>
                     </span>
                 </button>
             </div>
@@ -1169,6 +1203,8 @@
                     wire:target="disableTwoFactor"
 
                     class="
+                        relative
+
                         h-9
                         px-4
 
@@ -1187,17 +1223,50 @@
                     "
                 >
                     <span
-                        wire:loading.remove
+                        wire:loading.class="invisible"
                         wire:target="disableTwoFactor"
                     >
                         Desactivar 2FA
                     </span>
 
                     <span
-                        wire:loading
+                        wire:loading.flex
                         wire:target="disableTwoFactor"
+
+                        class="
+                            absolute
+                            inset-0
+
+                            items-center
+                            justify-center
+                        "
                     >
-                        Desactivando...
+                        <svg
+                            class="w-5 h-5 animate-spin"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            aria-hidden="true"
+                        >
+                            <circle
+                                cx="12"
+                                cy="12"
+                                r="9"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                opacity="0.25"
+                            />
+
+                            <path
+                                d="M21 12a9 9 0 0 0-9-9"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                            />
+                        </svg>
+
+                        <span class="sr-only">
+                            Desactivando autenticación en dos pasos...
+                        </span>
                     </span>
                 </button>
             </div>

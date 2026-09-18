@@ -596,6 +596,8 @@
                     @disabled($organizationChangeField === '')
 
                     class="
+                        relative
+
                         h-9
                         px-4
 
@@ -615,53 +617,52 @@
                         transition-colors
                     "
                 >
-
                     <span
-                        wire:loading.remove
+                        wire:loading.class="invisible"
                         wire:target="requestOrganizationChange"
                     >
                         Enviar solicitud
                     </span>
 
-
                     <span
-                        wire:loading
+                        wire:loading.flex
                         wire:target="requestOrganizationChange"
 
                         class="
-                            flex
+                            absolute
+                            inset-0
+
                             items-center
-                            gap-2
+                            justify-center
                         "
                     >
                         <svg
-                            class="
-                                w-4
-                                h-4
-                                animate-spin
-                            "
+                            class="w-5 h-5 animate-spin"
                             viewBox="0 0 24 24"
                             fill="none"
+                            aria-hidden="true"
                         >
                             <circle
-                                class="opacity-25"
                                 cx="12"
                                 cy="12"
-                                r="10"
+                                r="9"
                                 stroke="currentColor"
-                                stroke-width="4"
+                                stroke-width="2"
+                                opacity="0.25"
                             />
 
                             <path
-                                class="opacity-75"
-                                fill="currentColor"
-                                d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                                d="M21 12a9 9 0 0 0-9-9"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
                             />
                         </svg>
 
-                        Enviando...
+                        <span class="sr-only">
+                            Enviando solicitud...
+                        </span>
                     </span>
-
                 </button>
 
             </div>

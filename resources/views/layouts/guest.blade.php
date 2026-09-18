@@ -210,191 +210,247 @@
 >
 
     {{-- ============================================================
-        LOGO
+        CABECERA GUEST
+
+        Móvil:
+        - Selector de tema arriba.
+        - Logo centrado debajo.
+        - Ambos reservan espacio.
+
+        Escritorio:
+        - Logo vuelve a la esquina superior izquierda.
+        - Selector vuelve a quedar fijo arriba a la derecha.
     ============================================================ --}}
-<div
-    class="
-        absolute
-        top-5
-        left-1/2
-        -translate-x-1/2
+    <header
+        class="
+            w-full
 
-        sm:top-6
-        sm:left-8
-        sm:translate-x-0
+            px-4
+            pt-4
 
-        z-40
-    "
->
-            {{-- Logo modo claro --}}
-            <img
-                id="guestLogo"
-                src="{{ asset('images/logo-grand-palladium.png') }}"
-                alt="Grand Palladium Hotels & Resorts"
+            sm:p-0
+        "
+    >
+
+        {{-- ========================================================
+            SELECTOR DE TEMA
+        ======================================================== --}}
+        <div
+            class="
+                flex
+                justify-end
+
+                sm:contents
+            "
+        >
+
+            <div
+                id="guestThemeSwitcher"
                 class="
-                    h-[135px]
-                    sm:h-[110px]
-                    w-auto
+                    relative
+                    z-50
 
-                    object-contain
+                    flex
+                    items-center
 
-                    transition-[filter,opacity]
-                    duration-200
+                    p-1
+
+                    rounded-lg
+
+                    bg-[var(--theme-surface)]
+
+                    border
+                    border-[var(--theme-border)]
+
+                    shadow-sm
+
+                    sm:fixed
+                    sm:top-6
+                    sm:right-6
                 "
-                onerror="this.style.display='none'"
             >
+
+                {{-- Claro --}}
+                <button
+                    type="button"
+                    data-theme-option="light"
+                    onclick="changeGuestTheme('light')"
+                    class="
+                        guest-theme-option
+
+                        w-9
+                        h-9
+
+                        flex
+                        items-center
+                        justify-center
+
+                        rounded-md
+
+                        text-[var(--theme-text-muted)]
+
+                        transition-colors
+                    "
+                    title="Tema claro"
+                    aria-label="Tema claro"
+                >
+                    <svg
+                        class="w-4 h-4"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.7"
+                    >
+                        <circle cx="12" cy="12" r="4"/>
+                        <path d="M12 2v2"/>
+                        <path d="M12 20v2"/>
+                        <path d="M4.93 4.93l1.41 1.41"/>
+                        <path d="M17.66 17.66l1.41 1.41"/>
+                        <path d="M2 12h2"/>
+                        <path d="M20 12h2"/>
+                        <path d="M4.93 19.07l1.41-1.41"/>
+                        <path d="M17.66 6.34l1.41-1.41"/>
+                    </svg>
+                </button>
+
+
+                {{-- Oscuro --}}
+                <button
+                    type="button"
+                    data-theme-option="dark"
+                    onclick="changeGuestTheme('dark')"
+                    class="
+                        guest-theme-option
+
+                        w-9
+                        h-9
+
+                        flex
+                        items-center
+                        justify-center
+
+                        rounded-md
+
+                        text-[var(--theme-text-muted)]
+
+                        transition-colors
+                    "
+                    title="Tema oscuro"
+                    aria-label="Tema oscuro"
+                >
+                    <svg
+                        class="w-4 h-4"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.7"
+                    >
+                        <path
+                            d="M20 15.5A8 8 0 018.5 4
+                               8 8 0 1020 15.5z"
+                        />
+                    </svg>
+                </button>
+
+
+                {{-- Sistema --}}
+                <button
+                    type="button"
+                    data-theme-option="system"
+                    onclick="changeGuestTheme('system')"
+                    class="
+                        guest-theme-option
+
+                        w-9
+                        h-9
+
+                        flex
+                        items-center
+                        justify-center
+
+                        rounded-md
+
+                        text-[var(--theme-text-muted)]
+
+                        transition-colors
+                    "
+                    title="Usar tema del sistema"
+                    aria-label="Usar tema del sistema"
+                >
+                    <svg
+                        class="w-4 h-4"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.7"
+                    >
+                        <rect
+                            x="3"
+                            y="4"
+                            width="18"
+                            height="13"
+                            rx="2"
+                        />
+
+                        <path d="M8 21h8"/>
+                        <path d="M12 17v4"/>
+                    </svg>
+                </button>
+
+            </div>
+
         </div>
 
-{{-- ============================================================
-    SELECTOR DE TEMA
-============================================================ --}}
-<div
-    id="guestThemeSwitcher"
-    class="
-        fixed
-        top-4
-        right-4
-        sm:top-6
-        sm:right-6
-        z-50
 
-        flex
-        items-center
+        {{-- ========================================================
+            LOGO
+        ======================================================== --}}
+        <div
+            class="
+                mt-3
 
-        p-1
+                flex
+                justify-center
 
-        rounded-lg
-
-        bg-[var(--theme-surface)]
-
-        border
-        border-[var(--theme-border)]
-
-        shadow-sm
-    "
->
-
-    {{-- Claro --}}
-    <button
-        type="button"
-        data-theme-option="light"
-        onclick="changeGuestTheme('light')"
-        class="
-            guest-theme-option
-
-            w-9
-            h-9
-
-            flex
-            items-center
-            justify-center
-
-            rounded-md
-
-            text-[var(--theme-text-muted)]
-
-            transition-colors
-        "
-        title="Tema claro"
-        aria-label="Tema claro"
-    >
-        <svg
-            class="w-4 h-4"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.7"
+                sm:mt-0
+                sm:block
+            "
         >
-            <circle cx="12" cy="12" r="4"/>
-            <path d="M12 2v2"/>
-            <path d="M12 20v2"/>
-            <path d="M4.93 4.93l1.41 1.41"/>
-            <path d="M17.66 17.66l1.41 1.41"/>
-            <path d="M2 12h2"/>
-            <path d="M20 12h2"/>
-            <path d="M4.93 19.07l1.41-1.41"/>
-            <path d="M17.66 6.34l1.41-1.41"/>
-        </svg>
-    </button>
 
+            <div
+                class="
+                    relative
+                    z-40
 
-    {{-- Oscuro --}}
-    <button
-        type="button"
-        data-theme-option="dark"
-        onclick="changeGuestTheme('dark')"
-        class="
-            guest-theme-option
+                    sm:absolute
+                    sm:top-6
+                    sm:left-8
+                "
+            >
 
-            w-9
-            h-9
+                <img
+                    id="guestLogo"
+                    src="{{ asset('images/logo-grand-palladium.png') }}"
+                    alt="Grand Palladium Hotels & Resorts"
+                    class="
+                        h-[90px]
+                        sm:h-[110px]
 
-            flex
-            items-center
-            justify-center
+                        w-auto
 
-            rounded-md
+                        object-contain
 
-            text-[var(--theme-text-muted)]
+                        transition-[filter,opacity]
+                        duration-200
+                    "
+                    onerror="this.style.display='none'"
+                >
 
-            transition-colors
-        "
-        title="Tema oscuro"
-        aria-label="Tema oscuro"
-    >
-        <svg
-            class="w-4 h-4"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.7"
-        >
-            <path
-                d="M20 15.5A8 8 0 018.5 4
-                   8 8 0 1020 15.5z"
-            />
-        </svg>
-    </button>
+            </div>
 
+        </div>
 
-    {{-- Sistema --}}
-    <button
-        type="button"
-        data-theme-option="system"
-        onclick="changeGuestTheme('system')"
-        class="
-            guest-theme-option
-
-            w-9
-            h-9
-
-            flex
-            items-center
-            justify-center
-
-            rounded-md
-
-            text-[var(--theme-text-muted)]
-
-            transition-colors
-        "
-        title="Usar tema del sistema"
-        aria-label="Usar tema del sistema"
-    >
-        <svg
-            class="w-4 h-4"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.7"
-        >
-            <rect x="3" y="4" width="18" height="13" rx="2"/>
-            <path d="M8 21h8"/>
-            <path d="M12 17v4"/>
-        </svg>
-    </button>
-
-</div>
+    </header>
 
 
     {{-- ============================================================
@@ -402,14 +458,20 @@
     ============================================================ --}}
     <main
         class="
-            min-h-screen
+            w-full
 
             flex
-            items-center
+            items-start
             justify-center
 
             px-4
-            py-10
+
+            pt-4
+            pb-10
+
+            sm:min-h-screen
+            sm:items-center
+            sm:py-10
         "
     >
 

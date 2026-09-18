@@ -1,9 +1,23 @@
-@props(['heading', 'icon' => 'user'])
+@props([
+    'heading',
+    'icon' => 'user',
+    'width' => 'md',
+])
+
+@php
+    $widthClass = match ($width) {
+        'lg' => 'max-w-lg',
+        'xl' => 'max-w-xl',
+        '2xl' => 'max-w-2xl',
+        '3xl' => 'max-w-3xl',
+        default => 'max-w-md',
+    };
+@endphp
 
 <div
     class="
         w-full
-        max-w-md
+        {{ $widthClass }}
 
         bg-[var(--theme-surface)]
 
@@ -15,8 +29,12 @@
         shadow-sm
         shadow-[var(--theme-shadow)]
 
-        px-10
-        py-10
+        px-6
+        sm:px-8
+        lg:px-10
+
+        py-8
+        sm:py-10
     "
 >
 
