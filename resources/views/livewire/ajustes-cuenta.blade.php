@@ -70,6 +70,8 @@
     ============================================================ --}}
     @include('livewire.settings.modals.edit-profile')
 
+    @include('livewire.settings.modals.request-organization-change')
+
     @include('livewire.settings.modals.change-password')
 
     @include('livewire.settings.modals.two-factor')
