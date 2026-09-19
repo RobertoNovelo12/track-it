@@ -1,24 +1,23 @@
 <div>
 
     {{-- ============================================================
-        TOAST GLOBAL
+        TOAST
     ============================================================ --}}
     @include('livewire.settings.partials.toast')
 
 
     {{-- ============================================================
-        NAVEGACIÓN
+        NAVEGACIÓN DE AJUSTES
     ============================================================ --}}
     @include('livewire.settings.partials.navigation')
 
 
     {{-- ============================================================
-        PLACEHOLDER → CUENTA
+        PLACEHOLDER - CUENTA
     ============================================================ --}}
     <div
         wire:loading.delay.shortest
         wire:target="setSection('cuenta')"
-
         class="w-full"
     >
         @include('livewire.placeholders.ajustes-cuenta')
@@ -26,12 +25,11 @@
 
 
     {{-- ============================================================
-        PLACEHOLDER → SEGURIDAD
+        PLACEHOLDER - SEGURIDAD
     ============================================================ --}}
     <div
         wire:loading.delay.shortest
         wire:target="setSection('seguridad')"
-
         class="w-full"
     >
         @include('livewire.placeholders.ajustes-seguridad')
@@ -39,29 +37,46 @@
 
 
     {{-- ============================================================
-        CONTENIDO DE LA SECCIÓN
+        PLACEHOLDER - NOTIFICACIONES
+    ============================================================ --}}
+    <div
+        wire:loading.delay.shortest
+        wire:target="setSection('notificaciones')"
+        class="w-full"
+    >
+        @include('livewire.placeholders.ajustes-notificaciones')
+    </div>
+
+
+    {{-- ============================================================
+        CONTENIDO DE LA SECCIÓN ACTIVA
     ============================================================ --}}
     <div
         wire:loading.remove
         wire:target="setSection"
     >
+
         @if ($section === 'cuenta')
 
             @include('livewire.settings.account')
+
 
         @elseif ($section === 'seguridad')
 
             @include('livewire.settings.security')
 
+
         @elseif ($section === 'notificaciones')
 
             @include('livewire.settings.notifications')
+
 
         @elseif ($section === 'preferencias')
 
             @include('livewire.settings.preferences')
 
         @endif
+
     </div>
 
 

@@ -135,6 +135,27 @@ class AjustesCuenta extends Component
 
     /*
     |--------------------------------------------------------------------------
+    | Notificaciones - Preferencias
+    |--------------------------------------------------------------------------
+    */
+
+    public bool $notificarAsignacionesMovimientos = true;
+
+    public bool $notificarMantenimientos = true;
+
+    public bool $notificarCambiosEquipos = true;
+
+    public bool $notificarUsuariosAccesos = true;
+
+    public bool $notificarReportes = false;
+
+    public bool $soloNoLeidas = false;
+
+    public bool $mantenerHistorial = true;
+
+
+    /*
+    |--------------------------------------------------------------------------
     | Montaje
     |--------------------------------------------------------------------------
     */
@@ -196,6 +217,46 @@ class AjustesCuenta extends Component
 
             $this->alertaActividadSospechosa =
                 (bool) $preferenciasSeguridad->alerta_actividad_sospechosa;
+        }
+
+
+        /*
+         * Cargar preferencias del centro de notificaciones.
+         *
+         * Si el usuario todavía no tiene una fila, conservamos
+         * los valores predeterminados definidos en las propiedades
+         * y en la migración.
+         */
+        $preferenciasNotificaciones =
+            DB::table('preferencias_notificaciones')
+                ->where(
+                    'id_usuario',
+                    $usuario->id_usuario
+                )
+                ->first();
+
+
+        if ($preferenciasNotificaciones) {
+            $this->notificarAsignacionesMovimientos =
+                (bool) $preferenciasNotificaciones->notificar_asignaciones_movimientos;
+
+            $this->notificarMantenimientos =
+                (bool) $preferenciasNotificaciones->notificar_mantenimientos;
+
+            $this->notificarCambiosEquipos =
+                (bool) $preferenciasNotificaciones->notificar_cambios_equipos;
+
+            $this->notificarUsuariosAccesos =
+                (bool) $preferenciasNotificaciones->notificar_usuarios_accesos;
+
+            $this->notificarReportes =
+                (bool) $preferenciasNotificaciones->notificar_reportes;
+
+            $this->soloNoLeidas =
+                (bool) $preferenciasNotificaciones->solo_no_leidas;
+
+            $this->mantenerHistorial =
+                (bool) $preferenciasNotificaciones->mantener_historial;
         }
     }
 
@@ -1849,6 +1910,94 @@ class AjustesCuenta extends Component
 
     /*
     |--------------------------------------------------------------------------
+    | Notificaciones - Guardar preferencias
+    |--------------------------------------------------------------------------
+    */
+
+    public function saveNotificationPreferences(): void
+    {
+        $usuario = auth()->user();
+
+        if (! $usuario) {
+            return;
+        }
+
+
+        DB::transaction(
+            function () use ($usuario) {
+
+                /*
+                 * Crear la configuración si todavía no existe
+                 * o actualizarla si el usuario ya la guardó antes.
+                 */
+                DB::table('preferencias_notificaciones')
+                    ->updateOrInsert(
+                        [
+                            'id_usuario' =>
+                                $usuario->id_usuario,
+                        ],
+                        [
+                            'notificar_asignaciones_movimientos' =>
+                                $this->notificarAsignacionesMovimientos,
+
+                            'notificar_mantenimientos' =>
+                                $this->notificarMantenimientos,
+
+                            'notificar_cambios_equipos' =>
+                                $this->notificarCambiosEquipos,
+
+                            'notificar_usuarios_accesos' =>
+                                $this->notificarUsuariosAccesos,
+
+                            'notificar_reportes' =>
+                                $this->notificarReportes,
+
+                            'solo_no_leidas' =>
+                                $this->soloNoLeidas,
+
+                            'mantener_historial' =>
+                                $this->mantenerHistorial,
+
+                            'fecha_actualizacion' =>
+                                now(),
+                        ]
+                    );
+
+
+                /*
+                 * Registrar el cambio en bitácora.
+                 */
+                DB::table('bitacora_auditoria')
+                    ->insert([
+                        'id_usuario' =>
+                            $usuario->id_usuario,
+
+                        'accion' =>
+                            'PREFERENCIAS_NOTIFICACIONES_ACTUALIZADAS',
+
+                        'modulo' =>
+                            'AJUSTES',
+
+                        'descripcion' =>
+                            'El usuario actualizó sus preferencias de notificaciones.',
+
+                        'fecha_hora' =>
+                            now(),
+                    ]);
+            }
+        );
+
+
+        $this->dispatch(
+            'notification-preferences-updated',
+            message:
+                'Tus preferencias de notificaciones se actualizaron correctamente.'
+        );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
     | Seguridad - Nombre legible del dispositivo
     |--------------------------------------------------------------------------
     */
@@ -2014,9 +2163,15 @@ class AjustesCuenta extends Component
 
 
         return match ($section) {
+
             'seguridad' =>
                 view(
                     'livewire.placeholders.ajustes-seguridad'
+                ),
+
+            'notificaciones' =>
+                view(
+                    'livewire.placeholders.ajustes-notificaciones'
                 ),
 
             default =>
