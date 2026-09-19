@@ -1,274 +1,271 @@
-<div
-    class="
-        grid
-        grid-cols-1
-        xl:grid-cols-[280px_minmax(0,1fr)]
-        gap-5
-    "
->
-    @include('livewire.settings.partials.profile-summary')
+<div class="space-y-5">
 
-    <div class="space-y-5">
-        {{-- ====================================================
-            INFORMACIÓN PERSONAL
-        ==================================================== --}}
-        <section
+    {{-- ====================================================
+        INFORMACIÓN PERSONAL
+    ==================================================== --}}
+    <section
+        class="
+            bg-[var(--theme-surface)]
+            border border-[var(--theme-border)]
+            rounded-xl
+            overflow-hidden
+        "
+    >
+
+        <div
             class="
-                bg-[var(--theme-surface)]
-
-                border
-                border-[var(--theme-border)]
-
-                rounded-xl
-
-                overflow-hidden
+                px-4 sm:px-5 py-4
+                border-b border-[var(--theme-border)]
+                flex items-start justify-between gap-4
             "
         >
+            <div>
+                <h2
+                    class="
+                        text-sm font-semibold
+                        text-[var(--theme-text-strong)]
+                    "
+                >
+                    Información personal
+                </h2>
 
-            <div
-                class="
-                    px-4
-                    sm:px-5
-                    py-4
+                <p
+                    class="
+                        mt-1 text-xs
+                        text-[var(--theme-text-muted)]
+                    "
+                >
+                    Información básica asociada a tu cuenta.
+                </p>
+            </div>
 
-                    border-b
-                    border-[var(--theme-border)]
-
-                    flex
-                    items-start
-                    justify-between
-                    gap-4
-                "
-            >
-
-                <div>
-
-                    <h2
-                        class="
-                            text-sm
-                            font-semibold
-                            text-[var(--theme-text-strong)]
-                        "
-                    >
-                        Información personal
-                    </h2>
-
-                    <p
-                        class="
-                            mt-1
-                            text-xs
-                            text-[var(--theme-text-muted)]
-                        "
-                    >
-                        Información básica asociada a tu cuenta.
-                    </p>
-
-                </div>
-
-
-                {{-- Visual por ahora --}}
-                <button
+            <button
                 x-data="{}"
                 type="button"
                 @click="$dispatch('abrir-edicion-perfil')"
                 class="
                     shrink-0
-
-                    h-8
-                    px-3
-
-                    inline-flex
-                    items-center
-                    justify-center
-                    gap-2
-
+                    h-8 px-3
+                    inline-flex items-center justify-center
                     rounded-md
-
-                    border
-                    border-[var(--theme-border-strong)]
-
+                    border border-[var(--theme-border-strong)]
                     bg-[var(--theme-surface)]
-
-                    text-xs
-                    font-medium
+                    text-xs font-medium
                     text-[var(--theme-text)]
-
                     hover:bg-[var(--theme-surface-soft)]
                     hover:border-[var(--theme-primary-border)]
-
                     transition-colors
                 "
             >
-                    <svg
-                        class="w-3.5 h-3.5"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.6"
-                    >
-                        <path d="M4 20h4l10-10-4-4L4 16v4z"/>
-                        <path d="M13 7l4 4"/>
-                    </svg>
-
-                    <span class="hidden sm:inline">
-                        Editar
-                    </span>
-                </button>
-
-            </div>
+                <span>Editar</span>
+            </button>
+        </div>
 
 
+        <div class="p-4 sm:p-5">
             <div
                 class="
-                    divide-y
-                    divide-[var(--theme-border)]
+                    grid
+                    grid-cols-1
+                    xl:grid-cols-[220px_minmax(0,1fr)]
+                    gap-5
+                    items-start
                 "
             >
 
-                {{-- Nombre --}}
+                {{-- ====================================================
+                    RESUMEN DE PERFIL
+                ==================================================== --}}
                 <div
                     class="
-                        px-4
-                        sm:px-5
-                        py-3
+                        rounded-xl
+                        bg-[var(--theme-surface-soft)]
+                        p-5
 
-                        grid
-                        grid-cols-1
-                        sm:grid-cols-[180px_1fr]
+                        flex
+                        flex-col
+                        items-center
+                        justify-center
 
-                        gap-1
-                        sm:gap-4
+                        text-center
                     "
                 >
-                    <span
+                    <div
                         class="
-                            text-xs
-                            text-[var(--theme-text-muted)]
+                            w-20 h-20
+                            rounded-full
+                            flex items-center justify-center
+                            bg-[var(--theme-primary-soft)]
+                            text-[var(--theme-primary)]
+                            text-2xl font-semibold uppercase
                         "
                     >
-                        Nombre completo
-                    </span>
+                        {{ mb_substr($usuario->nombres ?? '?', 0, 1) }}
+                        {{ mb_substr($usuario->apellido_paterno ?? '', 0, 1) }}
+                    </div>
 
-                    <span
+                    <h3
                         class="
-                            text-xs
-                            font-medium
-                            text-[var(--theme-text)]
+                            mt-4
+                            text-base font-semibold
+                            text-[var(--theme-text-strong)]
                         "
                     >
                         {{ $nombreCompleto }}
+                    </h3>
+
+                    <p
+                        class="
+                            mt-1 text-xs
+                            text-[var(--theme-text-muted)]
+                        "
+                    >
+                        {{ '@' . $usuario->username }}
+                    </p>
+
+                    @php
+                        $estadoClave = strtoupper($usuario->estado_clave ?? '');
+
+                        $estadoClasses = match ($estadoClave) {
+                            'ACTIVO' =>
+                                'bg-[var(--theme-success-soft)] text-[var(--theme-success)]',
+
+                            'PENDIENTE' =>
+                                'bg-[var(--theme-warning-soft)] text-[var(--theme-warning)]',
+
+                            'INACTIVO', 'BAJA' =>
+                                'bg-[var(--theme-danger-soft)] text-[var(--theme-danger)]',
+
+                            default =>
+                                'bg-[var(--theme-surface)] text-[var(--theme-text-muted)]',
+                        };
+                    @endphp
+
+                    <span
+                        class="
+                            mt-3
+                            inline-flex items-center
+                            px-2.5 py-1
+                            rounded-full
+                            text-[10px] font-medium
+                            {{ $estadoClasses }}
+                        "
+                    >
+                        {{ $usuario->estado_nombre ?? 'Sin estado' }}
                     </span>
                 </div>
 
 
-                {{-- Correo --}}
+                {{-- ====================================================
+                    DATOS PERSONALES LIMPIOS
+                ==================================================== --}}
                 <div
                     class="
-                        px-4
-                        sm:px-5
-                        py-3
-
                         grid
                         grid-cols-1
-                        sm:grid-cols-[180px_1fr]
-
-                        gap-1
-                        sm:gap-4
+                        md:grid-cols-2
+                        gap-x-10
+                        gap-y-6
+                        content-start
                     "
                 >
-                    <span
-                        class="
-                            text-xs
-                            text-[var(--theme-text-muted)]
-                        "
-                    >
-                        Correo electrónico
-                    </span>
 
-                    <span
-                        class="
-                            text-xs
-                            text-[var(--theme-text)]
-                            break-all
-                        "
-                    >
-                        {{ $usuario->correo }}
-                    </span>
-                </div>
+                    <div>
+                        <p
+                            class="
+                                text-[11px]
+                                text-[var(--theme-text-muted)]
+                            "
+                        >
+                            Nombre completo
+                        </p>
 
+                        <p
+                            class="
+                                mt-2
+                                text-sm font-medium
+                                text-[var(--theme-text)]
+                            "
+                        >
+                            {{ $nombreCompleto }}
+                        </p>
+                    </div>
 
-                {{-- Usuario --}}
-                <div
-                    class="
-                        px-4
-                        sm:px-5
-                        py-3
+                    <div>
+                        <p
+                            class="
+                                text-[11px]
+                                text-[var(--theme-text-muted)]
+                            "
+                        >
+                            Correo electrónico
+                        </p>
 
-                        grid
-                        grid-cols-1
-                        sm:grid-cols-[180px_1fr]
+                        <p
+                            class="
+                                mt-2
+                                text-sm font-medium
+                                text-[var(--theme-text)]
+                                break-all
+                            "
+                        >
+                            {{ $usuario->correo }}
+                        </p>
+                    </div>
 
-                        gap-1
-                        sm:gap-4
-                    "
-                >
-                    <span
-                        class="
-                            text-xs
-                            text-[var(--theme-text-muted)]
-                        "
-                    >
-                        Nombre de usuario
-                    </span>
+                    <div>
+                        <p
+                            class="
+                                text-[11px]
+                                text-[var(--theme-text-muted)]
+                            "
+                        >
+                            Nombre de usuario
+                        </p>
 
-                    <span
-                        class="
-                            text-xs
-                            text-[var(--theme-text)]
-                        "
-                    >
-                        {{ $usuario->username }}
-                    </span>
-                </div>
+                        <p
+                            class="
+                                mt-2
+                                text-sm font-medium
+                                text-[var(--theme-text)]
+                            "
+                        >
+                            {{ $usuario->username }}
+                        </p>
+                    </div>
 
+                    <div>
+                        <p
+                            class="
+                                text-[11px]
+                                text-[var(--theme-text-muted)]
+                            "
+                        >
+                            Teléfono
+                        </p>
 
-                {{-- Teléfono --}}
-                <div
-                    class="
-                        px-4
-                        sm:px-5
-                        py-3
+                        <p
+                            class="
+                                mt-2
+                                text-sm font-medium
+                                text-[var(--theme-text)]
+                            "
+                        >
+                            {{ $usuario->telefono ?: 'Sin especificar' }}
+                        </p>
+                    </div>
 
-                        grid
-                        grid-cols-1
-                        sm:grid-cols-[180px_1fr]
-
-                        gap-1
-                        sm:gap-4
-                    "
-                >
-                    <span
-                        class="
-                            text-xs
-                            text-[var(--theme-text-muted)]
-                        "
-                    >
-                        Teléfono
-                    </span>
-
-                    <span
-                        class="
-                            text-xs
-                            text-[var(--theme-text)]
-                        "
-                    >
-                        {{ $usuario->telefono ?: 'Sin especificar' }}
-                    </span>
                 </div>
 
             </div>
+        </div>
 
-        </section>
-        @include('livewire.settings.operation')
-    </div>
+    </section>
+
+
+    {{-- ====================================================
+        INFORMACIÓN ORGANIZACIONAL
+    ==================================================== --}}
+    @include('livewire.settings.operation')
+
 </div>

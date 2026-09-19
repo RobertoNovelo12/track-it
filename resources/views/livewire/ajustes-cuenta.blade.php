@@ -78,4 +78,6 @@
 
     @include('livewire.settings.modals.manage-two-factor')
 
+    @include('livewire.settings.modals.active-sessions')
+
 </div>

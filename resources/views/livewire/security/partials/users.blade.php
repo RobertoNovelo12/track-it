@@ -483,45 +483,72 @@
                                         "
                                     >
 
-                                            @if ($estadoClave === 'PENDIENTE')
+                                        @if ($estadoClave === 'PENDIENTE')
 
-                                                <button
-                                                    type="button"
-                                                    wire:click="openApprovalModal({{ $usuario->id_usuario }})"
-                                                    wire:loading.attr="disabled"
-                                                    wire:target="openApprovalModal({{ $usuario->id_usuario }})"
-                                                    class="
-                                                        h-7
-                                                        px-2.5
+                                            <button
+                                                type="button"
 
-                                                        rounded-md
+                                                data-open-approval-modal
+                                                data-approval-user-id="{{ $usuario->id_usuario }}"
+                                                data-approval-user-name="{{
+                                                    trim(
+                                                        implode(' ', array_filter([
+                                                            $usuario->nombres,
+                                                            $usuario->apellido_paterno,
+                                                            $usuario->apellido_materno,
+                                                        ]))
+                                                    )
+                                                }}"
+                                                data-approval-user-email="{{ $usuario->correo }}"
 
-                                                        bg-[var(--theme-success-soft)]
-                                                        text-[var(--theme-success)]
+                                                onclick="window.openApprovalUserModalFromButton(this)"
 
-                                                        text-[10px]
-                                                        font-medium
+                                                class="
+                                                    h-8
+                                                    px-3
 
-                                                        hover:opacity-80
+                                                    inline-flex
+                                                    items-center
+                                                    justify-center
+                                                    gap-1.5
 
-                                                        disabled:opacity-50
-                                                        disabled:cursor-not-allowed
+                                                    rounded-md
 
-                                                        transition
-                                                    "
+                                                    bg-[var(--theme-primary)]
+                                                    text-white
+
+                                                    text-[11px]
+                                                    font-medium
+
+                                                    hover:bg-[var(--theme-primary-hover)]
+
+                                                    transition-colors
+                                                "
+                                            >
+                                                <svg
+                                                    class="w-3.5 h-3.5"
+                                                    viewBox="0 0 24 24"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    stroke-width="1.7"
                                                 >
-                                                    Aprobar
-                                                </button>
+                                                    <path d="M5 12l4 4L19 6"/>
+                                                </svg>
 
-                                            @endif
+                                                Aprobar
+                                            </button>
+
+                                        @endif
 
 
                                         <button
                                             type="button"
-                                            title="Ver usuario"
+                                            data-user-id="{{ $usuario->id_usuario }}"
+                                            onclick="window.openUserDetailsModalFromButton(this)"
+                                            title="Ver detalles"
                                             class="
-                                                w-7
-                                                h-7
+                                                w-8
+                                                h-8
 
                                                 flex
                                                 items-center
@@ -529,10 +556,16 @@
 
                                                 rounded-md
 
+                                                border
+                                                border-[var(--theme-border)]
+
+                                                bg-[var(--theme-surface)]
+
                                                 text-[var(--theme-text-muted)]
 
                                                 hover:bg-[var(--theme-primary-soft)]
                                                 hover:text-[var(--theme-primary)]
+                                                hover:border-[var(--theme-primary-border)]
 
                                                 transition-colors
                                             "
@@ -552,7 +585,6 @@
                                     </div>
 
                                 </td>
-
                             </tr>
 
                         @empty
@@ -769,8 +801,9 @@
 
                         </div>
 
-                        @if ($estadoClave === 'PENDIENTE')
-
+                        {{-- ====================================================
+                            ACCIONES MÓVIL
+                        ==================================================== --}}
                         <div
                             class="
                                 mt-4
@@ -780,41 +813,114 @@
                                 border-[var(--theme-border)]
 
                                 flex
+                                items-center
                                 justify-end
+                                gap-2
                             "
                         >
 
                             <button
                                 type="button"
-                                wire:click="openApprovalModal({{ $usuario->id_usuario }})"
-                                wire:loading.attr="disabled"
-                                wire:target="openApprovalModal({{ $usuario->id_usuario }})"
+                                data-user-id="{{ $usuario->id_usuario }}"
+                                onclick="window.openUserDetailsModalFromButton(this)"
                                 class="
-                                    h-8
+                                    h-9
                                     px-3
+
+                                    inline-flex
+                                    items-center
+                                    justify-center
+                                    gap-2
 
                                     rounded-md
 
-                                    bg-[var(--theme-success-soft)]
-                                    text-[var(--theme-success)]
+                                    border
+                                    border-[var(--theme-border-strong)]
+
+                                    bg-[var(--theme-surface)]
 
                                     text-xs
                                     font-medium
+                                    text-[var(--theme-text)]
 
-                                    hover:opacity-80
+                                    hover:bg-[var(--theme-surface-soft)]
 
-                                    disabled:opacity-50
-                                    disabled:cursor-not-allowed
-
-                                    transition
+                                    transition-colors
                                 "
                             >
-                                Aprobar usuario
+                                <svg
+                                    class="w-4 h-4"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="1.5"
+                                >
+                                    <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/>
+                                    <circle cx="12" cy="12" r="3"/>
+                                </svg>
+
+                                Ver detalles
                             </button>
 
-                        </div>
 
-                    @endif
+                            @if ($estadoClave === 'PENDIENTE')
+
+                                <button
+                                    type="button"
+
+                                    data-open-approval-modal
+                                    data-approval-user-id="{{ $usuario->id_usuario }}"
+                                    data-approval-user-name="{{
+                                        trim(
+                                            implode(' ', array_filter([
+                                                $usuario->nombres,
+                                                $usuario->apellido_paterno,
+                                                $usuario->apellido_materno,
+                                            ]))
+                                        )
+                                    }}"
+                                    data-approval-user-email="{{ $usuario->correo }}"
+
+                                    onclick="window.openApprovalUserModalFromButton(this)"
+
+                                    class="
+                                        h-9
+                                        px-3
+
+                                        inline-flex
+                                        items-center
+                                        justify-center
+                                        gap-2
+
+                                        rounded-md
+
+                                        bg-[var(--theme-primary)]
+                                        text-white
+
+                                        text-xs
+                                        font-medium
+
+                                        hover:bg-[var(--theme-primary-hover)]
+
+                                        transition-colors
+                                    "
+                                >
+                                    <svg
+                                        class="w-4 h-4"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="1.7"
+                                    >
+                                        <path d="M5 12l4 4L19 6"/>
+                                    </svg>
+
+                                    Aprobar
+                                </button>
+
+                            @endif
+
+                        </div>
 
                     </article>
 

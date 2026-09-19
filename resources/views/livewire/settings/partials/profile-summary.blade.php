@@ -49,6 +49,7 @@
         </div>
 
 
+        {{-- Nombre --}}
         <h2
             class="
                 mt-4
@@ -62,6 +63,7 @@
         </h2>
 
 
+        {{-- Usuario --}}
         <p
             class="
                 mt-1
@@ -116,99 +118,6 @@
         >
             {{ $usuario->estado_nombre ?? 'Sin estado' }}
         </span>
-
-    </div>
-
-
-    <div
-        class="
-            mt-5
-            pt-5
-
-            border-t
-            border-[var(--theme-border)]
-
-            space-y-3
-        "
-    >
-
-        <div>
-
-            <p
-                class="
-                    text-[10px]
-                    uppercase
-                    tracking-wide
-                    text-[var(--theme-text-muted)]
-                "
-            >
-                Rol
-            </p>
-
-            <p
-                class="
-                    mt-1
-                    text-xs
-                    font-medium
-                    text-[var(--theme-text)]
-                "
-            >
-                {{ $usuario->rol_nombre ?? 'Sin rol asignado' }}
-            </p>
-
-        </div>
-
-
-        <div>
-
-            <p
-                class="
-                    text-[10px]
-                    uppercase
-                    tracking-wide
-                    text-[var(--theme-text-muted)]
-                "
-            >
-                Puesto
-            </p>
-
-            <p
-                class="
-                    mt-1
-                    text-xs
-                    text-[var(--theme-text)]
-                "
-            >
-                {{ $usuario->puesto ?: 'Sin especificar' }}
-            </p>
-
-        </div>
-
-
-        <div>
-
-            <p
-                class="
-                    text-[10px]
-                    uppercase
-                    tracking-wide
-                    text-[var(--theme-text-muted)]
-                "
-            >
-                Número de colaborador
-            </p>
-
-            <p
-                class="
-                    mt-1
-                    text-xs
-                    text-[var(--theme-text)]
-                "
-            >
-                {{ $usuario->numero_colaborador ?: 'Sin asignar' }}
-            </p>
-
-        </div>
 
     </div>
 

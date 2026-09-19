@@ -46,8 +46,16 @@
     {{-- ============================================================
         MODALES
     ============================================================ --}}
+
+    {{-- Aprobar usuario --}}
     @include('livewire.security.modals.approve-user')
 
+
+    {{-- Ver detalles del usuario --}}
+    @include('livewire.security.modals.user-details')
+
+
+    {{-- Solicitudes de cambio organizacional --}}
     @include('livewire.security.modals.organization-request')
 
 </div>

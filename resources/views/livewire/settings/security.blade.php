@@ -48,7 +48,9 @@
             >
                 <svg
                     class="w-5 h-5"
+
                     viewBox="0 0 24 24"
+
                     fill="none"
                     stroke="currentColor"
                     stroke-width="1.6"
@@ -179,6 +181,7 @@
                     class="w-4 h-4"
 
                     viewBox="0 0 24 24"
+
                     fill="none"
                     stroke="currentColor"
                     stroke-width="1.6"
@@ -259,6 +262,7 @@
                         class="w-4.5 h-4.5"
 
                         viewBox="0 0 24 24"
+
                         fill="none"
                         stroke="currentColor"
                         stroke-width="1.6"
@@ -439,6 +443,7 @@
                             class="w-4 h-4"
 
                             viewBox="0 0 24 24"
+
                             fill="none"
                             stroke="currentColor"
                             stroke-width="1.6"
@@ -473,20 +478,25 @@
                             "
 
                             viewBox="0 0 24 24"
+
                             fill="none"
                         >
                             <circle
                                 class="opacity-25"
+
                                 cx="12"
                                 cy="12"
                                 r="10"
+
                                 stroke="currentColor"
                                 stroke-width="4"
                             />
 
                             <path
                                 class="opacity-75"
+
                                 fill="currentColor"
+
                                 d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
                             />
                         </svg>
@@ -497,7 +507,7 @@
 
             @else
 
-               <button
+                <button
                     type="button"
 
                     @click="
@@ -536,6 +546,7 @@
                         class="w-4 h-4"
 
                         viewBox="0 0 24 24"
+
                         fill="none"
                         stroke="currentColor"
                         stroke-width="1.6"
@@ -559,4 +570,1008 @@
 
     </section>
 
+
+    {{-- ============================================================
+        SESIONES
+    ============================================================ --}}
+    <section
+        class="
+            bg-[var(--theme-surface)]
+
+            border
+            border-[var(--theme-border)]
+
+            rounded-xl
+
+            overflow-hidden
+        "
+    >
+        {{-- Cabecera --}}
+        <div
+            class="
+                px-4
+                sm:px-5
+                py-4
+
+                border-b
+                border-[var(--theme-border)]
+
+                flex
+                items-start
+                gap-3
+            "
+        >
+            <div
+                class="
+                    w-9
+                    h-9
+                    shrink-0
+
+                    rounded-lg
+
+                    flex
+                    items-center
+                    justify-center
+
+                    bg-[var(--theme-primary-soft)]
+                    text-[var(--theme-primary)]
+                "
+            >
+                <svg
+                    class="w-5 h-5"
+
+                    viewBox="0 0 24 24"
+
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                >
+                    <rect
+                        x="3"
+                        y="4"
+                        width="18"
+                        height="13"
+                        rx="2"
+                    />
+
+                    <path d="M8 21h8"/>
+                    <path d="M12 17v4"/>
+                </svg>
+            </div>
+
+
+            <div class="min-w-0">
+
+                <h2
+                    class="
+                        text-sm
+                        font-semibold
+                        text-[var(--theme-text-strong)]
+                    "
+                >
+                    Sesiones
+                </h2>
+
+                <p
+                    class="
+                        mt-1
+
+                        text-xs
+                        leading-relaxed
+                        text-[var(--theme-text-muted)]
+                    "
+                >
+                    Administra tus sesiones activas y dispositivos.
+                </p>
+
+            </div>
+        </div>
+
+
+        {{-- ========================================================
+            SESIÓN ACTUAL
+        ======================================================== --}}
+        <div
+            class="
+                px-4
+                sm:px-5
+                py-4
+
+                flex
+                flex-col
+
+                sm:flex-row
+                sm:items-center
+                sm:justify-between
+
+                gap-4
+            "
+        >
+            <div class="min-w-0">
+
+                <p
+                    class="
+                        text-sm
+                        font-medium
+                        text-[var(--theme-text-strong)]
+                    "
+                >
+                    Sesión actual
+                </p>
+
+                <p
+                    class="
+                        mt-1
+
+                        text-xs
+                        leading-relaxed
+                        text-[var(--theme-text-muted)]
+                    "
+                >
+                    Estás conectado en este dispositivo.
+                </p>
+
+            </div>
+
+
+            <div
+                class="
+                    shrink-0
+
+                    min-h-9
+                    px-3
+
+                    inline-flex
+                    items-center
+                    gap-2.5
+
+                    rounded-lg
+
+                    bg-[var(--theme-surface-soft)]
+
+                    text-xs
+                    text-[var(--theme-text)]
+                "
+            >
+                <svg
+                    class="
+                        w-4
+                        h-4
+                        shrink-0
+                    "
+
+                    viewBox="0 0 24 24"
+
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                >
+                    <rect
+                        x="3"
+                        y="4"
+                        width="18"
+                        height="13"
+                        rx="2"
+                    />
+
+                    <path d="M8 21h8"/>
+                    <path d="M12 17v4"/>
+                </svg>
+
+
+                <span>
+                    {{ $currentSessionDevice }}
+                </span>
+
+
+                <span
+                    class="
+                        w-1.5
+                        h-1.5
+                        shrink-0
+
+                        rounded-full
+
+                        bg-emerald-500
+                    "
+                ></span>
+
+
+                <span
+                    class="
+                        font-medium
+                        text-[var(--theme-text-strong)]
+                    "
+                >
+                    Activa
+                </span>
+            </div>
+        </div>
+
+
+        {{-- Separador --}}
+        <div
+            class="
+                mx-4
+                sm:mx-5
+
+                border-t
+                border-[var(--theme-border)]
+            "
+        ></div>
+
+
+        {{-- ========================================================
+            VER DISPOSITIVOS ACTIVOS
+        ======================================================== --}}
+        <div
+            class="
+                px-4
+                sm:px-5
+                py-4
+
+                flex
+                flex-col
+
+                sm:flex-row
+                sm:items-center
+                sm:justify-between
+
+                gap-4
+            "
+        >
+            <div class="min-w-0">
+
+                <p
+                    class="
+                        text-sm
+                        font-medium
+                        text-[var(--theme-text-strong)]
+                    "
+                >
+                    Ver dispositivos activos
+                </p>
+
+                <p
+                    class="
+                        mt-1
+
+                        text-xs
+                        leading-relaxed
+                        text-[var(--theme-text-muted)]
+                    "
+                >
+                    Revisa los dispositivos donde has iniciado sesión.
+                </p>
+
+            </div>
+
+
+            <button
+                type="button"
+
+                onclick="window.openActiveSessionsModalFast()"
+
+                wire:loading.attr="disabled"
+                wire:target="loadActiveSessions"
+
+                class="
+                    relative
+                    shrink-0
+
+                    h-9
+                    px-4
+
+                    rounded-md
+
+                    border
+                    border-[var(--theme-border-strong)]
+
+                    bg-[var(--theme-surface)]
+
+                    text-xs
+                    font-medium
+                    text-[var(--theme-text)]
+
+                    hover:bg-[var(--theme-surface-soft)]
+                    hover:border-[var(--theme-primary-border)]
+
+                    disabled:opacity-60
+                    disabled:cursor-not-allowed
+
+                    transition-colors
+                "
+            >
+                {{-- Estado normal --}}
+                <span
+                    wire:loading.class="invisible"
+                    wire:target="loadActiveSessions"
+
+                    class="
+                        inline-flex
+                        items-center
+                        justify-center
+                        gap-2
+                    "
+                >
+                    <svg
+                        class="w-4 h-4"
+
+                        viewBox="0 0 24 24"
+
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.6"
+                    >
+                        <rect
+                            x="3"
+                            y="4"
+                            width="13"
+                            height="16"
+                            rx="2"
+                        />
+
+                        <rect
+                            x="17"
+                            y="9"
+                            width="4"
+                            height="8"
+                            rx="1"
+                        />
+                    </svg>
+
+                    Ver dispositivos
+                </span>
+
+
+                {{-- Estado cargando --}}
+                <span
+                    wire:loading.flex
+                    wire:target="loadActiveSessions"
+
+                    class="
+                        absolute
+                        inset-0
+
+                        items-center
+                        justify-center
+                    "
+                >
+                    <svg
+                        class="w-5 h-5 animate-spin"
+
+                        viewBox="0 0 24 24"
+
+                        fill="none"
+
+                        aria-hidden="true"
+                    >
+                        <circle
+                            cx="12"
+                            cy="12"
+                            r="9"
+
+                            stroke="currentColor"
+                            stroke-width="2"
+
+                            opacity="0.25"
+                        />
+
+                        <path
+                            d="M21 12a9 9 0 0 0-9-9"
+
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                        />
+                    </svg>
+
+                    <span class="sr-only">
+                        Cargando dispositivos...
+                    </span>
+                </span>
+            </button>
+        </div>
+
+
+        {{-- Separador --}}
+        <div
+            class="
+                mx-4
+                sm:mx-5
+
+                border-t
+                border-[var(--theme-border)]
+            "
+        ></div>
+
+
+        {{-- ========================================================
+            CERRAR OTRAS SESIONES
+        ======================================================== --}}
+        <div
+            class="
+                px-4
+                sm:px-5
+                py-4
+
+                flex
+                flex-col
+
+                sm:flex-row
+                sm:items-center
+                sm:justify-between
+
+                gap-4
+            "
+        >
+            <div class="min-w-0">
+
+                <p
+                    class="
+                        text-sm
+                        font-medium
+                        text-[var(--theme-text-strong)]
+                    "
+                >
+                    Cerrar sesión en otros dispositivos
+                </p>
+
+                <p
+                    class="
+                        mt-1
+
+                        text-xs
+                        leading-relaxed
+                        text-[var(--theme-text-muted)]
+                    "
+                >
+                    Finaliza todas las sesiones excepto la actual.
+                </p>
+
+            </div>
+
+
+            <button
+                type="button"
+
+                wire:click="logoutOtherSessions"
+
+                wire:confirm="Se cerrarán todas tus demás sesiones. ¿Deseas continuar?"
+
+                wire:loading.attr="disabled"
+                wire:target="logoutOtherSessions"
+
+                class="
+                    relative
+                    shrink-0
+
+                    h-9
+                    px-4
+
+                    rounded-md
+
+                    border
+                    border-[var(--theme-border-strong)]
+
+                    bg-[var(--theme-surface)]
+
+                    text-xs
+                    font-medium
+                    text-[var(--theme-text)]
+
+                    hover:bg-[var(--theme-surface-soft)]
+                    hover:border-[var(--theme-primary-border)]
+
+                    disabled:opacity-60
+                    disabled:cursor-not-allowed
+
+                    transition-colors
+                "
+            >
+                {{-- Estado normal --}}
+                <span
+                    wire:loading.class="invisible"
+                    wire:target="logoutOtherSessions"
+
+                    class="
+                        inline-flex
+                        items-center
+                        justify-center
+                        gap-2
+                    "
+                >
+                    <svg
+                        class="w-4 h-4"
+
+                        viewBox="0 0 24 24"
+
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.6"
+                    >
+                        <path d="M10 17l5-5-5-5"/>
+                        <path d="M15 12H3"/>
+                        <path d="M14 4h5a2 2 0 012 2v12a2 2 0 01-2 2h-5"/>
+                    </svg>
+
+                    Cerrar en otros
+                </span>
+
+
+                {{-- Estado cargando --}}
+                <span
+                    wire:loading.flex
+                    wire:target="logoutOtherSessions"
+
+                    class="
+                        absolute
+                        inset-0
+
+                        items-center
+                        justify-center
+                    "
+                >
+                    <svg
+                        class="w-5 h-5 animate-spin"
+
+                        viewBox="0 0 24 24"
+
+                        fill="none"
+
+                        aria-hidden="true"
+                    >
+                        <circle
+                            cx="12"
+                            cy="12"
+                            r="9"
+
+                            stroke="currentColor"
+                            stroke-width="2"
+
+                            opacity="0.25"
+                        />
+
+                        <path
+                            d="M21 12a9 9 0 0 0-9-9"
+
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                        />
+                    </svg>
+
+                    <span class="sr-only">
+                        Cerrando sesiones...
+                    </span>
+                </span>
+            </button>
+
+        </div>
+
+    </section>
+
+    {{-- ============================================================
+        ALERTAS DE SEGURIDAD
+    ============================================================ --}}
+    <section
+        class="
+            bg-[var(--theme-surface)]
+
+            border
+            border-[var(--theme-border)]
+
+            rounded-xl
+
+            overflow-hidden
+        "
+    >
+        {{-- Cabecera --}}
+        <div
+            class="
+                px-4
+                sm:px-5
+                py-4
+
+                border-b
+                border-[var(--theme-border)]
+
+                flex
+                items-start
+                gap-3
+            "
+        >
+            <div
+                class="
+                    w-9
+                    h-9
+                    shrink-0
+
+                    rounded-lg
+
+                    flex
+                    items-center
+                    justify-center
+
+                    bg-[var(--theme-primary-soft)]
+                    text-[var(--theme-primary)]
+                "
+            >
+                <svg
+                    class="w-5 h-5"
+
+                    viewBox="0 0 24 24"
+
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                >
+                    <path
+                        d="M18 8a6 6 0 10-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"
+                    />
+
+                    <path d="M10 21h4"/>
+                </svg>
+            </div>
+
+
+            <div class="min-w-0">
+
+                <h2
+                    class="
+                        text-sm
+                        font-semibold
+                        text-[var(--theme-text-strong)]
+                    "
+                >
+                    Alertas de seguridad
+                </h2>
+
+                <p
+                    class="
+                        mt-1
+
+                        text-xs
+                        leading-relaxed
+                        text-[var(--theme-text-muted)]
+                    "
+                >
+                    Elige qué eventos de seguridad quieres recibir como notificación.
+                </p>
+
+            </div>
+        </div>
+
+
+        {{-- ========================================================
+            ALERTA DE INICIO DE SESIÓN
+        ======================================================== --}}
+        <div
+            class="
+                px-4
+                sm:px-5
+                py-4
+
+                flex
+                items-center
+                justify-between
+
+                gap-4
+            "
+        >
+            <div class="min-w-0">
+
+                <p
+                    class="
+                        text-sm
+                        font-medium
+                        text-[var(--theme-text-strong)]
+                    "
+                >
+                    Inicio de sesión
+                </p>
+
+                <p
+                    class="
+                        mt-1
+
+                        max-w-xl
+
+                        text-xs
+                        leading-relaxed
+                        text-[var(--theme-text-muted)]
+                    "
+                >
+                    Recibe una alerta cuando se inicie sesión en tu cuenta.
+                </p>
+
+            </div>
+
+
+                <label
+                    class="
+                        relative
+                        inline-flex
+                        items-center
+                        shrink-0
+                        cursor-pointer
+                    "
+                >
+                    <input
+                        type="checkbox"
+                        wire:model="alertaInicioSesion"
+                        class="peer sr-only"
+                    >
+
+                    <span
+                        class="
+                            relative
+
+                            block
+                            w-11
+                            h-6
+
+                            rounded-full
+
+                            bg-[var(--theme-border)]
+
+                            transition-colors
+                            duration-200
+
+                            peer-checked:bg-[var(--theme-primary)]
+
+                            after:content-['']
+                            after:absolute
+                            after:top-1/2
+                            after:left-0.5
+
+                            after:w-5
+                            after:h-5
+
+                            after:-translate-y-1/2
+
+                            after:rounded-full
+                            after:bg-white
+
+                            after:shadow-sm
+
+                            after:transition-transform
+                            after:duration-200
+
+                            peer-checked:after:translate-x-5
+                        "
+                    ></span>
+                </label>
+        </div>
+
+
+        {{-- Separador --}}
+        <div
+            class="
+                mx-4
+                sm:mx-5
+
+                border-t
+                border-[var(--theme-border)]
+            "
+        ></div>
+
+
+        {{-- ========================================================
+            ALERTA DE ACTIVIDAD SOSPECHOSA
+        ======================================================== --}}
+        <div
+            class="
+                px-4
+                sm:px-5
+                py-4
+
+                flex
+                items-center
+                justify-between
+
+                gap-4
+            "
+        >
+            <div class="min-w-0">
+
+                <p
+                    class="
+                        text-sm
+                        font-medium
+                        text-[var(--theme-text-strong)]
+                    "
+                >
+                    Actividad sospechosa
+                </p>
+
+                <p
+                    class="
+                        mt-1
+
+                        max-w-xl
+
+                        text-xs
+                        leading-relaxed
+                        text-[var(--theme-text-muted)]
+                    "
+                >
+                    Recibe una alerta cuando detectemos actividad inusual relacionada con tu cuenta.
+                </p>
+
+            </div>
+
+
+            <label
+                class="
+                    relative
+                    inline-flex
+                    items-center
+                    shrink-0
+                    cursor-pointer
+                "
+            >
+                <input
+                    type="checkbox"
+                    wire:model="alertaActividadSospechosa"
+                    class="peer sr-only"
+                >
+
+                <span
+                    class="
+                        relative
+
+                        block
+                        w-11
+                        h-6
+
+                        rounded-full
+
+                        bg-[var(--theme-border)]
+
+                        transition-colors
+                        duration-200
+
+                        peer-checked:bg-[var(--theme-primary)]
+
+                        after:content-['']
+                        after:absolute
+                        after:top-1/2
+                        after:left-0.5
+
+                        after:w-5
+                        after:h-5
+
+                        after:-translate-y-1/2
+
+                        after:rounded-full
+                        after:bg-white
+
+                        after:shadow-sm
+
+                        after:transition-transform
+                        after:duration-200
+
+                        peer-checked:after:translate-x-5
+                    "
+                ></span>
+            </label>
+        </div>
+
+
+        {{-- ========================================================
+            ACCIONES
+        ======================================================== --}}
+        <div
+            class="
+                px-4
+                sm:px-5
+                py-4
+
+                border-t
+                border-[var(--theme-border)]
+
+                flex
+                items-center
+                justify-end
+
+                bg-[var(--theme-surface-soft)]
+            "
+        >
+            <button
+                type="button"
+
+                wire:click="saveSecurityPreferences"
+
+                wire:loading.attr="disabled"
+                wire:target="saveSecurityPreferences"
+
+                class="
+                    relative
+
+                    h-9
+                    px-4
+
+                    rounded-md
+
+                    bg-[var(--theme-primary)]
+                    text-white
+
+                    text-xs
+                    font-medium
+
+                    hover:bg-[var(--theme-primary-hover)]
+
+                    disabled:opacity-60
+                    disabled:cursor-not-allowed
+
+                    transition-colors
+                "
+            >
+                {{-- Estado normal --}}
+                <span
+                    wire:loading.class="invisible"
+                    wire:target="saveSecurityPreferences"
+
+                    class="
+                        inline-flex
+                        items-center
+                        justify-center
+                        gap-2
+                    "
+                >
+                    Guardar cambios
+                </span>
+
+
+                {{-- Estado cargando --}}
+                <span
+                    wire:loading.flex
+                    wire:target="saveSecurityPreferences"
+
+                    class="
+                        absolute
+                        inset-0
+
+                        items-center
+                        justify-center
+                    "
+                >
+                    <svg
+                        class="w-5 h-5 animate-spin"
+
+                        viewBox="0 0 24 24"
+
+                        fill="none"
+
+                        aria-hidden="true"
+                    >
+                        <circle
+                            cx="12"
+                            cy="12"
+                            r="9"
+
+                            stroke="currentColor"
+                            stroke-width="2"
+
+                            opacity="0.25"
+                        />
+
+                        <path
+                            d="M21 12a9 9 0 0 0-9-9"
+
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                        />
+                    </svg>
+
+                    <span class="sr-only">
+                        Guardando preferencias...
+                    </span>
+                </span>
+            </button>
+        </div>
+
+    </section>
 </div>

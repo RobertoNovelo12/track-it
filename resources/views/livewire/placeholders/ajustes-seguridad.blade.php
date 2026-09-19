@@ -47,6 +47,7 @@
             overflow-hidden
         "
     >
+
         {{-- ========================================================
             CABECERA
         ======================================================== --}}
@@ -332,6 +333,470 @@
                 "
             ></div>
         </div>
+
+    </section>
+
+
+    {{-- ============================================================
+        SESIONES
+    ============================================================ --}}
+    <section
+        class="
+            mt-5
+
+            bg-[var(--theme-surface)]
+
+            border
+            border-[var(--theme-border)]
+
+            rounded-xl
+
+            overflow-hidden
+        "
+    >
+
+        {{-- ========================================================
+            CABECERA
+        ======================================================== --}}
+        <div
+            class="
+                px-4
+                sm:px-5
+                py-4
+
+                border-b
+                border-[var(--theme-border)]
+
+                flex
+                items-start
+                gap-3
+            "
+        >
+            {{-- Icono --}}
+            <div
+                class="
+                    w-9
+                    h-9
+                    shrink-0
+
+                    rounded-lg
+
+                    bg-[var(--theme-surface-soft)]
+                "
+            ></div>
+
+
+            {{-- Textos --}}
+            <div
+                class="
+                    min-w-0
+                    flex-1
+                "
+            >
+                <div
+                    class="
+                        h-4
+                        w-20
+
+                        rounded
+
+                        bg-[var(--theme-surface-soft)]
+                    "
+                ></div>
+
+
+                <div
+                    class="
+                        mt-2
+
+                        h-3
+                        w-80
+                        max-w-full
+
+                        rounded
+
+                        bg-[var(--theme-surface-soft)]
+                    "
+                ></div>
+            </div>
+        </div>
+
+
+        {{-- ========================================================
+            SESIONES ACTIVAS
+        ======================================================== --}}
+        <div
+            class="
+                px-4
+                sm:px-5
+                py-4
+
+                flex
+                flex-col
+
+                sm:flex-row
+                sm:items-center
+                sm:justify-between
+
+                gap-4
+            "
+        >
+            <div
+                class="
+                    min-w-0
+                    flex-1
+
+                    flex
+                    items-start
+                    gap-3
+                "
+            >
+                {{-- Icono --}}
+                <div
+                    class="
+                        w-9
+                        h-9
+                        shrink-0
+
+                        rounded-lg
+
+                        bg-[var(--theme-surface-soft)]
+                    "
+                ></div>
+
+
+                {{-- Textos --}}
+                <div
+                    class="
+                        min-w-0
+                        flex-1
+                    "
+                >
+                    <div
+                        class="
+                            h-4
+                            w-36
+
+                            rounded
+
+                            bg-[var(--theme-surface-soft)]
+                        "
+                    ></div>
+
+
+                    <div
+                        class="
+                            mt-2
+
+                            h-3
+                            w-80
+                            max-w-full
+
+                            rounded
+
+                            bg-[var(--theme-surface-soft)]
+                        "
+                    ></div>
+
+
+                    <div
+                        class="
+                            mt-2
+
+                            sm:hidden
+
+                            h-3
+                            w-44
+
+                            rounded
+
+                            bg-[var(--theme-surface-soft)]
+                        "
+                    ></div>
+                </div>
+            </div>
+
+
+            {{-- Botón --}}
+            <div
+                class="
+                    h-9
+                    w-full
+                    sm:w-40
+                    shrink-0
+
+                    rounded-md
+
+                    bg-[var(--theme-surface-soft)]
+
+                    border
+                    border-[var(--theme-border)]
+                "
+            ></div>
+        </div>
+
+    </section>
+
+
+    {{-- ============================================================
+        ALERTAS DE SEGURIDAD
+    ============================================================ --}}
+    <section
+        class="
+            mt-5
+
+            bg-[var(--theme-surface)]
+
+            border
+            border-[var(--theme-border)]
+
+            rounded-xl
+
+            overflow-hidden
+        "
+    >
+
+        {{-- ========================================================
+            CABECERA
+        ======================================================== --}}
+        <div
+            class="
+                px-4
+                sm:px-5
+                py-4
+
+                border-b
+                border-[var(--theme-border)]
+
+                flex
+                items-start
+                gap-3
+            "
+        >
+            {{-- Icono --}}
+            <div
+                class="
+                    w-9
+                    h-9
+                    shrink-0
+
+                    rounded-lg
+
+                    bg-[var(--theme-surface-soft)]
+                "
+            ></div>
+
+
+            {{-- Textos --}}
+            <div
+                class="
+                    min-w-0
+                    flex-1
+                "
+            >
+                <div
+                    class="
+                        h-4
+                        w-36
+
+                        rounded
+
+                        bg-[var(--theme-surface-soft)]
+                    "
+                ></div>
+
+
+                <div
+                    class="
+                        mt-2
+
+                        h-3
+                        w-96
+                        max-w-full
+
+                        rounded
+
+                        bg-[var(--theme-surface-soft)]
+                    "
+                ></div>
+            </div>
+        </div>
+
+
+        {{-- ========================================================
+            ALERTA DE INICIO DE SESIÓN
+        ======================================================== --}}
+        <div
+            class="
+                px-4
+                sm:px-5
+                py-4
+
+                flex
+                items-center
+                justify-between
+
+                gap-4
+            "
+        >
+            <div
+                class="
+                    min-w-0
+                    flex-1
+                "
+            >
+                <div
+                    class="
+                        h-4
+                        w-32
+
+                        rounded
+
+                        bg-[var(--theme-surface-soft)]
+                    "
+                ></div>
+
+
+                <div
+                    class="
+                        mt-2
+
+                        h-3
+                        w-72
+                        max-w-full
+
+                        rounded
+
+                        bg-[var(--theme-surface-soft)]
+                    "
+                ></div>
+            </div>
+
+
+            {{-- Switch --}}
+            <div
+                class="
+                    w-11
+                    h-6
+                    shrink-0
+
+                    rounded-full
+
+                    bg-[var(--theme-surface-soft)]
+                "
+            ></div>
+        </div>
+
+
+        {{-- Separador --}}
+        <div
+            class="
+                mx-4
+                sm:mx-5
+
+                border-t
+                border-[var(--theme-border)]
+            "
+        ></div>
+
+
+        {{-- ========================================================
+            ACTIVIDAD SOSPECHOSA
+        ======================================================== --}}
+        <div
+            class="
+                px-4
+                sm:px-5
+                py-4
+
+                flex
+                items-center
+                justify-between
+
+                gap-4
+            "
+        >
+            <div
+                class="
+                    min-w-0
+                    flex-1
+                "
+            >
+                <div
+                    class="
+                        h-4
+                        w-40
+
+                        rounded
+
+                        bg-[var(--theme-surface-soft)]
+                    "
+                ></div>
+
+
+                <div
+                    class="
+                        mt-2
+
+                        h-3
+                        w-80
+                        max-w-full
+
+                        rounded
+
+                        bg-[var(--theme-surface-soft)]
+                    "
+                ></div>
+            </div>
+
+
+            {{-- Switch --}}
+            <div
+                class="
+                    w-11
+                    h-6
+                    shrink-0
+
+                    rounded-full
+
+                    bg-[var(--theme-surface-soft)]
+                "
+            ></div>
+        </div>
+
+
+        {{-- ========================================================
+            PIE / GUARDAR CAMBIOS
+        ======================================================== --}}
+        <div
+            class="
+                px-4
+                sm:px-5
+                py-4
+
+                border-t
+                border-[var(--theme-border)]
+
+                flex
+                justify-end
+            "
+        >
+            <div
+                class="
+                    h-9
+                    w-full
+                    sm:w-40
+
+                    rounded-md
+
+                    bg-[var(--theme-surface-soft)]
+
+                    border
+                    border-[var(--theme-border)]
+                "
+            ></div>
+        </div>
+
     </section>
 
 </div>

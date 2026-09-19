@@ -800,13 +800,35 @@
             {{-- ========================================================
                 USUARIO / PERFIL
             ======================================================== --}}
-            <div class="flex shrink-0 items-center gap-2 sm:gap-3">
+            @php
+                $initialUnreadNotifications = auth()->check()
+                    ? \Illuminate\Support\Facades\DB::table('notificaciones')
+                        ->where('id_usuario', auth()->id())
+                        ->where('leida', false)
+                        ->count()
+                    : 0;
+            @endphp
+
+            <div
+                x-data="{
+                    unreadNotifications: {{ $initialUnreadNotifications }}
+                }"
+
+                @notifications-unread-updated.window="
+                    unreadNotifications = Number(
+                        $event.detail.count ?? 0
+                    )
+                "
+
+                class="flex shrink-0 items-center gap-2 sm:gap-3"
+            >
 
                 {{-- ====================================================
                     NOTIFICACIONES
                 ==================================================== --}}
                 <button
                     type="button"
+                    onclick="window.openNotificationsPanelFast()"
                     class="
                         relative
                         shrink-0
@@ -828,6 +850,7 @@
                         transition-colors
                     "
                     aria-label="Notificaciones"
+                    aria-haspopup="dialog"
                 >
                     <svg
                         class="w-5 h-5"
@@ -842,6 +865,9 @@
 
                     {{-- Punto de notificación --}}
                     <span
+                        x-show="unreadNotifications > 0"
+                        x-cloak
+
                         class="
                             absolute
                             top-1.5
@@ -853,6 +879,8 @@
                             bg-[var(--theme-danger)]
                             rounded-full
                         "
+
+                        aria-hidden="true"
                     ></span>
                 </button>
 
@@ -1225,6 +1253,10 @@
                             {{-- Notificaciones --}}
                             <button
                                 type="button"
+                                @click="
+                                    open = false;
+                                    window.openNotificationsPanelFast();
+                                "
                                 class="
                                     w-full
 
@@ -1262,12 +1294,17 @@
                                 </span>
 
                                 <span
+                                    x-show="unreadNotifications > 0"
+                                    x-cloak
+
                                     class="
                                         w-2
                                         h-2
                                         rounded-full
                                         bg-[var(--theme-danger)]
                                     "
+
+                                    aria-hidden="true"
                                 ></span>
                             </button>
 
@@ -1663,6 +1700,11 @@
             </div>
 
     </div>
+
+    {{-- ============================================================
+        PANEL GLOBAL DE NOTIFICACIONES
+    ============================================================ --}}
+    <livewire:notifications-panel />
 
     <script>
         function isMobileViewport() {
