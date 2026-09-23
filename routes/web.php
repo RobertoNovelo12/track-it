@@ -121,6 +121,66 @@ Route::middleware([
         fn () => view('asignaciones.index')
     )->name('asignaciones.index');
 
+/*
+|--------------------------------------------------------------------------
+| Catálogos base
+|--------------------------------------------------------------------------
+*/
+
+Route::get(
+    '/catalogos',
+    fn () => view('catalogos.index')
+)->name('catalogos.index');
+
+
+/*
+|--------------------------------------------------------------------------
+| Crear marca o modelo
+|--------------------------------------------------------------------------
+*/
+
+Route::get(
+    '/catalogos/crear',
+    fn () => view('catalogos.create')
+)->name('catalogos.create');
+
+
+/*
+|--------------------------------------------------------------------------
+| Editar marca o modelo
+|--------------------------------------------------------------------------
+*/
+
+Route::get(
+    '/catalogos/{tipo}/{registro}/editar',
+    function (
+        string $tipo,
+        int $registro
+    ) {
+        return view(
+            'catalogos.edit',
+            [
+                'tipo' =>
+                    $tipo,
+
+                'registroId' =>
+                    $registro,
+            ]
+        );
+    }
+)
+    ->whereIn(
+        'tipo',
+        [
+            'marca',
+            'modelo',
+        ]
+    )
+    ->whereNumber(
+        'registro'
+    )
+    ->name('catalogos.edit');
+    
     /*
     |--------------------------------------------------------------------------
     | Seguridad y roles
