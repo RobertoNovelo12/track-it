@@ -1,4 +1,6 @@
-<div class="animate-pulse">
+<div
+    class="animate-pulse"
+>
 
     {{-- ============================================================
         CABECERA
@@ -19,7 +21,7 @@
     >
         <div class="space-y-2">
 
-            {{-- Título --}}
+            {{-- TÍTULO --}}
             <div
                 class="
                     h-6
@@ -32,7 +34,7 @@
             ></div>
 
 
-            {{-- Breadcrumb --}}
+            {{-- BREADCRUMB --}}
             <div
                 class="
                     flex
@@ -99,7 +101,9 @@
         </div>
 
 
-        {{-- Acciones superiores --}}
+        {{-- ========================================================
+            ACCIONES SUPERIORES
+        ======================================================== --}}
         <div
             class="
                 flex
@@ -111,6 +115,7 @@
                 gap-2
             "
         >
+            {{-- VOLVER --}}
             <div
                 class="
                     h-10
@@ -126,6 +131,8 @@
                 "
             ></div>
 
+
+            {{-- ACTIVAR / DESACTIVAR --}}
             <div
                 class="
                     h-10
@@ -141,10 +148,19 @@
                 "
             ></div>
         </div>
+
     </div>
 
 
-    <div class="space-y-4 sm:space-y-6">
+    {{-- ============================================================
+        CONTENIDO
+    ============================================================ --}}
+    <div
+        class="
+            space-y-4
+            sm:space-y-6
+        "
+    >
 
         {{-- ========================================================
             INFORMACIÓN GENERAL
@@ -162,6 +178,7 @@
                 sm:p-6
             "
         >
+            {{-- ENCABEZADO DE SECCIÓN --}}
             <div
                 class="
                     flex
@@ -176,6 +193,7 @@
                     mb-5
                 "
             >
+                {{-- TÍTULO --}}
                 <div
                     class="
                         h-4
@@ -188,7 +206,7 @@
                 ></div>
 
 
-                {{-- Código interno / identificador --}}
+                {{-- CÓDIGO INTERNO / IDENTIFICADOR --}}
                 <div
                     class="
                         flex
@@ -218,9 +236,11 @@
                         "
                     ></div>
                 </div>
+
             </div>
 
 
+            {{-- CAMPOS --}}
             <div
                 class="
                     grid
@@ -236,10 +256,19 @@
 
                     <div class="min-w-0">
 
+                        {{-- LABEL --}}
                         <div
                             class="
                                 h-3
-                                {{ $i % 3 === 0 ? 'w-24' : ($i % 3 === 1 ? 'w-20' : 'w-28') }}
+
+                                {{ $i % 3 === 0
+                                    ? 'w-24'
+                                    : (
+                                        $i % 3 === 1
+                                            ? 'w-20'
+                                            : 'w-28'
+                                    )
+                                }}
 
                                 rounded
 
@@ -249,6 +278,8 @@
                             "
                         ></div>
 
+
+                        {{-- INPUT --}}
                         <div
                             class="
                                 h-[42px]
@@ -268,9 +299,15 @@
                 @endfor
 
 
-                {{-- Descripción --}}
-                <div class="min-w-0 xl:col-span-3">
-
+                {{-- ====================================================
+                    DESCRIPCIÓN
+                ==================================================== --}}
+                <div
+                    class="
+                        min-w-0
+                        xl:col-span-3
+                    "
+                >
                     <div
                         class="
                             h-3
@@ -299,7 +336,9 @@
                     ></div>
 
                 </div>
+
             </div>
+
         </section>
 
 
@@ -319,6 +358,7 @@
                 sm:p-6
             "
         >
+            {{-- TÍTULO --}}
             <div
                 class="
                     h-4
@@ -333,6 +373,7 @@
             ></div>
 
 
+            {{-- CAMPOS --}}
             <div
                 class="
                     grid
@@ -348,10 +389,15 @@
 
                     <div class="min-w-0">
 
+                        {{-- LABEL --}}
                         <div
                             class="
                                 h-3
-                                {{ $i % 2 === 0 ? 'w-28' : 'w-24' }}
+
+                                {{ $i % 2 === 0
+                                    ? 'w-28'
+                                    : 'w-24'
+                                }}
 
                                 rounded
 
@@ -361,6 +407,8 @@
                             "
                         ></div>
 
+
+                        {{-- INPUT --}}
                         <div
                             class="
                                 h-[42px]
@@ -380,7 +428,9 @@
                 @endfor
 
 
-                {{-- Comentarios --}}
+                {{-- ====================================================
+                    COMENTARIOS
+                ==================================================== --}}
                 <div
                     class="
                         min-w-0
@@ -417,7 +467,9 @@
                     ></div>
 
                 </div>
+
             </div>
+
         </section>
 
 
@@ -439,9 +491,11 @@
                 pb-2
             "
         >
+            {{-- CANCELAR --}}
             <div
                 class="
                     h-11
+
                     w-full
                     sm:w-24
 
@@ -454,9 +508,12 @@
                 "
             ></div>
 
+
+            {{-- GUARDAR CAMBIOS --}}
             <div
                 class="
                     h-11
+
                     w-full
                     sm:w-36
 
@@ -465,7 +522,9 @@
                     bg-[var(--theme-surface-soft)]
                 "
             ></div>
+
         </div>
+
     </div>
 
 </div>

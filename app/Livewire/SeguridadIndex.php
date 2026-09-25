@@ -2,8 +2,8 @@
 
 namespace App\Livewire;
 
-use Illuminate\Support\Facades\Log;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -262,111 +262,57 @@ class SeguridadIndex extends Component
 
     public function openOrganizationRequestModal(int $requestId): void
     {
-        Log::error('[DEBUG MODAL] 1. Método iniciado', [
-            'request_id' => $requestId,
-            'user_id' => auth()->id(),
-        ]);
+        $this->resetValidation();
 
-        try {
-            $this->resetValidation();
+        $solicitud = DB::table('solicitudes_cambio_organizacion as s')
+            ->join(
+                'usuarios as u',
+                'u.id_usuario',
+                '=',
+                's.id_usuario'
+            )
+            ->where('s.id_solicitud', $requestId)
+            ->where('s.estado', 'pendiente')
+            ->select([
+                's.id_solicitud',
+                's.campo',
+                's.valor_actual',
+                's.valor_solicitado',
+                's.motivo',
+                's.fecha_solicitud',
+                'u.id_usuario',
+                'u.nombres',
+                'u.apellido_paterno',
+                'u.apellido_materno',
+                'u.correo',
+            ])
+            ->first();
 
-            Log::error('[DEBUG MODAL] 2. Antes de consultar solicitud', [
-                'request_id' => $requestId,
-            ]);
-
-            $solicitud = DB::table('solicitudes_cambio_organizacion as s')
-                ->join(
-                    'usuarios as u',
-                    'u.id_usuario',
-                    '=',
-                    's.id_usuario'
-                )
-                ->where('s.id_solicitud', $requestId)
-                ->where('s.estado', 'pendiente')
-                ->select([
-                    's.id_solicitud',
-                    's.campo',
-                    's.valor_actual',
-                    's.valor_solicitado',
-                    's.motivo',
-                    's.fecha_solicitud',
-                    'u.id_usuario',
-                    'u.nombres',
-                    'u.apellido_paterno',
-                    'u.apellido_materno',
-                    'u.correo',
-                ])
-                ->first();
-
-            Log::error('[DEBUG MODAL] 3. Consulta terminada', [
-                'request_id' => $requestId,
-                'encontrada' => (bool) $solicitud,
-                'campo' => $solicitud?->campo,
-                'estado_buscado' => 'pendiente',
-            ]);
-
-            if (! $solicitud) {
-                Log::error('[DEBUG MODAL] 4. Solicitud no encontrada o no pendiente', [
-                    'request_id' => $requestId,
-                ]);
-
-                return;
-            }
-
-            $this->organizationRequestId = (int) $solicitud->id_solicitud;
-            $this->organizationRequestUserName = trim(
-                implode(' ', array_filter([
-                    $solicitud->nombres,
-                    $solicitud->apellido_paterno,
-                    $solicitud->apellido_materno,
-                ]))
-            );
-            $this->organizationRequestField = $solicitud->campo;
-            $this->organizationRequestFieldLabel =
-                $this->organizationFieldLabel($solicitud->campo);
-            $this->organizationRequestCurrentValue = $solicitud->valor_actual;
-            $this->organizationRequestRequestedValue = $solicitud->valor_solicitado;
-            $this->organizationRequestReason = $solicitud->motivo;
-
-            Log::error('[DEBUG MODAL] 5. Datos básicos cargados', [
-                'organizationRequestId' => $this->organizationRequestId,
-                'organizationRequestField' => $this->organizationRequestField,
-                'organizationRequestUserName' => $this->organizationRequestUserName,
-            ]);
-
-            Log::error('[DEBUG MODAL] 6. Antes de resolver catálogo', [
-                'campo' => $solicitud->campo,
-                'valor_solicitado' => $solicitud->valor_solicitado,
-            ]);
-
-            $this->organizationRequestCatalogId =
-                $this->resolveOrganizationCatalogId(
-                    $solicitud->campo,
-                    $solicitud->valor_solicitado
-                );
-
-            Log::error('[DEBUG MODAL] 7. Catálogo resuelto', [
-                'catalog_id' => $this->organizationRequestCatalogId,
-            ]);
-
-            $this->organizationRequestReviewComment = '';
-            $this->organizationRequestModalOpen = true;
-
-            Log::error('[DEBUG MODAL] 8. Modal marcada como abierta', [
-                'organizationRequestModalOpen' => $this->organizationRequestModalOpen,
-                'organizationRequestId' => $this->organizationRequestId,
-            ]);
-        } catch (\Throwable $e) {
-            Log::error('[DEBUG MODAL] EXCEPCIÓN AL ABRIR', [
-                'request_id' => $requestId,
-                'exception' => get_class($e),
-                'message' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-            ]);
-
-            throw $e;
+        if (! $solicitud) {
+            return;
         }
+
+        $this->organizationRequestId = (int) $solicitud->id_solicitud;
+        $this->organizationRequestUserName = trim(
+            implode(' ', array_filter([
+                $solicitud->nombres,
+                $solicitud->apellido_paterno,
+                $solicitud->apellido_materno,
+            ]))
+        );
+        $this->organizationRequestField = $solicitud->campo;
+        $this->organizationRequestFieldLabel =
+            $this->organizationFieldLabel($solicitud->campo);
+        $this->organizationRequestCurrentValue = $solicitud->valor_actual;
+        $this->organizationRequestRequestedValue = $solicitud->valor_solicitado;
+        $this->organizationRequestReason = $solicitud->motivo;
+        $this->organizationRequestCatalogId =
+            $this->resolveOrganizationCatalogId(
+                $solicitud->campo,
+                $solicitud->valor_solicitado
+            );
+        $this->organizationRequestReviewComment = '';
+        $this->organizationRequestModalOpen = true;
     }
 
     public function closeOrganizationRequestModal(): void
@@ -728,9 +674,16 @@ class SeguridadIndex extends Component
     {
         /*
         |--------------------------------------------------------------------------
-        | Indicadores
+        | Indicadores + alertas basadas en usuarios
         |--------------------------------------------------------------------------
+        |
+        | Antes se consultaba usuarios tres veces: indicadores, usuarios sin rol
+        | e inactividad de 90 días. Ahora los tres cálculos salen de una sola
+        | consulta agregada.
+        |
         */
+
+        $limiteInactividad = now()->subDays(90);
 
         $statsRow = DB::table('usuarios as u')
             ->join(
@@ -739,7 +692,8 @@ class SeguridadIndex extends Component
                 '=',
                 'u.id_estado_usuario'
             )
-            ->selectRaw("
+            ->selectRaw(
+                "
                 COUNT(*) AS total,
 
                 COUNT(*) FILTER (
@@ -757,12 +711,137 @@ class SeguridadIndex extends Component
                 COUNT(*) FILTER (
                     WHERE DATE_TRUNC('month', u.fecha_registro)
                         = DATE_TRUNC('month', CURRENT_DATE)
-                ) AS registrados_mes
-            ")
+                ) AS registrados_mes,
+
+                COUNT(*) FILTER (
+                    WHERE u.id_rol IS NULL
+                    AND eu.clave IN ('PENDIENTE', 'ACTIVO')
+                ) AS usuarios_sin_rol,
+
+                COUNT(*) FILTER (
+                    WHERE eu.clave = 'ACTIVO'
+                    AND COALESCE(
+                        u.ultimo_acceso,
+                        u.fecha_registro
+                    ) < ?
+                ) AS usuarios_inactivos_90
+                ",
+                [$limiteInactividad]
+            )
             ->first();
 
-        $rolesConfigurados = DB::table('roles')
-            ->where('activo', true)
+        /*
+        |--------------------------------------------------------------------------
+        | Catálogos de apoyo
+        |--------------------------------------------------------------------------
+        |
+        | Estos catálogos cambian con poca frecuencia, pero antes se consultaban
+        | de nuevo en cada render de Livewire. Se mantienen 30 segundos en caché
+        | para evitar cuatro consultas repetidas durante búsqueda/paginación.
+        |
+        */
+
+        $catalogos = Cache::remember(
+            'seguridad.catalogos-activos.v2',
+            now()->addSeconds(30),
+            function (): array {
+                /*
+                 * IMPORTANTE:
+                 * Guardamos únicamente arrays escalares en caché.
+                 *
+                 * No almacenamos instancias de Collection porque algunos
+                 * drivers de caché serializan el objeto y pueden devolver
+                 * __PHP_Incomplete_Class durante peticiones Livewire.
+                 */
+                $roles = DB::table('roles as r')
+                    ->where('r.activo', true)
+                    ->orderBy('r.nombre')
+                    ->select([
+                        'r.id_rol',
+                        'r.nombre',
+                        'r.descripcion',
+                    ])
+                    ->selectRaw(
+                        "
+                        CASE
+                            WHEN NOT EXISTS (
+                                SELECT 1
+                                FROM roles_permisos AS rp
+                                WHERE rp.id_rol = r.id_rol
+                            ) THEN 1
+                            ELSE 0
+                        END AS sin_permisos
+                        "
+                    )
+                    ->get()
+                    ->map(fn ($row): array => (array) $row)
+                    ->all();
+
+                $areas = DB::table('areas')
+                    ->where('activo', true)
+                    ->orderBy('nombre')
+                    ->get([
+                        'id_area',
+                        'nombre',
+                    ])
+                    ->map(fn ($row): array => (array) $row)
+                    ->all();
+
+                $departamentos = DB::table('departamentos')
+                    ->where('activo', true)
+                    ->orderBy('nombre')
+                    ->get([
+                        'id_departamento',
+                        'id_area',
+                        'nombre',
+                    ])
+                    ->map(fn ($row): array => (array) $row)
+                    ->all();
+
+                $estados = DB::table('estados_usuario')
+                    ->where('activo', true)
+                    ->orderBy('orden')
+                    ->orderBy('nombre')
+                    ->get([
+                        'id_estado_usuario',
+                        'clave',
+                        'nombre',
+                    ])
+                    ->map(fn ($row): array => (array) $row)
+                    ->all();
+
+                return [
+                    'roles' => $roles,
+                    'areas' => $areas,
+                    'departamentos' => $departamentos,
+                    'estados' => $estados,
+                ];
+            }
+        );
+
+        /*
+         * La vista ya trabaja con objetos/Collections.
+         * Los reconstruimos después de leer el caché.
+         */
+        $roles = collect($catalogos['roles'] ?? [])
+            ->map(fn (array $row): object => (object) $row);
+
+        $areas = collect($catalogos['areas'] ?? [])
+            ->map(fn (array $row): object => (object) $row);
+
+        $departamentos = collect($catalogos['departamentos'] ?? [])
+            ->map(fn (array $row): object => (object) $row);
+
+        $estados = collect($catalogos['estados'] ?? [])
+            ->map(fn (array $row): object => (object) $row);
+
+        $rolesConfigurados = $roles->count();
+
+        $rolesSinPermisos = $roles
+            ->filter(
+                fn ($rol): bool =>
+                    (int) ($rol->sin_permisos ?? 0) === 1
+            )
             ->count();
 
         $stats = [
@@ -774,47 +853,11 @@ class SeguridadIndex extends Component
             'roles' => (int) $rolesConfigurados,
         ];
 
-        /*
-        |--------------------------------------------------------------------------
-        | Catálogos disponibles
-        |--------------------------------------------------------------------------
-        */
+        $usuariosSinRol =
+            (int) ($statsRow->usuarios_sin_rol ?? 0);
 
-        $roles = DB::table('roles')
-            ->where('activo', true)
-            ->orderBy('nombre')
-            ->get([
-                'id_rol',
-                'nombre',
-                'descripcion',
-            ]);
-
-        $areas = DB::table('areas')
-            ->where('activo', true)
-            ->orderBy('nombre')
-            ->get([
-                'id_area',
-                'nombre',
-            ]);
-
-        $departamentos = DB::table('departamentos')
-            ->where('activo', true)
-            ->orderBy('nombre')
-            ->get([
-                'id_departamento',
-                'id_area',
-                'nombre',
-            ]);
-
-        $estados = DB::table('estados_usuario')
-            ->where('activo', true)
-            ->orderBy('orden')
-            ->orderBy('nombre')
-            ->get([
-                'id_estado_usuario',
-                'clave',
-                'nombre',
-            ]);
+        $usuariosInactivos90 =
+            (int) ($statsRow->usuarios_inactivos_90 ?? 0);
 
         /*
         |--------------------------------------------------------------------------
@@ -934,7 +977,8 @@ class SeguridadIndex extends Component
         }
 
         $usuariosQuery
-            ->orderByRaw("
+            ->orderByRaw(
+                "
                 CASE eu.clave
                     WHEN 'PENDIENTE' THEN 0
                     WHEN 'ACTIVO' THEN 1
@@ -942,7 +986,8 @@ class SeguridadIndex extends Component
                     WHEN 'BAJA' THEN 3
                     ELSE 4
                 END
-            ")
+                "
+            )
             ->orderByDesc('u.fecha_registro');
 
         $usuarios = $usuariosQuery->paginate(
@@ -976,7 +1021,8 @@ class SeguridadIndex extends Component
                 'u.username',
                 'u.correo',
             ])
-            ->selectRaw("
+            ->selectRaw(
+                "
                 TRIM(
                     CONCAT_WS(
                         ' ',
@@ -985,11 +1031,13 @@ class SeguridadIndex extends Component
                         u.apellido_materno
                     )
                 ) AS usuario_nombre
-            ")
+                "
+            )
             ->orderBy('s.fecha_solicitud')
             ->get();
 
-        $solicitudesCambioPendientes = $solicitudesCambio->count();
+        $solicitudesCambioPendientes =
+            $solicitudesCambio->count();
 
         /*
         |--------------------------------------------------------------------------
@@ -1013,7 +1061,8 @@ class SeguridadIndex extends Component
                 'u.id_usuario',
                 'u.username',
             ])
-            ->selectRaw("
+            ->selectRaw(
+                "
                 TRIM(
                     CONCAT_WS(
                         ' ',
@@ -1021,7 +1070,8 @@ class SeguridadIndex extends Component
                         u.apellido_paterno
                     )
                 ) AS usuario_nombre
-            ")
+                "
+            )
             ->orderByDesc('b.fecha_hora')
             ->limit(8)
             ->get();
@@ -1030,92 +1080,77 @@ class SeguridadIndex extends Component
         |--------------------------------------------------------------------------
         | Resumen de los últimos 7 días
         |--------------------------------------------------------------------------
+        |
+        | El resumen no necesita recalcularse en cada pulsación de búsqueda.
+        | Se conserva brevemente en caché para reducir dos agregaciones por render.
+        |
         */
 
-        $inicioSemana = now()
-            ->startOfDay()
-            ->subDays(6);
-
-        $actividadRaw = DB::table('bitacora_auditoria')
-            ->where('fecha_hora', '>=', $inicioSemana)
-            ->selectRaw(
-                'DATE(fecha_hora) AS fecha, COUNT(*) AS total'
-            )
-            ->groupByRaw('DATE(fecha_hora)')
-            ->pluck('total', 'fecha');
-
-        $registrosRaw = DB::table('usuarios')
-            ->where('fecha_registro', '>=', $inicioSemana)
-            ->selectRaw(
-                'DATE(fecha_registro) AS fecha, COUNT(*) AS total'
-            )
-            ->groupByRaw('DATE(fecha_registro)')
-            ->pluck('total', 'fecha');
-
-        $resumenSemanal = collect(range(6, 0))
-            ->map(function (int $dias) use ($actividadRaw, $registrosRaw) {
-                $fecha = now()
+        $resumenSemanalData = Cache::remember(
+            'seguridad.resumen-semanal.v2.' . now()->toDateString(),
+            now()->addSeconds(30),
+            function (): array {
+                $inicioSemana = now()
                     ->startOfDay()
-                    ->subDays($dias);
+                    ->subDays(6);
 
-                $key = $fecha->toDateString();
+                /*
+                 * También convertimos los pluck() a arrays antes de que
+                 * cualquier dato sea guardado en caché.
+                 */
+                $actividadRaw = DB::table('bitacora_auditoria')
+                    ->where('fecha_hora', '>=', $inicioSemana)
+                    ->selectRaw(
+                        'DATE(fecha_hora) AS fecha, COUNT(*) AS total'
+                    )
+                    ->groupByRaw('DATE(fecha_hora)')
+                    ->pluck('total', 'fecha')
+                    ->all();
 
-                return [
-                    'fecha' => $key,
-                    'label' => $fecha->format('d/m'),
-                    'actividad' => (int) ($actividadRaw[$key] ?? 0),
-                    'registros' => (int) ($registrosRaw[$key] ?? 0),
-                ];
-            });
+                $registrosRaw = DB::table('usuarios')
+                    ->where('fecha_registro', '>=', $inicioSemana)
+                    ->selectRaw(
+                        'DATE(fecha_registro) AS fecha, COUNT(*) AS total'
+                    )
+                    ->groupByRaw('DATE(fecha_registro)')
+                    ->pluck('total', 'fecha')
+                    ->all();
+
+                return collect(range(6, 0))
+                    ->map(function (int $dias) use (
+                        $actividadRaw,
+                        $registrosRaw
+                    ) {
+                        $fecha = now()
+                            ->startOfDay()
+                            ->subDays($dias);
+
+                        $key = $fecha->toDateString();
+
+                        return [
+                            'fecha' => $key,
+                            'label' => $fecha->format('d/m'),
+                            'actividad' =>
+                                (int) ($actividadRaw[$key] ?? 0),
+                            'registros' =>
+                                (int) ($registrosRaw[$key] ?? 0),
+                        ];
+                    })
+                    ->all();
+            }
+        );
+
+        /*
+         * La vista usa ->max(), por eso reconstruimos la Collection
+         * únicamente después de recuperar los datos escalares del caché.
+         */
+        $resumenSemanal = collect($resumenSemanalData);
 
         /*
         |--------------------------------------------------------------------------
         | Alertas de seguridad
         |--------------------------------------------------------------------------
         */
-
-        $usuariosSinRol = DB::table('usuarios as u')
-            ->join(
-                'estados_usuario as eu',
-                'eu.id_estado_usuario',
-                '=',
-                'u.id_estado_usuario'
-            )
-            ->whereNull('u.id_rol')
-            ->whereIn('eu.clave', [
-                'PENDIENTE',
-                'ACTIVO',
-            ])
-            ->count();
-
-        $usuariosInactivos90 = DB::table('usuarios as u')
-            ->join(
-                'estados_usuario as eu',
-                'eu.id_estado_usuario',
-                '=',
-                'u.id_estado_usuario'
-            )
-            ->where('eu.clave', 'ACTIVO')
-            ->whereRaw(
-                "
-                COALESCE(
-                    u.ultimo_acceso,
-                    u.fecha_registro
-                ) < ?
-                ",
-                [now()->subDays(90)]
-            )
-            ->count();
-
-        $rolesSinPermisos = DB::table('roles as r')
-            ->where('r.activo', true)
-            ->whereNotExists(function ($query) {
-                $query
-                    ->selectRaw('1')
-                    ->from('roles_permisos as rp')
-                    ->whereColumn('rp.id_rol', 'r.id_rol');
-            })
-            ->count();
 
         $alertas = collect();
 

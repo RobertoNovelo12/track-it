@@ -184,16 +184,20 @@
                 Gestión de marcas y modelos
             </h1>
 
-            <p
-                class="
+                <p
+                    class="
                     mt-1
-
                     text-xs
                     text-[var(--theme-text-muted)]
-                "
-            >
-                Administra las marcas y modelos disponibles para el inventario tecnológico.
-            </p>
+                ">
+                    Inicio
+
+                    <span class="mx-1">
+                        &gt;
+                    </span>
+
+                    Catalogo
+                </p>
 
         </div>
 
@@ -334,88 +338,60 @@
 
 
             {{-- ESTADO --}}
-            <div>
-                <select
-                    wire:model.live="estado"
+            <div class="min-w-0">
+                <x-searchable-select
+                    wire-model="estado"
 
-                    class="
-                        w-full
-                        h-10
+                    :options="[
+                        [
+                            'value' => 'todos',
+                            'label' => 'Todos los estados',
+                        ],
+                        [
+                            'value' => 'activos',
+                            'label' => 'Activos',
+                        ],
+                        [
+                            'value' => 'inactivos',
+                            'label' => 'Inactivos',
+                        ],
+                    ]"
 
-                        px-3
+                    placeholder="Buscar estado..."
 
-                        rounded-md
+                    :show-clear="false"
 
-                        border
-                        border-[var(--theme-border-strong)]
-
-                        bg-[var(--theme-surface)]
-
-                        text-xs
-                        text-[var(--theme-text)]
-
-                        focus:outline-none
-                        focus:border-[var(--theme-primary)]
-                        focus:ring-2
-                        focus:ring-[var(--theme-primary-soft)]
-                    "
-                >
-                    <option value="todos">
-                        Todos los estados
-                    </option>
-
-                    <option value="activos">
-                        Activos
-                    </option>
-
-                    <option value="inactivos">
-                        Inactivos
-                    </option>
-                </select>
+                    compact
+                />
             </div>
 
 
             {{-- TIPO --}}
-            <div>
-                <select
-                    wire:model.live="tipo"
+            <div class="min-w-0">
+                <x-searchable-select
+                    wire-model="tipo"
 
-                    class="
-                        w-full
-                        h-10
+                    :options="collect([
+                        [
+                            'value' => 'todos',
+                            'label' => 'Todos los tipos',
+                        ],
+                    ])
+                        ->concat(
+                            $tiposEquipo->map(fn ($tipoEquipo) => [
+                                'value' => (string) $tipoEquipo->id_tipo_equipo,
+                                'label' => $tipoEquipo->nombre,
+                            ])
+                        )
+                        ->values()
+                        ->all()"
 
-                        px-3
+                    placeholder="Buscar tipo..."
 
-                        rounded-md
+                    :show-clear="false"
 
-                        border
-                        border-[var(--theme-border-strong)]
-
-                        bg-[var(--theme-surface)]
-
-                        text-xs
-                        text-[var(--theme-text)]
-
-                        focus:outline-none
-                        focus:border-[var(--theme-primary)]
-                        focus:ring-2
-                        focus:ring-[var(--theme-primary-soft)]
-                    "
-                >
-                    <option value="todos">
-                        Todos los tipos
-                    </option>
-
-                    @foreach ($tiposEquipo as $tipoEquipo)
-
-                        <option
-                            value="{{ $tipoEquipo->id_tipo_equipo }}"
-                        >
-                            {{ $tipoEquipo->nombre }}
-                        </option>
-
-                    @endforeach
-                </select>
+                    compact
+                />
             </div>
         </div>
     </section>
@@ -801,26 +777,23 @@
                         Mostrar
                     </span>
 
-                    <select
-                        wire:model.live="perPageMarcas"
-                        class="
-                            text-xs
-                            border border-[var(--theme-border-strong)]
-                            rounded-md
-                            px-2 py-1.5
-                            bg-[var(--theme-surface)]
-                            focus:ring-1
-                            focus:ring-[var(--theme-primary)]
-                        "
-                    >
-                        @foreach ([10, 25, 50, 100] as $option)
+                    <div class="w-20 shrink-0">
+                        <x-searchable-select
+                            wire-model="perPageMarcas"
 
-                            <option value="{{ $option }}">
-                                {{ $option }}
-                            </option>
+                            :options="collect([10, 25, 50, 100])
+                                ->map(fn ($option) => [
+                                    'value' => (string) $option,
+                                    'label' => (string) $option,
+                                ])
+                                ->values()
+                                ->all()"
 
-                        @endforeach
-                    </select>
+                            :show-clear="false"
+
+                            compact
+                        />
+                    </div>
 
                     <span class="text-xs text-[var(--theme-text-muted)]">
                         Por página
@@ -829,27 +802,26 @@
                 </div>
 
 
-                <select
-                    wire:model.live="sortMarcas"
-                    class="
-                        text-xs
-                        border border-[var(--theme-border-strong)]
-                        rounded-md
-                        px-2 py-1.5
-                        bg-[var(--theme-surface)]
-                        uppercase
-                        focus:ring-1
-                        focus:ring-[var(--theme-primary)]
-                    "
-                >
-                    <option value="asc">
-                        ASC
-                    </option>
+                <div class="w-24 shrink-0">
+                    <x-searchable-select
+                        wire-model="sortMarcas"
 
-                    <option value="desc">
-                        DESC
-                    </option>
-                </select>
+                        :options="[
+                            [
+                                'value' => 'asc',
+                                'label' => 'ASC',
+                            ],
+                            [
+                                'value' => 'desc',
+                                'label' => 'DESC',
+                            ],
+                        ]"
+
+                        :show-clear="false"
+
+                        compact
+                    />
+                </div>
 
             </div>
         </div>
@@ -1758,26 +1730,23 @@
                         Mostrar
                     </span>
 
-                    <select
-                        wire:model.live="perPageModelos"
-                        class="
-                            text-xs
-                            border border-[var(--theme-border-strong)]
-                            rounded-md
-                            px-2 py-1.5
-                            bg-[var(--theme-surface)]
-                            focus:ring-1
-                            focus:ring-[var(--theme-primary)]
-                        "
-                    >
-                        @foreach ([10, 25, 50, 100] as $option)
+                    <div class="w-20 shrink-0">
+                        <x-searchable-select
+                            wire-model="perPageModelos"
 
-                            <option value="{{ $option }}">
-                                {{ $option }}
-                            </option>
+                            :options="collect([10, 25, 50, 100])
+                                ->map(fn ($option) => [
+                                    'value' => (string) $option,
+                                    'label' => (string) $option,
+                                ])
+                                ->values()
+                                ->all()"
 
-                        @endforeach
-                    </select>
+                            :show-clear="false"
+
+                            compact
+                        />
+                    </div>
 
                     <span class="text-xs text-[var(--theme-text-muted)]">
                         Por página
@@ -1786,27 +1755,26 @@
                 </div>
 
 
-                <select
-                    wire:model.live="sortModelos"
-                    class="
-                        text-xs
-                        border border-[var(--theme-border-strong)]
-                        rounded-md
-                        px-2 py-1.5
-                        bg-[var(--theme-surface)]
-                        uppercase
-                        focus:ring-1
-                        focus:ring-[var(--theme-primary)]
-                    "
-                >
-                    <option value="asc">
-                        ASC
-                    </option>
+                <div class="w-24 shrink-0">
+                    <x-searchable-select
+                        wire-model="sortModelos"
 
-                    <option value="desc">
-                        DESC
-                    </option>
-                </select>
+                        :options="[
+                            [
+                                'value' => 'asc',
+                                'label' => 'ASC',
+                            ],
+                            [
+                                'value' => 'desc',
+                                'label' => 'DESC',
+                            ],
+                        ]"
+
+                        :show-clear="false"
+
+                        compact
+                    />
+                </div>
 
             </div>
         </div>

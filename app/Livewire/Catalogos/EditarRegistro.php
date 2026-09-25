@@ -46,6 +46,17 @@ class EditarRegistro extends Component
 
     /*
     |--------------------------------------------------------------------------
+    | Estado visual de guardado
+    |--------------------------------------------------------------------------
+    */
+
+    public ?string $successMessage = null;
+
+    public int $successVersion = 0;
+
+
+    /*
+    |--------------------------------------------------------------------------
     | Campos exclusivos de marca
     |--------------------------------------------------------------------------
     */
@@ -489,11 +500,10 @@ class EditarRegistro extends Component
         $this->resetValidation();
 
 
-        $this->dispatch(
-            'catalog-record-updated',
-            message:
-                'La marca se actualizó correctamente.'
-        );
+        $this->successMessage =
+            'La marca se actualizó correctamente.';
+
+        $this->successVersion++;
     }
 
 
@@ -815,12 +825,10 @@ class EditarRegistro extends Component
 
         $this->resetValidation();
 
+        $this->successMessage =
+            'El modelo se actualizó correctamente.';
 
-        $this->dispatch(
-            'catalog-record-updated',
-            message:
-                'El modelo se actualizó correctamente.'
-        );
+        $this->successVersion++;
     }
 
 

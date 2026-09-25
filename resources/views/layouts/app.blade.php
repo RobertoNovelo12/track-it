@@ -116,6 +116,55 @@
             applyTheme();
 
 
+/*
+|--------------------------------------------------------------------------
+| Antes de intercambiar la página
+|--------------------------------------------------------------------------
+|
+| Aplicamos el tema inmediatamente después del swap del HTML,
+| pero antes de que se procesen los scripts de la nueva página.
+| Esto evita flashes de tema claro y parpadeos del logo.
+|
+*/
+document.addEventListener(
+    'livewire:navigating',
+    (event) => {
+        event.detail.onSwap(() => {
+            applyTheme(
+                getThemePreference()
+            );
+        });
+    }
+);
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Después de terminar la navegación
+    |--------------------------------------------------------------------------
+    */
+    document.addEventListener(
+        'livewire:navigated',
+        () => {
+            const preference =
+                getThemePreference();
+
+            applyTheme(preference);
+
+            window.dispatchEvent(
+                new CustomEvent(
+                    'trackit-theme-changed',
+                    {
+                        detail: {
+                            preference: preference
+                        }
+                    }
+                )
+            );
+        }
+    );
+
+
             /*
             |--------------------------------------------------------------------------
             | Si está en "Sistema", reaccionar al cambio del SO
@@ -367,36 +416,39 @@
                     </svg>
                 </button>
 
-                {{-- Logo: reemplazar con la imagen del logo --}}
-                <a
-                    id="sidebarLogoWrap"
-                    href="{{ route('dashboard') }}"
-                    class="flex items-center min-w-0"
-                >
-                    {{--
-                        Coloca el archivo logo-grand-palladium.png dentro de:
-                        public/images/logo-grand-palladium.png
-                    --}}
-                    <img
-                        id="sidebarLogo"
-                        src="{{ asset('images/logo-grand-palladium.png') }}"
-                        alt="Grand Palladium Hotels & Resorts"
-                        class="
-                            w-36
-                            h-auto
-                            max-h-20
-
-                            md:w-auto
-                            md:h-32
-                            md:max-h-none
-
-                            object-contain
-
-                            transition-all
-                            duration-300
-                        "
+                {{-- Logo persistente entre navegaciones Livewire --}}
+                @persist('sidebar-logo')
+                    <a
+                        id="sidebarLogoWrap"
+                        href="{{ route('dashboard') }}"
+                        wire:navigate
+                        class="flex items-center min-w-0"
                     >
-                </a>
+                        {{--
+                            Coloca el archivo logo-grand-palladium.png dentro de:
+                            public/images/logo-grand-palladium.png
+                        --}}
+                        <img
+                            id="sidebarLogo"
+                            src="{{ asset('images/logo-grand-palladium.png') }}"
+                            alt="Grand Palladium Hotels & Resorts"
+                            class="
+                                w-36
+                                h-auto
+                                max-h-20
+
+                                md:w-auto
+                                md:h-32
+                                md:max-h-none
+
+                                object-contain
+
+                                transition-all
+                                duration-300
+                            "
+                        >
+                    </a>
+                @endpersist
 
             </div>
 
@@ -407,6 +459,7 @@
                 {{-- Vista general --}}
                 <a
                     href="{{ route('dashboard') }}"
+                    wire:navigate
                     class="
                         sidebar-nav-link
                         flex items-center gap-3 px-3 py-3 rounded-md
@@ -437,6 +490,7 @@
                 {{-- Equipos --}}
                 <a
                     href="{{ Route::has('equipos.index') ? route('equipos.index') : '#' }}"
+                    wire:navigate
                     class="
                         sidebar-nav-link
                         flex items-center gap-3 px-3 py-3 rounded-md
@@ -466,6 +520,7 @@
                 {{-- Asignaciones --}}
                 <a
                     href="{{ Route::has('asignaciones.index') ? route('asignaciones.index') : '#' }}"
+                    wire:navigate
                     class="
                         sidebar-nav-link
                         flex items-center gap-3 px-3 py-3 rounded-md
@@ -497,6 +552,7 @@
                 {{-- Mantenimientos --}}
                 <a
                     href="{{ Route::has('mantenimientos.index') ? route('mantenimientos.index') : '#' }}"
+                    wire:navigate
                     class="
                         sidebar-nav-link
                         flex items-center gap-3 px-3 py-3 rounded-md
@@ -525,6 +581,7 @@
                 {{-- Reportes --}}
                 <a
                     href="{{ Route::has('reportes.index') ? route('reportes.index') : '#' }}"
+                    wire:navigate
                     class="
                         sidebar-nav-link
                         flex items-center gap-3 px-3 py-3 rounded-md
@@ -556,6 +613,7 @@
                 {{-- Seguridad --}}
                 <a
                     href="{{ Route::has('usuarios.index') ? route('usuarios.index') : '#' }}"
+                    wire:navigate
                     class="
                         sidebar-nav-link
                         flex items-center gap-3 px-3 py-3 rounded-md
@@ -586,6 +644,7 @@
                 {{-- Catálogos --}}
                 <a
                     href="{{ Route::has('catalogos.index') ? route('catalogos.index') : '#' }}"
+                    wire:navigate
                     class="
                         sidebar-nav-link
                         flex items-center gap-3 px-3 py-3 rounded-md
@@ -694,26 +753,28 @@
                         h-16
                         theme-bg
                         border-b border-[var(--theme-border)]
-                        flex
+
+                        grid
+                        grid-cols-[auto_minmax(0,1fr)_auto]
                         items-center
-                        justify-between
-                        gap-3
+
+                        gap-2
                         sm:gap-5
+
                         px-4
                         sm:px-6
+
                         sticky
                         top-0
                         z-30
                     "
                 >
 
-                <div class="flex items-center gap-3 flex-1 min-w-0">
-
                     {{-- Hamburguesa móvil: abre el drawer --}}
                     <button
                         type="button"
                         onclick="toggleSidebar()"
-                        class="md:hidden shrink-0 text-[var(--theme-text-muted)] hover:text-[var(--theme-primary)]"
+                        class="col-start-1 md:hidden shrink-0 text-[var(--theme-text-muted)] hover:text-[var(--theme-primary)]"
                         aria-label="Abrir menú"
                     >
                         <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -727,74 +788,149 @@
             {{-- ============================================================
                 BUSCADOR GLOBAL DE EQUIPOS
             ============================================================ --}}
-            <form
-                action="{{ route('equipos.search') }}"
-                method="GET"
-                class="
-                    relative
-                    block
-                    flex-1
-                    min-w-0
-                    max-w-96
-                "
-            >
+            @persist('global-equipment-search')
+                <form
+                    action="{{ route('equipos.search') }}"
+                    method="GET"
 
-                {{-- Lupa --}}
-                <svg
+                    x-data="{
+                        query: '',
+                        ready: false,
+
+                        init() {
+                            const serverQuery = @js(
+                                request()->routeIs('equipos.search')
+                                    ? (string) request('q', '')
+                                    : null
+                            );
+
+                            let savedQuery = '';
+
+                            try {
+                                savedQuery =
+                                    localStorage.getItem(
+                                        'trackit_global_equipment_search'
+                                    ) ?? '';
+                            } catch (error) {
+                                savedQuery = '';
+                            }
+
+                            if (serverQuery !== null) {
+                                this.query = serverQuery;
+                                this.persist();
+                            } else {
+                                this.query = savedQuery;
+                            }
+
+                            this.ready = true;
+                        },
+
+                        persist() {
+                            const value = String(this.query ?? '');
+
+                            try {
+                                if (value.trim() === '') {
+                                    localStorage.removeItem(
+                                        'trackit_global_equipment_search'
+                                    );
+
+                                    return;
+                                }
+
+                                localStorage.setItem(
+                                    'trackit_global_equipment_search',
+                                    value
+                                );
+                            } catch (error) {
+                                // El buscador sigue funcionando aunque localStorage no esté disponible.
+                            }
+                        },
+                    }"
+
+                    @submit="persist()"
+
                     class="
-                        absolute
-                        left-3
-                        top-1/2
-                        -translate-y-1/2
+                        relative
+                        block
 
-                        w-4
-                        h-4
+                        col-start-2
 
-                        text-[var(--theme-text-muted)]
-                        pointer-events-none
-                    "
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.5"
-                >
-                    <circle cx="11" cy="11" r="7"/>
-                    <path d="M20 20l-4-4"/>
-                </svg>
-
-
-                {{-- Campo --}}
-                <input
-                    type="search"
-                    name="q"
-                    value="{{ request()->routeIs('equipos.search') ? request('q') : '' }}"
-                    placeholder="Buscar equipos..."
-                    autocomplete="off"
-                    class="
+                        min-w-0
                         w-full
+                        max-w-none
 
-                        bg-[var(--theme-surface-soft)]
-
-                        rounded-full
-                        border-0
-
-                        pl-10
-                        pr-4
-                        py-2
-
-                        text-xs
-                        text-[var(--theme-text)]
-
-                        placeholder:text-[var(--theme-text-muted)]
-
-                        focus:ring-1
-                        focus:ring-[var(--theme-primary)]
+                        md:w-96
+                        md:justify-self-start
                     "
                 >
 
-            </form>
+                    {{-- Lupa --}}
+                    <svg
+                        class="
+                            absolute
+                            left-3
+                            top-1/2
+                            -translate-y-1/2
 
-                </div>
+                            w-4
+                            h-4
+
+                            text-[var(--theme-text-muted)]
+                            pointer-events-none
+                        "
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                        aria-hidden="true"
+                    >
+                        <circle cx="11" cy="11" r="7"/>
+                        <path d="M20 20l-4-4"/>
+                    </svg>
+
+
+                    {{-- Campo --}}
+                    <input
+                        type="search"
+                        name="q"
+
+                        x-model="query"
+                        @input="persist()"
+
+                        :placeholder="
+                            ready
+                                ? 'Buscar equipos...'
+                                : ''
+                        "
+
+                        autocomplete="off"
+
+                        class="
+                            block
+                            w-full
+                            min-w-0
+
+                            bg-[var(--theme-surface-soft)]
+
+                            rounded-full
+                            border-0
+
+                            pl-10
+                            pr-4
+                            py-2
+
+                            text-xs
+                            text-[var(--theme-text)]
+
+                            placeholder:text-[var(--theme-text-muted)]
+
+                            focus:ring-1
+                            focus:ring-[var(--theme-primary)]
+                        "
+                    >
+
+                </form>
+            @endpersist
 
 
             {{-- ========================================================
@@ -820,7 +956,7 @@
                     )
                 "
 
-                class="flex shrink-0 items-center gap-2 sm:gap-3"
+                class="col-start-3 flex shrink-0 items-center gap-2 sm:gap-3"
             >
 
                 {{-- ====================================================
@@ -1214,6 +1350,7 @@
                             {{-- Mi perfil --}}
                             <a
                                 href="{{ route('ajustes.index', ['section' => 'cuenta']) }}"
+                                wire:navigate
                                 class="
                                     w-full
 
@@ -1543,6 +1680,7 @@
                             {{-- Seguridad --}}
                             <a
                                 href="{{ route('ajustes.index', ['section' => 'seguridad']) }}"
+                                wire:navigate
                                 class="
                                     w-full
 

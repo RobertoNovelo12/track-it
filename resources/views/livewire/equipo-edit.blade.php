@@ -1,28 +1,4 @@
-<div
-    x-data="{
-        successVisible: false,
-        successMessage: '',
-        successTimer: null,
-
-        showSuccess(message) {
-            this.successMessage = message;
-            this.successVisible = true;
-
-            if (this.successTimer) {
-                clearTimeout(this.successTimer);
-            }
-
-            this.successTimer = setTimeout(() => {
-                this.successVisible = false;
-            }, 2800);
-        }
-    }"
-    @equipo-actualizado.window="
-        showSuccess(
-            $event.detail.message ?? 'Los cambios se guardaron correctamente.'
-        )
-    "
->
+<div>
 
     @php
         $toOptions = fn ($items, string $valueKey, string $labelKey = 'nombre') =>
@@ -40,6 +16,33 @@
         MENSAJE DE ÉXITO
     ============================================================ --}}
     <div
+        x-data="{
+            successVisible: false,
+            successMessage: '',
+            successTimer: null,
+
+            showSuccess(message) {
+                this.successMessage =
+                    message ?? 'Los cambios se guardaron correctamente.';
+
+                this.successVisible = true;
+
+                if (this.successTimer) {
+                    clearTimeout(this.successTimer);
+                }
+
+                this.successTimer = setTimeout(() => {
+                    this.successVisible = false;
+                }, 2800);
+            }
+        }"
+
+        @equipo-actualizado.window="
+            showSuccess(
+                $event.detail.message ?? 'Los cambios se guardaron correctamente.'
+            )
+        "
+
         x-show="successVisible"
         x-cloak
         x-transition:enter="transition ease-out duration-200"
@@ -1395,10 +1398,8 @@
             >
 
                 <a
-                    href="{{ route(
-                        'equipos.show',
-                        $equipoId
-                    ) }}"
+                    href="{{ route('equipos.index') }}"
+
                     class="
                         w-full
                         sm:w-auto

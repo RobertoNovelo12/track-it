@@ -1,3 +1,4 @@
+<div>
 <div
     x-data="{
         successVisible: false,
@@ -1334,4 +1335,5 @@
             </div>
         </div>
     </form>
+</div>
 </div>

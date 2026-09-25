@@ -1,158 +1,160 @@
-<div
-    x-data="{
-        successVisible: false,
-        successMessage: '',
-        successTimer: null,
-
-        showSuccess(message) {
-            this.successMessage = message ?? 'Los cambios se guardaron correctamente.';
-            this.successVisible = true;
-
-            if (this.successTimer) {
-                clearTimeout(this.successTimer);
-            }
-
-            this.successTimer = setTimeout(() => {
-                this.successVisible = false;
-            }, 2800);
-        }
-    }"
-
-    @catalog-record-updated.window="
-        showSuccess(
-            $event.detail.message ?? 'Los cambios se guardaron correctamente.'
-        )
-    "
-
-    @catalog-record-status-updated.window="
-        showSuccess(
-            $event.detail.message ?? 'El estado se actualizó correctamente.'
-        )
-    "
->
+<div>
 
     {{-- ============================================================
         MENSAJE DE ÉXITO
     ============================================================ --}}
-    <div
-        x-show="successVisible"
-        x-cloak
+    @if ($successMessage)
 
-        x-transition:enter="transition ease-out duration-200"
-        x-transition:enter-start="opacity-0 translate-y-2"
-        x-transition:enter-end="opacity-100 translate-y-0"
-
-        x-transition:leave="transition ease-in duration-150"
-        x-transition:leave-start="opacity-100 translate-y-0"
-        x-transition:leave-end="opacity-0 translate-y-2"
-
-        class="
-            fixed
-            z-[150]
-            top-20
-            left-4
-            right-4
-
-            sm:left-auto
-            sm:right-6
-            sm:w-96
-
-            flex
-            items-start
-            gap-3
-
-            bg-[var(--theme-surface)]
-
-            border
-            border-emerald-500/30
-
-            rounded-xl
-            shadow-lg
-
-            px-4
-            py-3
-        "
-    >
         <div
+            wire:key="catalog-success-{{ $successVersion }}"
+
+            x-data="{
+                visible: true
+            }"
+
+            x-init="
+                setTimeout(() => {
+                    visible = false;
+                }, 3200)
+            "
+
+            x-show="visible"
+            x-cloak
+
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0 translate-y-2"
+            x-transition:enter-end="opacity-100 translate-y-0"
+
+            x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="opacity-100 translate-y-0"
+            x-transition:leave-end="opacity-0 translate-y-2"
+
             class="
-                shrink-0
-                w-8
-                h-8
+                fixed
+                z-[150]
 
-                rounded-full
+                top-20
+                left-4
+                right-4
 
-                bg-emerald-500/15
-                text-emerald-500
+                sm:left-auto
+                sm:right-6
+                sm:w-96
 
                 flex
-                items-center
-                justify-center
+                items-start
+                gap-3
+
+                bg-[var(--theme-surface)]
+
+                border
+                border-emerald-500/30
+
+                rounded-xl
+                shadow-lg
+
+                px-4
+                py-3
             "
         >
-            <svg
-                class="w-5 h-5"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-            >
-                <path d="M5 12l4 4L19 7"/>
-            </svg>
-        </div>
-
-
-        <div class="min-w-0 flex-1">
-
-            <p
+            {{-- ICONO --}}
+            <div
                 class="
-                    text-sm
-                    font-semibold
-                    text-[var(--theme-text-strong)]
+                    shrink-0
+
+                    w-8
+                    h-8
+
+                    rounded-full
+
+                    bg-emerald-500/15
+                    text-emerald-500
+
+                    flex
+                    items-center
+                    justify-center
                 "
             >
-                Cambios guardados
-            </p>
+                <svg
+                    class="w-5 h-5"
 
-            <p
+                    viewBox="0 0 24 24"
+
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+
+                    aria-hidden="true"
+                >
+                    <path d="M5 12l4 4L19 7"/>
+                </svg>
+            </div>
+
+
+            {{-- TEXTO --}}
+            <div class="min-w-0 flex-1">
+
+                <p
+                    class="
+                        text-sm
+                        font-semibold
+                        text-emerald-500
+                    "
+                >
+                    Cambios guardados
+                </p>
+
+                <p
+                    class="
+                        mt-0.5
+
+                        text-xs
+                        text-[var(--theme-text)]
+                    "
+                >
+                    {{ $successMessage }}
+                </p>
+
+            </div>
+
+
+            {{-- CERRAR --}}
+            <button
+                type="button"
+
+                @click="visible = false"
+
                 class="
-                    mt-0.5
-                    text-xs
-                    text-[var(--theme-text)]
+                    shrink-0
+
+                    text-emerald-500/60
+
+                    hover:text-emerald-500
+
+                    transition-colors
                 "
-                x-text="successMessage"
-            ></p>
+
+                aria-label="Cerrar mensaje"
+            >
+                <svg
+                    class="w-4 h-4"
+
+                    viewBox="0 0 24 24"
+
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+
+                    aria-hidden="true"
+                >
+                    <path d="M6 6l12 12"/>
+                    <path d="M18 6L6 18"/>
+                </svg>
+            </button>
 
         </div>
 
-
-        <button
-            type="button"
-            @click="successVisible = false"
-
-            class="
-                shrink-0
-
-                text-[var(--theme-text-muted)]
-
-                hover:text-[var(--theme-text)]
-
-                transition-colors
-            "
-
-            aria-label="Cerrar mensaje"
-        >
-            <svg
-                class="w-4 h-4"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-            >
-                <path d="M6 6l12 12"/>
-                <path d="M18 6L6 18"/>
-            </svg>
-        </button>
-    </div>
+    @endif
 
 
     {{-- ============================================================
@@ -174,17 +176,7 @@
     >
         <div>
 
-            <h1
-                class="
-                    text-xl
-                    font-semibold
-                    text-[var(--theme-text-strong)]
-                "
-            >
-                Editar {{ $tipo === 'marca' ? 'marca' : 'modelo' }}
-            </h1>
-
-
+            {{-- BREADCRUMB --}}
             <div
                 class="
                     flex
@@ -192,10 +184,10 @@
                     items-center
                     gap-2
 
-                    mt-1
-
                     text-xs
                     text-[var(--theme-text-muted)]
+
+                    mb-1
                 "
             >
                 <span>
@@ -219,9 +211,24 @@
                 </span>
             </div>
 
+
+            {{-- TÍTULO --}}
+            <h1
+                class="
+                    text-xl
+                    font-semibold
+                    text-[var(--theme-text-strong)]
+                "
+            >
+                Editar {{ $tipo === 'marca' ? 'marca' : 'modelo' }}
+            </h1>
+
         </div>
 
 
+        {{-- ========================================================
+            ACCIONES SUPERIORES
+        ======================================================== --}}
         <div
             class="
                 flex
@@ -233,6 +240,7 @@
                 gap-2
             "
         >
+            {{-- VOLVER --}}
             <a
                 href="{{ route('catalogos.index') }}"
 
@@ -268,7 +276,9 @@
             >
                 <svg
                     class="w-4 h-4"
+
                     viewBox="0 0 24 24"
+
                     fill="none"
                     stroke="currentColor"
                     stroke-width="1.7"
@@ -280,6 +290,7 @@
             </a>
 
 
+            {{-- ACTIVAR / DESACTIVAR --}}
             <button
                 type="button"
 
@@ -304,6 +315,7 @@
                     gap-2
 
                     border
+
                     rounded-lg
 
                     px-4
@@ -329,12 +341,21 @@
                         wire:target="toggleStatus"
 
                         class="w-4 h-4"
+
                         viewBox="0 0 24 24"
+
                         fill="none"
                         stroke="currentColor"
                         stroke-width="1.7"
                     >
-                        <rect x="5" y="5" width="14" height="14" rx="1.5"/>
+                        <rect
+                            x="5"
+                            y="5"
+                            width="14"
+                            height="14"
+                            rx="1.5"
+                        />
+
                         <path d="M9 9l6 6"/>
                         <path d="M15 9l-6 6"/>
                     </svg>
@@ -346,7 +367,9 @@
                         wire:target="toggleStatus"
 
                         class="w-4 h-4"
+
                         viewBox="0 0 24 24"
+
                         fill="none"
                         stroke="currentColor"
                         stroke-width="1.7"
@@ -364,6 +387,7 @@
                     class="
                         w-4
                         h-4
+
                         animate-spin
                     "
 
@@ -405,32 +429,30 @@
                     Actualizando...
                 </span>
             </button>
+
         </div>
+
     </div>
 
 
     {{-- ============================================================
         FORMULARIO
+
+        IMPORTANTE:
+        ESTE FORMULARIO DEBE ESTAR FUERA DEL @if ($successMessage)
     ============================================================ --}}
     <form
         wire:submit.prevent="save"
+
         class="relative"
     >
         <fieldset
             wire:loading.attr="disabled"
             wire:target="save"
 
-            wire:loading.class="
-                pointer-events-none
-                opacity-60
-            "
-
             class="
                 space-y-4
                 sm:space-y-6
-
-                transition-opacity
-                duration-150
             "
         >
 
@@ -475,43 +497,40 @@
                     </h2>
 
 
-                    @if ($tipo === 'marca')
+                    <div
+                        class="
+                            flex
+                            items-center
+                            gap-2
 
-                        <div
+                            text-xs
+                            text-[var(--theme-text-muted)]
+                        "
+                    >
+                        <span>
+                            Código interno:
+                        </span>
+
+                        <span
                             class="
-                                flex
+                                inline-flex
                                 items-center
-                                gap-2
 
-                                text-xs
-                                text-[var(--theme-text-muted)]
+                                rounded-md
+
+                                bg-[var(--theme-primary-soft)]
+
+                                px-2.5
+                                py-1
+
+                                font-semibold
+                                text-[var(--theme-primary)]
                             "
                         >
-                            <span>
-                                Código interno:
-                            </span>
+                            {{ $codigoInterno }}
+                        </span>
+                    </div>
 
-                            <span
-                                class="
-                                    inline-flex
-                                    items-center
-
-                                    rounded-md
-
-                                    bg-[var(--theme-primary-soft)]
-
-                                    px-2.5
-                                    py-1
-
-                                    font-semibold
-                                    text-[var(--theme-primary)]
-                                "
-                            >
-                                {{ $codigoInterno }}
-                            </span>
-                        </div>
-
-                    @endif
                 </div>
 
 
@@ -532,8 +551,10 @@
                         <label
                             class="
                                 block
+
                                 text-xs
                                 text-[var(--theme-text-muted)]
+
                                 mb-1.5
                             "
                         >
@@ -571,144 +592,49 @@
                     </div>
 
 
-                    {{-- CÓDIGO INTERNO
-                        En marca se muestra arriba a la derecha y no se edita.
-                        En modelo se mantiene editable por ahora.
-                    --}}
-                    @if ($tipo === 'modelo')
-
-                        <div class="min-w-0">
-
-                            <label
-                                for="catalog-code"
-
-                                class="
-                                    block
-                                    text-xs
-                                    text-[var(--theme-text-muted)]
-                                    mb-1.5
-                                "
-                            >
-                                Código interno *
-                            </label>
-
-                            <input
-                                id="catalog-code"
-                                type="text"
-
-                                wire:model="codigoInterno"
-
-                                placeholder="Ej. MOD-DELL-001"
-
-                                class="
-                                    w-full
-                                    min-w-0
-
-                                    text-sm
-                                    text-[var(--theme-text)]
-
-                                    bg-[var(--theme-surface)]
-
-                                    border
-                                    border-[var(--theme-border-strong)]
-
-                                    rounded-md
-
-                                    px-3
-                                    py-2.5
-
-                                    placeholder:text-[var(--theme-text-muted)]
-
-                                    focus:ring-1
-                                    focus:ring-[var(--theme-primary)]
-                                    focus:border-[var(--theme-primary)]
-
-                                    outline-none
-                                    transition-colors
-                                "
-                            >
-
-                            @error('codigoInterno')
-
-                                <p class="mt-1 text-xs text-[var(--theme-danger)]">
-                                    {{ $message }}
-                                </p>
-
-                            @enderror
-
-                        </div>
-
-                    @endif
-
-
                     {{-- ID INTERNO --}}
                     <div class="min-w-0">
 
                         <label
                             class="
                                 block
+
                                 text-xs
                                 text-[var(--theme-text-muted)]
+
                                 mb-1.5
                             "
                         >
                             Número de inventario (ID interno)
                         </label>
 
-                        <div class="relative">
+                        <input
+                            type="text"
 
-                            <input
-                                type="text"
+                            value="{{ $registroId }}"
 
-                                value="{{ $registroId }}"
+                            readonly
 
-                                readonly
+                            class="
+                                w-full
+                                min-w-0
 
-                                class="
-                                    w-full
-                                    min-w-0
+                                text-sm
+                                text-[var(--theme-text-muted)]
 
-                                    text-sm
-                                    text-[var(--theme-text-muted)]
+                                border
+                                border-[var(--theme-border)]
 
-                                    border
-                                    border-[var(--theme-border)]
+                                rounded-md
 
-                                    rounded-md
+                                px-3
+                                py-2.5
 
-                                    px-3
-                                    py-2.5
-                                    pr-9
+                                bg-[var(--theme-surface-soft)]
 
-                                    bg-[var(--theme-surface-soft)]
-
-                                    cursor-not-allowed
-                                "
-                            >
-
-                            <svg
-                                class="
-                                    absolute
-                                    right-3
-                                    top-1/2
-                                    -translate-y-1/2
-
-                                    w-4
-                                    h-4
-
-                                    text-[var(--theme-text-muted)]
-                                "
-
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="1.6"
-                            >
-                                <rect x="6" y="10" width="12" height="9" rx="1.5"/>
-                                <path d="M8 10V7a4 4 0 018 0v3"/>
-                            </svg>
-
-                        </div>
+                                cursor-not-allowed
+                            "
+                        >
 
                     </div>
 
@@ -721,12 +647,17 @@
 
                             class="
                                 block
+
                                 text-xs
                                 text-[var(--theme-text-muted)]
+
                                 mb-1.5
                             "
                         >
-                            {{ $tipo === 'marca' ? 'Nombre de la marca' : 'Nombre del modelo' }} *
+                            {{ $tipo === 'marca'
+                                ? 'Nombre de la marca'
+                                : 'Nombre del modelo'
+                            }} *
                         </label>
 
                         <input
@@ -735,7 +666,10 @@
 
                             wire:model="nombre"
 
-                            placeholder="{{ $tipo === 'marca' ? 'Ej. Apple' : 'Ej. Latitude 5440' }}"
+                            placeholder="{{ $tipo === 'marca'
+                                ? 'Ej. Apple'
+                                : 'Ej. Latitude 5440'
+                            }}"
 
                             class="
                                 w-full
@@ -761,22 +695,59 @@
                                 focus:border-[var(--theme-primary)]
 
                                 outline-none
+
                                 transition-colors
                             "
                         >
 
                         @error('nombre')
+                            <p
+                                class="
+                                    mt-1
 
-                            <p class="mt-1 text-xs text-[var(--theme-danger)]">
+                                    text-xs
+                                    text-[var(--theme-danger)]
+                                "
+                            >
                                 {{ $message }}
                             </p>
-
                         @enderror
 
                     </div>
 
 
-                    @if ($tipo === 'modelo')
+                    {{-- PAÍS / DATOS MODELO --}}
+                    @if ($tipo === 'marca')
+
+                        <div class="min-w-0">
+
+                            <x-searchable-select
+                                wire-model="idPaisOrigen"
+
+                                :options="$paisesOrigen->map(fn ($pais) => [
+                                    'value' => $pais->id_valor,
+                                    'label' => $pais->nombre,
+                                ])->values()->all()"
+
+                                label="País de origen"
+                                placeholder="Seleccionar un país..."
+                            />
+
+                            @error('idPaisOrigen')
+                                <p
+                                    class="
+                                        mt-1
+                                        text-xs
+                                        text-[var(--theme-danger)]
+                                    "
+                                >
+                                    {{ $message }}
+                                </p>
+                            @enderror
+
+                        </div>
+
+                    @else
 
                         {{-- MARCA --}}
                         <div class="min-w-0">
@@ -794,11 +765,15 @@
                             />
 
                             @error('idMarca')
-
-                                <p class="mt-1 text-xs text-[var(--theme-danger)]">
+                                <p
+                                    class="
+                                        mt-1
+                                        text-xs
+                                        text-[var(--theme-danger)]
+                                    "
+                                >
                                     {{ $message }}
                                 </p>
-
                             @enderror
 
                         </div>
@@ -820,38 +795,15 @@
                             />
 
                             @error('idTipoEquipo')
-
-                                <p class="mt-1 text-xs text-[var(--theme-danger)]">
+                                <p
+                                    class="
+                                        mt-1
+                                        text-xs
+                                        text-[var(--theme-danger)]
+                                    "
+                                >
                                     {{ $message }}
                                 </p>
-
-                            @enderror
-
-                        </div>
-
-                    @else
-
-                        {{-- PAÍS DE ORIGEN --}}
-                        <div class="min-w-0">
-
-                            <x-searchable-select
-                                wire-model="idPaisOrigen"
-
-                                :options="$paisesOrigen->map(fn ($pais) => [
-                                    'value' => $pais->id_valor,
-                                    'label' => $pais->nombre,
-                                ])->values()->all()"
-
-                                label="País de origen"
-                                placeholder="Seleccionar un país..."
-                            />
-
-                            @error('idPaisOrigen')
-
-                                <p class="mt-1 text-xs text-[var(--theme-danger)]">
-                                    {{ $message }}
-                                </p>
-
                             @enderror
 
                         </div>
@@ -867,8 +819,10 @@
 
                             class="
                                 block
+
                                 text-xs
                                 text-[var(--theme-text-muted)]
+
                                 mb-1.5
                             "
                         >
@@ -907,138 +861,42 @@
                                 focus:border-[var(--theme-primary)]
 
                                 outline-none
-                                transition-colors
                             "
                         >
 
                         @error('sitioWeb')
-
-                            <p class="mt-1 text-xs text-[var(--theme-danger)]">
+                            <p
+                                class="
+                                    mt-1
+                                    text-xs
+                                    text-[var(--theme-danger)]
+                                "
+                            >
                                 {{ $message }}
                             </p>
-
                         @enderror
 
                     </div>
 
 
-                    @if ($tipo === 'modelo')
-
-                        {{-- PAÍS HEREDADO DE MARCA --}}
-                        <div class="min-w-0">
-
-                            <label
-                                class="
-                                    block
-                                    text-xs
-                                    text-[var(--theme-text-muted)]
-                                    mb-1.5
-                                "
-                            >
-                                País de origen
-                            </label>
-
-                            <input
-                                type="text"
-
-                                value="{{ $paisOrigenModelo ?: 'No definido en la marca' }}"
-
-                                readonly
-
-                                class="
-                                    w-full
-                                    min-w-0
-
-                                    text-sm
-                                    text-[var(--theme-text-muted)]
-
-                                    border
-                                    border-[var(--theme-border)]
-
-                                    rounded-md
-
-                                    px-3
-                                    py-2.5
-
-                                    bg-[var(--theme-surface-soft)]
-
-                                    cursor-not-allowed
-                                "
-                            >
-
-                        </div>
-
-                    @endif
-
-
-                    {{-- ESTADO --}}
-                    <div class="min-w-0">
-
-                        <label
-                            class="
-                                block
-                                text-xs
-                                text-[var(--theme-text-muted)]
-                                mb-1.5
-                            "
-                        >
-                            Estado actual
-                        </label>
-
-                        <div
-                            class="
-                                min-h-[42px]
-
-                                flex
-                                items-center
-
-                                px-3
-                                py-2.5
-
-                                rounded-md
-
-                                border
-                                border-[var(--theme-border)]
-
-                                bg-[var(--theme-surface-soft)]
-                            "
-                        >
-                            <span
-                                class="
-                                    inline-flex
-                                    items-center
-
-                                    px-2
-                                    py-1
-
-                                    rounded-full
-
-                                    text-[10px]
-                                    font-medium
-
-                                    {{ $activo
-                                        ? 'bg-[var(--theme-success-soft)] text-[var(--theme-success)]'
-                                        : 'bg-[var(--theme-danger-soft)] text-[var(--theme-danger)]'
-                                    }}
-                                "
-                            >
-                                {{ $activo ? 'Activo' : 'Inactivo' }}
-                            </span>
-                        </div>
-
-                    </div>
-
-
                     {{-- DESCRIPCIÓN --}}
-                    <div class="min-w-0 xl:col-span-3">
+                    <div
+                        class="
+                            min-w-0
 
+                            md:col-span-2
+                            xl:col-span-3
+                        "
+                    >
                         <label
                             for="catalog-description"
 
                             class="
                                 block
+
                                 text-xs
                                 text-[var(--theme-text-muted)]
+
                                 mb-1.5
                             "
                         >
@@ -1080,20 +938,25 @@
                                 focus:border-[var(--theme-primary)]
 
                                 outline-none
-                                transition-colors
                             "
                         ></textarea>
 
                         @error('descripcion')
-
-                            <p class="mt-1 text-xs text-[var(--theme-danger)]">
+                            <p
+                                class="
+                                    mt-1
+                                    text-xs
+                                    text-[var(--theme-danger)]
+                                "
+                            >
                                 {{ $message }}
                             </p>
-
                         @enderror
 
                     </div>
+
                 </div>
+
             </section>
 
 
@@ -1137,7 +1000,7 @@
                         gap-4
                     "
                 >
-                    {{-- PROVEEDOR SUGERIDO --}}
+                    {{-- PROVEEDOR --}}
                     <div class="min-w-0">
 
                         <x-searchable-select
@@ -1153,11 +1016,15 @@
                         />
 
                         @error('idProveedorSugerido')
-
-                            <p class="mt-1 text-xs text-[var(--theme-danger)]">
+                            <p
+                                class="
+                                    mt-1
+                                    text-xs
+                                    text-[var(--theme-danger)]
+                                "
+                            >
                                 {{ $message }}
                             </p>
-
                         @enderror
 
                     </div>
@@ -1171,8 +1038,10 @@
 
                             class="
                                 block
+
                                 text-xs
                                 text-[var(--theme-text-muted)]
+
                                 mb-1.5
                             "
                         >
@@ -1194,7 +1063,6 @@
 
                                 class="
                                     w-full
-                                    min-w-0
 
                                     text-sm
                                     text-[var(--theme-text)]
@@ -1210,20 +1078,18 @@
                                     py-2.5
                                     pr-16
 
-                                    placeholder:text-[var(--theme-text-muted)]
-
                                     focus:ring-1
                                     focus:ring-[var(--theme-primary)]
                                     focus:border-[var(--theme-primary)]
 
                                     outline-none
-                                    transition-colors
                                 "
                             >
 
                             <span
                                 class="
                                     absolute
+
                                     right-3
                                     top-1/2
                                     -translate-y-1/2
@@ -1234,67 +1100,27 @@
                             >
                                 meses
                             </span>
+
                         </div>
 
                         @error('garantiaEstandarMeses')
-
-                            <p class="mt-1 text-xs text-[var(--theme-danger)]">
+                            <p
+                                class="
+                                    mt-1
+                                    text-xs
+                                    text-[var(--theme-danger)]
+                                "
+                            >
                                 {{ $message }}
                             </p>
-
                         @enderror
-
-                    </div>
-
-
-                    {{-- CONTACTO PROVEEDOR --}}
-                    <div class="min-w-0">
-
-                        <label
-                            class="
-                                block
-                                text-xs
-                                text-[var(--theme-text-muted)]
-                                mb-1.5
-                            "
-                        >
-                            Contacto de proveedor
-                        </label>
-
-                        <input
-                            type="text"
-
-                            value="{{ $contactoProveedor ?: 'Selecciona un proveedor' }}"
-
-                            readonly
-
-                            class="
-                                w-full
-                                min-w-0
-
-                                text-sm
-                                text-[var(--theme-text-muted)]
-
-                                border
-                                border-[var(--theme-border)]
-
-                                rounded-md
-
-                                px-3
-                                py-2.5
-
-                                bg-[var(--theme-surface-soft)]
-
-                                cursor-not-allowed
-                            "
-                        >
 
                     </div>
 
 
                     @if ($tipo === 'modelo')
 
-                        {{-- ÁREA DE USO COMÚN --}}
+                        {{-- ÁREA --}}
                         <div class="min-w-0">
 
                             <x-searchable-select
@@ -1310,106 +1136,16 @@
                             />
 
                             @error('idAreaUsoComun')
-
-                                <p class="mt-1 text-xs text-[var(--theme-danger)]">
+                                <p
+                                    class="
+                                        mt-1
+                                        text-xs
+                                        text-[var(--theme-danger)]
+                                    "
+                                >
                                     {{ $message }}
                                 </p>
-
                             @enderror
-
-                        </div>
-
-                    @endif
-
-
-                    {{-- EQUIPOS ASOCIADOS --}}
-                    <div class="min-w-0">
-
-                        <label
-                            class="
-                                block
-                                text-xs
-                                text-[var(--theme-text-muted)]
-                                mb-1.5
-                            "
-                        >
-                            Equipos asociados
-                        </label>
-
-                        <input
-                            type="text"
-
-                            value="{{ number_format($totalEquipos) }}"
-
-                            readonly
-
-                            class="
-                                w-full
-                                min-w-0
-
-                                text-sm
-                                text-[var(--theme-text-muted)]
-
-                                border
-                                border-[var(--theme-border)]
-
-                                rounded-md
-
-                                px-3
-                                py-2.5
-
-                                bg-[var(--theme-surface-soft)]
-
-                                cursor-not-allowed
-                            "
-                        >
-
-                    </div>
-
-
-                    @if ($tipo === 'marca')
-
-                        {{-- MODELOS REGISTRADOS --}}
-                        <div class="min-w-0">
-
-                            <label
-                                class="
-                                    block
-                                    text-xs
-                                    text-[var(--theme-text-muted)]
-                                    mb-1.5
-                                "
-                            >
-                                Modelos registrados
-                            </label>
-
-                            <input
-                                type="text"
-
-                                value="{{ number_format($totalModelos ?? 0) }}"
-
-                                readonly
-
-                                class="
-                                    w-full
-                                    min-w-0
-
-                                    text-sm
-                                    text-[var(--theme-text-muted)]
-
-                                    border
-                                    border-[var(--theme-border)]
-
-                                    rounded-md
-
-                                    px-3
-                                    py-2.5
-
-                                    bg-[var(--theme-surface-soft)]
-
-                                    cursor-not-allowed
-                                "
-                            >
 
                         </div>
 
@@ -1421,20 +1157,19 @@
                         class="
                             min-w-0
 
-                            {{ $tipo === 'modelo'
-                                ? 'md:col-span-2 xl:col-span-3'
-                                : 'md:col-span-2 xl:col-span-3'
-                            }}
+                            md:col-span-2
+                            xl:col-span-3
                         "
                     >
-
                         <label
                             for="catalog-comments"
 
                             class="
                                 block
+
                                 text-xs
                                 text-[var(--theme-text-muted)]
+
                                 mb-1.5
                             "
                         >
@@ -1452,7 +1187,6 @@
 
                             class="
                                 w-full
-                                min-w-0
 
                                 text-sm
                                 text-[var(--theme-text)]
@@ -1467,8 +1201,6 @@
                                 px-3
                                 py-2.5
 
-                                placeholder:text-[var(--theme-text-muted)]
-
                                 resize-y
 
                                 focus:ring-1
@@ -1476,20 +1208,25 @@
                                 focus:border-[var(--theme-primary)]
 
                                 outline-none
-                                transition-colors
                             "
                         ></textarea>
 
                         @error('comentarios')
-
-                            <p class="mt-1 text-xs text-[var(--theme-danger)]">
+                            <p
+                                class="
+                                    mt-1
+                                    text-xs
+                                    text-[var(--theme-danger)]
+                                "
+                            >
                                 {{ $message }}
                             </p>
-
                         @enderror
 
                     </div>
+
                 </div>
+
             </section>
 
 
@@ -1539,7 +1276,6 @@
 
                         hover:bg-[var(--theme-surface-soft)]
                         hover:text-[var(--theme-text)]
-                        hover:border-[var(--theme-primary-border)]
 
                         transition-colors
                     "
@@ -1555,15 +1291,17 @@
                     wire:target="save"
 
                     class="
+                        relative
+
                         w-full
                         sm:w-auto
 
+                        min-w-[165px]
                         h-11
 
                         flex
                         items-center
                         justify-center
-                        gap-2
 
                         bg-[var(--theme-primary)]
                         hover:bg-[var(--theme-primary-hover)]
@@ -1582,172 +1320,93 @@
                         transition-colors
                     "
                 >
-                    <svg
+                    {{-- ESTADO NORMAL --}}
+                    <span
                         wire:loading.remove
-                        wire:target="save"
-
-                        class="w-4 h-4"
-
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.7"
-                    >
-                        <path d="M5 4h12l2 2v14H5z"/>
-                        <path d="M8 4v6h8V4"/>
-                        <path d="M8 20v-6h8v6"/>
-                    </svg>
-
-
-                    <svg
-                        wire:loading
                         wire:target="save"
 
                         class="
-                            w-4
-                            h-4
-                            animate-spin
+                            inline-flex
+                            items-center
+                            justify-center
+                            gap-2
                         "
-
-                        viewBox="0 0 24 24"
-                        fill="none"
                     >
-                        <circle
-                            cx="12"
-                            cy="12"
-                            r="9"
+                        <svg
+                            class="w-4 h-4"
 
+                            viewBox="0 0 24 24"
+
+                            fill="none"
                             stroke="currentColor"
-                            stroke-width="2"
+                            stroke-width="1.7"
+                        >
+                            <path d="M5 4h12l2 2v14H5z"/>
+                            <path d="M8 4v6h8V4"/>
+                            <path d="M8 20v-6h8v6"/>
+                        </svg>
 
-                            opacity="0.25"
-                        />
-
-                        <path
-                            d="M21 12a9 9 0 0 0-9-9"
-
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                        />
-                    </svg>
-
-
-                    <span
-                        wire:loading.remove
-                        wire:target="save"
-                    >
-                        Guardar cambios
+                        <span>
+                            Guardar cambios
+                        </span>
                     </span>
 
+
+                    {{-- ESTADO GUARDANDO --}}
                     <span
-                        wire:loading
+                        wire:loading.flex
                         wire:target="save"
+
+                        class="
+                            absolute
+                            inset-0
+
+                            items-center
+                            justify-center
+                        "
                     >
-                        Guardando...
+                        <svg
+                            class="
+                                w-5
+                                h-5
+
+                                animate-spin
+                            "
+
+                            viewBox="0 0 24 24"
+                            fill="none"
+                        >
+                            <circle
+                                cx="12"
+                                cy="12"
+                                r="9"
+
+                                stroke="currentColor"
+                                stroke-width="2"
+
+                                opacity="0.25"
+                            />
+
+                            <path
+                                d="M21 12a9 9 0 0 0-9-9"
+
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                            />
+                        </svg>
+
+                        <span class="sr-only">
+                            Guardando cambios...
+                        </span>
                     </span>
+
                 </button>
+
             </div>
+
         </fieldset>
 
-
-        {{-- ========================================================
-            OVERLAY GUARDANDO
-        ======================================================== --}}
-        <div
-            wire:loading.flex
-            wire:target="save"
-
-            class="
-                fixed
-                inset-0
-                z-[140]
-
-                items-center
-                justify-center
-
-                bg-[var(--theme-overlay)]
-
-                backdrop-blur-[1px]
-            "
-        >
-            <div
-                class="
-                    flex
-                    items-center
-                    gap-3
-
-                    bg-[var(--theme-surface)]
-
-                    border
-                    border-[var(--theme-border)]
-
-                    rounded-xl
-                    shadow-lg
-
-                    px-5
-                    py-4
-                "
-            >
-                <svg
-                    class="
-                        w-5
-                        h-5
-
-                        animate-spin
-
-                        text-[var(--theme-primary)]
-                    "
-
-                    viewBox="0 0 24 24"
-                    fill="none"
-                >
-                    <circle
-                        cx="12"
-                        cy="12"
-                        r="9"
-
-                        stroke="currentColor"
-                        stroke-width="2"
-
-                        opacity="0.2"
-                    />
-
-                    <path
-                        d="M21 12a9 9 0 0 0-9-9"
-
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                    />
-                </svg>
-
-
-                <div>
-
-                    <p
-                        class="
-                            text-sm
-                            font-semibold
-                            text-[var(--theme-text-strong)]
-                        "
-                    >
-                        Guardando cambios...
-                    </p>
-
-                    <p
-                        class="
-                            text-xs
-                            text-[var(--theme-text-muted)]
-
-                            mt-0.5
-                        "
-                    >
-                        Espera un momento
-                    </p>
-
-                </div>
-            </div>
-        </div>
     </form>
+
 </div>

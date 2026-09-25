@@ -100,7 +100,7 @@
 
         {{-- Volver --}}
         <a
-            href="{{ route('equipos.show', $equipoId) }}"
+            href="{{ route('equipos.index') }}"
             class="
                 shrink-0
 

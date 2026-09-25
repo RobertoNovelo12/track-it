@@ -1,4 +1,31 @@
-<div class="animate-pulse">
+<div
+    x-data="{
+        successVisible: false,
+        successMessage: '',
+        successTimer: null,
+
+        showSuccess(message) {
+            this.successMessage = message ?? 'El registro se creó correctamente.';
+            this.successVisible = true;
+
+            if (this.successTimer) {
+                clearTimeout(this.successTimer);
+            }
+
+            this.successTimer = setTimeout(() => {
+                this.successVisible = false;
+            }, 3200);
+        }
+    }"
+
+    @catalog-record-created.window="
+        showSuccess(
+            $event.detail.message ?? 'El registro se creó correctamente.'
+        )
+    "
+
+    class="animate-pulse"
+>
 
     {{-- ============================================================
         CABECERA

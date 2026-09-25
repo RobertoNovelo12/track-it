@@ -1,4 +1,26 @@
-<div class="animate-pulse space-y-5">
+<div
+    x-data="{
+        toastOpen: false,
+        toastMessage: '',
+        toastTimer: null,
+
+        showToast(message) {
+            this.toastMessage = message ?? 'Cambios guardados correctamente.';
+            this.toastOpen = true;
+
+            if (this.toastTimer) {
+                clearTimeout(this.toastTimer);
+            }
+
+            this.toastTimer = setTimeout(() => {
+                this.toastOpen = false;
+            }, 3200);
+        }
+    }"
+    @catalog-item-saved.window="showToast($event.detail.message)"
+    @catalog-status-updated.window="showToast($event.detail.message)"
+    class="animate-pulse space-y-5"
+>
 
     {{-- ============================================================
         ENCABEZADO
