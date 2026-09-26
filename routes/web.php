@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EquipoController;
+use App\Http\Controllers\ReporteController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -35,7 +36,7 @@ Route::middleware([
 
     Route::get(
         '/buscar-equipos',
-        fn () => view('equipos.search')
+        fn() => view('equipos.search')
     )
         ->name('equipos.search');
 
@@ -69,7 +70,7 @@ Route::middleware([
 
     Route::get(
         '/equipos/crear',
-        fn () => view('equipos.create')
+        fn() => view('equipos.create')
     )->name('equipos.create');
 
     /*
@@ -118,8 +119,33 @@ Route::middleware([
 
     Route::get(
         '/asignaciones',
-        fn () => view('asignaciones.index')
+        fn() => view('asignaciones.index')
     )->name('asignaciones.index');
+
+    /*
+|--------------------------------------------------------------------------
+| Generación de reportes
+|--------------------------------------------------------------------------
+*/
+
+    Route::get(
+        '/reportes',
+        fn() => view('reportes.index')
+    )->name('reportes.index');
+
+    Route::get(
+    '/reportes/{reporte}',
+    [ReporteController::class, 'show']
+)
+    ->whereNumber('reporte')
+    ->name('reportes.show');
+
+Route::get(
+    '/reportes/{reporte}/descargar',
+    [ReporteController::class, 'download']
+)
+    ->whereNumber('reporte')
+    ->name('reportes.download');
 
     /*
     |--------------------------------------------------------------------------
@@ -129,7 +155,7 @@ Route::middleware([
 
     Route::get(
         '/seguridad',
-        fn () => view('seguridad.index')
+        fn() => view('seguridad.index')
     )->name('usuarios.index');
 
     /*
@@ -140,7 +166,7 @@ Route::middleware([
 
     Route::get(
         '/ajustes',
-        fn () => view('ajustes.index')
+        fn() => view('ajustes.index')
     )->name('ajustes.index');
 
 });
@@ -151,4 +177,4 @@ Route::middleware([
 |--------------------------------------------------------------------------
 */
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

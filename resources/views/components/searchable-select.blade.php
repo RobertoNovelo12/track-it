@@ -28,7 +28,9 @@
             this.query = label;
             this.open = false;
             this.$refs.hidden.value = value;
-            this.$refs.hidden.dispatchEvent(new Event('input'));
+            this.$refs.hidden.dispatchEvent(
+    new Event('input', { bubbles: true })
+);
         },
         clear() { this.pick('', ''); },
         openAndFocus() {
@@ -37,6 +39,10 @@
             this.$nextTick(() => this.$refs.search.focus());
         },
     }"
+    x-on:reportes-filtros-limpiados.window="
+    query = '';
+    open = false;
+"
     @click.outside="open = false"
     class="relative"
     :class="disabled ? 'opacity-50' : ''"
