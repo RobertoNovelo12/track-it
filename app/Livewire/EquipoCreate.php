@@ -5,6 +5,8 @@ namespace App\Livewire;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
+use Livewire\Attributes\Json;
 use Livewire\Component;
 
 class EquipoCreate extends Component
@@ -32,6 +34,7 @@ class EquipoCreate extends Component
 
     // --- Campos dinámicos de la tabla hija (según tipo de equipo) ---
     public array $childData = [];
+
     public int $formKey = 0;
 
     /**
@@ -40,7 +43,9 @@ class EquipoCreate extends Component
      */
     private function toPlainArray($collection): array
     {
-        return $collection->map(fn ($row) => (array) $row)->all();
+        return $collection
+            ->map(fn ($row) => (array) $row)
+            ->all();
     }
 
     /**
@@ -59,14 +64,14 @@ class EquipoCreate extends Component
         return [
             1 => [
                 'table' => 'computadoras_escritorio',
-                'fields' => $baseCompu
+                'fields' => $baseCompu,
             ],
 
             2 => [
                 'table' => 'laptops',
                 'fields' => $baseCompu + [
-                    'incluye_cargador' => 'boolean'
-                ]
+                    'incluye_cargador' => 'boolean',
+                ],
             ],
 
             3 => [
@@ -74,7 +79,7 @@ class EquipoCreate extends Component
                 'fields' => [
                     'tamano_pulgadas' => 'number',
                     'id_tipo_conexion' => 'catalog:tipo_conexion',
-                ]
+                ],
             ],
 
             4 => [
@@ -85,7 +90,7 @@ class EquipoCreate extends Component
                     'sistema_operativo' => 'text',
                     'color' => 'text',
                     'incluye_cargador' => 'boolean',
-                ]
+                ],
             ],
 
             5 => [
@@ -98,7 +103,7 @@ class EquipoCreate extends Component
                     'sistema_operativo' => 'text',
                     'color' => 'text',
                     'incluye_cargador' => 'boolean',
-                ]
+                ],
             ],
 
             6 => [
@@ -107,26 +112,26 @@ class EquipoCreate extends Component
                     'id_tipo_impresora' => 'catalog:tipo_impresora',
                     'id_tipo_conexion' => 'catalog:tipo_conexion',
                     'nombre_red' => 'text',
-                ]
+                ],
             ],
 
             7 => [
                 'table' => 'escaneres',
                 'fields' => [
                     'id_tipo_conexion' => 'catalog:tipo_conexion',
-                ]
+                ],
             ],
 
             8 => [
                 'table' => 'grabadores_llaves',
                 'fields' => [
                     'id_tipo_conexion' => 'catalog:tipo_conexion',
-                ]
+                ],
             ],
 
             9 => [
                 'table' => 'tpv',
-                'fields' => $baseCompu
+                'fields' => $baseCompu,
             ],
 
             10 => [
@@ -135,7 +140,7 @@ class EquipoCreate extends Component
                     'numero_puertos' => 'number',
                     'velocidad' => 'text',
                     'administrable' => 'boolean',
-                ]
+                ],
             ],
 
             11 => [
@@ -143,21 +148,21 @@ class EquipoCreate extends Component
                 'fields' => [
                     'numero_puertos' => 'number',
                     'velocidad' => 'text',
-                ]
+                ],
             ],
 
             12 => [
                 'table' => 'access_points',
                 'fields' => [
                     'nombre_ap' => 'text',
-                ]
+                ],
             ],
 
             13 => [
                 'table' => 'servidores',
                 'fields' => [
                     'id_tipo_servidor' => 'catalog:tipo_servidor',
-                ] + $baseCompu
+                ] + $baseCompu,
             ],
 
             14 => [
@@ -166,7 +171,7 @@ class EquipoCreate extends Component
                     'capacidad_va' => 'number',
                     'fecha_cambio_bateria' => 'date',
                     'id_estado_bateria' => 'catalog:estado_bateria',
-                ]
+                ],
             ],
 
             15 => [
@@ -174,21 +179,21 @@ class EquipoCreate extends Component
                 'fields' => [
                     'id_tipo_telefono' => 'catalog:tipo_telefono',
                     'extension' => 'text',
-                ]
+                ],
             ],
 
             16 => [
                 'table' => 'teclados',
                 'fields' => [
                     'id_tipo_conexion' => 'catalog:tipo_conexion',
-                ]
+                ],
             ],
 
             17 => [
                 'table' => 'mouse',
                 'fields' => [
                     'id_tipo_conexion' => 'catalog:tipo_conexion',
-                ]
+                ],
             ],
         ];
     }
@@ -230,6 +235,7 @@ class EquipoCreate extends Component
     public function getChildFieldsProperty(): array
     {
         $config = $this->childConfig();
+
         $tipo = (int) $this->idTipoEquipo;
 
         return $config[$tipo]['fields'] ?? [];
@@ -243,6 +249,7 @@ class EquipoCreate extends Component
     public function updatedIdTipoEquipo(): void
     {
         $this->childData = [];
+
         $this->idModelo = '';
     }
 
@@ -268,7 +275,7 @@ class EquipoCreate extends Component
                         ->orderBy('orden')
                         ->get([
                             'id_estado_equipo',
-                            'nombre'
+                            'nombre',
                         ])
                 );
             }
@@ -287,7 +294,7 @@ class EquipoCreate extends Component
                         ->orderBy('nombre')
                         ->get([
                             'id_tipo_equipo',
-                            'nombre'
+                            'nombre',
                         ])
                 );
             }
@@ -306,7 +313,7 @@ class EquipoCreate extends Component
                         ->orderBy('nombre')
                         ->get([
                             'id_marca',
-                            'nombre'
+                            'nombre',
                         ])
                 );
             }
@@ -316,8 +323,8 @@ class EquipoCreate extends Component
     public function getModelosProperty(): array
     {
         if (
-            $this->idMarca === '' ||
-            $this->idTipoEquipo === ''
+            $this->idMarca === ''
+            || $this->idTipoEquipo === ''
         ) {
             return [];
         }
@@ -336,7 +343,7 @@ class EquipoCreate extends Component
                 ->orderBy('nombre')
                 ->get([
                     'id_modelo',
-                    'nombre'
+                    'nombre',
                 ])
         );
     }
@@ -353,7 +360,7 @@ class EquipoCreate extends Component
                         ->orderBy('nombre')
                         ->get([
                             'id_proveedor',
-                            'nombre'
+                            'nombre',
                         ])
                 );
             }
@@ -385,7 +392,7 @@ class EquipoCreate extends Component
                         ->orderBy('nombre')
                         ->get([
                             'id_area',
-                            'nombre'
+                            'nombre',
                         ])
                 );
             }
@@ -408,7 +415,7 @@ class EquipoCreate extends Component
                 ->orderBy('nombre')
                 ->get([
                     'id_departamento',
-                    'nombre'
+                    'nombre',
                 ])
         );
     }
@@ -450,191 +457,242 @@ class EquipoCreate extends Component
                 )
                 ->get([
                     'catalogo_valores.id_valor',
-                    'catalogo_valores.nombre'
+                    'catalogo_valores.nombre',
                 ])
         );
     }
 
-    public function save()
+    /*
+    |--------------------------------------------------------------------------
+    | Guardado optimista
+    |--------------------------------------------------------------------------
+    |
+    | Recibimos una fotografía completa del formulario.
+    | El navegador puede limpiar la interfaz inmediatamente sin afectar
+    | los datos que esta petición ya está guardando.
+    |
+    */
+    #[Json]
+    public function save(array $payload): array
     {
-        $childFields = $this->childFields;
+        $payload = $this->normalizePayload(
+            $payload
+        );
+
+        $validated = Validator::make(
+            $payload,
+            [
+                'nombreEquipo' => [
+                    'required',
+                    'string',
+                    'max:255',
+                ],
+
+                'idEstadoActivo' => [
+                    'required',
+                ],
+
+                'idTipoEquipo' => [
+                    'required',
+                ],
+
+                'idMarca' => [
+                    'required',
+                ],
+
+                'numeroSerie' => [
+                    'required',
+                    'string',
+                    'max:255',
+                    'unique:equipos,numero_serie',
+                ],
+
+                'numeroFactura' => [
+                    'required',
+                    'string',
+                    'max:255',
+                ],
+
+                'idArea' => [
+                    'required',
+                ],
+
+                'childData' => [
+                    'array',
+                ],
+            ]
+        )->validate();
+
+        $tipoEquipoId =
+            (int) $validated['idTipoEquipo'];
+
+        $config =
+            $this->childConfig();
+
+        $childFields =
+            $config[$tipoEquipoId]['fields']
+            ?? [];
 
         $childTable =
-            $this->childConfig()[
-                (int) $this->idTipoEquipo
-            ]['table'] ?? null;
+            $config[$tipoEquipoId]['table']
+            ?? null;
 
+        $childData =
+            is_array($payload['childData'])
+                ? $payload['childData']
+                : [];
 
-        $rules = [
-            'nombreEquipo' => [
-                'required',
-                'string',
-                'max:255'
-            ],
-
-            'idEstadoActivo' => [
-                'required'
-            ],
-
-            'idTipoEquipo' => [
-                'required'
-            ],
-
-            'idMarca' => [
-                'required'
-            ],
-
-            'numeroSerie' => [
-                'required',
-                'string',
-                'max:255',
-                'unique:equipos,numero_serie'
-            ],
-
-            'numeroFactura' => [
-                'required',
-                'string',
-                'max:255'
-            ],
-
-            'idArea' => [
-                'required'
-            ],
-        ];
-
-
-        $this->validate($rules);
-
+        $codigoInventario =
+            $this->generarCodigoInventario();
 
         $idEquipo = DB::transaction(
             function () use (
+                $payload,
+                $validated,
                 $childFields,
-                $childTable
+                $childTable,
+                $childData,
+                $codigoInventario
             ) {
+                $idEquipo = DB::table('equipos')
+                    ->insertGetId(
+                        [
+                            'codigo_inventario' =>
+                                $codigoInventario,
 
-                $idEquipo =
-                    DB::table('equipos')
-                        ->insertGetId(
-                            [
-                                'codigo_inventario' =>
-                                    $this->generarCodigoInventario(),
+                            'nombre_equipo' =>
+                                $validated['nombreEquipo'],
 
-                                'nombre_equipo' =>
-                                    $this->nombreEquipo,
+                            'host' =>
+                                $this->nullableString(
+                                    $payload['host']
+                                ),
 
-                                'host' =>
-                                    $this->host ?: null,
+                            'id_estado_activo' =>
+                                (int) $validated['idEstadoActivo'],
 
-                                'id_estado_activo' =>
-                                    (int) $this->idEstadoActivo,
+                            'id_tipo_equipo' =>
+                                (int) $validated['idTipoEquipo'],
 
-                                'id_tipo_equipo' =>
-                                    (int) $this->idTipoEquipo,
+                            'id_modelo' =>
+                                $this->nullableInt(
+                                    $payload['idModelo']
+                                ),
 
-                                'id_modelo' =>
-                                    $this->idModelo !== ''
-                                        ? (int) $this->idModelo
-                                        : null,
+                            'fecha_compra' =>
+                                $this->nullableString(
+                                    $payload['fechaCompra']
+                                ),
 
-                                'fecha_compra' =>
-                                    $this->fechaCompra ?: null,
+                            'id_marca' =>
+                                (int) $validated['idMarca'],
 
-                                'id_marca' =>
-                                    (int) $this->idMarca,
+                            'direccion_mac' =>
+                                $this->nullableString(
+                                    $payload['direccionMac']
+                                ),
 
-                                'direccion_mac' =>
-                                    $this->direccionMac ?: null,
+                            'numero_factura' =>
+                                $validated['numeroFactura'],
 
-                                'numero_factura' =>
-                                    $this->numeroFactura,
+                            'numero_serie' =>
+                                $validated['numeroSerie'],
 
-                                'numero_serie' =>
-                                    $this->numeroSerie,
+                            'id_proveedor' =>
+                                $this->nullableInt(
+                                    $payload['idProveedor']
+                                ),
 
-                                'id_proveedor' =>
-                                    $this->idProveedor !== ''
-                                        ? (int) $this->idProveedor
-                                        : null,
+                            'id_condicion_activo' =>
+                                $this->nullableInt(
+                                    $payload['idCondicionActivo']
+                                ),
 
-                                'id_condicion_activo' =>
-                                    $this->idCondicionActivo !== ''
-                                        ? (int) $this->idCondicionActivo
-                                        : null,
+                            'id_area' =>
+                                $this->nullableInt(
+                                    $payload['idDepartamento']
+                                ) !== null
+                                    ? null
+                                    : (int) $validated['idArea'],
 
-                                'id_area' =>
-                                    $this->idDepartamento !== ''
-                                        ? null
-                                        : (int) $this->idArea,
+                            'id_departamento' =>
+                                $this->nullableInt(
+                                    $payload['idDepartamento']
+                                ),
 
-                                'id_departamento' =>
-                                    $this->idDepartamento !== ''
-                                        ? (int) $this->idDepartamento
-                                        : null,
+                            'fecha_fin_garantia' =>
+                                $this->nullableString(
+                                    $payload['fechaFinGarantia']
+                                ),
 
-                                'fecha_fin_garantia' =>
-                                    $this->fechaFinGarantia ?: null,
+                            'comentarios' =>
+                                $this->nullableString(
+                                    $payload['comentarios']
+                                ),
 
-                                'comentarios' =>
-                                    $this->comentarios ?: null,
+                            'registrado_por' =>
+                                Auth::id(),
+                        ],
+                        'id_equipo'
+                    );
 
-                                'registrado_por' =>
-                                    Auth::id(),
-                            ],
-                            'id_equipo'
-                        );
-
-
+                /*
+                |--------------------------------------------------------------------------
+                | Tabla hija según tipo
+                |--------------------------------------------------------------------------
+                */
                 if ($childTable) {
-
                     $row = [
-                        'id_equipo' => $idEquipo
+                        'id_equipo' => $idEquipo,
                     ];
-
 
                     foreach (
                         $childFields as $field => $type
                     ) {
-
                         $value =
-                            $this->childData[$field]
+                            $childData[$field]
                             ?? null;
 
-
                         if ($type === 'boolean') {
-
                             $row[$field] =
                                 (bool) ($value ?? false);
 
                         } elseif (
-                            $value === null ||
-                            $value === ''
+                            $value === null
+                            || $value === ''
                         ) {
-
                             $row[$field] = null;
 
                         } elseif ($type === 'number') {
-
                             $row[$field] =
                                 is_numeric($value)
                                     ? $value + 0
                                     : null;
 
                         } else {
-
-                            $row[$field] = $value;
+                            $row[$field] =
+                                $value;
                         }
                     }
 
-
-                    DB::table($childTable)
-                        ->insert($row);
+                    DB::table(
+                        $childTable
+                    )->insert(
+                        $row
+                    );
                 }
 
+                /*
+                |--------------------------------------------------------------------------
+                | Asignación inicial
+                |--------------------------------------------------------------------------
+                */
+                $propietario =
+                    trim(
+                        (string) $payload['propietario']
+                    );
 
-                if (
-                    trim($this->propietario) !== ''
-                ) {
-
+                if ($propietario !== '') {
                     $idTipoAsignacion =
                         DB::table('catalogo_valores')
                             ->join(
@@ -655,103 +713,151 @@ class EquipoCreate extends Component
                                 'catalogo_valores.id_valor'
                             );
 
-
                     if ($idTipoAsignacion) {
+                        DB::table(
+                            'asignaciones'
+                        )->insert([
+                            'id_equipo' =>
+                                $idEquipo,
 
-                        DB::table('asignaciones')
-                            ->insert([
-                                'id_equipo' =>
-                                    $idEquipo,
+                            'nombre_colaborador' =>
+                                $propietario,
 
-                                'nombre_colaborador' =>
-                                    $this->propietario,
+                            'id_area' =>
+                                $this->nullableInt(
+                                    $payload['idDepartamento']
+                                ) !== null
+                                    ? null
+                                    : (int) $validated['idArea'],
 
-                                'id_area' =>
-                                    $this->idDepartamento !== ''
-                                        ? null
-                                        : (int) $this->idArea,
+                            'id_departamento' =>
+                                $this->nullableInt(
+                                    $payload['idDepartamento']
+                                ),
 
-                                'id_departamento' =>
-                                    $this->idDepartamento !== ''
-                                        ? (int) $this->idDepartamento
-                                        : null,
+                            'id_tipo_asignacion' =>
+                                $idTipoAsignacion,
 
-                                'id_tipo_asignacion' =>
-                                    $idTipoAsignacion,
+                            'fecha_asignacion' =>
+                                now(),
 
-                                'fecha_asignacion' =>
-                                    now(),
-
-                                'asignado_por' =>
-                                    Auth::id(),
-                            ]);
+                            'asignado_por' =>
+                                Auth::id(),
+                        ]);
                     }
                 }
 
-
-                return $idEquipo;
+                return (int) $idEquipo;
             }
         );
 
+        return [
+            'ok' => true,
 
-        $this->reset([
-        'nombreEquipo',
-        'host',
-        'idEstadoActivo',
-        'idTipoEquipo',
-        'idModelo',
-        'fechaCompra',
-        'idMarca',
-        'direccionMac',
-        'numeroFactura',
-        'numeroSerie',
-        'idProveedor',
+            'message' =>
+                'Equipo añadido correctamente.',
 
-        'propietario',
-        'idCondicionActivo',
-        'idArea',
-        'idDepartamento',
-        'fechaFinGarantia',
-        'comentarios',
+            'record' => [
+                'id' =>
+                    $idEquipo,
 
-        'childData',
-    ]);
+                'code' =>
+                    $codigoInventario,
 
-    $this->resetValidation();
-    $this->resetErrorBag();
+                'name' =>
+                    (string) $validated['nombreEquipo'],
+            ],
 
-    /*
-    |--------------------------------------------------------------------------
-    | Fuerza a reconstruir el formulario
-    |--------------------------------------------------------------------------
-    |
-    | Esto también limpia visualmente los x-searchable-select,
-    | que manejan parte de su estado mediante Alpine.
-    |
-    */
-    $this->formKey++;
+            'nextCode' =>
+                'ACT-'
+                . str_pad(
+                    (string) ($idEquipo + 1),
+                    6,
+                    '0',
+                    STR_PAD_LEFT
+                ),
+        ];
+    }
 
     /*
     |--------------------------------------------------------------------------
-    | Aviso de éxito
+    | Normalizar snapshot
     |--------------------------------------------------------------------------
     */
-    $this->dispatch(
-        'equipo-guardado',
-        message: 'Equipo añadido correctamente.'
-    );
+    private function normalizePayload(
+        array $payload
+    ): array {
+        return array_merge(
+            [
+                'nombreEquipo' => '',
+                'host' => '',
+                'idEstadoActivo' => '',
+                'idTipoEquipo' => '',
+                'idModelo' => '',
+                'fechaCompra' => '',
+                'idMarca' => '',
+                'direccionMac' => '',
+                'numeroFactura' => '',
+                'numeroSerie' => '',
+                'idProveedor' => '',
+                'propietario' => '',
+                'idCondicionActivo' => '',
+                'idArea' => '',
+                'idDepartamento' => '',
+                'fechaFinGarantia' => '',
+                'comentarios' => '',
+                'childData' => [],
+            ],
+            $payload
+        );
+    }
+
+    private function nullableInt(
+        mixed $value
+    ): ?int {
+        if (
+            $value === null
+            || $value === ''
+        ) {
+            return null;
+        }
+
+        return is_numeric($value)
+            ? (int) $value
+            : null;
+    }
+
+    private function nullableString(
+        mixed $value
+    ): ?string {
+        if (
+            $value === null
+            || ! is_string($value)
+        ) {
+            return null;
+        }
+
+        $value =
+            trim($value);
+
+        return $value !== ''
+            ? $value
+            : null;
     }
 
     public function getCodigoInventarioPreviewProperty(): string
     {
-        $ultimo = DB::table('equipos')->max('id_equipo');
+        $ultimo =
+            DB::table('equipos')
+                ->max('id_equipo');
 
-        return 'ACT-' . str_pad(
-            (string) (($ultimo ?? 0) + 1),
-            6,
-            '0',
-            STR_PAD_LEFT
-        );
+        return 'ACT-'
+            . str_pad(
+                (string) (($ultimo ?? 0) + 1),
+                6,
+                '0',
+                STR_PAD_LEFT
+            );
     }
 
     private function generarCodigoInventario(): string
@@ -760,15 +866,14 @@ class EquipoCreate extends Component
             DB::table('equipos')
                 ->max('id_equipo');
 
-        return 'ACT-' .
-            str_pad(
+        return 'ACT-'
+            . str_pad(
                 (string) (($ultimo ?? 0) + 1),
                 6,
                 '0',
                 STR_PAD_LEFT
             );
     }
-
 
     /**
      * Placeholder que se muestra mientras el componente
@@ -780,7 +885,6 @@ class EquipoCreate extends Component
             'livewire.placeholders.equipo-create'
         );
     }
-
 
     public function render()
     {

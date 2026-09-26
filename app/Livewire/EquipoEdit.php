@@ -4,7 +4,9 @@ namespace App\Livewire;
 
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Livewire\Attributes\Json;
 use Livewire\Component;
 
 class EquipoEdit extends Component
@@ -117,7 +119,6 @@ class EquipoEdit extends Component
             )
             ->first();
 
-
         abort_unless(
             $equipo,
             404
@@ -136,13 +137,11 @@ class EquipoEdit extends Component
                 ?? ''
             );
 
-
         $this->nombreEquipo =
             (string) (
                 $equipo->nombre_equipo
                 ?? ''
             );
-
 
         $this->host =
             (string) (
@@ -150,18 +149,15 @@ class EquipoEdit extends Component
                 ?? ''
             );
 
-
         $this->idEstadoActivo =
             $equipo->id_estado_activo !== null
                 ? (string) $equipo->id_estado_activo
                 : '';
 
-
         $this->idTipoEquipo =
             $equipo->id_tipo_equipo !== null
                 ? (string) $equipo->id_tipo_equipo
                 : '';
-
 
         $this->tipoEquipoOriginal =
             (int) (
@@ -169,12 +165,10 @@ class EquipoEdit extends Component
                 ?? 0
             );
 
-
         $this->idModelo =
             $equipo->id_modelo !== null
                 ? (string) $equipo->id_modelo
                 : '';
-
 
         $this->fechaCompra =
             (string) (
@@ -182,12 +176,10 @@ class EquipoEdit extends Component
                 ?? ''
             );
 
-
         $this->idMarca =
             $equipo->id_marca !== null
                 ? (string) $equipo->id_marca
                 : '';
-
 
         $this->direccionMac =
             (string) (
@@ -195,20 +187,17 @@ class EquipoEdit extends Component
                 ?? ''
             );
 
-
         $this->numeroFactura =
             (string) (
                 $equipo->numero_factura
                 ?? ''
             );
 
-
         $this->numeroSerie =
             (string) (
                 $equipo->numero_serie
                 ?? ''
             );
-
 
         $this->idProveedor =
             $equipo->id_proveedor !== null
@@ -227,13 +216,11 @@ class EquipoEdit extends Component
                 ? (string) $equipo->id_condicion_activo
                 : '';
 
-
         $this->fechaFinGarantia =
             (string) (
                 $equipo->fecha_fin_garantia
                 ?? ''
             );
-
 
         $this->comentarios =
             (string) (
@@ -269,14 +256,12 @@ class EquipoEdit extends Component
                     'id_area',
                 ]);
 
-
             if ($departamento) {
 
                 $this->idArea =
                     $departamento->id_area !== null
                         ? (string) $departamento->id_area
                         : '';
-
 
                 $this->idDepartamento =
                     (string) $departamento->id_departamento;
@@ -288,7 +273,6 @@ class EquipoEdit extends Component
                 $equipo->id_area !== null
                     ? (string) $equipo->id_area
                     : '';
-
 
             $this->idDepartamento = '';
         }
@@ -316,7 +300,6 @@ class EquipoEdit extends Component
             ->first([
                 'nombre_colaborador',
             ]);
-
 
         $this->propietario =
             (string) (
@@ -378,7 +361,6 @@ class EquipoEdit extends Component
 
             'sistema_operativo' =>
                 'text',
-
         ];
 
 
@@ -687,7 +669,6 @@ class EquipoEdit extends Component
                 ],
 
             ],
-
         ];
     }
 
@@ -792,10 +773,8 @@ class EquipoEdit extends Component
         $config =
             $this->childConfig();
 
-
         $tipo =
             (int) $this->idTipoEquipo;
-
 
         return
             $config[$tipo]['fields']
@@ -1233,89 +1212,122 @@ class EquipoEdit extends Component
 
     /*
     |--------------------------------------------------------------------------
-    | Guardar cambios
+    | Guardar cambios de forma optimista
     |--------------------------------------------------------------------------
+    |
+    | El Blade envía una fotografía completa del formulario.
+    |
+    | El guardado ya no depende de que las propiedades actuales del componente
+    | permanezcan sin cambios mientras termina la petición.
+    |
     */
 
-    public function save(): void
+    #[Json]
+    public function save(array $payload): array
     {
+        $payload =
+            $this->normalizePayload(
+                $payload
+            );
+
+
         /*
         |--------------------------------------------------------------------------
         | Validación
         |--------------------------------------------------------------------------
         */
 
-        $rules = [
+        $validated = Validator::make(
+            $payload,
+            [
 
-            'nombreEquipo' => [
-                'required',
-                'string',
-                'max:255',
-            ],
+                'nombreEquipo' => [
+                    'required',
+                    'string',
+                    'max:255',
+                ],
 
-            'idEstadoActivo' => [
-                'required',
-            ],
+                'idEstadoActivo' => [
+                    'required',
+                ],
 
-            'idTipoEquipo' => [
-                'required',
-            ],
+                'idTipoEquipo' => [
+                    'required',
+                ],
 
-            'idMarca' => [
-                'required',
-            ],
+                'idMarca' => [
+                    'required',
+                ],
 
-            'numeroSerie' => [
+                'numeroSerie' => [
 
-                'required',
+                    'required',
 
-                'string',
+                    'string',
 
-                'max:255',
+                    'max:255',
 
-                Rule::unique(
-                    'equipos',
-                    'numero_serie'
-                )->ignore(
-                    $this->equipoId,
-                    'id_equipo'
-                ),
+                    Rule::unique(
+                        'equipos',
+                        'numero_serie'
+                    )->ignore(
+                        $this->equipoId,
+                        'id_equipo'
+                    ),
 
-            ],
+                ],
 
-            'numeroFactura' => [
-                'required',
-                'string',
-                'max:255',
-            ],
+                'numeroFactura' => [
+                    'required',
+                    'string',
+                    'max:255',
+                ],
 
-            'idArea' => [
-                'required',
-            ],
+                'idArea' => [
+                    'required',
+                ],
 
-        ];
+                'childData' => [
+                    'array',
+                ],
 
-
-        $this->validate(
-            $rules
-        );
+            ]
+        )->validate();
 
 
         /*
         |--------------------------------------------------------------------------
-        | Configuración anterior y nueva
+        | Tipo actualmente persistido
         |--------------------------------------------------------------------------
+        |
+        | Lo consultamos directamente en BD.
+        |
+        | Esto es importante porque #[Json] no depende de un render posterior
+        | para mantener correcto el tipo anterior en guardados consecutivos.
+        |
         */
 
-        $configAnterior =
-            $this->childConfig()[
-                $this->tipoEquipoOriginal
-            ]
-            ?? null;
+        $tipoAnterior = (int) DB::table(
+            'equipos'
+        )
+            ->where(
+                'id_equipo',
+                $this->equipoId
+            )
+            ->value(
+                'id_tipo_equipo'
+            );
 
 
         $tipoNuevo =
-            (int) $this->idTipoEquipo;
+            (int) $validated['idTipoEquipo'];
+
+
+        $configAnterior =
+            $this->childConfig()[
+                $tipoAnterior
+            ]
+            ?? null;
 
 
         $configNuevo =
@@ -1330,6 +1342,14 @@ class EquipoEdit extends Component
             ?? [];
 
 
+        $childData =
+            is_array(
+                $payload['childData']
+            )
+                ? $payload['childData']
+                : [];
+
+
         /*
         |--------------------------------------------------------------------------
         | Transacción
@@ -1338,20 +1358,25 @@ class EquipoEdit extends Component
 
         DB::transaction(
             function () use (
+                $payload,
+                $validated,
+                $tipoAnterior,
+                $tipoNuevo,
                 $configAnterior,
                 $configNuevo,
                 $childFields,
-                $tipoNuevo
-            ) {
+                $childData
+            ): void {
+
 
                 /*
                 |--------------------------------------------------------------------------
-                | Si cambió el tipo, quitamos primero la fila de la tabla antigua
+                | Si cambió el tipo, eliminamos la fila específica anterior
                 |--------------------------------------------------------------------------
                 */
 
                 if (
-                    $this->tipoEquipoOriginal !==
+                    $tipoAnterior !==
                         $tipoNuevo &&
                     $configAnterior
                 ) {
@@ -1371,6 +1396,9 @@ class EquipoEdit extends Component
                 |--------------------------------------------------------------------------
                 | Actualizar equipo
                 |--------------------------------------------------------------------------
+                |
+                | codigo_inventario NO se modifica.
+                |
                 */
 
                 DB::table('equipos')
@@ -1382,83 +1410,88 @@ class EquipoEdit extends Component
 
                     ->update([
 
-                        /*
-                        |--------------------------------------------------------------------------
-                        | codigo_inventario NO se modifica
-                        |--------------------------------------------------------------------------
-                        */
-
                         'nombre_equipo' =>
-                            $this->nombreEquipo,
+                            trim(
+                                (string) $validated['nombreEquipo']
+                            ),
 
                         'host' =>
-                            $this->host ?: null,
+                            $this->nullableString(
+                                $payload['host']
+                            ),
 
                         'id_estado_activo' =>
-                            (int) $this->idEstadoActivo,
+                            (int) $validated['idEstadoActivo'],
 
                         'id_tipo_equipo' =>
                             $tipoNuevo,
 
                         'id_modelo' =>
-                            $this->idModelo !== ''
-                                ? (int) $this->idModelo
-                                : null,
+                            $this->nullableInt(
+                                $payload['idModelo']
+                            ),
 
                         'fecha_compra' =>
-                            $this->fechaCompra ?: null,
+                            $this->nullableString(
+                                $payload['fechaCompra']
+                            ),
 
                         'id_marca' =>
-                            (int) $this->idMarca,
+                            (int) $validated['idMarca'],
 
                         'direccion_mac' =>
-                            $this->direccionMac ?: null,
+                            $this->nullableString(
+                                $payload['direccionMac']
+                            ),
 
                         'numero_factura' =>
-                            $this->numeroFactura,
+                            trim(
+                                (string) $validated['numeroFactura']
+                            ),
 
                         'numero_serie' =>
-                            $this->numeroSerie,
+                            trim(
+                                (string) $validated['numeroSerie']
+                            ),
 
                         'id_proveedor' =>
-                            $this->idProveedor !== ''
-                                ? (int) $this->idProveedor
-                                : null,
+                            $this->nullableInt(
+                                $payload['idProveedor']
+                            ),
 
                         'id_condicion_activo' =>
-                            $this->idCondicionActivo !== ''
-                                ? (int) $this->idCondicionActivo
-                                : null,
+                            $this->nullableInt(
+                                $payload['idCondicionActivo']
+                            ),
 
 
                         /*
                         |--------------------------------------------------------------------------
                         | Área / Departamento
                         |--------------------------------------------------------------------------
-                        |
-                        | Igual que en EquipoCreate:
-                        |
-                        | si existe departamento -> id_area = null
-                        |
                         */
 
                         'id_area' =>
-                            $this->idDepartamento !== ''
+                            $this->nullableInt(
+                                $payload['idDepartamento']
+                            ) !== null
                                 ? null
-                                : (int) $this->idArea,
+                                : (int) $validated['idArea'],
 
                         'id_departamento' =>
-                            $this->idDepartamento !== ''
-                                ? (int) $this->idDepartamento
-                                : null,
+                            $this->nullableInt(
+                                $payload['idDepartamento']
+                            ),
 
                         'fecha_fin_garantia' =>
-                            $this->fechaFinGarantia
-                                ?: null,
+                            $this->nullableString(
+                                $payload['fechaFinGarantia']
+                            ),
 
                         'comentarios' =>
-                            $this->comentarios
-                                ?: null,
+                            $this->nullableString(
+                                $payload['comentarios']
+                            ),
 
                     ]);
 
@@ -1480,7 +1513,7 @@ class EquipoEdit extends Component
                     ) {
 
                         $value =
-                            $this->childData[$field]
+                            $childData[$field]
                             ?? null;
 
 
@@ -1585,7 +1618,7 @@ class EquipoEdit extends Component
 
         /*
         |--------------------------------------------------------------------------
-        | Actualizamos tipo original
+        | Estado interno
         |--------------------------------------------------------------------------
         */
 
@@ -1595,35 +1628,143 @@ class EquipoEdit extends Component
 
         /*
         |--------------------------------------------------------------------------
-        | Limpiar errores
+        | Respuesta JSON
         |--------------------------------------------------------------------------
         */
 
-        $this->resetValidation();
+        return [
 
-        $this->resetErrorBag();
+            'ok' =>
+                true,
+
+            'message' =>
+                'Los cambios se guardaron correctamente.',
+
+            'record' => [
+
+                'id' =>
+                    $this->equipoId,
+
+                'code' =>
+                    $this->codigoInventario,
+
+                'name' =>
+                    trim(
+                        (string) $validated['nombreEquipo']
+                    ),
+
+                'typeId' =>
+                    $tipoNuevo,
+
+            ],
+        ];
+    }
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | Reconstruir selects
-        |--------------------------------------------------------------------------
-        */
+    /*
+    |--------------------------------------------------------------------------
+    | Normalizar snapshot
+    |--------------------------------------------------------------------------
+    */
 
-        $this->formKey++;
+    private function normalizePayload(
+        array $payload
+    ): array {
 
+        return array_merge(
+            [
 
-        /*
-        |--------------------------------------------------------------------------
-        | Mensaje
-        |--------------------------------------------------------------------------
-        */
+                'nombreEquipo' => '',
 
-        $this->dispatch(
-            'equipo-actualizado',
-            message:
-                'Los cambios se guardaron correctamente.'
+                'host' => '',
+
+                'idEstadoActivo' => '',
+
+                'idTipoEquipo' => '',
+
+                'idModelo' => '',
+
+                'fechaCompra' => '',
+
+                'idMarca' => '',
+
+                'direccionMac' => '',
+
+                'numeroFactura' => '',
+
+                'numeroSerie' => '',
+
+                'idProveedor' => '',
+
+                'propietario' => '',
+
+                'idCondicionActivo' => '',
+
+                'idArea' => '',
+
+                'idDepartamento' => '',
+
+                'fechaFinGarantia' => '',
+
+                'comentarios' => '',
+
+                'childData' => [],
+
+            ],
+            $payload
         );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Entero nullable
+    |--------------------------------------------------------------------------
+    */
+
+    private function nullableInt(
+        mixed $value
+    ): ?int {
+
+        if (
+            $value === null ||
+            $value === ''
+        ) {
+            return null;
+        }
+
+
+        return is_numeric($value)
+            ? (int) $value
+            : null;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Texto nullable
+    |--------------------------------------------------------------------------
+    */
+
+    private function nullableString(
+        mixed $value
+    ): ?string {
+
+        if (
+            $value === null ||
+            ! is_string($value)
+        ) {
+            return null;
+        }
+
+
+        $value =
+            trim($value);
+
+
+        return $value !== ''
+            ? $value
+            : null;
     }
 
 

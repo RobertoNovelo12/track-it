@@ -20,11 +20,9 @@
         ->all();
 @endphp
 
-
 <div
     x-data="{
         open: false,
-
         query: '',
 
         selected: $wire.entangle('{{ $wireModel }}').live,
@@ -40,6 +38,11 @@
         clearValue: @js($clearValue),
 
 
+        /*
+        |--------------------------------------------------------------------------
+        | Opciones filtradas
+        |--------------------------------------------------------------------------
+        */
         get filtered() {
             const query =
                 String(this.query ?? '')
@@ -58,6 +61,11 @@
         },
 
 
+        /*
+        |--------------------------------------------------------------------------
+        | Inicialización
+        |--------------------------------------------------------------------------
+        */
         init() {
             this.syncSelectedLabel();
 
@@ -72,6 +80,11 @@
         },
 
 
+        /*
+        |--------------------------------------------------------------------------
+        | Obtener opción seleccionada
+        |--------------------------------------------------------------------------
+        */
         selectedOption() {
             if (
                 this.selected === null
@@ -91,6 +104,11 @@
         },
 
 
+        /*
+        |--------------------------------------------------------------------------
+        | Sincronizar texto visible
+        |--------------------------------------------------------------------------
+        */
         syncSelectedLabel() {
             const option =
                 this.selectedOption();
@@ -120,6 +138,11 @@
         },
 
 
+        /*
+        |--------------------------------------------------------------------------
+        | Abrir
+        |--------------------------------------------------------------------------
+        */
         openAndFocus() {
             if (this.disabled) {
                 return;
@@ -137,6 +160,11 @@
         },
 
 
+        /*
+        |--------------------------------------------------------------------------
+        | Cerrar
+        |--------------------------------------------------------------------------
+        */
         closeDropdown() {
             if (!this.open) {
                 return;
@@ -148,6 +176,31 @@
         },
 
 
+        /*
+        |--------------------------------------------------------------------------
+        | Abrir / cerrar con la flecha
+        |--------------------------------------------------------------------------
+        */
+        toggleDropdown() {
+            if (this.disabled) {
+                return;
+            }
+
+            if (this.open) {
+                this.closeDropdown();
+
+                return;
+            }
+
+            this.openAndFocus();
+        },
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Seleccionar
+        |--------------------------------------------------------------------------
+        */
         pick(value, label) {
             if (this.disabled) {
                 return;
@@ -166,6 +219,11 @@
         },
 
 
+        /*
+        |--------------------------------------------------------------------------
+        | Limpiar / valor general
+        |--------------------------------------------------------------------------
+        */
         clear() {
             if (this.disabled) {
                 return;
@@ -188,6 +246,11 @@
         },
 
 
+        /*
+        |--------------------------------------------------------------------------
+        | Escritura
+        |--------------------------------------------------------------------------
+        */
         handleInput() {
             if (this.disabled) {
                 return;
@@ -199,7 +262,6 @@
     }"
 
     @click.outside="closeDropdown()"
-
     @keydown.escape.window="closeDropdown()"
 
     class="relative"
@@ -215,20 +277,16 @@
         LABEL
     ============================================================ --}}
     @if ($label)
-
         <label
             class="
                 block
-
                 text-xs
                 text-[var(--theme-text-muted)]
-
                 mb-1.5
             "
         >
             {{ $label }}
         </label>
-
     @endif
 
 
@@ -244,10 +302,8 @@
 
         class="
             relative
-
             flex
             items-center
-
             w-full
 
             border
@@ -299,7 +355,7 @@
                 'bg-transparent',
 
                 'pl-3',
-                'pr-8',
+                'pr-10',
 
                 'placeholder:text-[var(--theme-text-muted)]',
 
@@ -313,40 +369,70 @@
         >
 
 
-        {{-- FLECHA --}}
-        <svg
+        {{-- ========================================================
+            FLECHA
+        ======================================================== --}}
+        <button
+            type="button"
+
+            @click.stop="toggleDropdown()"
+
+            :disabled="disabled"
+
+            :aria-expanded="open ? 'true' : 'false'"
+
+            aria-label="Abrir o cerrar opciones"
+
             class="
                 absolute
 
-                right-2
+                right-0
+                top-0
+                bottom-0
 
-                w-4
-                h-4
+                w-9
+
+                flex
+                items-center
+                justify-center
 
                 text-[var(--theme-text-muted)]
 
-                pointer-events-none
+                hover:text-[var(--theme-text)]
 
-                transition-transform
-                duration-150
+                disabled:cursor-not-allowed
+
+                transition-colors
             "
-
-            :class="
-                open
-                    ? 'rotate-180'
-                    : ''
-            "
-
-            viewBox="0 0 24 24"
-
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.5"
-
-            aria-hidden="true"
         >
-            <path d="M6 9l6 6 6-6"/>
-        </svg>
+            <svg
+                class="
+                    w-4
+                    h-4
+
+                    pointer-events-none
+
+                    transition-transform
+                    duration-150
+                "
+
+                :class="
+                    open
+                        ? 'rotate-180'
+                        : ''
+                "
+
+                viewBox="0 0 24 24"
+
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+
+                aria-hidden="true"
+            >
+                <path d="M6 9l6 6 6-6"/>
+            </svg>
+        </button>
 
     </div>
 
@@ -383,9 +469,10 @@
         "
     >
 
-        {{-- LIMPIAR / VALOR GENERAL --}}
+        {{-- ========================================================
+            LIMPIAR / VALOR GENERAL
+        ======================================================== --}}
         @if ($showClear)
-
             <div
                 @click="clear()"
 
@@ -402,11 +489,12 @@
             >
                 {{ $clearLabel }}
             </div>
-
         @endif
 
 
-        {{-- OPCIONES --}}
+        {{-- ========================================================
+            OPCIONES
+        ======================================================== --}}
         <template
             x-for="option in filtered"
 
@@ -436,7 +524,9 @@
         </template>
 
 
-        {{-- SIN RESULTADOS --}}
+        {{-- ========================================================
+            SIN RESULTADOS
+        ======================================================== --}}
         <div
             x-show="filtered.length === 0"
 

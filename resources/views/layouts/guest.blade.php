@@ -433,10 +433,10 @@
                     src="{{ asset('images/logo-grand-palladium.png') }}"
                     alt="Grand Palladium Hotels & Resorts"
                     class="
-                        h-[90px]
-                        sm:h-[110px]
+                        w-[150px]
+                        sm:w-[170px]
 
-                        w-auto
+                        h-auto
 
                         object-contain
 

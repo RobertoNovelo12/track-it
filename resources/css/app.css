@@ -232,3 +232,26 @@ select:not([multiple]) {
     background-position: right 0.75rem center;
     background-size: 14px 14px;
 }
+
+
+/* ============================================================
+   LIVEWIRE NAVIGATE - PROGRESS BAR
+============================================================ */
+
+#nprogress .bar {
+    background: var(--theme-primary) !important;
+
+    height: 2px !important;
+
+    box-shadow: none !important;
+}
+
+#nprogress .peg {
+    box-shadow: none !important;
+
+    opacity: 0 !important;
+}
+
+#nprogress .spinner {
+    display: none !important;
+}

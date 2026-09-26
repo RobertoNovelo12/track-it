@@ -1,4 +1,4 @@
-<div class="animate-pulse">
+<div>
 
     {{-- ============================================================
         ENCABEZADO
@@ -14,7 +14,6 @@
             mb-6
         "
     >
-
         <div class="min-w-0">
 
             {{-- Breadcrumb --}}
@@ -22,98 +21,180 @@
                 class="
                     flex
                     items-center
+                    flex-wrap
                     gap-2
-                    mb-3
+                    mb-2
+                    text-xs
+                    text-[var(--theme-text-muted)]
                 "
             >
-                <div
+                <a
+                    href="{{ route('dashboard') }}"
                     class="
-                        h-2.5
-                        w-20
-                        rounded
-                        bg-[var(--theme-surface-soft)]
+                        hover:text-[var(--theme-primary)]
+                        transition-colors
                     "
-                ></div>
+                >
+                    Vista General
+                </a>
 
-                <div
-                    class="
-                        h-2.5
-                        w-2
-                        rounded
-                        bg-[var(--theme-surface-soft)]
-                    "
-                ></div>
+                <svg
+                    class="w-3 h-3"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                >
+                    <path d="M9 6l6 6-6 6"/>
+                </svg>
 
-                <div
-                    class="
-                        h-2.5
-                        w-32
-                        rounded
-                        bg-[var(--theme-surface-soft)]
-                    "
-                ></div>
+                <span>
+                    Asignación y Movimientos
+                </span>
             </div>
 
-
             {{-- Título --}}
-            <div
+            <h1
                 class="
-                    h-6
-                    w-56
-                    max-w-full
-                    rounded
-                    bg-[var(--theme-surface-soft)]
+                    text-xl
+                    font-semibold
+                    leading-tight
+                    text-[var(--theme-text-strong)]
                 "
-            ></div>
-
+            >
+                Asignación y Movimientos
+            </h1>
         </div>
 
 
-        {{-- Acciones --}}
+        {{-- ========================================================
+            ACCIONES SUPERIORES
+        ======================================================== --}}
         <div
             class="
                 flex
                 flex-wrap
                 items-center
                 gap-2
+                xl:justify-end
             "
         >
 
-            <div
+            {{-- Asignar --}}
+            <button
+                type="button"
+                disabled
                 class="
                     h-9
-                    w-24
+                    px-4
+                    inline-flex
+                    items-center
+                    justify-center
+                    gap-2
                     rounded-md
-                    bg-[var(--theme-surface-soft)]
+                    bg-[var(--theme-primary)]
+                    text-sm
+                    font-medium
+                    text-white
+                    disabled:opacity-100
+                    disabled:cursor-default
                 "
-            ></div>
+            >
+                <svg
+                    class="w-4 h-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.7"
+                >
+                    <path d="M12 5v14"/>
+                    <path d="M5 12h14"/>
+                </svg>
 
-            <div
+                Asignar
+            </button>
+
+
+            {{-- Reasignar --}}
+            <button
+                type="button"
+                disabled
                 class="
                     h-9
-                    w-28
+                    px-4
+                    inline-flex
+                    items-center
+                    justify-center
+                    gap-2
                     rounded-md
-                    bg-[var(--theme-surface-soft)]
+                    bg-[var(--theme-surface)]
+                    border
+                    border-[var(--theme-border-strong)]
+                    text-sm
+                    font-medium
+                    text-[var(--theme-text)]
+                    disabled:opacity-100
+                    disabled:cursor-default
                 "
-            ></div>
+            >
+                <svg
+                    class="w-4 h-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                >
+                    <path d="M4 7h15"/>
+                    <path d="M16 4l3 3-3 3"/>
+                    <path d="M20 17H5"/>
+                    <path d="M8 14l-3 3 3 3"/>
+                </svg>
 
-            <div
+                Reasignar
+            </button>
+
+
+            {{-- Historial --}}
+            <button
+                type="button"
+                disabled
                 class="
                     h-9
-                    w-24
+                    px-4
+                    inline-flex
+                    items-center
+                    justify-center
+                    gap-2
                     rounded-md
-                    bg-[var(--theme-surface-soft)]
+                    bg-[var(--theme-surface)]
+                    border
+                    border-[var(--theme-border-strong)]
+                    text-sm
+                    font-medium
+                    text-[var(--theme-text)]
+                    disabled:opacity-100
+                    disabled:cursor-default
                 "
-            ></div>
+            >
+                <svg
+                    class="w-4 h-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                >
+                    <circle cx="12" cy="12" r="8"/>
+                    <path d="M12 7v5l3 2"/>
+                </svg>
 
+                Historial
+            </button>
         </div>
-
     </section>
 
 
-
     {{-- ============================================================
-        MÉTRICAS
+        MÉTRICAS PRINCIPALES
     ============================================================ --}}
     <section
         class="
@@ -126,85 +207,288 @@
         "
     >
 
-        @for ($i = 0; $i < 3; $i++)
-
+        {{-- ========================================================
+            EQUIPOS ASIGNADOS
+        ======================================================== --}}
+        <div
+            class="
+                bg-[var(--theme-surface)]
+                border
+                border-[var(--theme-border)]
+                rounded-xl
+                px-4
+                sm:px-5
+                py-4
+                flex
+                items-center
+                gap-4
+            "
+        >
             <div
                 class="
-                    bg-[var(--theme-surface)]
-                    border
-                    border-[var(--theme-border)]
+                    shrink-0
+                    w-14
+                    h-14
                     rounded-xl
-                    px-4
-                    sm:px-5
-                    py-4
+                    bg-emerald-500/10
+                    text-emerald-500
                     flex
                     items-center
-                    gap-4
+                    justify-center
                 "
             >
-
-                <div
-                    class="
-                        shrink-0
-                        w-14
-                        h-14
-                        rounded-xl
-                        bg-[var(--theme-surface-soft)]
-                    "
-                ></div>
-
-
-                <div class="flex-1 min-w-0">
-
-                    <div
-                        class="
-                            h-3
-                            w-36
-                            max-w-full
-                            rounded
-                            bg-[var(--theme-surface-soft)]
-                        "
-                    ></div>
-
-                    <div
-                        class="
-                            mt-2
-                            h-6
-                            w-12
-                            rounded
-                            bg-[var(--theme-surface-soft)]
-                        "
-                    ></div>
-
-                    <div
-                        class="
-                            mt-2
-                            h-2.5
-                            w-24
-                            rounded
-                            bg-[var(--theme-surface-soft)]
-                        "
-                    ></div>
-
-                </div>
-
-
-                <div
-                    class="
-                        shrink-0
-                        w-5
-                        h-5
-                        rounded
-                        bg-[var(--theme-surface-soft)]
-                    "
-                ></div>
-
+                <svg
+                    class="w-7 h-7"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                >
+                    <rect x="3" y="4" width="12" height="14" rx="2"/>
+                    <rect x="15" y="8" width="6" height="12" rx="1"/>
+                    <path d="M6 8h6"/>
+                    <path d="M18 12h.01"/>
+                </svg>
             </div>
 
-        @endfor
+            <div class="min-w-0 flex-1">
+                <p
+                    class="
+                        text-sm
+                        font-medium
+                        text-[var(--theme-text-muted)]
+                    "
+                >
+                    Equipos Asignados
+                </p>
+
+                {{-- Solo el dato es desconocido --}}
+                <div class="mt-1 animate-pulse">
+                    <div
+                        class="
+                            h-6
+                            w-14
+                            rounded
+                            bg-[var(--theme-surface-soft)]
+                        "
+                    ></div>
+                </div>
+
+                <p
+                    class="
+                        mt-1
+                        text-[11px]
+                        text-[var(--theme-text-muted)]
+                    "
+                >
+                    Equipos en uso
+                </p>
+            </div>
+
+            <svg
+                class="
+                    shrink-0
+                    w-5
+                    h-5
+                    text-[var(--theme-text-muted)]
+                "
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.7"
+            >
+                <path d="M9 6l6 6-6 6"/>
+            </svg>
+        </div>
+
+
+        {{-- ========================================================
+            EQUIPOS NO ASIGNADOS
+        ======================================================== --}}
+        <div
+            class="
+                bg-[var(--theme-surface)]
+                border
+                border-red-500/25
+                rounded-xl
+                px-4
+                sm:px-5
+                py-4
+                flex
+                items-center
+                gap-4
+            "
+        >
+            <div
+                class="
+                    shrink-0
+                    w-14
+                    h-14
+                    rounded-xl
+                    bg-red-500/10
+                    text-red-500
+                    flex
+                    items-center
+                    justify-center
+                "
+            >
+                <svg
+                    class="w-7 h-7"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                >
+                    <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"/>
+                    <path d="M4 7.5l8 4.5 8-4.5"/>
+                    <path d="M12 12v9"/>
+                </svg>
+            </div>
+
+            <div class="min-w-0 flex-1">
+                <p
+                    class="
+                        text-sm
+                        font-medium
+                        text-[var(--theme-text-muted)]
+                    "
+                >
+                    Equipos No Asignados
+                </p>
+
+                <div class="mt-1 animate-pulse">
+                    <div
+                        class="
+                            h-6
+                            w-14
+                            rounded
+                            bg-[var(--theme-surface-soft)]
+                        "
+                    ></div>
+                </div>
+
+                <p
+                    class="
+                        mt-1
+                        text-[11px]
+                        text-[var(--theme-text-muted)]
+                    "
+                >
+                    Equipos disponibles
+                </p>
+            </div>
+
+            <svg
+                class="
+                    shrink-0
+                    w-5
+                    h-5
+                    text-[var(--theme-text-muted)]
+                "
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.7"
+            >
+                <path d="M9 6l6 6-6 6"/>
+            </svg>
+        </div>
+
+
+        {{-- ========================================================
+            MOVIMIENTOS
+        ======================================================== --}}
+        <div
+            class="
+                bg-[var(--theme-surface)]
+                border
+                border-[var(--theme-primary-border)]
+                rounded-xl
+                px-4
+                sm:px-5
+                py-4
+                flex
+                items-center
+                gap-4
+            "
+        >
+            <div
+                class="
+                    shrink-0
+                    w-14
+                    h-14
+                    rounded-xl
+                    bg-[var(--theme-primary-soft)]
+                    text-[var(--theme-primary)]
+                    flex
+                    items-center
+                    justify-center
+                "
+            >
+                <svg
+                    class="w-7 h-7"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.7"
+                >
+                    <path d="M4 7h15"/>
+                    <path d="M16 4l3 3-3 3"/>
+                    <path d="M20 17H5"/>
+                    <path d="M8 14l-3 3 3 3"/>
+                </svg>
+            </div>
+
+            <div class="min-w-0 flex-1">
+                <p
+                    class="
+                        text-sm
+                        font-medium
+                        text-[var(--theme-text-muted)]
+                    "
+                >
+                    Movimientos recientes
+                </p>
+
+                <div class="mt-1 animate-pulse">
+                    <div
+                        class="
+                            h-6
+                            w-14
+                            rounded
+                            bg-[var(--theme-surface-soft)]
+                        "
+                    ></div>
+                </div>
+
+                <p
+                    class="
+                        mt-1
+                        text-[11px]
+                        text-[var(--theme-text-muted)]
+                    "
+                >
+                    Últimos 7 días
+                </p>
+            </div>
+
+            <svg
+                class="
+                    shrink-0
+                    w-5
+                    h-5
+                    text-[var(--theme-text-muted)]
+                "
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.7"
+            >
+                <path d="M9 6l6 6-6 6"/>
+            </svg>
+        </div>
 
     </section>
-
 
 
     {{-- ============================================================
@@ -233,7 +517,7 @@
             "
         >
 
-            {{-- Cabecera --}}
+            {{-- Cabecera conocida --}}
             <div
                 class="
                     flex
@@ -244,7 +528,6 @@
                     gap-3
                 "
             >
-
                 <div
                     class="
                         flex
@@ -253,60 +536,90 @@
                         min-w-0
                     "
                 >
-
-                    <div
+                    <svg
                         class="
                             shrink-0
                             w-5
                             h-5
-                            rounded
-                            bg-[var(--theme-surface-soft)]
+                            mt-0.5
+                            text-[var(--theme-text-strong)]
                         "
-                    ></div>
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                    >
+                        <path d="M5 20V10"/>
+                        <path d="M12 20V4"/>
+                        <path d="M19 20v-7"/>
+                    </svg>
 
-
-                    <div class="min-w-0 flex-1">
-
-                        <div
+                    <div class="min-w-0">
+                        <h2
                             class="
-                                h-3.5
-                                w-40
-                                max-w-full
-                                rounded
-                                bg-[var(--theme-surface-soft)]
+                                text-sm
+                                font-semibold
+                                text-[var(--theme-text-strong)]
                             "
-                        ></div>
+                        >
+                            Equipos asignados por área
+                        </h2>
 
-                        <div
+                        <p
                             class="
-                                mt-2
-                                h-2.5
-                                w-64
-                                max-w-full
-                                rounded
-                                bg-[var(--theme-surface-soft)]
+                                mt-1
+                                text-xs
+                                text-[var(--theme-text-muted)]
                             "
-                        ></div>
-
+                        >
+                            Distribución de equipos en uso por área de la organización.
+                        </p>
                     </div>
-
                 </div>
 
 
-                <div
+                {{-- Sabemos qué control existe, solo aún no hay datos --}}
+                <button
+                    type="button"
+                    disabled
                     class="
+                        shrink-0
                         h-9
                         w-full
-                        sm:w-32
+                        sm:w-auto
+                        px-3
+                        inline-flex
+                        items-center
+                        justify-between
+                        gap-4
+                        border
+                        border-[var(--theme-border-strong)]
                         rounded-lg
-                        bg-[var(--theme-surface-soft)]
+                        bg-[var(--theme-surface)]
+                        text-xs
+                        text-[var(--theme-text-muted)]
+                        disabled:cursor-default
+                        disabled:opacity-100
                     "
-                ></div>
+                >
+                    Todas las áreas
 
+                    <svg
+                        class="w-3.5 h-3.5"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.7"
+                    >
+                        <path d="M6 9l6 6 6-6"/>
+                    </svg>
+                </button>
             </div>
 
 
-            {{-- Donut y leyenda --}}
+            {{-- ====================================================
+                DATOS DEL GRÁFICO
+            ==================================================== --}}
             <div
                 class="
                     mt-7
@@ -319,29 +632,59 @@
                 "
             >
 
-                {{-- Donut --}}
+                {{-- Donut desconocido --}}
                 <div
                     class="
                         relative
                         shrink-0
-                        w-48
-                        h-48
-                        sm:w-56
-                        sm:h-56
-                        rounded-full
-                        bg-[var(--theme-surface-soft)]
+                        w-56
+                        h-56
+                        sm:w-64
+                        sm:h-64
+                        animate-pulse
                     "
                 >
+                    <div
+                        class="
+                            absolute
+                            inset-0
+                            rounded-full
+                            bg-[var(--theme-surface-soft)]
+                        "
+                    ></div>
 
                     <div
                         class="
                             absolute
-                            inset-[28%]
+                            inset-[25%]
                             rounded-full
                             bg-[var(--theme-surface)]
+                            flex
+                            flex-col
+                            items-center
+                            justify-center
+                            gap-2
                         "
-                    ></div>
+                    >
+                        <div
+                            class="
+                                h-7
+                                w-16
+                                rounded
+                                bg-[var(--theme-surface-soft)]
+                            "
+                        ></div>
 
+                        <span
+                            class="
+                                text-[10px]
+                                sm:text-xs
+                                text-[var(--theme-text-muted)]
+                            "
+                        >
+                            Equipos asignados
+                        </span>
+                    </div>
                 </div>
 
 
@@ -350,12 +693,11 @@
                     class="
                         w-full
                         max-w-xs
-                        space-y-3
+                        space-y-2.5
+                        animate-pulse
                     "
                 >
-
                     @for ($i = 0; $i < 5; $i++)
-
                         <div
                             class="
                                 flex
@@ -363,8 +705,7 @@
                                 gap-2.5
                             "
                         >
-
-                            <div
+                            <span
                                 class="
                                     shrink-0
                                     w-2.5
@@ -372,8 +713,7 @@
                                     rounded-full
                                     bg-[var(--theme-surface-soft)]
                                 "
-                            ></div>
-
+                            ></span>
 
                             <div
                                 class="
@@ -384,7 +724,6 @@
                                 "
                             ></div>
 
-
                             <div
                                 class="
                                     h-2.5
@@ -393,17 +732,12 @@
                                     bg-[var(--theme-surface-soft)]
                                 "
                             ></div>
-
                         </div>
-
                     @endfor
-
                 </div>
 
             </div>
-
         </section>
-
 
 
         {{-- ========================================================
@@ -428,7 +762,6 @@
                     sm:pt-5
                 "
             >
-
                 <div
                     class="
                         flex
@@ -437,7 +770,6 @@
                         gap-4
                     "
                 >
-
                     <div
                         class="
                             flex
@@ -446,60 +778,76 @@
                             min-w-0
                         "
                     >
-
-                        <div
+                        <svg
                             class="
                                 shrink-0
                                 w-5
                                 h-5
-                                rounded
-                                bg-[var(--theme-surface-soft)]
+                                mt-0.5
+                                text-[var(--theme-text-strong)]
                             "
-                        ></div>
-
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                        >
+                            <path d="M3 12h4l2-7 4 14 2-7h6"/>
+                        </svg>
 
                         <div class="min-w-0">
-
-                            <div
+                            <h2
                                 class="
-                                    h-3.5
-                                    w-36
-                                    rounded
-                                    bg-[var(--theme-surface-soft)]
+                                    text-sm
+                                    font-semibold
+                                    text-[var(--theme-text-strong)]
                                 "
-                            ></div>
+                            >
+                                Resumen de actividad
+                            </h2>
 
-                            <div
+                            <p
                                 class="
-                                    mt-2
-                                    h-2.5
-                                    w-56
-                                    max-w-full
-                                    rounded
-                                    bg-[var(--theme-surface-soft)]
+                                    mt-1
+                                    text-xs
+                                    text-[var(--theme-text-muted)]
                                 "
-                            ></div>
-
+                            >
+                                Información general de movimientos y asignaciones.
+                            </p>
                         </div>
-
                     </div>
 
 
-                    <div
+                    <span
                         class="
                             hidden
-                            sm:block
-                            h-3
-                            w-28
-                            rounded
-                            bg-[var(--theme-surface-soft)]
+                            sm:inline-flex
+                            items-center
+                            gap-1
+                            text-xs
+                            font-medium
+                            text-[var(--theme-primary)]
                         "
-                    ></div>
+                    >
+                        Ver reporte completo
 
+                        <svg
+                            class="w-3.5 h-3.5"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                        >
+                            <path d="M5 12h14"/>
+                            <path d="M15 8l4 4-4 4"/>
+                        </svg>
+                    </span>
                 </div>
 
 
-                {{-- Mini métricas --}}
+                {{-- ====================================================
+                    MINI MÉTRICAS
+                ==================================================== --}}
                 <div
                     class="
                         grid
@@ -511,72 +859,287 @@
                     "
                 >
 
-                    @for ($i = 0; $i < 4; $i++)
-
+                    {{-- Asignaciones hoy --}}
+                    <div
+                        class="
+                            rounded-xl
+                            border
+                            border-emerald-500/20
+                            bg-emerald-500/10
+                            p-3
+                        "
+                    >
                         <div
                             class="
-                                rounded-xl
-                                border
-                                border-[var(--theme-border)]
-                                bg-[var(--theme-surface-soft)]
-                                p-3
+                                flex
+                                items-center
+                                gap-2
                             "
                         >
-
-                            <div
+                            <span
                                 class="
+                                    shrink-0
+                                    w-7
+                                    h-7
+                                    rounded-lg
+                                    bg-emerald-500/15
+                                    text-emerald-500
                                     flex
                                     items-center
-                                    gap-2
+                                    justify-center
                                 "
                             >
+                                <svg
+                                    class="w-4 h-4"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="1.7"
+                                >
+                                    <path d="M6 3h10l3 3v15H6z"/>
+                                    <path d="M9 11h6"/>
+                                    <path d="M9 15h6"/>
+                                </svg>
+                            </span>
 
-                                <div
-                                    class="
-                                        shrink-0
-                                        w-7
-                                        h-7
-                                        rounded-lg
-                                        bg-[var(--theme-border)]
-                                    "
-                                ></div>
-
-
+                            <div class="animate-pulse">
                                 <div
                                     class="
                                         h-5
                                         w-8
                                         rounded
-                                        bg-[var(--theme-border)]
+                                        bg-emerald-500/20
                                     "
                                 ></div>
-
                             </div>
-
-
-                            <div
-                                class="
-                                    mt-2
-                                    h-2.5
-                                    w-20
-                                    max-w-full
-                                    rounded
-                                    bg-[var(--theme-border)]
-                                "
-                            ></div>
-
                         </div>
 
-                    @endfor
+                        <p
+                            class="
+                                mt-2
+                                text-[10px]
+                                leading-snug
+                                text-[var(--theme-text-muted)]
+                            "
+                        >
+                            Asignaciones hoy
+                        </p>
+                    </div>
+
+
+                    {{-- Reasignaciones hoy --}}
+                    <div
+                        class="
+                            rounded-xl
+                            border
+                            border-[var(--theme-primary-border)]
+                            bg-[var(--theme-primary-soft-subtle)]
+                            p-3
+                        "
+                    >
+                        <div
+                            class="
+                                flex
+                                items-center
+                                gap-2
+                            "
+                        >
+                            <span
+                                class="
+                                    shrink-0
+                                    w-7
+                                    h-7
+                                    rounded-lg
+                                    bg-[var(--theme-primary-soft)]
+                                    text-[var(--theme-primary)]
+                                    flex
+                                    items-center
+                                    justify-center
+                                "
+                            >
+                                <svg
+                                    class="w-4 h-4"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="1.7"
+                                >
+                                    <path d="M4 7h15"/>
+                                    <path d="M16 4l3 3-3 3"/>
+                                    <path d="M20 17H5"/>
+                                    <path d="M8 14l-3 3 3 3"/>
+                                </svg>
+                            </span>
+
+                            <div class="animate-pulse">
+                                <div
+                                    class="
+                                        h-5
+                                        w-8
+                                        rounded
+                                        bg-[var(--theme-primary-soft)]
+                                    "
+                                ></div>
+                            </div>
+                        </div>
+
+                        <p
+                            class="
+                                mt-2
+                                text-[10px]
+                                leading-snug
+                                text-[var(--theme-text-muted)]
+                            "
+                        >
+                            Reasignaciones hoy
+                        </p>
+                    </div>
+
+
+                    {{-- Asignaciones este mes --}}
+                    <div
+                        class="
+                            rounded-xl
+                            border
+                            border-amber-500/20
+                            bg-amber-500/10
+                            p-3
+                        "
+                    >
+                        <div
+                            class="
+                                flex
+                                items-center
+                                gap-2
+                            "
+                        >
+                            <span
+                                class="
+                                    shrink-0
+                                    w-7
+                                    h-7
+                                    rounded-lg
+                                    bg-amber-500/15
+                                    text-amber-500
+                                    flex
+                                    items-center
+                                    justify-center
+                                "
+                            >
+                                <svg
+                                    class="w-4 h-4"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="1.7"
+                                >
+                                    <circle cx="12" cy="12" r="8"/>
+                                    <path d="M12 7v5l3 2"/>
+                                </svg>
+                            </span>
+
+                            <div class="animate-pulse">
+                                <div
+                                    class="
+                                        h-5
+                                        w-8
+                                        rounded
+                                        bg-amber-500/20
+                                    "
+                                ></div>
+                            </div>
+                        </div>
+
+                        <p
+                            class="
+                                mt-2
+                                text-[10px]
+                                leading-snug
+                                text-[var(--theme-text-muted)]
+                            "
+                        >
+                            Asignaciones este mes
+                        </p>
+                    </div>
+
+
+                    {{-- Reasignaciones este mes --}}
+                    <div
+                        class="
+                            rounded-xl
+                            border
+                            border-violet-500/20
+                            bg-violet-500/10
+                            p-3
+                        "
+                    >
+                        <div
+                            class="
+                                flex
+                                items-center
+                                gap-2
+                            "
+                        >
+                            <span
+                                class="
+                                    shrink-0
+                                    w-7
+                                    h-7
+                                    rounded-lg
+                                    bg-violet-500/15
+                                    text-violet-500
+                                    flex
+                                    items-center
+                                    justify-center
+                                "
+                            >
+                                <svg
+                                    class="w-4 h-4"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="1.7"
+                                >
+                                    <path d="M5 20V10"/>
+                                    <path d="M12 20V4"/>
+                                    <path d="M19 20v-7"/>
+                                </svg>
+                            </span>
+
+                            <div class="animate-pulse">
+                                <div
+                                    class="
+                                        h-5
+                                        w-8
+                                        rounded
+                                        bg-violet-500/20
+                                    "
+                                ></div>
+                            </div>
+                        </div>
+
+                        <p
+                            class="
+                                mt-2
+                                text-[10px]
+                                leading-snug
+                                text-[var(--theme-text-muted)]
+                            "
+                        >
+                            Reasignaciones este mes
+                        </p>
+                    </div>
 
                 </div>
-
             </div>
 
 
-            {{-- Actividad reciente --}}
+            {{-- ====================================================
+                ACTIVIDAD RECIENTE
+            ==================================================== --}}
             <div>
 
+                {{-- Título conocido --}}
                 <div
                     class="
                         px-4
@@ -590,7 +1153,6 @@
                         gap-3
                     "
                 >
-
                     <div
                         class="
                             flex
@@ -598,107 +1160,173 @@
                             gap-2
                         "
                     >
-
-                        <div
+                        <svg
                             class="
                                 w-4
                                 h-4
-                                rounded
-                                bg-[var(--theme-surface-soft)]
+                                text-[var(--theme-text-strong)]
                             "
-                        ></div>
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.7"
+                        >
+                            <path d="M8 6h13"/>
+                            <path d="M8 12h13"/>
+                            <path d="M8 18h13"/>
 
-                        <div
+                            <circle
+                                cx="3.5"
+                                cy="6"
+                                r=".5"
+                                fill="currentColor"
+                            />
+
+                            <circle
+                                cx="3.5"
+                                cy="12"
+                                r=".5"
+                                fill="currentColor"
+                            />
+
+                            <circle
+                                cx="3.5"
+                                cy="18"
+                                r=".5"
+                                fill="currentColor"
+                            />
+                        </svg>
+
+                        <h3
                             class="
-                                h-3
-                                w-28
-                                rounded
-                                bg-[var(--theme-surface-soft)]
+                                text-sm
+                                font-semibold
+                                text-[var(--theme-text-strong)]
                             "
-                        ></div>
-
+                        >
+                            Actividad reciente
+                        </h3>
                     </div>
 
-
-                    <div
+                    <span
                         class="
-                            h-2.5
-                            w-20
-                            rounded
-                            bg-[var(--theme-surface-soft)]
+                            text-xs
+                            font-medium
+                            text-[var(--theme-primary)]
                         "
-                    ></div>
-
+                    >
+                        Últimos movimientos
+                    </span>
                 </div>
 
 
-                {{-- En móvil son filas compactas, no tabla --}}
-                @for ($i = 0; $i < 5; $i++)
+                {{-- Encabezado escritorio conocido --}}
+                <div
+                    class="
+                        hidden
+                        sm:grid
+                        grid-cols-[80px_1fr_90px]
+                        gap-3
+                        px-5
+                        py-2
+                        bg-[var(--theme-surface-soft)]
+                        border-b
+                        border-[var(--theme-border)]
+                        text-[9px]
+                        font-medium
+                        uppercase
+                        tracking-wide
+                        text-[var(--theme-text-muted)]
+                    "
+                >
+                    <div>
+                        Acción
+                    </div>
 
-                    <div
-                        class="
-                            grid
-                            grid-cols-[36px_1fr_auto]
-                            sm:grid-cols-[80px_1fr_90px]
-                            items-center
-                            gap-3
-                            px-4
-                            sm:px-5
-                            py-3
-                            border-b
-                            border-[var(--theme-border)]
-                            last:border-b-0
-                        "
-                    >
+                    <div>
+                        Detalle
+                    </div>
 
+                    <div class="text-right">
+                        Hora
+                    </div>
+                </div>
+
+
+                {{-- ====================================================
+                    FILAS DESCONOCIDAS
+                ==================================================== --}}
+                <div class="animate-pulse">
+
+                    @for ($i = 0; $i < 5; $i++)
                         <div
                             class="
-                                w-8
-                                h-7
-                                rounded-lg
-                                bg-[var(--theme-surface-soft)]
+                                grid
+                                grid-cols-[36px_1fr_auto]
+                                sm:grid-cols-[80px_1fr_90px]
+                                items-center
+                                gap-3
+                                px-4
+                                sm:px-5
+                                py-2.5
+                                border-b
+                                border-[var(--theme-border)]
+                                last:border-b-0
                             "
-                        ></div>
+                        >
+
+                            {{-- Acción --}}
+                            <div>
+                                <div
+                                    class="
+                                        w-8
+                                        h-7
+                                        rounded-lg
+                                        bg-[var(--theme-surface-soft)]
+                                    "
+                                ></div>
+                            </div>
 
 
-                        <div class="min-w-0">
+                            {{-- Detalle --}}
+                            <div class="min-w-0">
+                                <div
+                                    class="
+                                        h-2.5
+                                        w-full
+                                        max-w-56
+                                        rounded
+                                        bg-[var(--theme-surface-soft)]
+                                    "
+                                ></div>
 
+                                <div
+                                    class="
+                                        mt-2
+                                        h-2
+                                        w-24
+                                        rounded
+                                        bg-[var(--theme-surface-soft)]
+                                    "
+                                ></div>
+                            </div>
+
+
+                            {{-- Hora --}}
                             <div
                                 class="
+                                    justify-self-end
                                     h-2.5
-                                    w-full
-                                    max-w-44
-                                    rounded
-                                    bg-[var(--theme-surface-soft)]
-                                "
-                            ></div>
-
-                            <div
-                                class="
-                                    mt-2
-                                    h-2
-                                    w-20
+                                    w-12
                                     rounded
                                     bg-[var(--theme-surface-soft)]
                                 "
                             ></div>
 
                         </div>
+                    @endfor
 
-
-                        <div
-                            class="
-                                justify-self-end
-                                h-2.5
-                                w-12
-                                rounded
-                                bg-[var(--theme-surface-soft)]
-                            "
-                        ></div>
-
-                    </div>
-
-                @endfor
+                </div>
 
             </div>
 

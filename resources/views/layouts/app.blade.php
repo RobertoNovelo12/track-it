@@ -268,9 +268,11 @@ document.addEventListener(
             @media (max-width: 767px) {
 
                 /*
-                * El logo queda centrado respecto
-                * al ancho completo del sidebar.
+                |--------------------------------------------------------------------------
+                | Header sidebar móvil
+                |--------------------------------------------------------------------------
                 */
+
                 #sidebarHeader {
                     position: relative;
 
@@ -279,10 +281,11 @@ document.addEventListener(
 
 
                 /*
-                * Centramos el botón hamburguesa
-                * sobre la misma línea vertical
-                * de los iconos del menú.
+                |--------------------------------------------------------------------------
+                | Hamburguesa
+                |--------------------------------------------------------------------------
                 */
+
                 #sidebarHeader > button {
                     position: absolute;
 
@@ -305,11 +308,30 @@ document.addEventListener(
 
 
                 /*
-                * El logo ya no es empujado
-                * por el botón hamburguesa.
+                |--------------------------------------------------------------------------
+                | Logo perfectamente centrado
+                |--------------------------------------------------------------------------
                 */
+
                 #sidebarLogoWrap {
+                    position: absolute;
+
+                    left: calc(50% + 6px);
+                    top: 50%;
+
                     margin-left: 0;
+
+                    transform: translate(-50%, -50%);
+
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+
+
+                #sidebarLogo {
+                    width: 128px;
+                    height: auto;
                 }
             }
 
@@ -424,29 +446,23 @@ document.addEventListener(
                         wire:navigate
                         class="flex items-center min-w-0"
                     >
-                        {{--
-                            Coloca el archivo logo-grand-palladium.png dentro de:
-                            public/images/logo-grand-palladium.png
-                        --}}
-                        <img
-                            id="sidebarLogo"
-                            src="{{ asset('images/logo-grand-palladium.png') }}"
-                            alt="Grand Palladium Hotels & Resorts"
-                            class="
-                                w-36
-                                h-auto
-                                max-h-20
+                            <img
+                                id="sidebarLogo"
+                                src="{{ asset('images/logo-grand-palladium.png') }}"
+                                alt="Grand Palladium Hotels & Resorts"
+                                class="
+                                    w-32
+                                    h-auto
 
-                                md:w-auto
-                                md:h-32
-                                md:max-h-none
+                                    md:w-[135px]
+                                    md:h-auto
 
-                                object-contain
+                                    object-contain
 
-                                transition-all
-                                duration-300
-                            "
-                        >
+                                    transition-all
+                                    duration-300
+                                "
+                            >
                     </a>
                 @endpersist
 
@@ -1845,146 +1861,430 @@ document.addEventListener(
     <livewire:notifications-panel />
 
     <script>
-        function isMobileViewport() {
-            return window.matchMedia('(max-width: 767px)').matches;
-        }
-
-    function applyDesktopSidebarState(collapsed) {
-        const sidebar = document.getElementById('sidebar');
-        const main = document.getElementById('mainContent');
-
-        /*
-        |--------------------------------------------------------------------------
-        | Estado global
-        |--------------------------------------------------------------------------
-        */
-
-        document.documentElement.classList.toggle(
-            'sidebar-collapsed',
-            collapsed
-        );
+        (() => {
+            const storageKey = 'sidebarCollapsed';
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | Sidebar
-        |--------------------------------------------------------------------------
-        */
+            /*
+            |--------------------------------------------------------------------------
+            | Helpers
+            |--------------------------------------------------------------------------
+            */
 
-        if (collapsed) {
-
-            sidebar.classList.remove('w-64');
-            sidebar.classList.add('w-20');
-
-            main.classList.remove('md:ml-64');
-            main.classList.add('md:ml-20');
-
-        } else {
-
-            sidebar.classList.remove('w-20');
-            sidebar.classList.add('w-64');
-
-            main.classList.remove('md:ml-20');
-            main.classList.add('md:ml-64');
-
-        }
-    }
-
-    function normalizeMobileSidebar() {
-        const sidebar = document.getElementById('sidebar');
-        const labels = document.querySelectorAll('.sidebar-label');
-        const logoWrap = document.getElementById('sidebarLogoWrap');
-
-        /*
-        * En móvil el drawer siempre utiliza
-        * el ancho completo.
-        */
-
-        sidebar.classList.remove('w-20');
-        sidebar.classList.add('w-64');
-
-        /*
-        * Restauramos textos y logo.
-        */
-
-        labels.forEach(el => {
-            el.classList.remove('hidden');
-        });
-
-        logoWrap.classList.remove('hidden');
-    }
-
-        function applyMobileSidebarState(open) {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('sidebarOverlay');
-
-            if (open) {
-                sidebar.classList.remove('-translate-x-full');
-                sidebar.classList.add('translate-x-0');
-                overlay.classList.remove('hidden');
-            } else {
-                sidebar.classList.add('-translate-x-full');
-                sidebar.classList.remove('translate-x-0');
-                overlay.classList.add('hidden');
-            }
-        }
-
-        function toggleSidebar() {
-            if (isMobileViewport()) {
-                const sidebar = document.getElementById('sidebar');
-                const isOpen = sidebar.classList.contains('translate-x-0');
-
-                normalizeMobileSidebar();
-                applyMobileSidebarState(!isOpen);
-                return;
+            function isMobileViewport() {
+                return window.matchMedia(
+                    '(max-width: 767px)'
+                ).matches;
             }
 
-            const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
-            const next = !isCollapsed;
 
-            localStorage.setItem('sidebarCollapsed', next);
-            applyDesktopSidebarState(next);
-        }
-
-        document.addEventListener('DOMContentLoaded', function () {
-            let wasMobile = isMobileViewport();
-
-            if (wasMobile) {
-                normalizeMobileSidebar();
-                applyMobileSidebarState(false);
-            } else {
-                const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
-                applyDesktopSidebarState(isCollapsed);
-            }
-
-            // Cierra el drawer al tocar un enlace del menú en móvil.
-            document.getElementById('sidebarNav').addEventListener('click', function (e) {
-                if (isMobileViewport() && e.target.closest('a')) {
-                    applyMobileSidebarState(false);
+            function getStoredDesktopState() {
+                try {
+                    return localStorage.getItem(
+                        storageKey
+                    ) === 'true';
+                } catch (error) {
+                    return false;
                 }
-            });
+            }
 
-            // Solo reajusta cuando realmente se cruza el breakpoint md.
-            window.addEventListener('resize', function () {
-                const nowMobile = isMobileViewport();
 
-                if (nowMobile === wasMobile) {
+            function saveDesktopState(collapsed) {
+                try {
+                    localStorage.setItem(
+                        storageKey,
+                        collapsed ? 'true' : 'false'
+                    );
+                } catch (error) {
+                    // El sidebar continúa funcionando aunque
+                    // localStorage no esté disponible.
+                }
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Escritorio
+            |--------------------------------------------------------------------------
+            |
+            | Una sola fuente visual de verdad:
+            |
+            | html.sidebar-collapsed
+            |
+            | El CSS del <head> se encarga del ancho del sidebar,
+            | margen del contenido, etiquetas y logo.
+            |
+            */
+
+            function applyDesktopSidebarState(collapsed) {
+                document.documentElement.classList.toggle(
+                    'sidebar-collapsed',
+                    collapsed
+                );
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Móvil
+            |--------------------------------------------------------------------------
+            */
+
+            function normalizeMobileSidebar() {
+                const sidebar =
+                    document.getElementById('sidebar');
+
+                const overlay =
+                    document.getElementById('sidebarOverlay');
+
+                if (!sidebar) {
                     return;
                 }
 
-                wasMobile = nowMobile;
 
-                if (nowMobile) {
+                /*
+                * En móvil siempre usamos el ancho completo.
+                */
+                sidebar.classList.remove('w-20');
+                sidebar.classList.add('w-64');
+
+
+                /*
+                * Restaurar etiquetas.
+                */
+                document
+                    .querySelectorAll('.sidebar-label')
+                    .forEach(element => {
+                        element.classList.remove('hidden');
+                    });
+
+
+                /*
+                * Restaurar logo.
+                */
+                document
+                    .getElementById('sidebarLogoWrap')
+                    ?.classList
+                    .remove('hidden');
+
+
+                /*
+                * El drawer comienza cerrado.
+                */
+                sidebar.classList.add('-translate-x-full');
+                sidebar.classList.remove('translate-x-0');
+
+                overlay
+                    ?.classList
+                    .add('hidden');
+            }
+
+
+            function applyMobileSidebarState(open) {
+                const sidebar =
+                    document.getElementById('sidebar');
+
+                const overlay =
+                    document.getElementById('sidebarOverlay');
+
+                if (!sidebar) {
+                    return;
+                }
+
+
+                if (open) {
+                    sidebar.classList.remove(
+                        '-translate-x-full'
+                    );
+
+                    sidebar.classList.add(
+                        'translate-x-0'
+                    );
+
+                    overlay
+                        ?.classList
+                        .remove('hidden');
+
+                    return;
+                }
+
+
+                sidebar.classList.add(
+                    '-translate-x-full'
+                );
+
+                sidebar.classList.remove(
+                    'translate-x-0'
+                );
+
+                overlay
+                    ?.classList
+                    .add('hidden');
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Sincronización global
+            |--------------------------------------------------------------------------
+            |
+            | Se llama:
+            |
+            | - al entrar por primera vez
+            | - después de wire:navigate
+            | - después del swap de Livewire
+            | - al cambiar entre móvil y escritorio
+            |
+            */
+
+            function syncSidebarState() {
+                if (isMobileViewport()) {
                     normalizeMobileSidebar();
                     applyMobileSidebarState(false);
-                } else {
-                    applyMobileSidebarState(false);
 
-                    const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
-                    applyDesktopSidebarState(isCollapsed);
+                    return;
                 }
-            });
-        });
+
+
+                const collapsed =
+                    getStoredDesktopState();
+
+                applyDesktopSidebarState(
+                    collapsed
+                );
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Toggle público
+            |--------------------------------------------------------------------------
+            |
+            | Los botones HTML usan:
+            |
+            | onclick="toggleSidebar()"
+            |
+            */
+
+            window.toggleSidebar = function () {
+                if (isMobileViewport()) {
+                    const sidebar =
+                        document.getElementById('sidebar');
+
+                    if (!sidebar) {
+                        return;
+                    }
+
+
+                    const isOpen =
+                        sidebar.classList.contains(
+                            'translate-x-0'
+                        );
+
+
+                    normalizeMobileSidebar();
+
+                    applyMobileSidebarState(
+                        !isOpen
+                    );
+
+                    return;
+                }
+
+
+                /*
+                * Escritorio.
+                */
+                const current =
+                    getStoredDesktopState();
+
+                const next =
+                    !current;
+
+
+                saveDesktopState(
+                    next
+                );
+
+                applyDesktopSidebarState(
+                    next
+                );
+            };
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Exponer sincronizador
+            |--------------------------------------------------------------------------
+            |
+            | Útil también para depuración desde consola:
+            |
+            | window.syncTrackItSidebarState()
+            |
+            */
+
+            window.syncTrackItSidebarState =
+                syncSidebarState;
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Registrar listeners una sola vez
+            |--------------------------------------------------------------------------
+            |
+            | Livewire puede procesar este <script> nuevamente durante navegación.
+            | Evitamos duplicar listeners.
+            |
+            */
+
+            if (
+                !window.__trackItSidebarListenersInstalled
+            ) {
+                window.__trackItSidebarListenersInstalled =
+                    true;
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Cerrar drawer móvil al seleccionar una opción
+                |--------------------------------------------------------------------------
+                |
+                | Usamos delegación sobre document para que también funcione
+                | después de que Livewire sustituya #sidebarNav.
+                |
+                */
+
+                document.addEventListener(
+                    'click',
+                    event => {
+                        if (
+                            !isMobileViewport()
+                        ) {
+                            return;
+                        }
+
+
+                        const link =
+                            event.target.closest(
+                                '#sidebarNav a'
+                            );
+
+
+                        if (!link) {
+                            return;
+                        }
+
+
+                        applyMobileSidebarState(
+                            false
+                        );
+                    }
+                );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Cambio de breakpoint
+                |--------------------------------------------------------------------------
+                */
+
+                let wasMobile =
+                    isMobileViewport();
+
+
+                window.addEventListener(
+                    'resize',
+                    () => {
+                        const nowMobile =
+                            isMobileViewport();
+
+
+                        if (
+                            nowMobile === wasMobile
+                        ) {
+                            return;
+                        }
+
+
+                        wasMobile =
+                            nowMobile;
+
+
+                        syncSidebarState();
+                    }
+                );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Livewire: justo después de intercambiar el DOM
+                |--------------------------------------------------------------------------
+                |
+                | Esta es la parte que faltaba.
+                |
+                */
+
+                document.addEventListener(
+                    'livewire:navigating',
+                    event => {
+                        if (
+                            typeof event.detail?.onSwap
+                            !== 'function'
+                        ) {
+                            return;
+                        }
+
+
+                        event.detail.onSwap(
+                            () => {
+                                syncSidebarState();
+                            }
+                        );
+                    }
+                );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Livewire: navegación terminada
+                |--------------------------------------------------------------------------
+                |
+                | Segunda garantía para que el nuevo DOM siempre tome
+                | el estado guardado.
+                |
+                */
+
+                document.addEventListener(
+                    'livewire:navigated',
+                    () => {
+                        syncSidebarState();
+                    }
+                );
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Primera carga
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                document.readyState === 'loading'
+            ) {
+                document.addEventListener(
+                    'DOMContentLoaded',
+                    () => {
+                        syncSidebarState();
+                    },
+                    {
+                        once: true,
+                    }
+                );
+            } else {
+                syncSidebarState();
+            }
+        })();
     </script>
 
     @stack('scripts')
