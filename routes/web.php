@@ -16,6 +16,7 @@ Route::get('/', function () {
         : redirect()->route('login');
 });
 
+
 /*
 |--------------------------------------------------------------------------
 | Rutas protegidas
@@ -36,8 +37,8 @@ Route::middleware([
     Route::get(
         '/buscar-equipos',
         fn () => view('equipos.search')
-    )
-        ->name('equipos.search');
+    )->name('equipos.search');
+
 
     /*
     |--------------------------------------------------------------------------
@@ -50,6 +51,7 @@ Route::middleware([
         [DashboardController::class, 'index']
     )->name('dashboard');
 
+
     /*
     |--------------------------------------------------------------------------
     | Equipos tecnológicos
@@ -60,6 +62,7 @@ Route::middleware([
         '/equipos',
         [EquipoController::class, 'index']
     )->name('equipos.index');
+
 
     /*
     |--------------------------------------------------------------------------
@@ -72,6 +75,7 @@ Route::middleware([
         fn () => view('equipos.create')
     )->name('equipos.create');
 
+
     /*
     |--------------------------------------------------------------------------
     | Ver detalle de equipo
@@ -81,15 +85,14 @@ Route::middleware([
     Route::get(
         '/equipos/{equipo}',
         function (int $equipo) {
-
             return view('equipos.show', [
                 'equipoId' => $equipo,
             ]);
-
         }
     )
         ->whereNumber('equipo')
         ->name('equipos.show');
+
 
     /*
     |--------------------------------------------------------------------------
@@ -100,15 +103,14 @@ Route::middleware([
     Route::get(
         '/equipos/{equipo}/editar',
         function (int $equipo) {
-
             return view('equipos.edit', [
                 'equipoId' => $equipo,
             ]);
-
         }
     )
         ->whereNumber('equipo')
         ->name('equipos.edit');
+
 
     /*
     |--------------------------------------------------------------------------
@@ -121,66 +123,80 @@ Route::middleware([
         fn () => view('asignaciones.index')
     )->name('asignaciones.index');
 
-/*
-|--------------------------------------------------------------------------
-| Catálogos base
-|--------------------------------------------------------------------------
-*/
 
-Route::get(
-    '/catalogos',
-    fn () => view('catalogos.index')
-)->name('catalogos.index');
+    /*
+    |--------------------------------------------------------------------------
+    | Asignar equipo
+    |--------------------------------------------------------------------------
+    */
 
-
-/*
-|--------------------------------------------------------------------------
-| Crear marca o modelo
-|--------------------------------------------------------------------------
-*/
-
-Route::get(
-    '/catalogos/crear',
-    fn () => view('catalogos.create')
-)->name('catalogos.create');
+    Route::get(
+        '/asignaciones/asignar',
+        fn () => view('asignaciones.create')
+    )->name('asignaciones.create');
 
 
-/*
-|--------------------------------------------------------------------------
-| Editar marca o modelo
-|--------------------------------------------------------------------------
-*/
+    /*
+    |--------------------------------------------------------------------------
+    | Catálogos base
+    |--------------------------------------------------------------------------
+    */
 
-Route::get(
-    '/catalogos/{tipo}/{registro}/editar',
-    function (
-        string $tipo,
-        int $registro
-    ) {
-        return view(
-            'catalogos.edit',
+    Route::get(
+        '/catalogos',
+        fn () => view('catalogos.index')
+    )->name('catalogos.index');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Crear marca o modelo
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/catalogos/crear',
+        fn () => view('catalogos.create')
+    )->name('catalogos.create');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Editar marca o modelo
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/catalogos/{tipo}/{registro}/editar',
+        function (
+            string $tipo,
+            int $registro
+        ) {
+            return view(
+                'catalogos.edit',
+                [
+                    'tipo' =>
+                        $tipo,
+
+                    'registroId' =>
+                        $registro,
+                ]
+            );
+        }
+    )
+        ->whereIn(
+            'tipo',
             [
-                'tipo' =>
-                    $tipo,
-
-                'registroId' =>
-                    $registro,
+                'marca',
+                'modelo',
             ]
-        );
-    }
-)
-    ->whereIn(
-        'tipo',
-        [
-            'marca',
-            'modelo',
-        ]
-    )
-    ->whereNumber(
-        'registro'
-    )
-    ->name('catalogos.edit');
-    
+        )
+        ->whereNumber(
+            'registro'
+        )
+        ->name('catalogos.edit');
+
+
     /*
     |--------------------------------------------------------------------------
     | Seguridad y roles
@@ -192,6 +208,7 @@ Route::get(
         fn () => view('seguridad.index')
     )->name('usuarios.index');
 
+
     /*
     |--------------------------------------------------------------------------
     | Ajustes
@@ -202,8 +219,8 @@ Route::get(
         '/ajustes',
         fn () => view('ajustes.index')
     )->name('ajustes.index');
-
 });
+
 
 /*
 |--------------------------------------------------------------------------

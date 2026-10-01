@@ -250,8 +250,9 @@
         >
 
             {{-- ASIGNAR --}}
-            <button
-                type="button"
+            <a
+                href="{{ route('asignaciones.create') }}"
+                wire:navigate
                 class="
                     h-9
                     px-4
@@ -285,7 +286,7 @@
                 </svg>
 
                 Asignar
-            </button>
+            </a>
 
 
             {{-- Reasignar --}}
