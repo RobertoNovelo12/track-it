@@ -289,9 +289,10 @@
             </a>
 
 
-            {{-- Reasignar --}}
-            <button
-                type="button"
+            {{-- REASIGNAR --}}
+            <a
+                href="{{ route('asignaciones.reassign') }}"
+                wire:navigate
                 class="
                     h-9
                     px-4
@@ -332,12 +333,13 @@
                 </svg>
 
                 Reasignar
-            </button>
+            </a>
 
 
-            {{-- Historial --}}
-            <button
-                type="button"
+            {{-- HISTORIAL --}}
+            <a
+                href="{{ route('asignaciones.history') }}"
+                wire:navigate
                 class="
                     h-9
                     px-4
@@ -376,28 +378,28 @@
                 </svg>
 
                 Historial
-            </button>
+            </a>
 
-        </div>
+            </div> {{-- CIERRA ACCIONES SUPERIORES --}}
 
-    </section>
+            </section> {{-- CIERRA ENCABEZADO --}}
 
 
-    {{-- ============================================================
-        MÉTRICAS PRINCIPALES
-    ============================================================ --}}
-    <section
-        class="
-            grid
-            grid-cols-1
-            md:grid-cols-3
+            {{-- ============================================================
+                MÉTRICAS PRINCIPALES
+            ============================================================ --}}
+            <section
+                class="
+                    grid
+                    grid-cols-1
+                    md:grid-cols-3
 
-            gap-3
-            sm:gap-4
+                    gap-3
+                    sm:gap-4
 
-            mb-5
-        "
-    >
+                    mb-5
+                "
+            >
 
         {{-- ========================================================
             EQUIPOS ASIGNADOS

@@ -135,6 +135,28 @@ Route::middleware([
         fn () => view('asignaciones.create')
     )->name('asignaciones.create');
 
+    /*
+    |--------------------------------------------------------------------------
+    | Reasignar equipo
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/asignaciones/reasignar',
+        fn () => view('asignaciones.reassign')
+    )->name('asignaciones.reassign');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Historial de asignaciones y movimientos
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/asignaciones/historial',
+        fn () => view('asignaciones.history')
+    )->name('asignaciones.history');
+
 
     /*
     |--------------------------------------------------------------------------

@@ -115,26 +115,34 @@
             </button>
 
 
-            {{-- Reasignar --}}
-            <button
-                type="button"
-                disabled
+            {{-- REASIGNAR --}}
+            <a
+                href="{{ route('asignaciones.reassign') }}"
+                wire:navigate
                 class="
                     h-9
                     px-4
+
                     inline-flex
                     items-center
                     justify-center
                     gap-2
+
                     rounded-md
+
                     bg-[var(--theme-surface)]
+
                     border
                     border-[var(--theme-border-strong)]
+
                     text-sm
                     font-medium
                     text-[var(--theme-text)]
-                    disabled:opacity-100
-                    disabled:cursor-default
+
+                    hover:bg-[var(--theme-surface-soft)]
+                    hover:border-[var(--theme-primary-border)]
+
+                    transition-colors
                 "
             >
                 <svg
@@ -151,29 +159,37 @@
                 </svg>
 
                 Reasignar
-            </button>
+            </a>
 
 
-            {{-- Historial --}}
-            <button
-                type="button"
-                disabled
+            {{-- HISTORIAL --}}
+            <a
+                href="{{ route('asignaciones.history') }}"
+                wire:navigate
                 class="
                     h-9
                     px-4
+
                     inline-flex
                     items-center
                     justify-center
                     gap-2
+
                     rounded-md
+
                     bg-[var(--theme-surface)]
+
                     border
                     border-[var(--theme-border-strong)]
+
                     text-sm
                     font-medium
                     text-[var(--theme-text)]
-                    disabled:opacity-100
-                    disabled:cursor-default
+
+                    hover:bg-[var(--theme-surface-soft)]
+                    hover:border-[var(--theme-primary-border)]
+
+                    transition-colors
                 "
             >
                 <svg
@@ -188,7 +204,7 @@
                 </svg>
 
                 Historial
-            </button>
+            </a>
         </div>
     </section>
 

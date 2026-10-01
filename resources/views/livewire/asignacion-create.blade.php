@@ -710,10 +710,9 @@
 
 
                         {{-- REASIGNACIÓN --}}
-                        <button
-                            type="button"
-                            disabled
-                            title="La reasignación se habilitará en su pantalla correspondiente"
+                        <a
+                            href="{{ route('asignaciones.reassign') }}"
+                            wire:navigate
                             class="
                                 h-10
 
@@ -734,8 +733,11 @@
                                 font-medium
                                 text-[var(--theme-text-muted)]
 
-                                disabled:cursor-default
-                                disabled:opacity-100
+                                hover:bg-[var(--theme-surface-soft)]
+                                hover:text-[var(--theme-text)]
+                                hover:border-[var(--theme-primary-border)]
+
+                                transition-colors
                             "
                         >
                             <svg
@@ -752,7 +754,7 @@
                             </svg>
 
                             Reasignación
-                        </button>
+                        </a>
 
                     </div>
                 </div>
