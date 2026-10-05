@@ -2,6 +2,8 @@
 
     <div
         x-data="{
+            data: @js($assignmentData),
+
             successVisible: false,
             successMessage: '',
 
@@ -17,109 +19,357 @@
             successTimer: null,
             errorTimer: null,
 
+            idEquipoAsignar: '',
+            hostEquipo: '',
+
+            nombreColaborador: '',
+            numeroColaborador: '',
+
+            idSedeAsignar: '',
+            idAreaAsignar: '',
+            idDepartamentoAsignar: '',
+            idUbicacionAsignar: '',
+
+            fechaAsignacion: @js(
+                $assignmentData['defaults']['fechaAsignacion'] ?? ''
+            ),
+
+            idTipoAsignacion: @js(
+                $assignmentData['defaults']['idTipoAsignacion'] ?? ''
+            ),
+
+            observacionesAsignacion: '',
+
+            init() {
+                this.$watch(
+                    'idEquipoAsignar',
+                    (value, previous) => {
+                        if (
+                            String(value ?? '') ===
+                            String(previous ?? '')
+                        ) {
+                            return;
+                        }
+
+                        this.loadSelectedEquipment();
+                        this.clearValidationError(
+                            'idEquipoAsignar'
+                        );
+                    }
+                );
+
+                this.$watch(
+                    'idSedeAsignar',
+                    (value, previous) => {
+                        if (
+                            String(value ?? '') ===
+                            String(previous ?? '')
+                        ) {
+                            return;
+                        }
+
+                        this.idAreaAsignar = '';
+                        this.idDepartamentoAsignar = '';
+                        this.idUbicacionAsignar = '';
+
+                        this.clearValidationError(
+                            'idSedeAsignar'
+                        );
+
+                        this.clearValidationError(
+                            'idAreaAsignar'
+                        );
+
+                        this.clearValidationError(
+                            'idDepartamentoAsignar'
+                        );
+                    }
+                );
+
+                this.$watch(
+                    'idAreaAsignar',
+                    (value, previous) => {
+                        if (
+                            String(value ?? '') ===
+                            String(previous ?? '')
+                        ) {
+                            return;
+                        }
+
+                        this.idDepartamentoAsignar = '';
+                        this.idUbicacionAsignar = '';
+
+                        this.clearValidationError(
+                            'idAreaAsignar'
+                        );
+
+                        this.clearValidationError(
+                            'idDepartamentoAsignar'
+                        );
+                    }
+                );
+
+                this.$watch(
+                    'idDepartamentoAsignar',
+                    (value, previous) => {
+                        if (
+                            String(value ?? '') ===
+                            String(previous ?? '')
+                        ) {
+                            return;
+                        }
+
+                        this.idUbicacionAsignar = '';
+
+                        this.clearValidationError(
+                            'idDepartamentoAsignar'
+                        );
+                    }
+                );
+
+                this.$watch(
+                    'idTipoAsignacion',
+                    () => {
+                        this.clearValidationError(
+                            'idTipoAsignacion'
+                        );
+                    }
+                );
+            },
+
+            get areasDisponibles() {
+                const sedeId =
+                    String(
+                        this.idSedeAsignar ?? ''
+                    );
+
+                if (sedeId === '') {
+                    return [];
+                }
+
+                return (
+                    this.data?.areas ?? []
+                ).filter(
+                    area =>
+                        String(
+                            area?.idSede ?? ''
+                        ) === sedeId
+                );
+            },
+
+            get departamentosDisponibles() {
+                const areaId =
+                    String(
+                        this.idAreaAsignar ?? ''
+                    );
+
+                if (areaId === '') {
+                    return [];
+                }
+
+                return (
+                    this.data?.departamentos ?? []
+                ).filter(
+                    departamento =>
+                        String(
+                            departamento?.idArea ?? ''
+                        ) === areaId
+                );
+            },
+
+            get ubicacionesDisponibles() {
+                const sedeId =
+                    String(
+                        this.idSedeAsignar ?? ''
+                    );
+
+                const areaId =
+                    String(
+                        this.idAreaAsignar ?? ''
+                    );
+
+                if (sedeId === '') {
+                    return [];
+                }
+
+                return (
+                    this.data?.ubicaciones ?? []
+                ).filter(
+                    ubicacion => {
+                        const mismaSede =
+                            String(
+                                ubicacion?.idSede ?? ''
+                            ) === sedeId;
+
+                        if (!mismaSede) {
+                            return false;
+                        }
+
+                        if (areaId === '') {
+                            return true;
+                        }
+
+                        const ubicacionArea =
+                            String(
+                                ubicacion?.idArea ?? ''
+                            );
+
+                        return (
+                            ubicacionArea === ''
+                            || ubicacionArea === areaId
+                        );
+                    }
+                );
+            },
+
+            loadSelectedEquipment() {
+                this.hostEquipo = '';
+
+                const equipoId =
+                    String(
+                        this.idEquipoAsignar ?? ''
+                    );
+
+                if (equipoId === '') {
+                    return;
+                }
+
+                const equipo =
+                    (
+                        this.data?.equipos ?? []
+                    ).find(
+                        item =>
+                            String(
+                                item?.value ?? ''
+                            ) === equipoId
+                    );
+
+                if (!equipo) {
+                    this.idEquipoAsignar = '';
+
+                    return;
+                }
+
+                this.hostEquipo =
+                    String(
+                        equipo.host ?? ''
+                    );
+            },
+
+            clearValidationError(field) {
+                if (
+                    !this.validationErrors
+                    || typeof this.validationErrors
+                        !== 'object'
+                    || !Object.prototype.hasOwnProperty.call(
+                        this.validationErrors,
+                        field
+                    )
+                ) {
+                    return;
+                }
+
+                const errors = {
+                    ...this.validationErrors
+                };
+
+                delete errors[field];
+
+                this.validationErrors = errors;
+            },
+
             showSuccess(message) {
                 this.successMessage =
-                    message ||
-                    'El equipo fue asignado correctamente.';
+                    message
+                    || 'El equipo fue asignado correctamente.';
 
                 this.successVisible = true;
 
                 if (this.successTimer) {
-                    clearTimeout(this.successTimer);
+                    clearTimeout(
+                        this.successTimer
+                    );
                 }
 
-                this.successTimer = setTimeout(() => {
-                    this.successVisible = false;
-                }, 3000);
+                this.successTimer =
+                    setTimeout(() => {
+                        this.successVisible = false;
+                    }, 3000);
             },
 
             showError(message) {
                 this.errorMessage =
-                    message ||
-                    'No fue posible guardar la asignación.';
+                    message
+                    || 'No fue posible guardar la asignación.';
 
                 this.errorVisible = true;
 
                 if (this.errorTimer) {
-                    clearTimeout(this.errorTimer);
+                    clearTimeout(
+                        this.errorTimer
+                    );
                 }
 
-                this.errorTimer = setTimeout(() => {
-                    this.errorVisible = false;
-                }, 5000);
-            },
-
-            inputValue(id) {
-                const element =
-                    document.getElementById(id);
-
-                if (!element) {
-                    return '';
-                }
-
-                return element.value ?? '';
+                this.errorTimer =
+                    setTimeout(() => {
+                        this.errorVisible = false;
+                    }, 5000);
             },
 
             captureSnapshot() {
                 return {
-                    tipoMovimiento: 'asignacion',
+                    tipoMovimiento:
+                        'asignacion',
 
                     idEquipoAsignar:
                         String(
-                            $wire.idEquipoAsignar ?? ''
+                            this.idEquipoAsignar ?? ''
                         ),
 
                     nombreColaborador:
                         String(
-                            this.inputValue(
-                                'assignment-collaborator'
-                            )
+                            this.nombreColaborador ?? ''
                         ),
 
                     numeroColaborador:
                         String(
-                            this.inputValue(
-                                'assignment-collaborator-number'
-                            )
+                            this.numeroColaborador ?? ''
                         ),
 
                     idSedeAsignar:
                         String(
-                            $wire.idSedeAsignar ?? ''
+                            this.idSedeAsignar ?? ''
                         ),
 
                     idAreaAsignar:
                         String(
-                            $wire.idAreaAsignar ?? ''
+                            this.idAreaAsignar ?? ''
                         ),
 
                     idDepartamentoAsignar:
                         String(
-                            $wire.idDepartamentoAsignar ?? ''
+                            this.idDepartamentoAsignar ?? ''
                         ),
 
                     idUbicacionAsignar:
                         String(
-                            $wire.idUbicacionAsignar ?? ''
+                            this.idUbicacionAsignar ?? ''
                         ),
 
                     fechaAsignacion:
                         String(
-                            this.inputValue(
-                                'assignment-date'
-                            )
+                            this.fechaAsignacion ?? ''
                         ),
 
                     idTipoAsignacion:
                         String(
-                            $wire.idTipoAsignacion ?? ''
+                            this.idTipoAsignacion ?? ''
                         ),
 
                     observacionesAsignacion:
                         String(
-                            this.inputValue(
-                                'assignment-observations'
-                            )
+                            this.observacionesAsignacion
+                            ?? ''
                         ),
                 };
             },
@@ -132,13 +382,17 @@
                     return null;
                 }
 
-                if (Array.isArray(error)) {
+                if (
+                    Array.isArray(error)
+                ) {
                     return error[0] ?? null;
                 }
 
-                return typeof error === 'string'
-                    ? error
-                    : null;
+                return (
+                    typeof error === 'string'
+                        ? error
+                        : null
+                );
             },
 
             firstError(error) {
@@ -146,8 +400,8 @@
                     error?.errors;
 
                 if (
-                    !errors ||
-                    typeof errors !== 'object'
+                    !errors
+                    || typeof errors !== 'object'
                 ) {
                     return null;
                 }
@@ -162,13 +416,17 @@
                 const value =
                     errors[firstKey];
 
-                if (Array.isArray(value)) {
+                if (
+                    Array.isArray(value)
+                ) {
                     return value[0] ?? null;
                 }
 
-                return typeof value === 'string'
-                    ? value
-                    : null;
+                return (
+                    typeof value === 'string'
+                        ? value
+                        : null
+                );
             },
 
             validateSnapshot(payload) {
@@ -176,7 +434,8 @@
 
                 if (
                     String(
-                        payload.idEquipoAsignar ?? ''
+                        payload.idEquipoAsignar
+                        ?? ''
                     ) === ''
                 ) {
                     errors.idEquipoAsignar = [
@@ -186,7 +445,8 @@
 
                 if (
                     String(
-                        payload.nombreColaborador ?? ''
+                        payload.nombreColaborador
+                        ?? ''
                     ).trim() === ''
                 ) {
                     errors.nombreColaborador = [
@@ -196,7 +456,8 @@
 
                 if (
                     String(
-                        payload.idSedeAsignar ?? ''
+                        payload.idSedeAsignar
+                        ?? ''
                     ) === ''
                 ) {
                     errors.idSedeAsignar = [
@@ -206,7 +467,8 @@
 
                 if (
                     String(
-                        payload.idAreaAsignar ?? ''
+                        payload.idAreaAsignar
+                        ?? ''
                     ) === ''
                 ) {
                     errors.idAreaAsignar = [
@@ -216,7 +478,8 @@
 
                 if (
                     String(
-                        payload.idDepartamentoAsignar ?? ''
+                        payload.idDepartamentoAsignar
+                        ?? ''
                     ) === ''
                 ) {
                     errors.idDepartamentoAsignar = [
@@ -226,7 +489,8 @@
 
                 if (
                     String(
-                        payload.fechaAsignacion ?? ''
+                        payload.fechaAsignacion
+                        ?? ''
                     ) === ''
                 ) {
                     errors.fechaAsignacion = [
@@ -236,7 +500,8 @@
 
                 if (
                     String(
-                        payload.idTipoAsignacion ?? ''
+                        payload.idTipoAsignacion
+                        ?? ''
                     ) === ''
                 ) {
                     errors.idTipoAsignacion = [
@@ -249,7 +514,9 @@
                 const keys =
                     Object.keys(errors);
 
-                if (keys.length === 0) {
+                if (
+                    keys.length === 0
+                ) {
                     return true;
                 }
 
@@ -274,9 +541,10 @@
                     );
                 }
 
-                this.spinnerTimer = setTimeout(() => {
-                    this.savingVisual = false;
-                }, 350);
+                this.spinnerTimer =
+                    setTimeout(() => {
+                        this.savingVisual = false;
+                    }, 350);
             },
 
             async saveAssignment() {
@@ -307,8 +575,8 @@
                         );
 
                     if (
-                        !result ||
-                        result.ok !== true
+                        !result
+                        || result.ok !== true
                     ) {
                         throw new Error(
                             'Respuesta de guardado no válida.'
@@ -318,8 +586,8 @@
                     this.validationErrors = {};
 
                     this.showSuccess(
-                        result.message ||
-                        'El equipo fue asignado correctamente.'
+                        result.message
+                        || 'El equipo fue asignado correctamente.'
                     );
 
                     setTimeout(() => {
@@ -327,8 +595,9 @@
                             this.$root.dataset.indexUrl;
 
                         if (
-                            window.Livewire &&
-                            typeof window.Livewire.navigate === 'function'
+                            window.Livewire
+                            && typeof window.Livewire.navigate
+                                === 'function'
                         ) {
                             window.Livewire.navigate(
                                 url
@@ -346,8 +615,8 @@
                         error?.errors ?? {};
 
                     this.showError(
-                        this.firstError(error) ||
-                        'No fue posible guardar la asignación. Inténtalo nuevamente.'
+                        this.firstError(error)
+                        || 'No fue posible guardar la asignación. Inténtalo nuevamente.'
                     );
 
                 } finally {
@@ -355,6 +624,7 @@
                 }
             }
         }"
+
         data-index-url="{{ route('asignaciones.index') }}"
     >
 
@@ -609,6 +879,7 @@
             >
                 Asignación de Equipo
             </h1>
+
         </section>
 
 
@@ -640,6 +911,7 @@
                     class="
                         flex
                         flex-col
+
                         lg:flex-row
                         lg:items-center
 
@@ -792,11 +1064,15 @@
                         EQUIPO
                     ================================================= --}}
                     <div class="min-w-0">
+
                         <x-searchable-select
-                            wire-model="idEquipoAsignar"
-                            :options="$equiposDisponibles"
+                            x-model="idEquipoAsignar"
+                            x-options="data.equipos"
+
                             label="Nombre de Equipo *"
                             placeholder="Buscar equipo..."
+
+                            :show-clear="false"
                         />
 
                         <p
@@ -816,6 +1092,7 @@
                         COLABORADOR
                     ================================================= --}}
                     <div class="min-w-0">
+
                         <label
                             for="assignment-collaborator"
                             class="
@@ -832,8 +1109,17 @@
                         <input
                             id="assignment-collaborator"
                             type="text"
-                            wire:model="nombreColaborador"
+
+                            x-model="nombreColaborador"
+
+                            @input="
+                                clearValidationError(
+                                    'nombreColaborador'
+                                )
+                            "
+
                             placeholder="Nombre completo del colaborador"
+
                             class="
                                 w-full
 
@@ -879,6 +1165,7 @@
                         NÚMERO DE COLABORADOR
                     ================================================= --}}
                     <div class="min-w-0">
+
                         <label
                             for="assignment-collaborator-number"
                             class="
@@ -895,8 +1182,11 @@
                         <input
                             id="assignment-collaborator-number"
                             type="text"
-                            wire:model="numeroColaborador"
+
+                            x-model="numeroColaborador"
+
                             placeholder="Ej. 001245"
+
                             class="
                                 w-full
 
@@ -924,6 +1214,7 @@
                                 transition-colors
                             "
                         >
+
                     </div>
 
 
@@ -931,6 +1222,7 @@
                         HOST
                     ================================================= --}}
                     <div class="min-w-0">
+
                         <label
                             class="
                                 block
@@ -944,11 +1236,16 @@
                         </label>
 
                         <div class="relative">
+
                             <input
                                 type="text"
-                                wire:model="hostEquipo"
+
+                                :value="hostEquipo"
+
                                 readonly
+
                                 placeholder="Se obtiene del equipo seleccionado"
+
                                 class="
                                     w-full
 
@@ -999,6 +1296,7 @@
 
                                 <path d="M8 10V7a4 4 0 018 0v3"/>
                             </svg>
+
                         </div>
                     </div>
 
@@ -1007,11 +1305,15 @@
                         SEDE
                     ================================================= --}}
                     <div class="min-w-0">
+
                         <x-searchable-select
-                            wire-model="idSedeAsignar"
-                            :options="$sedes"
+                            x-model="idSedeAsignar"
+                            x-options="data.sedes"
+
                             label="Sede *"
                             placeholder="Buscar sede..."
+
+                            :show-clear="false"
                         />
 
                         <p
@@ -1031,16 +1333,24 @@
                         ÁREA
                     ================================================= --}}
                     <div class="min-w-0">
+
                         <x-searchable-select
-                            wire-model="idAreaAsignar"
-                            :options="$areas"
+                            x-model="idAreaAsignar"
+                            x-options="areasDisponibles"
+
                             label="Área *"
-                            :placeholder="
-                                $idSedeAsignar === ''
+
+                            placeholder="Selecciona una sede primero"
+
+                            x-placeholder="
+                                idSedeAsignar === ''
                                     ? 'Selecciona una sede primero'
                                     : 'Buscar área...'
                             "
-                            :disabled="$idSedeAsignar === ''"
+
+                            x-disabled="idSedeAsignar === ''"
+
+                            :show-clear="false"
                         />
 
                         <p
@@ -1060,16 +1370,24 @@
                         DEPARTAMENTO
                     ================================================= --}}
                     <div class="min-w-0">
+
                         <x-searchable-select
-                            wire-model="idDepartamentoAsignar"
-                            :options="$departamentos"
+                            x-model="idDepartamentoAsignar"
+                            x-options="departamentosDisponibles"
+
                             label="Departamento *"
-                            :placeholder="
-                                $idAreaAsignar === ''
+
+                            placeholder="Selecciona un área primero"
+
+                            x-placeholder="
+                                idAreaAsignar === ''
                                     ? 'Selecciona un área primero'
                                     : 'Buscar departamento...'
                             "
-                            :disabled="$idAreaAsignar === ''"
+
+                            x-disabled="idAreaAsignar === ''"
+
+                            :show-clear="false"
                         />
 
                         <p
@@ -1089,17 +1407,26 @@
                         UBICACIÓN
                     ================================================= --}}
                     <div class="min-w-0">
+
                         <x-searchable-select
-                            wire-model="idUbicacionAsignar"
-                            :options="$ubicaciones"
+                            x-model="idUbicacionAsignar"
+                            x-options="ubicacionesDisponibles"
+
                             label="Ubicación"
-                            :placeholder="
-                                $idSedeAsignar === ''
+
+                            placeholder="Selecciona una sede primero"
+
+                            x-placeholder="
+                                idSedeAsignar === ''
                                     ? 'Selecciona una sede primero'
                                     : 'Buscar ubicación...'
                             "
-                            :disabled="$idSedeAsignar === ''"
+
+                            x-disabled="idSedeAsignar === ''"
+
+                            clear-label="Sin ubicación específica"
                         />
+
                     </div>
 
 
@@ -1107,6 +1434,7 @@
                         FECHA
                     ================================================= --}}
                     <div class="min-w-0">
+
                         <label
                             for="assignment-date"
                             class="
@@ -1123,7 +1451,15 @@
                         <input
                             id="assignment-date"
                             type="date"
-                            wire:model="fechaAsignacion"
+
+                            x-model="fechaAsignacion"
+
+                            @change="
+                                clearValidationError(
+                                    'fechaAsignacion'
+                                )
+                            "
+
                             class="
                                 w-full
 
@@ -1160,6 +1496,7 @@
                                 text-[var(--theme-danger)]
                             "
                         ></p>
+
                     </div>
 
 
@@ -1167,11 +1504,15 @@
                         TIPO DE ASIGNACIÓN
                     ================================================= --}}
                     <div class="min-w-0">
+
                         <x-searchable-select
-                            wire-model="idTipoAsignacion"
-                            :options="$tiposAsignacion"
+                            x-model="idTipoAsignacion"
+                            x-options="data.tiposAsignacion"
+
                             label="Tipo de asignación *"
                             placeholder="Buscar tipo de asignación..."
+
+                            :show-clear="false"
                         />
 
                         <p
@@ -1184,6 +1525,7 @@
                                 text-[var(--theme-danger)]
                             "
                         ></p>
+
                     </div>
 
 
@@ -1191,6 +1533,7 @@
                         OBSERVACIONES
                     ================================================= --}}
                     <div class="lg:col-span-2 min-w-0">
+
                         <label
                             for="assignment-observations"
                             class="
@@ -1210,9 +1553,13 @@
 
                         <textarea
                             id="assignment-observations"
-                            wire:model="observacionesAsignacion"
+
+                            x-model="observacionesAsignacion"
+
                             rows="5"
+
                             placeholder="Escribe alguna observación relacionada con la asignación..."
+
                             class="
                                 w-full
 
@@ -1242,6 +1589,7 @@
                                 transition-colors
                             "
                         ></textarea>
+
                     </div>
 
                 </div>
@@ -1301,6 +1649,7 @@
                 </div>
 
                 <div class="min-w-0">
+
                     <p
                         class="
                             text-sm
@@ -1322,6 +1671,7 @@
                     >
                         Al guardar la información, el equipo quedará asignado al colaborador y a la ubicación organizacional seleccionada.
                     </p>
+
                 </div>
             </section>
 
@@ -1333,6 +1683,7 @@
                 class="
                     flex
                     flex-col-reverse
+
                     sm:flex-row
                     sm:items-center
                     sm:justify-end
@@ -1342,6 +1693,7 @@
                     pb-2
                 "
             >
+
                 <a
                     href="{{ route('asignaciones.index') }}"
                     wire:navigate
@@ -1381,8 +1733,10 @@
 
                 <button
                     type="submit"
-                    :disabled="savingVisual"
-                    :aria-busy="savingVisual ? 'true' : 'false'"
+
+                    :disabled="requestPending"
+                    :aria-busy="requestPending ? 'true' : 'false'"
+
                     class="
                         w-full
                         sm:w-auto
@@ -1431,7 +1785,9 @@
                     <svg
                         x-show="savingVisual"
                         x-cloak
+
                         class="w-4 h-4 animate-spin"
+
                         viewBox="0 0 24 24"
                         fill="none"
                     >
@@ -1439,13 +1795,16 @@
                             cx="12"
                             cy="12"
                             r="9"
+
                             stroke="currentColor"
                             stroke-width="2"
+
                             opacity="0.25"
                         />
 
                         <path
                             d="M21 12a9 9 0 0 0-9-9"
+
                             stroke="currentColor"
                             stroke-width="2"
                             stroke-linecap="round"
@@ -1459,7 +1818,9 @@
                                 : 'Guardar Asignación'
                         "
                     ></span>
+
                 </button>
+
             </div>
 
         </form>

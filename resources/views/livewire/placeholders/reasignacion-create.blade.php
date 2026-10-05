@@ -285,22 +285,44 @@
                         "
                     >
 
-                    <svg
+                    <div
                         class="
                             absolute
                             right-3
+                            top-1/2
+                            -translate-y-1/2
 
-                            w-4 h-4
+                            flex
+                            items-center
+                            justify-center
 
-                            text-[var(--theme-text-muted)]
+                            text-[var(--theme-primary)]
                         "
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.5"
+                        aria-label="Cargando equipos"
                     >
-                        <path d="M6 9l6 6 6-6"/>
-                    </svg>
+                        <svg
+                            class="w-4 h-4 animate-spin"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            aria-hidden="true"
+                        >
+                            <circle
+                                cx="12"
+                                cy="12"
+                                r="9"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                opacity="0.25"
+                            />
+
+                            <path
+                                d="M21 12a9 9 0 0 0-9-9"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                            />
+                        </svg>
+                    </div>
                 </div>
             </div>
 

@@ -319,6 +319,26 @@ class EquipoCreate extends Component
             }
         );
     }
+private function getAllModelos(): array
+{
+    return Cache::remember(
+        'form.modelos.all.v2',
+        now()->addMinutes(30),
+        function () {
+            return $this->toPlainArray(
+                DB::table('modelos')
+                    ->where('activo', true)
+                    ->orderBy('nombre')
+                    ->get([
+                        'id_modelo',
+                        'id_marca',
+                        'id_tipo_equipo',
+                        'nombre',
+                    ])
+            );
+        }
+    );
+}
 
     public function getModelosProperty(): array
     {
@@ -329,23 +349,19 @@ class EquipoCreate extends Component
             return [];
         }
 
-        return $this->toPlainArray(
-            DB::table('modelos')
-                ->where('activo', true)
-                ->where(
-                    'id_marca',
-                    (int) $this->idMarca
-                )
-                ->where(
-                    'id_tipo_equipo',
-                    (int) $this->idTipoEquipo
-                )
-                ->orderBy('nombre')
-                ->get([
-                    'id_modelo',
-                    'nombre',
-                ])
-        );
+        return collect(
+            $this->getAllModelos()
+        )
+            ->filter(
+                fn (array $modelo): bool =>
+                    (string) $modelo['id_marca']
+                        === (string) $this->idMarca
+                    &&
+                    (string) $modelo['id_tipo_equipo']
+                        === (string) $this->idTipoEquipo
+            )
+            ->values()
+            ->all();
     }
 
     public function getProveedoresProperty(): array
@@ -399,25 +415,42 @@ class EquipoCreate extends Component
         );
     }
 
+    private function getAllDepartamentos(): array
+    {
+        return Cache::remember(
+            'form.departamentos.all.v2',
+            now()->addMinutes(30),
+            function () {
+                return $this->toPlainArray(
+                    DB::table('departamentos')
+                        ->where('activo', true)
+                        ->orderBy('nombre')
+                        ->get([
+                            'id_departamento',
+                            'id_area',
+                            'nombre',
+                        ])
+                );
+            }
+        );
+    }
+
     public function getDepartamentosProperty(): array
     {
         if ($this->idArea === '') {
             return [];
         }
 
-        return $this->toPlainArray(
-            DB::table('departamentos')
-                ->where('activo', true)
-                ->where(
-                    'id_area',
-                    (int) $this->idArea
-                )
-                ->orderBy('nombre')
-                ->get([
-                    'id_departamento',
-                    'nombre',
-                ])
-        );
+        return collect(
+            $this->getAllDepartamentos()
+        )
+            ->filter(
+                fn (array $departamento): bool =>
+                    (string) $departamento['id_area']
+                        === (string) $this->idArea
+            )
+            ->values()
+            ->all();
     }
 
     /**
@@ -460,6 +493,296 @@ class EquipoCreate extends Component
                     'catalogo_valores.nombre',
                 ])
         );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Datos iniciales para Alpine
+    |--------------------------------------------------------------------------
+    */
+
+    private function toFrontendOptions(
+        array $items,
+        string $valueKey,
+        string $labelKey = 'nombre'
+    ): array {
+        return collect($items)
+            ->map(
+                fn (array $item): array => [
+                    'value' =>
+                        (string) (
+                            $item[$valueKey]
+                            ?? ''
+                        ),
+
+                    'label' =>
+                        (string) (
+                            $item[$labelKey]
+                            ?? ''
+                        ),
+                ]
+            )
+            ->values()
+            ->all();
+    }
+
+    private function getDynamicCatalogKeys(): array
+    {
+        return collect(
+            $this->childConfig()
+        )
+            ->flatMap(
+                fn (array $config): array =>
+                    array_values(
+                        $config['fields']
+                        ?? []
+                    )
+            )
+            ->filter(
+                fn ($type): bool =>
+                    is_string($type)
+                    && str_starts_with(
+                        $type,
+                        'catalog:'
+                    )
+            )
+            ->map(
+                fn (string $type): string =>
+                    substr(
+                        $type,
+                        8
+                    )
+            )
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    private function getEquipmentFrontendData(): array
+    {
+        /*
+        |--------------------------------------------------------------------------
+        | Estados
+        |--------------------------------------------------------------------------
+        */
+
+        $estados =
+            $this->toFrontendOptions(
+                $this->estados,
+                'id_estado_equipo'
+            );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Tipos de equipo
+        |--------------------------------------------------------------------------
+        */
+
+        $tiposEquipo =
+            $this->toFrontendOptions(
+                $this->tiposEquipo,
+                'id_tipo_equipo'
+            );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Marcas
+        |--------------------------------------------------------------------------
+        */
+
+        $marcas =
+            $this->toFrontendOptions(
+                $this->marcas,
+                'id_marca'
+            );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Todos los modelos
+        |--------------------------------------------------------------------------
+        |
+        | Se envían una sola vez.
+        | Alpine filtrará por:
+        |
+        | idMarca + idTipoEquipo
+        |
+        */
+
+        $modelos =
+            collect(
+                $this->getAllModelos()
+            )
+                ->map(
+                    fn (array $modelo): array => [
+                        'value' =>
+                            (string) $modelo['id_modelo'],
+
+                        'label' =>
+                            (string) $modelo['nombre'],
+
+                        'idMarca' =>
+                            (string) $modelo['id_marca'],
+
+                        'idTipoEquipo' =>
+                            (string) $modelo['id_tipo_equipo'],
+                    ]
+                )
+                ->values()
+                ->all();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Proveedores
+        |--------------------------------------------------------------------------
+        */
+
+        $proveedores =
+            $this->toFrontendOptions(
+                $this->proveedores,
+                'id_proveedor'
+            );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Condiciones
+        |--------------------------------------------------------------------------
+        */
+
+        $condiciones =
+            $this->toFrontendOptions(
+                $this->condiciones,
+                'id_valor'
+            );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Áreas
+        |--------------------------------------------------------------------------
+        */
+
+        $areas =
+            $this->toFrontendOptions(
+                $this->areas,
+                'id_area'
+            );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Todos los departamentos
+        |--------------------------------------------------------------------------
+        |
+        | Alpine filtrará utilizando idArea.
+        |
+        */
+
+        $departamentos =
+            collect(
+                $this->getAllDepartamentos()
+            )
+                ->map(
+                    fn (array $departamento): array => [
+                        'value' =>
+                            (string) $departamento['id_departamento'],
+
+                        'label' =>
+                            (string) $departamento['nombre'],
+
+                        'idArea' =>
+                            (string) $departamento['id_area'],
+                    ]
+                )
+                ->values()
+                ->all();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Configuración de campos dinámicos
+        |--------------------------------------------------------------------------
+        |
+        | No enviamos el nombre de la tabla al navegador.
+        | Solamente necesita conocer qué campos dibujar.
+        |
+        */
+
+        $childFieldsByType = [];
+
+        foreach (
+            $this->childConfig()
+            as $tipoId => $config
+        ) {
+            $childFieldsByType[
+                (string) $tipoId
+            ] =
+                $config['fields']
+                ?? [];
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Catálogos utilizados por campos dinámicos
+        |--------------------------------------------------------------------------
+        */
+
+        $dynamicCatalogs = [];
+
+        foreach (
+            $this->getDynamicCatalogKeys()
+            as $clave
+        ) {
+            $dynamicCatalogs[$clave] =
+                $this->toFrontendOptions(
+                    $this->catalogOptions(
+                        $clave
+                    ),
+                    'id_valor'
+                );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Resultado
+        |--------------------------------------------------------------------------
+        */
+
+        return [
+            'estados' =>
+                $estados,
+
+            'tiposEquipo' =>
+                $tiposEquipo,
+
+            'marcas' =>
+                $marcas,
+
+            'modelos' =>
+                $modelos,
+
+            'proveedores' =>
+                $proveedores,
+
+            'condiciones' =>
+                $condiciones,
+
+            'areas' =>
+                $areas,
+
+            'departamentos' =>
+                $departamentos,
+
+            'childFieldsByType' =>
+                $childFieldsByType,
+
+            'fieldLabels' =>
+                $this->fieldLabels(),
+
+            'dynamicCatalogs' =>
+                $dynamicCatalogs,
+
+            'defaults' => [
+                'codigoInventarioPreview' =>
+                    $this->codigoInventarioPreview,
+            ],
+        ];
     }
 
     /*
@@ -889,7 +1212,11 @@ class EquipoCreate extends Component
     public function render()
     {
         return view(
-            'livewire.equipo-create'
+            'livewire.equipo-create',
+            [
+                'equipmentData' =>
+                    $this->getEquipmentFrontendData(),
+            ]
         );
     }
 }

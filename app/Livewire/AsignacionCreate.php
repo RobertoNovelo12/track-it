@@ -29,6 +29,18 @@ class AsignacionCreate extends Component
     public string $idTipoAsignacion = '';
     public string $observacionesAsignacion = '';
 
+    /*
+    |--------------------------------------------------------------------------
+    | Cache únicamente durante el request actual
+    |--------------------------------------------------------------------------
+    |
+    | Evita consultar dos veces tipos de asignación durante mount/render
+    | o durante save/render.
+    |
+    */
+
+    private ?array $tiposAsignacionRequestCache = null;
+
     public function mount(): void
     {
         $this->fechaAsignacion = now()->toDateString();
@@ -36,14 +48,19 @@ class AsignacionCreate extends Component
         $tipos = $this->getTiposAsignacion();
 
         if (count($tipos) === 1) {
-            $this->idTipoAsignacion = (string) $tipos[0]['value'];
+            $this->idTipoAsignacion =
+                (string) $tipos[0]['value'];
         }
     }
 
     /*
     |--------------------------------------------------------------------------
-    | Dependencias
+    | Compatibilidad temporal
     |--------------------------------------------------------------------------
+    |
+    | Estos hooks quedan mientras cambiamos el Blade.
+    | Cuando los selects usen x-model local ya no se ejecutarán al hacer clic.
+    |
     */
 
     public function updatedIdEquipoAsignar(): void
@@ -61,7 +78,8 @@ class AsignacionCreate extends Component
             )
             ->value('host');
 
-        $this->hostEquipo = (string) ($host ?? '');
+        $this->hostEquipo =
+            (string) ($host ?? '');
     }
 
     public function updatedIdSedeAsignar(): void
@@ -91,110 +109,114 @@ class AsignacionCreate extends Component
     #[Json]
     public function save(array $payload): array
     {
-        $payload = $this->normalizePayload($payload);
+        $payload =
+            $this->normalizePayload($payload);
 
-        $validated = Validator::make(
-            $payload,
-            [
-                'idEquipoAsignar' => [
-                    'required',
-                    'integer',
-                    'exists:equipos,id_equipo',
+        $validated =
+            Validator::make(
+                $payload,
+                [
+                    'idEquipoAsignar' => [
+                        'required',
+                        'integer',
+                        'exists:equipos,id_equipo',
+                    ],
+
+                    'nombreColaborador' => [
+                        'required',
+                        'string',
+                        'max:255',
+                    ],
+
+                    'numeroColaborador' => [
+                        'nullable',
+                        'string',
+                        'max:255',
+                    ],
+
+                    'idSedeAsignar' => [
+                        'required',
+                        'integer',
+                        'exists:sedes,id_sede',
+                    ],
+
+                    'idAreaAsignar' => [
+                        'required',
+                        'integer',
+                        'exists:areas,id_area',
+                    ],
+
+                    'idDepartamentoAsignar' => [
+                        'required',
+                        'integer',
+                        'exists:departamentos,id_departamento',
+                    ],
+
+                    'idUbicacionAsignar' => [
+                        'nullable',
+                        'integer',
+                        'exists:ubicaciones,id_ubicacion',
+                    ],
+
+                    'fechaAsignacion' => [
+                        'required',
+                        'date',
+                    ],
+
+                    'idTipoAsignacion' => [
+                        'required',
+                        'integer',
+                        'exists:catalogo_valores,id_valor',
+                    ],
+
+                    'observacionesAsignacion' => [
+                        'nullable',
+                        'string',
+                        'max:2000',
+                    ],
                 ],
+                [
+                    'idEquipoAsignar.required' =>
+                        'Selecciona un equipo.',
 
-                'nombreColaborador' => [
-                    'required',
-                    'string',
-                    'max:255',
-                ],
+                    'nombreColaborador.required' =>
+                        'Escribe el nombre completo del colaborador.',
 
-                'numeroColaborador' => [
-                    'nullable',
-                    'string',
-                    'max:255',
-                ],
+                    'idSedeAsignar.required' =>
+                        'Selecciona una sede.',
 
-                'idSedeAsignar' => [
-                    'required',
-                    'integer',
-                    'exists:sedes,id_sede',
-                ],
+                    'idAreaAsignar.required' =>
+                        'Selecciona un área.',
 
-                'idAreaAsignar' => [
-                    'required',
-                    'integer',
-                    'exists:areas,id_area',
-                ],
+                    'idDepartamentoAsignar.required' =>
+                        'Selecciona un departamento.',
 
-                'idDepartamentoAsignar' => [
-                    'required',
-                    'integer',
-                    'exists:departamentos,id_departamento',
-                ],
+                    'fechaAsignacion.required' =>
+                        'Selecciona la fecha de asignación.',
 
-                'idUbicacionAsignar' => [
-                    'nullable',
-                    'integer',
-                    'exists:ubicaciones,id_ubicacion',
-                ],
-
-                'fechaAsignacion' => [
-                    'required',
-                    'date',
-                ],
-
-                'idTipoAsignacion' => [
-                    'required',
-                    'integer',
-                    'exists:catalogo_valores,id_valor',
-                ],
-
-                'observacionesAsignacion' => [
-                    'nullable',
-                    'string',
-                    'max:2000',
-                ],
-            ],
-            [
-                'idEquipoAsignar.required' =>
-                    'Selecciona un equipo.',
-
-                'nombreColaborador.required' =>
-                    'Escribe el nombre completo del colaborador.',
-
-                'idSedeAsignar.required' =>
-                    'Selecciona una sede.',
-
-                'idAreaAsignar.required' =>
-                    'Selecciona un área.',
-
-                'idDepartamentoAsignar.required' =>
-                    'Selecciona un departamento.',
-
-                'fechaAsignacion.required' =>
-                    'Selecciona la fecha de asignación.',
-
-                'idTipoAsignacion.required' =>
-                    'Selecciona el tipo de asignación.',
-            ]
-        )->validate();
+                    'idTipoAsignacion.required' =>
+                        'Selecciona el tipo de asignación.',
+                ]
+            )
+                ->validate();
 
         /*
         |--------------------------------------------------------------------------
-        | Validar Sede -> Área
+        | Sede -> Área
         |--------------------------------------------------------------------------
         */
 
-        $areaValida = DB::table('areas')
-            ->where(
-                'id_area',
-                (int) $validated['idAreaAsignar']
-            )
-            ->where(
-                'id_sede',
-                (int) $validated['idSedeAsignar']
-            )
-            ->exists();
+        $areaValida =
+            DB::table('areas')
+                ->where(
+                    'id_area',
+                    (int) $validated['idAreaAsignar']
+                )
+                ->where(
+                    'id_sede',
+                    (int) $validated['idSedeAsignar']
+                )
+                ->exists();
 
         if (! $areaValida) {
             throw ValidationException::withMessages([
@@ -205,20 +227,21 @@ class AsignacionCreate extends Component
 
         /*
         |--------------------------------------------------------------------------
-        | Validar Área -> Departamento
+        | Área -> Departamento
         |--------------------------------------------------------------------------
         */
 
-        $departamentoValido = DB::table('departamentos')
-            ->where(
-                'id_departamento',
-                (int) $validated['idDepartamentoAsignar']
-            )
-            ->where(
-                'id_area',
-                (int) $validated['idAreaAsignar']
-            )
-            ->exists();
+        $departamentoValido =
+            DB::table('departamentos')
+                ->where(
+                    'id_departamento',
+                    (int) $validated['idDepartamentoAsignar']
+                )
+                ->where(
+                    'id_area',
+                    (int) $validated['idAreaAsignar']
+                )
+                ->exists();
 
         if (! $departamentoValido) {
             throw ValidationException::withMessages([
@@ -229,29 +252,32 @@ class AsignacionCreate extends Component
 
         /*
         |--------------------------------------------------------------------------
-        | Validar ubicación
+        | Ubicación
         |--------------------------------------------------------------------------
         */
 
         if ($payload['idUbicacionAsignar'] !== '') {
-            $ubicacionValida = DB::table('ubicaciones')
-                ->where(
-                    'id_ubicacion',
-                    (int) $payload['idUbicacionAsignar']
-                )
-                ->where(
-                    'id_sede',
-                    (int) $validated['idSedeAsignar']
-                )
-                ->where(function ($query) use ($validated) {
-                    $query
-                        ->whereNull('id_area')
-                        ->orWhere(
-                            'id_area',
-                            (int) $validated['idAreaAsignar']
-                        );
-                })
-                ->exists();
+            $ubicacionValida =
+                DB::table('ubicaciones')
+                    ->where(
+                        'id_ubicacion',
+                        (int) $payload['idUbicacionAsignar']
+                    )
+                    ->where(
+                        'id_sede',
+                        (int) $validated['idSedeAsignar']
+                    )
+                    ->where(
+                        function ($query) use ($validated) {
+                            $query
+                                ->whereNull('id_area')
+                                ->orWhere(
+                                    'id_area',
+                                    (int) $validated['idAreaAsignar']
+                                );
+                        }
+                    )
+                    ->exists();
 
             if (! $ubicacionValida) {
                 throw ValidationException::withMessages([
@@ -263,18 +289,20 @@ class AsignacionCreate extends Component
 
         /*
         |--------------------------------------------------------------------------
-        | Validar tipo de asignación
+        | Tipo de asignación
         |--------------------------------------------------------------------------
         */
 
-        $tiposAsignacion = collect(
-            $this->getTiposAsignacion()
-        )
-            ->pluck('value')
-            ->map(
-                fn ($value) => (string) $value
+        $tiposAsignacion =
+            collect(
+                $this->getTiposAsignacion()
             )
-            ->all();
+                ->pluck('value')
+                ->map(
+                    fn ($value) =>
+                        (string) $value
+                )
+                ->all();
 
         if (
             ! in_array(
@@ -297,13 +325,15 @@ class AsignacionCreate extends Component
 
         $now = now();
 
-        $fechaAsignacion = Carbon::parse(
-            $validated['fechaAsignacion']
-        )->setTime(
-            $now->hour,
-            $now->minute,
-            $now->second
-        );
+        $fechaAsignacion =
+            Carbon::parse(
+                $validated['fechaAsignacion']
+            )
+                ->setTime(
+                    $now->hour,
+                    $now->minute,
+                    $now->second
+                );
 
         /*
         |--------------------------------------------------------------------------
@@ -311,179 +341,199 @@ class AsignacionCreate extends Component
         |--------------------------------------------------------------------------
         */
 
-        $resultado = DB::transaction(
-            function () use (
-                $payload,
-                $validated,
-                $fechaAsignacion
-            ): array {
-                $equipoId =
-                    (int) $validated['idEquipoAsignar'];
+        $resultado =
+            DB::transaction(
+                function () use (
+                    $payload,
+                    $validated,
+                    $fechaAsignacion
+                ): array {
 
-                /*
-                 * Bloquear el equipo para evitar dos asignaciones
-                 * simultáneas.
-                 */
-                $equipo = DB::table('equipos')
-                    ->where(
-                        'id_equipo',
-                        $equipoId
-                    )
-                    ->lockForUpdate()
-                    ->first([
-                        'id_equipo',
-                        'codigo_inventario',
-                        'nombre_equipo',
-                        'host',
-                    ]);
+                    $equipoId =
+                        (int) $validated['idEquipoAsignar'];
 
-                if (! $equipo) {
-                    throw ValidationException::withMessages([
-                        'idEquipoAsignar' =>
-                            'El equipo seleccionado ya no existe.',
-                    ]);
-                }
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Bloquear equipo
+                    |--------------------------------------------------------------------------
+                    */
 
-                /*
-                 * Evitar doble asignación.
-                 */
-                $yaAsignado = DB::table('asignaciones')
-                    ->where(
-                        'id_equipo',
-                        $equipoId
-                    )
-                    ->whereNull('fecha_fin')
-                    ->exists();
+                    $equipo =
+                        DB::table('equipos')
+                            ->where(
+                                'id_equipo',
+                                $equipoId
+                            )
+                            ->lockForUpdate()
+                            ->first([
+                                'id_equipo',
+                                'codigo_inventario',
+                                'nombre_equipo',
+                                'host',
+                            ]);
 
-                if ($yaAsignado) {
-                    throw ValidationException::withMessages([
-                        'idEquipoAsignar' =>
-                            'Este equipo ya tiene una asignación activa.',
-                    ]);
-                }
-
-                /*
-                 * Evitar equipos dados de baja.
-                 */
-                $estaDeBaja = DB::table('bajas')
-                    ->where(
-                        'id_equipo',
-                        $equipoId
-                    )
-                    ->exists();
-
-                if ($estaDeBaja) {
-                    throw ValidationException::withMessages([
-                        'idEquipoAsignar' =>
-                            'Este equipo se encuentra dado de baja.',
-                    ]);
-                }
-
-                /*
-                 * Crear asignación.
-                 *
-                 * Conservamos la lógica actual:
-                 *
-                 * - Si existe departamento, guardamos departamento.
-                 * - id_area queda NULL porque el área puede obtenerse
-                 *   desde el departamento.
-                 */
-                $idAsignacion = DB::table('asignaciones')
-                    ->insertGetId(
-                        [
-                            'id_equipo' =>
-                                $equipoId,
-
-                            'nombre_colaborador' =>
-                                trim(
-                                    (string) $validated['nombreColaborador']
-                                ),
-
-                            'numero_colaborador' =>
-                                $this->nullableString(
-                                    $payload['numeroColaborador']
-                                ),
-
-                            'id_area' =>
-                                null,
-
-                            'id_departamento' =>
-                                (int) $validated['idDepartamentoAsignar'],
-
-                            'id_ubicacion' =>
-                                $this->nullableInt(
-                                    $payload['idUbicacionAsignar']
-                                ),
-
-                            'id_tipo_asignacion' =>
-                                (int) $validated['idTipoAsignacion'],
-
-                            'fecha_asignacion' =>
-                                $fechaAsignacion,
-
-                            'fecha_fin' =>
-                                null,
-
-                            'observaciones' =>
-                                $this->nullableString(
-                                    $payload['observacionesAsignacion']
-                                ),
-
-                            'asignado_por' =>
-                                auth()->id(),
-                        ],
-                        'id_asignacion'
-                    );
-
-                /*
-                |--------------------------------------------------------------------------
-                | Cambiar estado del equipo a ASIGNADO
-                |--------------------------------------------------------------------------
-                */
-
-                $estadoAsignado = DB::table('estados_equipo')
-                    ->whereRaw(
-                        'LOWER(clave) = ?',
-                        ['asignado']
-                    )
-                    ->value('id_estado_equipo');
-
-                if ($estadoAsignado !== null) {
-                    DB::table('equipos')
-                        ->where(
-                            'id_equipo',
-                            $equipoId
-                        )
-                        ->update([
-                            'id_estado_activo' =>
-                                $estadoAsignado,
+                    if (! $equipo) {
+                        throw ValidationException::withMessages([
+                            'idEquipoAsignar' =>
+                                'El equipo seleccionado ya no existe.',
                         ]);
+                    }
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Evitar doble asignación
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $yaAsignado =
+                        DB::table('asignaciones')
+                            ->where(
+                                'id_equipo',
+                                $equipoId
+                            )
+                            ->whereNull(
+                                'fecha_fin'
+                            )
+                            ->exists();
+
+                    if ($yaAsignado) {
+                        throw ValidationException::withMessages([
+                            'idEquipoAsignar' =>
+                                'Este equipo ya tiene una asignación activa.',
+                        ]);
+                    }
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Evitar equipos dados de baja
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $estaDeBaja =
+                        DB::table('bajas')
+                            ->where(
+                                'id_equipo',
+                                $equipoId
+                            )
+                            ->exists();
+
+                    if ($estaDeBaja) {
+                        throw ValidationException::withMessages([
+                            'idEquipoAsignar' =>
+                                'Este equipo se encuentra dado de baja.',
+                        ]);
+                    }
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Crear asignación
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $idAsignacion =
+                        DB::table('asignaciones')
+                            ->insertGetId(
+                                [
+                                    'id_equipo' =>
+                                        $equipoId,
+
+                                    'nombre_colaborador' =>
+                                        trim(
+                                            (string) $validated['nombreColaborador']
+                                        ),
+
+                                    'numero_colaborador' =>
+                                        $this->nullableString(
+                                            $payload['numeroColaborador']
+                                        ),
+
+                                    /*
+                                     * Guardamos departamento.
+                                     * El área puede obtenerse desde departamento.
+                                     */
+                                    'id_area' =>
+                                        null,
+
+                                    'id_departamento' =>
+                                        (int) $validated['idDepartamentoAsignar'],
+
+                                    'id_ubicacion' =>
+                                        $this->nullableInt(
+                                            $payload['idUbicacionAsignar']
+                                        ),
+
+                                    'id_tipo_asignacion' =>
+                                        (int) $validated['idTipoAsignacion'],
+
+                                    'fecha_asignacion' =>
+                                        $fechaAsignacion,
+
+                                    'fecha_fin' =>
+                                        null,
+
+                                    'observaciones' =>
+                                        $this->nullableString(
+                                            $payload['observacionesAsignacion']
+                                        ),
+
+                                    'asignado_por' =>
+                                        auth()->id(),
+                                ],
+                                'id_asignacion'
+                            );
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Estado ASIGNADO
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $estadoAsignado =
+                        DB::table('estados_equipo')
+                            ->whereRaw(
+                                'LOWER(clave) = ?',
+                                ['asignado']
+                            )
+                            ->value(
+                                'id_estado_equipo'
+                            );
+
+                    if ($estadoAsignado !== null) {
+                        DB::table('equipos')
+                            ->where(
+                                'id_equipo',
+                                $equipoId
+                            )
+                            ->update([
+                                'id_estado_activo' =>
+                                    $estadoAsignado,
+                            ]);
+                    }
+
+                    return [
+                        'idAsignacion' =>
+                            $idAsignacion,
+
+                        'equipoId' =>
+                            $equipoId,
+
+                        'codigoInventario' =>
+                            (string) $equipo->codigo_inventario,
+
+                        'nombreEquipo' =>
+                            (string) (
+                                $equipo->nombre_equipo
+                                ?: $equipo->codigo_inventario
+                            ),
+
+                        'host' =>
+                            (string) (
+                                $equipo->host
+                                ?? ''
+                            ),
+                    ];
                 }
-
-                return [
-                    'idAsignacion' =>
-                        $idAsignacion,
-
-                    'equipoId' =>
-                        $equipoId,
-
-                    'codigoInventario' =>
-                        (string) $equipo->codigo_inventario,
-
-                    'nombreEquipo' =>
-                        (string) (
-                            $equipo->nombre_equipo
-                            ?: $equipo->codigo_inventario
-                        ),
-
-                    'host' =>
-                        (string) (
-                            $equipo->host
-                            ?? ''
-                        ),
-                ];
-            }
-        );
+            );
 
         return [
             'ok' => true,
@@ -506,6 +556,159 @@ class AsignacionCreate extends Component
 
                 'host' =>
                     $resultado['host'],
+            ],
+        ];
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | JSON inicial
+    |--------------------------------------------------------------------------
+    |
+    | Todo lo que necesita Alpine se obtiene aquí.
+    |
+    | Después:
+    |
+    | Equipo -> Host
+    | Sede -> Área
+    | Área -> Departamento
+    | Sede/Área -> Ubicación
+    |
+    | se resolverá en navegador sin requests Livewire.
+    |
+    */
+
+    private function getAssignmentFrontendData(): array
+    {
+        $equipos =
+            $this->getEquiposDisponibles();
+
+        $sedes =
+            $this->getSedes();
+
+        $areas =
+            DB::table('areas')
+                ->where(
+                    'activo',
+                    true
+                )
+                ->orderBy(
+                    'nombre'
+                )
+                ->get([
+                    'id_area',
+                    'id_sede',
+                    'nombre',
+                ])
+                ->map(
+                    fn ($area): array => [
+                        'value' =>
+                            (string) $area->id_area,
+
+                        'label' =>
+                            (string) $area->nombre,
+
+                        'idSede' =>
+                            (string) $area->id_sede,
+                    ]
+                )
+                ->values()
+                ->all();
+
+        $departamentos =
+            DB::table('departamentos')
+                ->where(
+                    'activo',
+                    true
+                )
+                ->orderBy(
+                    'nombre'
+                )
+                ->get([
+                    'id_departamento',
+                    'id_area',
+                    'nombre',
+                ])
+                ->map(
+                    fn ($departamento): array => [
+                        'value' =>
+                            (string) $departamento->id_departamento,
+
+                        'label' =>
+                            (string) $departamento->nombre,
+
+                        'idArea' =>
+                            (string) $departamento->id_area,
+                    ]
+                )
+                ->values()
+                ->all();
+
+        $ubicaciones =
+            DB::table('ubicaciones')
+                ->where(
+                    'activo',
+                    true
+                )
+                ->orderBy(
+                    'nombre'
+                )
+                ->get([
+                    'id_ubicacion',
+                    'id_sede',
+                    'id_area',
+                    'nombre',
+                ])
+                ->map(
+                    fn ($ubicacion): array => [
+                        'value' =>
+                            (string) $ubicacion->id_ubicacion,
+
+                        'label' =>
+                            (string) $ubicacion->nombre,
+
+                        'idSede' =>
+                            (string) $ubicacion->id_sede,
+
+                        'idArea' =>
+                            $ubicacion->id_area !== null
+                                ? (string) $ubicacion->id_area
+                                : '',
+                    ]
+                )
+                ->values()
+                ->all();
+
+        $tiposAsignacion =
+            $this->getTiposAsignacion();
+
+        return [
+            'equipos' =>
+                $equipos,
+
+            'sedes' =>
+                $sedes,
+
+            'areas' =>
+                $areas,
+
+            'departamentos' =>
+                $departamentos,
+
+            'ubicaciones' =>
+                $ubicaciones,
+
+            'tiposAsignacion' =>
+                $tiposAsignacion,
+
+            'defaults' => [
+                'fechaAsignacion' =>
+                    $this->fechaAsignacion,
+
+                'idTipoAsignacion' =>
+                    count($tiposAsignacion) === 1
+                        ? (string) $tiposAsignacion[0]['value']
+                        : (string) $this->idTipoAsignacion,
             ],
         ];
     }
@@ -578,16 +781,17 @@ class AsignacionCreate extends Component
             ])
             ->map(
                 function ($equipo): array {
-                    $descripcion = trim(
-                        implode(
-                            ' ',
-                            array_filter([
-                                $equipo->tipo,
-                                $equipo->marca,
-                                $equipo->modelo,
-                            ])
-                        )
-                    );
+                    $descripcion =
+                        trim(
+                            implode(
+                                ' ',
+                                array_filter([
+                                    $equipo->tipo,
+                                    $equipo->marca,
+                                    $equipo->modelo,
+                                ])
+                            )
+                        );
 
                     if ($descripcion === '') {
                         $descripcion =
@@ -613,6 +817,9 @@ class AsignacionCreate extends Component
                                 ?: $equipo->codigo_inventario
                             ),
 
+                        /*
+                         * Lo usaremos para llenar Host localmente.
+                         */
                         'host' =>
                             (string) (
                                 $equipo->host
@@ -672,252 +879,117 @@ class AsignacionCreate extends Component
 
     /*
     |--------------------------------------------------------------------------
-    | Áreas
-    |--------------------------------------------------------------------------
-    */
-
-    private function getAreas(): array
-    {
-        $query = DB::table('areas')
-            ->where(
-                'activo',
-                true
-            );
-
-        if ($this->idSedeAsignar !== '') {
-            $query->where(
-                'id_sede',
-                (int) $this->idSedeAsignar
-            );
-        } else {
-            return [];
-        }
-
-        return $query
-            ->orderBy(
-                'nombre'
-            )
-            ->get([
-                'id_area',
-                'nombre',
-            ])
-            ->map(
-                fn ($area): array => [
-                    'value' =>
-                        (string) $area->id_area,
-
-                    'label' =>
-                        (string) $area->nombre,
-                ]
-            )
-            ->values()
-            ->all();
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Departamentos
-    |--------------------------------------------------------------------------
-    */
-
-    private function getDepartamentos(): array
-    {
-        if ($this->idAreaAsignar === '') {
-            return [];
-        }
-
-        return DB::table('departamentos')
-            ->where(
-                'activo',
-                true
-            )
-            ->where(
-                'id_area',
-                (int) $this->idAreaAsignar
-            )
-            ->orderBy(
-                'nombre'
-            )
-            ->get([
-                'id_departamento',
-                'nombre',
-            ])
-            ->map(
-                fn ($departamento): array => [
-                    'value' =>
-                        (string) $departamento->id_departamento,
-
-                    'label' =>
-                        (string) $departamento->nombre,
-                ]
-            )
-            ->values()
-            ->all();
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Ubicaciones
-    |--------------------------------------------------------------------------
-    */
-
-    private function getUbicaciones(): array
-    {
-        if ($this->idSedeAsignar === '') {
-            return [];
-        }
-
-        $query = DB::table('ubicaciones')
-            ->where(
-                'activo',
-                true
-            )
-            ->where(
-                'id_sede',
-                (int) $this->idSedeAsignar
-            );
-
-        if ($this->idAreaAsignar !== '') {
-            $areaId =
-                (int) $this->idAreaAsignar;
-
-            $query->where(
-                function ($query) use ($areaId) {
-                    $query
-                        ->whereNull('id_area')
-                        ->orWhere(
-                            'id_area',
-                            $areaId
-                        );
-                }
-            );
-        }
-
-        return $query
-            ->orderBy(
-                'nombre'
-            )
-            ->get([
-                'id_ubicacion',
-                'nombre',
-            ])
-            ->map(
-                fn ($ubicacion): array => [
-                    'value' =>
-                        (string) $ubicacion->id_ubicacion,
-
-                    'label' =>
-                        (string) $ubicacion->nombre,
-                ]
-            )
-            ->values()
-            ->all();
-    }
-
-    /*
-    |--------------------------------------------------------------------------
     | Tipos de asignación
     |--------------------------------------------------------------------------
     */
 
     private function getTiposAsignacion(): array
     {
-        $tipos = DB::table('catalogo_valores as cv')
-            ->join(
-                'catalogos as c',
-                'c.id_catalogo',
-                '=',
-                'cv.id_catalogo'
-            )
-            ->where(
-                'cv.activo',
-                true
-            )
-            ->where(function ($query) {
-                $query
-                    ->whereRaw(
-                        'LOWER(c.clave) IN (?, ?)',
-                        [
-                            'tipo_asignacion',
-                            'tipos_asignacion',
-                        ]
-                    )
-                    ->orWhereRaw(
-                        'LOWER(c.nombre) LIKE ?',
-                        ['%asign%']
-                    );
-            })
-            ->orderBy(
-                'cv.orden'
-            )
-            ->orderBy(
-                'cv.nombre'
-            )
-            ->get([
-                'cv.id_valor',
-                'cv.nombre',
-            ])
-            ->map(
-                fn ($item): array => [
-                    'value' =>
-                        (string) $item->id_valor,
+        if ($this->tiposAsignacionRequestCache !== null) {
+            return $this->tiposAsignacionRequestCache;
+        }
 
-                    'label' =>
-                        (string) $item->nombre,
-                ]
-            )
-            ->values()
-            ->all();
+        $tipos =
+            DB::table('catalogo_valores as cv')
+                ->join(
+                    'catalogos as c',
+                    'c.id_catalogo',
+                    '=',
+                    'cv.id_catalogo'
+                )
+                ->where(
+                    'cv.activo',
+                    true
+                )
+                ->where(
+                    function ($query) {
+                        $query
+                            ->whereRaw(
+                                'LOWER(c.clave) IN (?, ?)',
+                                [
+                                    'tipo_asignacion',
+                                    'tipos_asignacion',
+                                ]
+                            )
+                            ->orWhereRaw(
+                                'LOWER(c.nombre) LIKE ?',
+                                ['%asign%']
+                            );
+                    }
+                )
+                ->orderBy(
+                    'cv.orden'
+                )
+                ->orderBy(
+                    'cv.nombre'
+                )
+                ->get([
+                    'cv.id_valor',
+                    'cv.nombre',
+                ])
+                ->map(
+                    fn ($item): array => [
+                        'value' =>
+                            (string) $item->id_valor,
+
+                        'label' =>
+                            (string) $item->nombre,
+                    ]
+                )
+                ->values()
+                ->all();
 
         /*
-         * Conservamos el fallback que ya tenía
-         * AsignacionesIndex.
+         * Fallback conservado de la versión actual.
          */
         if ($tipos === []) {
-            $idsUsados = DB::table('asignaciones')
-                ->whereNotNull(
-                    'id_tipo_asignacion'
-                )
-                ->distinct()
-                ->pluck(
-                    'id_tipo_asignacion'
-                );
+            $idsUsados =
+                DB::table('asignaciones')
+                    ->whereNotNull(
+                        'id_tipo_asignacion'
+                    )
+                    ->distinct()
+                    ->pluck(
+                        'id_tipo_asignacion'
+                    );
 
             if ($idsUsados->isNotEmpty()) {
-                $tipos = DB::table('catalogo_valores')
-                    ->whereIn(
-                        'id_valor',
-                        $idsUsados
-                    )
-                    ->where(
-                        'activo',
-                        true
-                    )
-                    ->orderBy(
-                        'orden'
-                    )
-                    ->orderBy(
-                        'nombre'
-                    )
-                    ->get([
-                        'id_valor',
-                        'nombre',
-                    ])
-                    ->map(
-                        fn ($item): array => [
-                            'value' =>
-                                (string) $item->id_valor,
+                $tipos =
+                    DB::table('catalogo_valores')
+                        ->whereIn(
+                            'id_valor',
+                            $idsUsados
+                        )
+                        ->where(
+                            'activo',
+                            true
+                        )
+                        ->orderBy(
+                            'orden'
+                        )
+                        ->orderBy(
+                            'nombre'
+                        )
+                        ->get([
+                            'id_valor',
+                            'nombre',
+                        ])
+                        ->map(
+                            fn ($item): array => [
+                                'value' =>
+                                    (string) $item->id_valor,
 
-                            'label' =>
-                                (string) $item->nombre,
-                        ]
-                    )
-                    ->values()
-                    ->all();
+                                'label' =>
+                                    (string) $item->nombre,
+                            ]
+                        )
+                        ->values()
+                        ->all();
             }
         }
 
-        return $tipos;
+        return $this->tiposAsignacionRequestCache =
+            $tipos;
     }
 
     /*
@@ -970,8 +1042,8 @@ class AsignacionCreate extends Component
     private function nullableInt(mixed $value): ?int
     {
         if (
-            $value === null ||
-            $value === ''
+            $value === null
+            || $value === ''
         ) {
             return null;
         }
@@ -984,13 +1056,14 @@ class AsignacionCreate extends Component
     private function nullableString(mixed $value): ?string
     {
         if (
-            $value === null ||
-            ! is_string($value)
+            $value === null
+            || ! is_string($value)
         ) {
             return null;
         }
 
-        $value = trim($value);
+        $value =
+            trim($value);
 
         return $value !== ''
             ? $value
@@ -1018,47 +1091,123 @@ class AsignacionCreate extends Component
 
     public function render(): View
     {
-        $equipos =
-            $this->getEquiposDisponibles();
+        $assignmentData =
+            $this->getAssignmentFrontendData();
+
+        /*
+         * Compatibilidad temporal con el Blade actual.
+         * En el siguiente paso estos filtros se harán con Alpine.
+         */
+
+        $equiposDisponibles =
+            collect(
+                $assignmentData['equipos']
+            )
+                ->map(
+                    fn (array $equipo): array => [
+                        'value' =>
+                            $equipo['value'],
+
+                        'label' =>
+                            $equipo['label'],
+                    ]
+                )
+                ->values()
+                ->all();
+
+        $areas =
+            $this->idSedeAsignar === ''
+                ? []
+                : collect(
+                    $assignmentData['areas']
+                )
+                    ->filter(
+                        fn (array $area): bool =>
+                            (string) $area['idSede']
+                            ===
+                            (string) $this->idSedeAsignar
+                    )
+                    ->values()
+                    ->all();
+
+        $departamentos =
+            $this->idAreaAsignar === ''
+                ? []
+                : collect(
+                    $assignmentData['departamentos']
+                )
+                    ->filter(
+                        fn (array $departamento): bool =>
+                            (string) $departamento['idArea']
+                            ===
+                            (string) $this->idAreaAsignar
+                    )
+                    ->values()
+                    ->all();
+
+        $ubicaciones =
+            $this->idSedeAsignar === ''
+                ? []
+                : collect(
+                    $assignmentData['ubicaciones']
+                )
+                    ->filter(
+                        function (array $ubicacion): bool {
+                            if (
+                                (string) $ubicacion['idSede']
+                                !==
+                                (string) $this->idSedeAsignar
+                            ) {
+                                return false;
+                            }
+
+                            if ($this->idAreaAsignar === '') {
+                                return true;
+                            }
+
+                            return
+                                $ubicacion['idArea'] === ''
+                                ||
+                                (string) $ubicacion['idArea']
+                                ===
+                                (string) $this->idAreaAsignar;
+                        }
+                    )
+                    ->values()
+                    ->all();
 
         return view(
             'livewire.asignacion-create',
             [
-                'equiposDisponibles' =>
-                    collect($equipos)
-                        ->map(
-                            fn ($equipo) => [
-                                'value' =>
-                                    $equipo['value'],
-
-                                'label' =>
-                                    $equipo['label'],
-                            ]
-                        )
-                        ->values()
-                        ->all(),
+                /*
+                 * Nuevo paquete JSON.
+                 */
+                'assignmentData' =>
+                    $assignmentData,
 
                 /*
-                 * Estos metadatos nos servirán en Alpine para mostrar
-                 * Host inmediatamente, sin esperar otra petición.
+                 * Compatibilidad temporal con la vista actual.
                  */
+                'equiposDisponibles' =>
+                    $equiposDisponibles,
+
                 'equiposMeta' =>
-                    $equipos,
+                    $assignmentData['equipos'],
 
                 'sedes' =>
-                    $this->getSedes(),
+                    $assignmentData['sedes'],
 
                 'areas' =>
-                    $this->getAreas(),
+                    $areas,
 
                 'departamentos' =>
-                    $this->getDepartamentos(),
+                    $departamentos,
 
                 'ubicaciones' =>
-                    $this->getUbicaciones(),
+                    $ubicaciones,
 
                 'tiposAsignacion' =>
-                    $this->getTiposAsignacion(),
+                    $assignmentData['tiposAsignacion'],
             ]
         );
     }

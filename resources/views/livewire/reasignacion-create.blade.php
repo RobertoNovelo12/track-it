@@ -2,12 +2,12 @@
 
     <div
         x-data="{
+            data: @js($reassignmentData),
+
             successVisible: false,
             successMessage: '',
-
             errorVisible: false,
             errorMessage: '',
-
             validationErrors: {},
 
             savingVisual: false,
@@ -17,9 +17,248 @@
             successTimer: null,
             errorTimer: null,
 
+            idEquipoReasignar: '',
+            idAsignacionActual: '',
+
+            responsableActual: '',
+            numeroColaboradorActual: '',
+            hostActual: '',
+            areaDepartamentoActual: '',
+            sedeActual: '',
+            fechaAsignacionActual: '',
+            tipoAsignacionActual: '',
+
+            idAreaActual: '',
+            idDepartamentoActual: '',
+            idUbicacionActual: '',
+            idTipoAsignacionActual: '',
+
+            motivoReasignacion: '',
+            nombreNuevoColaborador: '',
+
+            idSedeNueva: '',
+            idAreaNueva: '',
+            idDepartamentoNuevo: '',
+            idUbicacionNueva: '',
+
+            fechaReasignacion: @js(
+                $reassignmentData['defaults']['fechaReasignacion'] ?? ''
+            ),
+
+            observacionesReasignacion: '',
+
+            init() {
+                this.$watch('idEquipoReasignar', () => {
+                    this.loadSelectedAssignment();
+                    this.clearValidationError('idEquipoReasignar');
+                });
+
+                this.$watch('idSedeNueva', (value, previous) => {
+                    if (String(value ?? '') === String(previous ?? '')) {
+                        return;
+                    }
+
+                    this.idAreaNueva = '';
+                    this.idDepartamentoNuevo = '';
+                    this.idUbicacionNueva = '';
+
+                    this.clearValidationError('idSedeNueva');
+                    this.clearValidationError('idAreaNueva');
+                    this.clearValidationError('idDepartamentoNuevo');
+                });
+
+                this.$watch('idAreaNueva', (value, previous) => {
+                    if (String(value ?? '') === String(previous ?? '')) {
+                        return;
+                    }
+
+                    this.idDepartamentoNuevo = '';
+                    this.idUbicacionNueva = '';
+
+                    this.clearValidationError('idAreaNueva');
+                    this.clearValidationError('idDepartamentoNuevo');
+                });
+
+                this.$watch('idDepartamentoNuevo', (value, previous) => {
+                    if (String(value ?? '') === String(previous ?? '')) {
+                        return;
+                    }
+
+                    this.idUbicacionNueva = '';
+
+                    this.clearValidationError('idDepartamentoNuevo');
+                });
+            },
+
+            get areasDisponibles() {
+                const sedeId = String(this.idSedeNueva ?? '');
+
+                if (sedeId === '') {
+                    return [];
+                }
+
+                return (this.data?.areas ?? []).filter(
+                    area =>
+                        String(area?.idSede ?? '') === sedeId
+                );
+            },
+
+            get departamentosDisponibles() {
+                const areaId = String(this.idAreaNueva ?? '');
+
+                if (areaId === '') {
+                    return [];
+                }
+
+                return (this.data?.departamentos ?? []).filter(
+                    departamento =>
+                        String(departamento?.idArea ?? '') === areaId
+                );
+            },
+
+            get ubicacionesDisponibles() {
+                const sedeId = String(this.idSedeNueva ?? '');
+                const areaId = String(this.idAreaNueva ?? '');
+
+                if (sedeId === '') {
+                    return [];
+                }
+
+                return (this.data?.ubicaciones ?? []).filter(
+                    ubicacion => {
+                        const mismaSede =
+                            String(ubicacion?.idSede ?? '') === sedeId;
+
+                        if (!mismaSede) {
+                            return false;
+                        }
+
+                        if (areaId === '') {
+                            return true;
+                        }
+
+                        const ubicacionArea =
+                            String(ubicacion?.idArea ?? '');
+
+                        return (
+                            ubicacionArea === ''
+                            || ubicacionArea === areaId
+                        );
+                    }
+                );
+            },
+
+            resetCurrentAssignment() {
+                this.idAsignacionActual = '';
+
+                this.responsableActual = '';
+                this.numeroColaboradorActual = '';
+                this.hostActual = '';
+                this.areaDepartamentoActual = '';
+                this.sedeActual = '';
+                this.fechaAsignacionActual = '';
+                this.tipoAsignacionActual = '';
+
+                this.idAreaActual = '';
+                this.idDepartamentoActual = '';
+                this.idUbicacionActual = '';
+                this.idTipoAsignacionActual = '';
+            },
+
+            resetNewDestination() {
+                this.idSedeNueva = '';
+                this.idAreaNueva = '';
+                this.idDepartamentoNuevo = '';
+                this.idUbicacionNueva = '';
+            },
+
+            loadSelectedAssignment() {
+                this.resetCurrentAssignment();
+                this.resetNewDestination();
+
+                const equipoId =
+                    String(this.idEquipoReasignar ?? '');
+
+                if (equipoId === '') {
+                    return;
+                }
+
+                const equipo =
+                    (this.data?.equipos ?? []).find(
+                        item =>
+                            String(item?.value ?? '') === equipoId
+                    );
+
+                if (!equipo) {
+                    this.idEquipoReasignar = '';
+                    return;
+                }
+
+                const assignment =
+                    equipo.assignment ?? {};
+
+                this.idAsignacionActual =
+                    String(assignment.idAsignacion ?? '');
+
+                this.responsableActual =
+                    String(assignment.responsable ?? '');
+
+                this.numeroColaboradorActual =
+                    String(assignment.numeroColaborador ?? '');
+
+                this.hostActual =
+                    String(assignment.host ?? '');
+
+                this.areaDepartamentoActual =
+                    String(assignment.areaDepartamento ?? '');
+
+                this.sedeActual =
+                    String(assignment.sede ?? '');
+
+                this.fechaAsignacionActual =
+                    String(assignment.fechaAsignacion ?? '');
+
+                this.tipoAsignacionActual =
+                    String(assignment.tipoAsignacion ?? '');
+
+                this.idAreaActual =
+                    String(assignment.idArea ?? '');
+
+                this.idDepartamentoActual =
+                    String(assignment.idDepartamento ?? '');
+
+                this.idUbicacionActual =
+                    String(assignment.idUbicacion ?? '');
+
+                this.idTipoAsignacionActual =
+                    String(assignment.idTipoAsignacion ?? '');
+            },
+
+            clearValidationError(field) {
+                if (
+                    !this.validationErrors
+                    || typeof this.validationErrors !== 'object'
+                    || !Object.prototype.hasOwnProperty.call(
+                        this.validationErrors,
+                        field
+                    )
+                ) {
+                    return;
+                }
+
+                const errors = {
+                    ...this.validationErrors
+                };
+
+                delete errors[field];
+
+                this.validationErrors = errors;
+            },
+
             showSuccess(message) {
                 this.successMessage =
-                    message || 'El equipo fue reasignado correctamente.';
+                    message
+                    || 'El equipo fue reasignado correctamente.';
 
                 this.successVisible = true;
 
@@ -34,7 +273,8 @@
 
             showError(message) {
                 this.errorMessage =
-                    message || 'No fue posible guardar la reasignación.';
+                    message
+                    || 'No fue posible guardar la reasignación.';
 
                 this.errorVisible = true;
 
@@ -47,74 +287,37 @@
                 }, 5000);
             },
 
-            inputValue(id) {
-                const element =
-                    document.getElementById(id);
-
-                return element
-                    ? element.value ?? ''
-                    : '';
-            },
-
             captureSnapshot() {
                 return {
                     idEquipoReasignar:
-                        String(
-                            $wire.idEquipoReasignar ?? ''
-                        ),
+                        String(this.idEquipoReasignar ?? ''),
 
                     idAsignacionActual:
-                        String(
-                            $wire.idAsignacionActual ?? ''
-                        ),
+                        String(this.idAsignacionActual ?? ''),
 
                     motivoReasignacion:
-                        String(
-                            this.inputValue(
-                                'reassignment-reason'
-                            )
-                        ),
+                        String(this.motivoReasignacion ?? ''),
 
                     nombreNuevoColaborador:
-                        String(
-                            this.inputValue(
-                                'reassignment-collaborator'
-                            )
-                        ),
+                        String(this.nombreNuevoColaborador ?? ''),
 
                     idSedeNueva:
-                        String(
-                            $wire.idSedeNueva ?? ''
-                        ),
+                        String(this.idSedeNueva ?? ''),
 
                     idAreaNueva:
-                        String(
-                            $wire.idAreaNueva ?? ''
-                        ),
+                        String(this.idAreaNueva ?? ''),
 
                     idDepartamentoNuevo:
-                        String(
-                            $wire.idDepartamentoNuevo ?? ''
-                        ),
+                        String(this.idDepartamentoNuevo ?? ''),
 
                     idUbicacionNueva:
-                        String(
-                            $wire.idUbicacionNueva ?? ''
-                        ),
+                        String(this.idUbicacionNueva ?? ''),
 
                     fechaReasignacion:
-                        String(
-                            this.inputValue(
-                                'reassignment-date'
-                            )
-                        ),
+                        String(this.fechaReasignacion ?? ''),
 
                     observacionesReasignacion:
-                        String(
-                            this.inputValue(
-                                'reassignment-observations'
-                            )
-                        ),
+                        String(this.observacionesReasignacion ?? ''),
                 };
             },
 
@@ -140,8 +343,8 @@
                     error?.errors;
 
                 if (
-                    !errors ||
-                    typeof errors !== 'object'
+                    !errors
+                    || typeof errors !== 'object'
                 ) {
                     return null;
                 }
@@ -273,15 +476,12 @@
                 this.savingVisual = true;
 
                 if (this.spinnerTimer) {
-                    clearTimeout(
-                        this.spinnerTimer
-                    );
+                    clearTimeout(this.spinnerTimer);
                 }
 
-                this.spinnerTimer =
-                    setTimeout(() => {
-                        this.savingVisual = false;
-                    }, 350);
+                this.spinnerTimer = setTimeout(() => {
+                    this.savingVisual = false;
+                }, 350);
             },
 
             async saveReassignment() {
@@ -292,11 +492,7 @@
                 const payload =
                     this.captureSnapshot();
 
-                if (
-                    !this.validateSnapshot(
-                        payload
-                    )
-                ) {
+                if (!this.validateSnapshot(payload)) {
                     return;
                 }
 
@@ -307,13 +503,11 @@
 
                 try {
                     const result =
-                        await $wire.save(
-                            payload
-                        );
+                        await $wire.save(payload);
 
                     if (
-                        !result ||
-                        result.ok !== true
+                        !result
+                        || result.ok !== true
                     ) {
                         throw new Error(
                             'Respuesta de guardado no válida.'
@@ -323,8 +517,8 @@
                     this.validationErrors = {};
 
                     this.showSuccess(
-                        result.message ||
-                        'El equipo fue reasignado correctamente.'
+                        result.message
+                        || 'El equipo fue reasignado correctamente.'
                     );
 
                     setTimeout(() => {
@@ -332,18 +526,15 @@
                             this.$root.dataset.indexUrl;
 
                         if (
-                            window.Livewire &&
-                            typeof window.Livewire.navigate === 'function'
+                            window.Livewire
+                            && typeof window.Livewire.navigate
+                                === 'function'
                         ) {
-                            window.Livewire.navigate(
-                                url
-                            );
-
+                            window.Livewire.navigate(url);
                             return;
                         }
 
-                        window.location.href =
-                            url;
+                        window.location.href = url;
                     }, 650);
 
                 } catch (error) {
@@ -351,8 +542,8 @@
                         error?.errors ?? {};
 
                     this.showError(
-                        this.firstError(error) ||
-                        'No fue posible guardar la reasignación. Inténtalo nuevamente.'
+                        this.firstError(error)
+                        || 'No fue posible guardar la reasignación. Inténtalo nuevamente.'
                     );
 
                 } finally {
@@ -684,12 +875,11 @@
                     Asignación actual
                 </h2>
 
-
                 {{-- EQUIPO --}}
-                <div class="mb-5">
+                <div class="mb-4">
                     <x-searchable-select
-                        wire-model="idEquipoReasignar"
-                        :options="$equiposAsignados"
+                        x-model="idEquipoReasignar"
+                        x-options="data.equipos"
                         label="Equipo a reasignar *"
                         placeholder="Buscar equipo actualmente asignado..."
                     />
@@ -698,11 +888,7 @@
                         x-show="fieldError('idEquipoReasignar')"
                         x-cloak
                         x-text="fieldError('idEquipoReasignar')"
-                        class="
-                            mt-1
-                            text-xs
-                            text-[var(--theme-danger)]
-                        "
+                        class="mt-1 text-xs text-[var(--theme-danger)]"
                     ></p>
                 </div>
 
@@ -732,7 +918,7 @@
                             <input
                                 type="text"
                                 readonly
-                                value="{{ $responsableActual }}"
+                                :value="responsableActual"
                                 placeholder="Selecciona un equipo"
                                 class="
                                     w-full
@@ -782,7 +968,7 @@
                             <input
                                 type="text"
                                 readonly
-                                value="{{ $areaDepartamentoActual }}"
+                                :value="areaDepartamentoActual"
                                 placeholder="Selecciona un equipo"
                                 class="
                                     w-full
@@ -832,7 +1018,7 @@
                             <input
                                 type="text"
                                 readonly
-                                value="{{ $sedeActual }}"
+                                :value="sedeActual"
                                 placeholder="Selecciona un equipo"
                                 class="
                                     w-full
@@ -882,7 +1068,7 @@
                             <input
                                 type="text"
                                 readonly
-                                value="{{ $hostActual }}"
+                                :value="hostActual"
                                 placeholder="Sin host"
                                 class="
                                     w-full
@@ -932,7 +1118,7 @@
                             <input
                                 type="text"
                                 readonly
-                                value="{{ $fechaAsignacionActual }}"
+                                :value="fechaAsignacionActual"
                                 placeholder="Selecciona un equipo"
                                 class="
                                     w-full
@@ -982,7 +1168,7 @@
                             <input
                                 type="text"
                                 readonly
-                                value="{{ $tipoAsignacionActual }}"
+                                :value="tipoAsignacionActual"
                                 placeholder="Selecciona un equipo"
                                 class="
                                     w-full
@@ -1065,7 +1251,8 @@
                         <input
                             id="reassignment-reason"
                             type="text"
-                            wire:model="motivoReasignacion"
+                            x-model="motivoReasignacion"
+                            @input="clearValidationError('motivoReasignacion')"
                             placeholder="Escribe el motivo de la reasignación"
                             class="
                                 w-full
@@ -1113,7 +1300,8 @@
                         <input
                             id="reassignment-collaborator"
                             type="text"
-                            wire:model="nombreNuevoColaborador"
+                            x-model="nombreNuevoColaborador"
+                            @input="clearValidationError('nombreNuevoColaborador')"
                             placeholder="Nombre completo del nuevo colaborador"
                             class="
                                 w-full
@@ -1148,15 +1336,16 @@
                     {{-- NUEVA SEDE --}}
                     <div>
                         <x-searchable-select
-                            wire-model="idSedeNueva"
-                            :options="$sedes"
+                            x-model="idSedeNueva"
+                            x-options="data.sedes"
+
                             label="Nueva Sede *"
-                            :placeholder="
-                                $idAsignacionActual === ''
-                                    ? 'Selecciona un equipo primero'
-                                    : 'Buscar sede...'
-                            "
-                            :disabled="$idAsignacionActual === ''"
+
+                            placeholder="Selecciona un equipo primero"
+                            :disabled="true"
+
+                            x-placeholder="idAsignacionActual === '' ? 'Selecciona un equipo primero' : 'Buscar sede...'"
+                            x-disabled="idAsignacionActual === ''"
                         />
 
                         <p
@@ -1175,15 +1364,16 @@
                     {{-- NUEVA ÁREA --}}
                     <div>
                         <x-searchable-select
-                            wire-model="idAreaNueva"
-                            :options="$areas"
+                            x-model="idAreaNueva"
+                            x-options="areasDisponibles"
+
                             label="Nueva Área *"
-                            :placeholder="
-                                $idSedeNueva === ''
-                                    ? 'Selecciona una sede primero'
-                                    : 'Buscar área...'
-                            "
-                            :disabled="$idSedeNueva === ''"
+
+                            placeholder="Selecciona una sede primero"
+                            :disabled="true"
+
+                            x-placeholder="idSedeNueva === '' ? 'Selecciona una sede primero' : 'Buscar área...'"
+                            x-disabled="idSedeNueva === ''"
                         />
 
                         <p
@@ -1202,15 +1392,16 @@
                     {{-- NUEVO DEPARTAMENTO --}}
                     <div>
                         <x-searchable-select
-                            wire-model="idDepartamentoNuevo"
-                            :options="$departamentos"
+                            x-model="idDepartamentoNuevo"
+                            x-options="departamentosDisponibles"
+
                             label="Nuevo Departamento *"
-                            :placeholder="
-                                $idAreaNueva === ''
-                                    ? 'Selecciona un área primero'
-                                    : 'Buscar departamento...'
-                            "
-                            :disabled="$idAreaNueva === ''"
+
+                            placeholder="Selecciona un área primero"
+                            :disabled="true"
+
+                            x-placeholder="idAreaNueva === '' ? 'Selecciona un área primero' : 'Buscar departamento...'"
+                            x-disabled="idAreaNueva === ''"
                         />
 
                         <p
@@ -1229,15 +1420,16 @@
                     {{-- NUEVA UBICACIÓN --}}
                     <div>
                         <x-searchable-select
-                            wire-model="idUbicacionNueva"
-                            :options="$ubicaciones"
+                            x-model="idUbicacionNueva"
+                            x-options="ubicacionesDisponibles"
+
                             label="Nueva Ubicación"
-                            :placeholder="
-                                $idSedeNueva === ''
-                                    ? 'Selecciona una sede primero'
-                                    : 'Buscar ubicación...'
-                            "
-                            :disabled="$idSedeNueva === ''"
+
+                            placeholder="Selecciona una sede primero"
+                            :disabled="true"
+
+                            x-placeholder="idSedeNueva === '' ? 'Selecciona una sede primero' : 'Buscar ubicación...'"
+                            x-disabled="idSedeNueva === ''"
                         />
                     </div>
 
@@ -1258,7 +1450,8 @@
                         <input
                             id="reassignment-date"
                             type="date"
-                            wire:model="fechaReasignacion"
+                            x-model="fechaReasignacion"
+                            @change="clearValidationError('fechaReasignacion')"
                             class="
                                 w-full
                                 px-3 py-2.5
@@ -1310,7 +1503,7 @@
 
                         <textarea
                             id="reassignment-observations"
-                            wire:model="observacionesReasignacion"
+                            x-model="observacionesReasignacion"
                             rows="5"
                             placeholder="Escribe alguna observación relacionada con la reasignación..."
                             class="

@@ -4,6 +4,8 @@
 
 @section('content')
 
+@include('catalogos.partials.marcas-modelos-alpine')
+
     <div
         class="
             w-full
@@ -11,7 +13,7 @@
             mx-auto
         "
     >
-        <livewire:catalogos.marcas-modelos lazy />
+        <livewire:catalogos.marcas-modelos />
     </div>
 
 @endsection

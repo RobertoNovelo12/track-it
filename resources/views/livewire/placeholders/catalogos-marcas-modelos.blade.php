@@ -3,22 +3,46 @@
     {{-- ============================================================
         ENCABEZADO
     ============================================================ --}}
-    <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
+    <div
+        class="
+            flex
+            flex-col
+
+            lg:flex-row
+            lg:items-end
+            lg:justify-between
+
+            gap-4
+        "
+    >
         <div>
-            <h1 class="text-xl font-semibold text-[var(--theme-text-strong)]">
+            <h1
+                class="
+                    text-xl
+                    font-semibold
+                    text-[var(--theme-text-strong)]
+                "
+            >
                 Gestión de marcas y modelos
             </h1>
 
-            <p class="mt-1 text-xs text-[var(--theme-text-muted)]">
+            <p
+                class="
+                    mt-1
+                    text-xs
+                    text-[var(--theme-text-muted)]
+                "
+            >
                 Inicio
 
                 <span class="mx-1">
                     &gt;
                 </span>
 
-                Catalogo
+                Catálogo
             </p>
         </div>
+
 
         <a
             href="{{ route('catalogos.create') }}"
@@ -84,7 +108,6 @@
                 gap-3
             "
         >
-
             {{-- BUSCADOR --}}
             <div class="relative">
                 <div
@@ -139,90 +162,97 @@
 
                         placeholder:text-[var(--theme-text-muted)]
 
-                        disabled:cursor-default
                         disabled:opacity-100
+                        disabled:cursor-default
                     "
                 >
             </div>
 
 
             {{-- ESTADO --}}
-            <div>
-                <select
-                    disabled
-                    class="
-                        w-full
-                        h-10
+            <div
+                class="
+                    h-10
+                    px-3
 
-                        px-3
+                    flex
+                    items-center
+                    justify-between
 
-                        rounded-md
+                    rounded-md
 
-                        border
-                        border-[var(--theme-border-strong)]
+                    border
+                    border-[var(--theme-border-strong)]
 
-                        bg-[var(--theme-surface)]
+                    bg-[var(--theme-surface-soft)]
 
-                        text-xs
-                        text-[var(--theme-text)]
+                    text-xs
+                    text-[var(--theme-text)]
+                "
+            >
+                <span>Todos los estados</span>
 
-                        disabled:cursor-default
-                        disabled:opacity-100
-                    "
+                <svg
+                    class="w-4 h-4 text-[var(--theme-text-muted)]"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.7"
                 >
-                    <option>
-                        Todos los estados
-                    </option>
-
-                    <option>
-                        Activos
-                    </option>
-
-                    <option>
-                        Inactivos
-                    </option>
-                </select>
+                    <path d="M7 10l5 5 5-5"/>
+                </svg>
             </div>
 
 
             {{-- TIPO --}}
-            <div>
-                <select
-                    disabled
-                    class="
-                        w-full
-                        h-10
+            <div
+                class="
+                    h-10
+                    px-3
 
-                        px-3
+                    flex
+                    items-center
+                    justify-between
 
-                        rounded-md
+                    rounded-md
 
-                        border
-                        border-[var(--theme-border-strong)]
+                    border
+                    border-[var(--theme-border-strong)]
 
-                        bg-[var(--theme-surface)]
+                    bg-[var(--theme-surface-soft)]
 
-                        text-xs
-                        text-[var(--theme-text)]
+                    text-xs
+                    text-[var(--theme-text)]
+                "
+            >
+                <span>Todos los tipos</span>
 
-                        disabled:cursor-default
-                        disabled:opacity-100
-                    "
+                <svg
+                    class="w-4 h-4 text-[var(--theme-text-muted)]"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.7"
                 >
-                    <option>
-                        Todos los tipos
-                    </option>
-                </select>
+                    <path d="M7 10l5 5 5-5"/>
+                </svg>
             </div>
-
         </div>
     </section>
 
 
     {{-- ============================================================
         MÉTRICAS
-        Solo cargan los números.
     ============================================================ --}}
+    @php
+        $metricLabels = [
+            'Total de marcas',
+            'Total de modelos',
+            'Marcas inactivas',
+            'Modelos en uso',
+        ];
+    @endphp
+
     <div
         class="
             grid
@@ -233,123 +263,22 @@
             gap-3
         "
     >
+        @foreach ($metricLabels as $metricLabel)
+            <div
+                class="
+                    p-4
 
-        {{-- TOTAL MARCAS --}}
-        <div
-            class="
-                p-4
+                    rounded-xl
 
-                rounded-xl
+                    border
+                    border-[var(--theme-border)]
 
-                border
-                border-[var(--theme-primary)]
-
-                bg-[var(--theme-surface)]
-            "
-        >
-            <div class="flex items-center gap-3">
-                <div
-                    class="
-                        w-10
-                        h-10
-                        shrink-0
-
-                        rounded-lg
-
-                        flex
-                        items-center
-                        justify-center
-
-                        bg-[var(--theme-primary-soft)]
-                        text-[var(--theme-primary)]
-                    "
-                >
-                    <svg
-                        class="w-5 h-5"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.7"
-                    >
-                        <path d="M20 12l-8 8-8-8V4h8l8 8z"/>
-                        <circle cx="8.5" cy="8.5" r="1"/>
-                    </svg>
-                </div>
-
-                <div>
-                    <div class="animate-pulse">
-                        <div
-                            class="
-                                h-7
-                                w-12
-
-                                rounded
-
-                                bg-[var(--theme-primary-soft)]
-                            "
-                        ></div>
-                    </div>
-
-                    <p
-                        class="
-                            mt-1
-
-                            text-[11px]
-                            text-[var(--theme-text-muted)]
-                        "
-                    >
-                        Total de marcas
-                    </p>
-                </div>
-            </div>
-        </div>
-
-
-        {{-- TOTAL MODELOS --}}
-        <div
-            class="
-                p-4
-
-                rounded-xl
-
-                border
-                border-[var(--theme-border)]
-
-                bg-[var(--theme-surface)]
-            "
-        >
-            <div class="flex items-center gap-3">
-                <div
-                    class="
-                        w-10
-                        h-10
-                        shrink-0
-
-                        rounded-lg
-
-                        flex
-                        items-center
-                        justify-center
-
-                        bg-[var(--theme-surface-soft)]
-                        text-[var(--theme-text)]
-                    "
-                >
-                    <svg
-                        class="w-5 h-5"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.7"
-                    >
-                        <rect x="4" y="5" width="16" height="14" rx="2"/>
-                        <path d="M8 9h8"/>
-                        <path d="M8 13h5"/>
-                    </svg>
-                </div>
-
-                <div>
-                    <div class="animate-pulse">
+                    bg-[var(--theme-surface)]
+                "
+            >
+                <div class="flex items-center gap-3">
+                    <div class="min-w-0 flex-1">
+                        {{-- DATO DINÁMICO --}}
                         <div
                             class="
                                 h-7
@@ -358,171 +287,25 @@
                                 rounded
 
                                 bg-[var(--theme-surface-soft)]
+
+                                animate-pulse
                             "
                         ></div>
-                    </div>
 
-                    <p
-                        class="
-                            mt-1
-
-                            text-[11px]
-                            text-[var(--theme-text-muted)]
-                        "
-                    >
-                        Total de modelos
-                    </p>
-                </div>
-            </div>
-        </div>
-
-
-        {{-- MARCAS INACTIVAS --}}
-        <div
-            class="
-                p-4
-
-                rounded-xl
-
-                border
-                border-[var(--theme-border)]
-
-                bg-[var(--theme-surface)]
-            "
-        >
-            <div class="flex items-center gap-3">
-                <div
-                    class="
-                        w-10
-                        h-10
-                        shrink-0
-
-                        rounded-lg
-
-                        flex
-                        items-center
-                        justify-center
-
-                        bg-[var(--theme-surface-soft)]
-                        text-[var(--theme-text-muted)]
-                    "
-                >
-                    <svg
-                        class="w-5 h-5"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.7"
-                    >
-                        <path d="M12 8v5"/>
-                        <path d="M12 17h.01"/>
-                        <path d="M10.3 4.7L2.9 17.5A2 2 0 004.6 20h14.8a2 2 0 001.7-2.5L13.7 4.7a2 2 0 00-3.4 0z"/>
-                    </svg>
-                </div>
-
-                <div>
-                    <div class="animate-pulse">
-                        <div
+                        <p
                             class="
-                                h-7
-                                w-12
+                                mt-1
 
-                                rounded
-
-                                bg-[var(--theme-surface-soft)]
+                                text-[11px]
+                                text-[var(--theme-text-muted)]
                             "
-                        ></div>
+                        >
+                            {{ $metricLabel }}
+                        </p>
                     </div>
-
-                    <p
-                        class="
-                            mt-1
-
-                            text-[11px]
-                            text-[var(--theme-text-muted)]
-                        "
-                    >
-                        Marcas inactivas
-                    </p>
                 </div>
             </div>
-        </div>
-
-
-        {{-- MODELOS EN USO --}}
-        <div
-            class="
-                p-4
-
-                rounded-xl
-
-                border
-                border-[var(--theme-border)]
-
-                bg-[var(--theme-surface)]
-            "
-        >
-            <div class="flex items-center gap-3">
-                <div
-                    class="
-                        w-10
-                        h-10
-                        shrink-0
-
-                        rounded-lg
-
-                        flex
-                        items-center
-                        justify-center
-
-                        bg-[var(--theme-primary-soft)]
-                        text-[var(--theme-primary)]
-                    "
-                >
-                    <svg
-                        class="w-5 h-5"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.7"
-                    >
-                        <rect x="5" y="5" width="14" height="14" rx="2"/>
-                        <path d="M9 9h6v6H9z"/>
-                        <path d="M2 9h3"/>
-                        <path d="M2 15h3"/>
-                        <path d="M19 9h3"/>
-                        <path d="M19 15h3"/>
-                    </svg>
-                </div>
-
-                <div>
-                    <div class="animate-pulse">
-                        <div
-                            class="
-                                h-7
-                                w-12
-
-                                rounded
-
-                                bg-[var(--theme-primary-soft)]
-                            "
-                        ></div>
-                    </div>
-
-                    <p
-                        class="
-                            mt-1
-
-                            text-[11px]
-                            text-[var(--theme-text-muted)]
-                        "
-                    >
-                        Modelos en uso
-                    </p>
-                </div>
-            </div>
-        </div>
-
+        @endforeach
     </div>
 
 
@@ -545,10 +328,7 @@
             md:overflow-hidden
         "
     >
-
-        {{-- ========================================================
-            BARRA SUPERIOR - ESCRITORIO
-        ======================================================== --}}
+        {{-- BARRA SUPERIOR --}}
         <div
             class="
                 hidden
@@ -564,125 +344,148 @@
                 border-[var(--theme-border)]
             "
         >
-            <div class="flex items-center gap-1 text-sm text-[var(--theme-text)]">
-                <span>
-                    Resultados:
+            <p class="text-sm text-[var(--theme-text)]">
+                Resultados:
+
+                <span
+                    class="
+                        inline-block
+                        align-middle
+
+                        ml-1
+
+                        h-4
+                        w-8
+
+                        rounded
+
+                        bg-[var(--theme-surface-soft)]
+
+                        animate-pulse
+                    "
+                ></span>
+
+                <span class="ml-1">
+                    marcas
                 </span>
-
-                <div class="animate-pulse">
-                    <div
-                        class="
-                            h-4
-                            w-7
-
-                            rounded
-
-                            bg-[var(--theme-surface-soft)]
-                        "
-                    ></div>
-                </div>
-
-                <span>
-                    marcas encontradas
-                </span>
-            </div>
+            </p>
 
 
             <div class="flex items-center gap-4">
-
-                {{-- POR PÁGINA --}}
                 <div class="flex items-center gap-2">
-                    <span class="text-xs text-[var(--theme-text-muted)]">
+                    <span
+                        class="
+                            text-xs
+                            text-[var(--theme-text-muted)]
+                        "
+                    >
                         Mostrar
                     </span>
 
-                    <select
-                        disabled
+                    <div
                         class="
-                            text-xs
+                            h-8
+                            min-w-14
+                            px-2
+
+                            flex
+                            items-center
+                            justify-between
+
+                            rounded-md
 
                             border
                             border-[var(--theme-border-strong)]
 
-                            rounded-md
+                            bg-[var(--theme-surface-soft)]
 
-                            px-2
-                            py-1.5
-
-                            bg-[var(--theme-surface)]
-
-                            disabled:opacity-100
-                            disabled:cursor-default
+                            text-xs
+                            text-[var(--theme-text)]
                         "
                     >
-                        <option>
-                            10
-                        </option>
-                    </select>
+                        <span>10</span>
 
-                    <span class="text-xs text-[var(--theme-text-muted)]">
-                        Por página
+                        <svg
+                            class="w-3.5 h-3.5 text-[var(--theme-text-muted)]"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.7"
+                        >
+                            <path d="M7 10l5 5 5-5"/>
+                        </svg>
+                    </div>
+
+                    <span
+                        class="
+                            text-xs
+                            text-[var(--theme-text-muted)]
+                        "
+                    >
+                        por página
                     </span>
                 </div>
 
 
-                {{-- ORDEN --}}
-                <select
-                    disabled
+                <div
                     class="
-                        text-xs
+                        h-8
+                        min-w-16
+                        px-2
+
+                        flex
+                        items-center
+                        justify-between
+
+                        rounded-md
 
                         border
                         border-[var(--theme-border-strong)]
 
-                        rounded-md
+                        bg-[var(--theme-surface-soft)]
 
-                        px-2
-                        py-1.5
-
-                        bg-[var(--theme-surface)]
-
-                        uppercase
-
-                        disabled:opacity-100
-                        disabled:cursor-default
+                        text-xs
+                        text-[var(--theme-text)]
                     "
                 >
-                    <option>
-                        ASC
-                    </option>
-                </select>
+                    <span>ASC</span>
 
+                    <svg
+                        class="w-3.5 h-3.5 text-[var(--theme-text-muted)]"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.7"
+                    >
+                        <path d="M7 10l5 5 5-5"/>
+                    </svg>
+                </div>
             </div>
         </div>
 
 
-        {{-- ========================================================
-            TABLA MARCAS - ESCRITORIO
-        ======================================================== --}}
+        {{-- TABLA ESCRITORIO --}}
         <div class="hidden md:block overflow-x-auto">
             <table class="w-full text-sm">
-
-                {{-- Encabezados conocidos --}}
                 <thead>
                     <tr
                         class="
                             border-b
                             border-[var(--theme-border)]
-
-                            text-left
                         "
                     >
                         <th class="px-5 py-3 w-10">
-                            <input
-                                type="checkbox"
-                                disabled
+                            <div
                                 class="
+                                    w-4
+                                    h-4
+
                                     rounded
+
+                                    border
                                     border-[var(--theme-border-strong)]
-                                    disabled:opacity-100
                                 "
-                            >
+                            ></div>
                         </th>
 
                         <th class="px-3 py-3 font-medium text-[var(--theme-text-muted)]">
@@ -713,162 +516,77 @@
                             Registro
                         </th>
 
-                        <th class="px-3 py-3 font-medium text-[var(--theme-text-muted)] text-right">
+                        <th
+                            class="
+                                px-3
+                                py-3
+
+                                font-medium
+                                text-[var(--theme-text-muted)]
+                                text-right
+                            "
+                        >
                             Acciones
                         </th>
                     </tr>
                 </thead>
 
 
-                {{-- Solo los registros son desconocidos --}}
                 <tbody class="animate-pulse">
-                    @for ($row = 0; $row < 8; $row++)
-                        <tr class="border-b border-[var(--theme-border)]">
-
+                    @for ($row = 0; $row < 10; $row++)
+                        <tr
+                            class="
+                                border-b
+                                border-[var(--theme-border)]
+                            "
+                        >
                             <td class="px-5 py-3">
-                                <div
-                                    class="
-                                        w-4
-                                        h-4
-
-                                        rounded
-
-                                        bg-[var(--theme-surface-soft)]
-                                    "
-                                ></div>
+                                <div class="w-4 h-4 rounded bg-[var(--theme-surface-soft)]"></div>
                             </td>
 
                             <td class="px-3 py-3">
-                                <div
-                                    class="
-                                        h-3
-                                        w-8
-
-                                        rounded
-
-                                        bg-[var(--theme-surface-soft)]
-                                    "
-                                ></div>
+                                <div class="h-4 w-12 rounded bg-[var(--theme-surface-soft)]"></div>
                             </td>
 
                             <td class="px-3 py-3">
-                                <div
-                                    class="
-                                        h-3
-                                        w-24
-
-                                        rounded
-
-                                        bg-[var(--theme-surface-soft)]
-                                    "
-                                ></div>
+                                <div class="h-4 w-24 rounded bg-[var(--theme-surface-soft)]"></div>
                             </td>
 
                             <td class="px-3 py-3">
-                                <div
-                                    class="
-                                        h-3
-                                        w-36
-                                        max-w-full
-
-                                        rounded
-
-                                        bg-[var(--theme-surface-soft)]
-                                    "
-                                ></div>
+                                <div class="h-4 w-36 rounded bg-[var(--theme-surface-soft)]"></div>
                             </td>
 
                             <td class="px-3 py-3">
-                                <div
-                                    class="
-                                        h-5
-                                        w-14
-
-                                        rounded-full
-
-                                        bg-[var(--theme-surface-soft)]
-                                    "
-                                ></div>
+                                <div class="h-6 w-14 rounded-full bg-[var(--theme-surface-soft)]"></div>
                             </td>
 
                             <td class="px-3 py-3">
-                                <div
-                                    class="
-                                        h-3
-                                        w-8
-
-                                        rounded
-
-                                        bg-[var(--theme-surface-soft)]
-                                    "
-                                ></div>
+                                <div class="h-4 w-8 rounded bg-[var(--theme-surface-soft)]"></div>
                             </td>
 
                             <td class="px-3 py-3">
-                                <div
-                                    class="
-                                        h-3
-                                        w-8
-
-                                        rounded
-
-                                        bg-[var(--theme-surface-soft)]
-                                    "
-                                ></div>
+                                <div class="h-4 w-8 rounded bg-[var(--theme-surface-soft)]"></div>
                             </td>
 
                             <td class="px-3 py-3">
-                                <div
-                                    class="
-                                        h-3
-                                        w-20
-
-                                        rounded
-
-                                        bg-[var(--theme-surface-soft)]
-                                    "
-                                ></div>
+                                <div class="h-4 w-20 rounded bg-[var(--theme-surface-soft)]"></div>
                             </td>
 
                             <td class="px-3 py-3">
                                 <div class="flex items-center justify-end gap-2">
-                                    <div
-                                        class="
-                                            w-4
-                                            h-4
-
-                                            rounded
-
-                                            bg-[var(--theme-surface-soft)]
-                                        "
-                                    ></div>
-
-                                    <div
-                                        class="
-                                            w-4
-                                            h-4
-
-                                            rounded
-
-                                            bg-[var(--theme-surface-soft)]
-                                        "
-                                    ></div>
+                                    <div class="w-4 h-4 rounded bg-[var(--theme-surface-soft)]"></div>
+                                    <div class="w-4 h-4 rounded bg-[var(--theme-surface-soft)]"></div>
                                 </div>
                             </td>
-
                         </tr>
                     @endfor
                 </tbody>
-
             </table>
         </div>
 
 
-        {{-- ========================================================
-            MARCAS - MÓVIL
-        ======================================================== --}}
+        {{-- TARJETAS MÓVIL --}}
         <div class="md:hidden space-y-3 animate-pulse">
-
             @for ($row = 0; $row < 4; $row++)
                 <article
                     class="
@@ -883,89 +601,28 @@
                     "
                 >
                     <div class="space-y-3">
-
                         <div class="flex items-center justify-between gap-3">
                             <div class="space-y-2">
-                                <div
-                                    class="
-                                        h-4
-                                        w-28
-
-                                        rounded
-
-                                        bg-[var(--theme-surface-soft)]
-                                    "
-                                ></div>
-
-                                <div
-                                    class="
-                                        h-3
-                                        w-16
-
-                                        rounded
-
-                                        bg-[var(--theme-surface-soft)]
-                                    "
-                                ></div>
+                                <div class="h-4 w-28 rounded bg-[var(--theme-surface-soft)]"></div>
+                                <div class="h-3 w-16 rounded bg-[var(--theme-surface-soft)]"></div>
                             </div>
 
-                            <div
-                                class="
-                                    h-6
-                                    w-14
-
-                                    rounded-full
-
-                                    bg-[var(--theme-surface-soft)]
-                                "
-                            ></div>
+                            <div class="h-6 w-14 rounded-full bg-[var(--theme-surface-soft)]"></div>
                         </div>
 
-                        <div
-                            class="
-                                h-3
-                                w-full
-
-                                rounded
-
-                                bg-[var(--theme-surface-soft)]
-                            "
-                        ></div>
+                        <div class="h-3 w-full rounded bg-[var(--theme-surface-soft)]"></div>
 
                         <div class="grid grid-cols-2 gap-3">
-                            <div
-                                class="
-                                    h-3
-                                    w-20
-
-                                    rounded
-
-                                    bg-[var(--theme-surface-soft)]
-                                "
-                            ></div>
-
-                            <div
-                                class="
-                                    h-3
-                                    w-20
-
-                                    rounded
-
-                                    bg-[var(--theme-surface-soft)]
-                                "
-                            ></div>
+                            <div class="h-3 w-20 rounded bg-[var(--theme-surface-soft)]"></div>
+                            <div class="h-3 w-20 rounded bg-[var(--theme-surface-soft)]"></div>
                         </div>
-
                     </div>
                 </article>
             @endfor
-
         </div>
 
 
-        {{-- ========================================================
-            PAGINACIÓN MARCAS
-        ======================================================== --}}
+        {{-- PAGINACIÓN DEPENDIENTE DE DATOS --}}
         <div
             class="
                 hidden
@@ -981,24 +638,23 @@
 
                 border-t
                 border-[var(--theme-border)]
+
+                animate-pulse
             "
         >
-            <div class="animate-pulse flex items-center gap-1">
-                @for ($i = 0; $i < 6; $i++)
-                    <div
-                        class="
-                            w-8
-                            h-8
+            @for ($i = 0; $i < 6; $i++)
+                <div
+                    class="
+                        w-8
+                        h-8
 
-                            rounded-full
+                        rounded-full
 
-                            bg-[var(--theme-surface-soft)]
-                        "
-                    ></div>
-                @endfor
-            </div>
+                        bg-[var(--theme-surface-soft)]
+                    "
+                ></div>
+            @endfor
         </div>
-
     </section>
 
 
@@ -1021,10 +677,7 @@
             md:overflow-hidden
         "
     >
-
-        {{-- ========================================================
-            BARRA SUPERIOR
-        ======================================================== --}}
+        {{-- BARRA SUPERIOR --}}
         <div
             class="
                 hidden
@@ -1040,125 +693,148 @@
                 border-[var(--theme-border)]
             "
         >
-            <div class="flex items-center gap-1 text-sm text-[var(--theme-text)]">
-                <span>
-                    Resultados:
+            <p class="text-sm text-[var(--theme-text)]">
+                Resultados:
+
+                <span
+                    class="
+                        inline-block
+                        align-middle
+
+                        ml-1
+
+                        h-4
+                        w-8
+
+                        rounded
+
+                        bg-[var(--theme-surface-soft)]
+
+                        animate-pulse
+                    "
+                ></span>
+
+                <span class="ml-1">
+                    modelos
                 </span>
-
-                <div class="animate-pulse">
-                    <div
-                        class="
-                            h-4
-                            w-7
-
-                            rounded
-
-                            bg-[var(--theme-surface-soft)]
-                        "
-                    ></div>
-                </div>
-
-                <span>
-                    modelos encontrados
-                </span>
-            </div>
+            </p>
 
 
             <div class="flex items-center gap-4">
-
-                {{-- POR PÁGINA --}}
                 <div class="flex items-center gap-2">
-                    <span class="text-xs text-[var(--theme-text-muted)]">
+                    <span
+                        class="
+                            text-xs
+                            text-[var(--theme-text-muted)]
+                        "
+                    >
                         Mostrar
                     </span>
 
-                    <select
-                        disabled
+                    <div
                         class="
-                            text-xs
+                            h-8
+                            min-w-14
+                            px-2
+
+                            flex
+                            items-center
+                            justify-between
+
+                            rounded-md
 
                             border
                             border-[var(--theme-border-strong)]
 
-                            rounded-md
+                            bg-[var(--theme-surface-soft)]
 
-                            px-2
-                            py-1.5
-
-                            bg-[var(--theme-surface)]
-
-                            disabled:opacity-100
-                            disabled:cursor-default
+                            text-xs
+                            text-[var(--theme-text)]
                         "
                     >
-                        <option>
-                            10
-                        </option>
-                    </select>
+                        <span>10</span>
 
-                    <span class="text-xs text-[var(--theme-text-muted)]">
-                        Por página
+                        <svg
+                            class="w-3.5 h-3.5 text-[var(--theme-text-muted)]"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.7"
+                        >
+                            <path d="M7 10l5 5 5-5"/>
+                        </svg>
+                    </div>
+
+                    <span
+                        class="
+                            text-xs
+                            text-[var(--theme-text-muted)]
+                        "
+                    >
+                        por página
                     </span>
                 </div>
 
 
-                {{-- ORDEN --}}
-                <select
-                    disabled
+                <div
                     class="
-                        text-xs
+                        h-8
+                        min-w-16
+                        px-2
+
+                        flex
+                        items-center
+                        justify-between
+
+                        rounded-md
 
                         border
                         border-[var(--theme-border-strong)]
 
-                        rounded-md
+                        bg-[var(--theme-surface-soft)]
 
-                        px-2
-                        py-1.5
-
-                        bg-[var(--theme-surface)]
-
-                        uppercase
-
-                        disabled:opacity-100
-                        disabled:cursor-default
+                        text-xs
+                        text-[var(--theme-text)]
                     "
                 >
-                    <option>
-                        ASC
-                    </option>
-                </select>
+                    <span>ASC</span>
 
+                    <svg
+                        class="w-3.5 h-3.5 text-[var(--theme-text-muted)]"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.7"
+                    >
+                        <path d="M7 10l5 5 5-5"/>
+                    </svg>
+                </div>
             </div>
         </div>
 
 
-        {{-- ========================================================
-            TABLA MODELOS - ESCRITORIO
-        ======================================================== --}}
+        {{-- TABLA ESCRITORIO --}}
         <div class="hidden md:block overflow-x-auto">
             <table class="w-full text-sm">
-
-                {{-- Encabezados conocidos --}}
                 <thead>
                     <tr
                         class="
                             border-b
                             border-[var(--theme-border)]
-
-                            text-left
                         "
                     >
                         <th class="px-5 py-3 w-10">
-                            <input
-                                type="checkbox"
-                                disabled
+                            <div
                                 class="
+                                    w-4
+                                    h-4
+
                                     rounded
+
+                                    border
                                     border-[var(--theme-border-strong)]
-                                    disabled:opacity-100
                                 "
-                            >
+                            ></div>
                         </th>
 
                         <th class="px-3 py-3 font-medium text-[var(--theme-text-muted)]">
@@ -1174,7 +850,7 @@
                         </th>
 
                         <th class="px-3 py-3 font-medium text-[var(--theme-text-muted)]">
-                            Tipo de Equipo
+                            Tipo
                         </th>
 
                         <th class="px-3 py-3 font-medium text-[var(--theme-text-muted)]">
@@ -1193,175 +869,81 @@
                             Registro
                         </th>
 
-                        <th class="px-3 py-3 font-medium text-[var(--theme-text-muted)] text-right">
+                        <th
+                            class="
+                                px-3
+                                py-3
+
+                                font-medium
+                                text-[var(--theme-text-muted)]
+                                text-right
+                            "
+                        >
                             Acciones
                         </th>
                     </tr>
                 </thead>
 
 
-                {{-- Registros --}}
                 <tbody class="animate-pulse">
-                    @for ($row = 0; $row < 8; $row++)
-                        <tr class="border-b border-[var(--theme-border)]">
-
+                    @for ($row = 0; $row < 10; $row++)
+                        <tr
+                            class="
+                                border-b
+                                border-[var(--theme-border)]
+                            "
+                        >
                             <td class="px-5 py-3">
-                                <div
-                                    class="
-                                        w-4
-                                        h-4
-
-                                        rounded
-
-                                        bg-[var(--theme-surface-soft)]
-                                    "
-                                ></div>
+                                <div class="w-4 h-4 rounded bg-[var(--theme-surface-soft)]"></div>
                             </td>
 
                             <td class="px-3 py-3">
-                                <div
-                                    class="
-                                        h-3
-                                        w-8
-
-                                        rounded
-
-                                        bg-[var(--theme-surface-soft)]
-                                    "
-                                ></div>
+                                <div class="h-4 w-12 rounded bg-[var(--theme-surface-soft)]"></div>
                             </td>
 
                             <td class="px-3 py-3">
-                                <div
-                                    class="
-                                        h-3
-                                        w-28
-
-                                        rounded
-
-                                        bg-[var(--theme-surface-soft)]
-                                    "
-                                ></div>
+                                <div class="h-4 w-28 rounded bg-[var(--theme-surface-soft)]"></div>
                             </td>
 
                             <td class="px-3 py-3">
-                                <div
-                                    class="
-                                        h-3
-                                        w-20
-
-                                        rounded
-
-                                        bg-[var(--theme-surface-soft)]
-                                    "
-                                ></div>
+                                <div class="h-4 w-20 rounded bg-[var(--theme-surface-soft)]"></div>
                             </td>
 
                             <td class="px-3 py-3">
-                                <div
-                                    class="
-                                        h-3
-                                        w-24
-
-                                        rounded
-
-                                        bg-[var(--theme-surface-soft)]
-                                    "
-                                ></div>
+                                <div class="h-4 w-24 rounded bg-[var(--theme-surface-soft)]"></div>
                             </td>
 
                             <td class="px-3 py-3">
-                                <div
-                                    class="
-                                        h-3
-                                        w-32
-                                        max-w-full
-
-                                        rounded
-
-                                        bg-[var(--theme-surface-soft)]
-                                    "
-                                ></div>
+                                <div class="h-4 w-32 rounded bg-[var(--theme-surface-soft)]"></div>
                             </td>
 
                             <td class="px-3 py-3">
-                                <div
-                                    class="
-                                        h-5
-                                        w-14
-
-                                        rounded-full
-
-                                        bg-[var(--theme-surface-soft)]
-                                    "
-                                ></div>
+                                <div class="h-6 w-14 rounded-full bg-[var(--theme-surface-soft)]"></div>
                             </td>
 
                             <td class="px-3 py-3">
-                                <div
-                                    class="
-                                        h-3
-                                        w-8
-
-                                        rounded
-
-                                        bg-[var(--theme-surface-soft)]
-                                    "
-                                ></div>
+                                <div class="h-4 w-8 rounded bg-[var(--theme-surface-soft)]"></div>
                             </td>
 
                             <td class="px-3 py-3">
-                                <div
-                                    class="
-                                        h-3
-                                        w-20
-
-                                        rounded
-
-                                        bg-[var(--theme-surface-soft)]
-                                    "
-                                ></div>
+                                <div class="h-4 w-20 rounded bg-[var(--theme-surface-soft)]"></div>
                             </td>
 
                             <td class="px-3 py-3">
                                 <div class="flex items-center justify-end gap-2">
-                                    <div
-                                        class="
-                                            w-4
-                                            h-4
-
-                                            rounded
-
-                                            bg-[var(--theme-surface-soft)]
-                                        "
-                                    ></div>
-
-                                    <div
-                                        class="
-                                            w-4
-                                            h-4
-
-                                            rounded
-
-                                            bg-[var(--theme-surface-soft)]
-                                        "
-                                    ></div>
+                                    <div class="w-4 h-4 rounded bg-[var(--theme-surface-soft)]"></div>
+                                    <div class="w-4 h-4 rounded bg-[var(--theme-surface-soft)]"></div>
                                 </div>
                             </td>
-
                         </tr>
                     @endfor
                 </tbody>
-
             </table>
         </div>
 
 
-        {{-- ========================================================
-            MODELOS - MÓVIL
-        ======================================================== --}}
+        {{-- TARJETAS MÓVIL --}}
         <div class="md:hidden space-y-3 animate-pulse">
-
             @for ($row = 0; $row < 4; $row++)
                 <article
                     class="
@@ -1376,89 +958,28 @@
                     "
                 >
                     <div class="space-y-3">
-
                         <div class="flex items-center justify-between gap-3">
                             <div class="space-y-2">
-                                <div
-                                    class="
-                                        h-4
-                                        w-32
-
-                                        rounded
-
-                                        bg-[var(--theme-surface-soft)]
-                                    "
-                                ></div>
-
-                                <div
-                                    class="
-                                        h-3
-                                        w-24
-
-                                        rounded
-
-                                        bg-[var(--theme-surface-soft)]
-                                    "
-                                ></div>
+                                <div class="h-4 w-32 rounded bg-[var(--theme-surface-soft)]"></div>
+                                <div class="h-3 w-24 rounded bg-[var(--theme-surface-soft)]"></div>
                             </div>
 
-                            <div
-                                class="
-                                    h-6
-                                    w-14
-
-                                    rounded-full
-
-                                    bg-[var(--theme-surface-soft)]
-                                "
-                            ></div>
+                            <div class="h-6 w-14 rounded-full bg-[var(--theme-surface-soft)]"></div>
                         </div>
 
-                        <div
-                            class="
-                                h-3
-                                w-full
-
-                                rounded
-
-                                bg-[var(--theme-surface-soft)]
-                            "
-                        ></div>
+                        <div class="h-3 w-full rounded bg-[var(--theme-surface-soft)]"></div>
 
                         <div class="grid grid-cols-2 gap-3">
-                            <div
-                                class="
-                                    h-3
-                                    w-20
-
-                                    rounded
-
-                                    bg-[var(--theme-surface-soft)]
-                                "
-                            ></div>
-
-                            <div
-                                class="
-                                    h-3
-                                    w-20
-
-                                    rounded
-
-                                    bg-[var(--theme-surface-soft)]
-                                "
-                            ></div>
+                            <div class="h-3 w-20 rounded bg-[var(--theme-surface-soft)]"></div>
+                            <div class="h-3 w-20 rounded bg-[var(--theme-surface-soft)]"></div>
                         </div>
-
                     </div>
                 </article>
             @endfor
-
         </div>
 
 
-        {{-- ========================================================
-            PAGINACIÓN MODELOS
-        ======================================================== --}}
+        {{-- PAGINACIÓN DEPENDIENTE DE DATOS --}}
         <div
             class="
                 hidden
@@ -1474,24 +995,23 @@
 
                 border-t
                 border-[var(--theme-border)]
+
+                animate-pulse
             "
         >
-            <div class="animate-pulse flex items-center gap-1">
-                @for ($i = 0; $i < 6; $i++)
-                    <div
-                        class="
-                            w-8
-                            h-8
+            @for ($i = 0; $i < 6; $i++)
+                <div
+                    class="
+                        w-8
+                        h-8
 
-                            rounded-full
+                        rounded-full
 
-                            bg-[var(--theme-surface-soft)]
-                        "
-                    ></div>
-                @endfor
-            </div>
+                        bg-[var(--theme-surface-soft)]
+                    "
+                ></div>
+            @endfor
         </div>
-
     </section>
 
 </div>

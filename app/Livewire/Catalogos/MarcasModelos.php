@@ -3,7 +3,9 @@
 namespace App\Livewire\Catalogos;
 
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\Json;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -11,6 +13,8 @@ class MarcasModelos extends Component
 {
     use WithPagination;
 
+    private const CATALOG_FRONTEND_CACHE_KEY =
+        'catalogos.marcas-modelos.frontend.v1';
 
     /*
     |--------------------------------------------------------------------------
@@ -32,7 +36,6 @@ class MarcasModelos extends Component
 
     public string $sortModelos = 'asc';
 
-
     /*
     |--------------------------------------------------------------------------
     | Modal / formulario
@@ -49,7 +52,6 @@ class MarcasModelos extends Component
 
     public ?int $editingModeloId = null;
 
-
     /*
     |--------------------------------------------------------------------------
     | Marca
@@ -61,7 +63,6 @@ class MarcasModelos extends Component
     public string $marcaDescripcion = '';
 
     public bool $marcaActivo = true;
-
 
     /*
     |--------------------------------------------------------------------------
@@ -79,7 +80,6 @@ class MarcasModelos extends Component
 
     public bool $modeloActivo = true;
 
-
     /*
     |--------------------------------------------------------------------------
     | Reiniciar paginación al filtrar
@@ -91,12 +91,10 @@ class MarcasModelos extends Component
         $this->resetCatalogPagination();
     }
 
-
     public function updatedEstado(): void
     {
         $this->resetCatalogPagination();
     }
-
 
     public function updatedTipo(): void
     {
@@ -112,14 +110,12 @@ class MarcasModelos extends Component
         );
     }
 
-
     public function updatedPerPageModelos(): void
     {
         $this->resetPage(
             pageName: 'modelosPage'
         );
     }
-
 
     public function updatedSortMarcas(): void
     {
@@ -133,12 +129,10 @@ class MarcasModelos extends Component
             $this->sortMarcas = 'asc';
         }
 
-
         $this->resetPage(
             pageName: 'marcasPage'
         );
     }
-
 
     public function updatedSortModelos(): void
     {
@@ -152,12 +146,10 @@ class MarcasModelos extends Component
             $this->sortModelos = 'asc';
         }
 
-
         $this->resetPage(
             pageName: 'modelosPage'
         );
     }
-
 
     private function resetCatalogPagination(): void
     {
@@ -169,7 +161,6 @@ class MarcasModelos extends Component
             pageName: 'modelosPage'
         );
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -194,7 +185,6 @@ class MarcasModelos extends Component
         );
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | Nuevo modelo
@@ -218,7 +208,6 @@ class MarcasModelos extends Component
         );
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | Editar marca
@@ -235,11 +224,9 @@ class MarcasModelos extends Component
             )
             ->first();
 
-
         if (! $marca) {
             return;
         }
-
 
         $this->resetForm();
 
@@ -266,7 +253,6 @@ class MarcasModelos extends Component
         );
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | Editar modelo
@@ -283,11 +269,9 @@ class MarcasModelos extends Component
             )
             ->first();
 
-
         if (! $modelo) {
             return;
         }
-
 
         $this->resetForm();
 
@@ -320,7 +304,6 @@ class MarcasModelos extends Component
         );
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | Guardar formulario
@@ -335,10 +318,8 @@ class MarcasModelos extends Component
             return;
         }
 
-
         $this->saveMarca();
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -375,17 +356,16 @@ class MarcasModelos extends Component
                 'La descripción no puede superar los 1000 caracteres.',
         ]);
 
-
         $nombre =
             trim(
                 $validated['marcaNombre']
             );
 
-
         /*
          * Validación adicional amigable antes
          * de dejar que actúe el índice UNIQUE.
          */
+
         $duplicate = DB::table('marcas')
             ->whereRaw(
                 'LOWER(BTRIM(nombre)) = LOWER(BTRIM(?))',
@@ -402,7 +382,6 @@ class MarcasModelos extends Component
             )
             ->exists();
 
-
         if ($duplicate) {
             $this->addError(
                 'marcaNombre',
@@ -412,13 +391,11 @@ class MarcasModelos extends Component
             return;
         }
 
-
         DB::transaction(
             function () use (
                 $validated,
                 $nombre
             ): void {
-
                 if (
                     $this->formMode === 'edit'
                     &&
@@ -448,7 +425,6 @@ class MarcasModelos extends Component
                             'fecha_actualizacion' =>
                                 now(),
                         ]);
-
 
                     $accion =
                         'MARCA_ACTUALIZADA';
@@ -480,14 +456,12 @@ class MarcasModelos extends Component
                                 now(),
                         ]);
 
-
                     $accion =
                         'MARCA_CREADA';
 
                     $descripcion =
                         "Se creó la marca {$nombre}.";
                 }
-
 
                 $this->writeAudit(
                     $accion,
@@ -496,12 +470,12 @@ class MarcasModelos extends Component
             }
         );
 
+        $this->forgetCatalogFrontendCache();
 
         $this->finishSave(
             'La marca se guardó correctamente.'
         );
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -554,17 +528,16 @@ class MarcasModelos extends Component
                 'Selecciona un tipo de equipo.',
         ]);
 
-
         /*
          * Comprobar relaciones manualmente.
          */
+
         $marcaExists = DB::table('marcas')
             ->where(
                 'id_marca',
                 $validated['modeloMarcaId']
             )
             ->exists();
-
 
         if (! $marcaExists) {
             $this->addError(
@@ -575,14 +548,12 @@ class MarcasModelos extends Component
             return;
         }
 
-
         $tipoExists = DB::table('tipos_equipo')
             ->where(
                 'id_tipo_equipo',
                 $validated['modeloTipoEquipoId']
             )
             ->exists();
-
 
         if (! $tipoExists) {
             $this->addError(
@@ -593,17 +564,16 @@ class MarcasModelos extends Component
             return;
         }
 
-
         $nombre =
             trim(
                 $validated['modeloNombre']
             );
 
-
         /*
          * Un modelo se considera repetido cuando
          * coinciden marca + tipo + nombre.
          */
+
         $duplicate = DB::table('modelos')
             ->where(
                 'id_marca',
@@ -628,7 +598,6 @@ class MarcasModelos extends Component
             )
             ->exists();
 
-
         if ($duplicate) {
             $this->addError(
                 'modeloNombre',
@@ -638,13 +607,11 @@ class MarcasModelos extends Component
             return;
         }
 
-
         DB::transaction(
             function () use (
                 $validated,
                 $nombre
             ): void {
-
                 if (
                     $this->formMode === 'edit'
                     &&
@@ -680,7 +647,6 @@ class MarcasModelos extends Component
                             'fecha_actualizacion' =>
                                 now(),
                         ]);
-
 
                     $accion =
                         'MODELO_ACTUALIZADO';
@@ -718,14 +684,12 @@ class MarcasModelos extends Component
                                 now(),
                         ]);
 
-
                     $accion =
                         'MODELO_CREADO';
 
                     $descripcion =
                         "Se creó el modelo {$nombre}.";
                 }
-
 
                 $this->writeAudit(
                     $accion,
@@ -734,12 +698,12 @@ class MarcasModelos extends Component
             }
         );
 
+        $this->forgetCatalogFrontendCache();
 
         $this->finishSave(
             'El modelo se guardó correctamente.'
         );
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -747,9 +711,10 @@ class MarcasModelos extends Component
     |--------------------------------------------------------------------------
     */
 
+    #[Json]
     public function toggleMarcaStatus(
         int $marcaId
-    ): void {
+    ): array {
         $marca = DB::table('marcas')
             ->where(
                 'id_marca',
@@ -761,22 +726,22 @@ class MarcasModelos extends Component
                 'activo',
             ]);
 
-
         if (! $marca) {
-            return;
+            return [
+                'ok' => false,
+                'message' =>
+                    'La marca ya no existe.',
+            ];
         }
-
 
         $newStatus =
             ! (bool) $marca->activo;
-
 
         DB::transaction(
             function () use (
                 $marca,
                 $newStatus
             ): void {
-
                 DB::table('marcas')
                     ->where(
                         'id_marca',
@@ -790,7 +755,6 @@ class MarcasModelos extends Component
                             now(),
                     ]);
 
-
                 $this->writeAudit(
                     $newStatus
                         ? 'MARCA_ACTIVADA'
@@ -803,16 +767,32 @@ class MarcasModelos extends Component
             }
         );
 
+        /*
+         * Crear / Editar equipo utiliza este catálogo.
+         */
 
-        $this->dispatch(
-            'catalog-status-updated',
-            message:
+        Cache::forget(
+            'form.marcas.v2'
+        );
+
+        $this->forgetCatalogFrontendCache();
+
+        return [
+            'ok' =>
+                true,
+
+            'id' =>
+                (int) $marca->id_marca,
+
+            'active' =>
+                $newStatus,
+
+            'message' =>
                 $newStatus
                     ? 'La marca fue activada.'
-                    : 'La marca fue desactivada.'
-        );
+                    : 'La marca fue desactivada.',
+        ];
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -820,9 +800,10 @@ class MarcasModelos extends Component
     |--------------------------------------------------------------------------
     */
 
+    #[Json]
     public function toggleModeloStatus(
         int $modeloId
-    ): void {
+    ): array {
         $modelo = DB::table('modelos')
             ->where(
                 'id_modelo',
@@ -834,22 +815,22 @@ class MarcasModelos extends Component
                 'activo',
             ]);
 
-
         if (! $modelo) {
-            return;
+            return [
+                'ok' => false,
+                'message' =>
+                    'El modelo ya no existe.',
+            ];
         }
-
 
         $newStatus =
             ! (bool) $modelo->activo;
-
 
         DB::transaction(
             function () use (
                 $modelo,
                 $newStatus
             ): void {
-
                 DB::table('modelos')
                     ->where(
                         'id_modelo',
@@ -863,7 +844,6 @@ class MarcasModelos extends Component
                             now(),
                     ]);
 
-
                 $this->writeAudit(
                     $newStatus
                         ? 'MODELO_ACTIVADO'
@@ -876,16 +856,32 @@ class MarcasModelos extends Component
             }
         );
 
+        /*
+         * Crear / Editar equipo utiliza esta colección.
+         */
 
-        $this->dispatch(
-            'catalog-status-updated',
-            message:
+        Cache::forget(
+            'form.modelos.all.v2'
+        );
+
+        $this->forgetCatalogFrontendCache();
+
+        return [
+            'ok' =>
+                true,
+
+            'id' =>
+                (int) $modelo->id_modelo,
+
+            'active' =>
+                $newStatus,
+
+            'message' =>
                 $newStatus
                     ? 'El modelo fue activado.'
-                    : 'El modelo fue desactivado.'
-        );
+                    : 'El modelo fue desactivado.',
+        ];
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -900,7 +896,6 @@ class MarcasModelos extends Component
         $this->resetForm();
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | Reiniciar formulario
@@ -911,18 +906,15 @@ class MarcasModelos extends Component
     {
         $this->resetValidation();
 
-
         $this->editingMarcaId = null;
 
         $this->editingModeloId = null;
-
 
         $this->marcaNombre = '';
 
         $this->marcaDescripcion = '';
 
         $this->marcaActivo = true;
-
 
         $this->modeloNombre = '';
 
@@ -934,7 +926,6 @@ class MarcasModelos extends Component
 
         $this->modeloActivo = true;
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -951,13 +942,11 @@ class MarcasModelos extends Component
 
         $this->resetCatalogPagination();
 
-
         $this->dispatch(
             'catalog-item-saved',
             message: $message
         );
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -988,6 +977,461 @@ class MarcasModelos extends Component
             ]);
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Limpiar caché del catálogo
+    |--------------------------------------------------------------------------
+    */
+
+    private function forgetCatalogFrontendCache(): void
+    {
+        Cache::forget(
+            self::CATALOG_FRONTEND_CACHE_KEY
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Datos iniciales para Alpine
+    |--------------------------------------------------------------------------
+    */
+
+    private function getCatalogFrontendData(): array
+    {
+        return Cache::remember(
+            self::CATALOG_FRONTEND_CACHE_KEY,
+            now()->addMinutes(5),
+            function (): array {
+
+                /*
+                |--------------------------------------------------------------------------
+                | Conteos agrupados
+                |--------------------------------------------------------------------------
+                |
+                | Evitamos subconsultas correlacionadas por cada fila.
+                |
+                */
+
+                $equiposPorMarca =
+                    DB::table('equipos')
+                        ->select('id_marca')
+                        ->selectRaw(
+                            'COUNT(*) AS total_equipos'
+                        )
+                        ->whereNotNull(
+                            'id_marca'
+                        )
+                        ->groupBy(
+                            'id_marca'
+                        );
+
+                $modelosPorMarca =
+                    DB::table('modelos')
+                        ->select('id_marca')
+                        ->selectRaw(
+                            'COUNT(*) AS total_modelos'
+                        )
+                        ->groupBy(
+                            'id_marca'
+                        );
+
+                $equiposPorModelo =
+                    DB::table('equipos')
+                        ->select('id_modelo')
+                        ->selectRaw(
+                            'COUNT(*) AS total_equipos'
+                        )
+                        ->whereNotNull(
+                            'id_modelo'
+                        )
+                        ->groupBy(
+                            'id_modelo'
+                        );
+
+                /*
+                |--------------------------------------------------------------------------
+                | Marcas
+                |--------------------------------------------------------------------------
+                */
+
+                $marcas =
+                    DB::table('marcas as m')
+                        ->leftJoinSub(
+                            $equiposPorMarca,
+                            'em',
+                            function ($join) {
+                                $join->on(
+                                    'em.id_marca',
+                                    '=',
+                                    'm.id_marca'
+                                );
+                            }
+                        )
+                        ->leftJoinSub(
+                            $modelosPorMarca,
+                            'mm',
+                            function ($join) {
+                                $join->on(
+                                    'mm.id_marca',
+                                    '=',
+                                    'm.id_marca'
+                                );
+                            }
+                        )
+                        ->orderBy(
+                            'm.nombre'
+                        )
+                        ->get([
+                            'm.id_marca',
+                            'm.nombre',
+                            'm.descripcion',
+                            'm.activo',
+                            'm.fecha_creacion',
+                            'm.fecha_actualizacion',
+
+                            DB::raw(
+                                'COALESCE(em.total_equipos, 0) AS total_equipos'
+                            ),
+
+                            DB::raw(
+                                'COALESCE(mm.total_modelos, 0) AS total_modelos'
+                            ),
+                        ]);
+
+                /*
+                |--------------------------------------------------------------------------
+                | Modelos
+                |--------------------------------------------------------------------------
+                */
+
+                $modelos =
+                    DB::table('modelos as mo')
+                        ->join(
+                            'marcas as m',
+                            'm.id_marca',
+                            '=',
+                            'mo.id_marca'
+                        )
+                        ->join(
+                            'tipos_equipo as te',
+                            'te.id_tipo_equipo',
+                            '=',
+                            'mo.id_tipo_equipo'
+                        )
+                        ->leftJoinSub(
+                            $equiposPorModelo,
+                            'epm',
+                            function ($join) {
+                                $join->on(
+                                    'epm.id_modelo',
+                                    '=',
+                                    'mo.id_modelo'
+                                );
+                            }
+                        )
+                        ->orderBy(
+                            'm.nombre'
+                        )
+                        ->orderBy(
+                            'mo.nombre'
+                        )
+                        ->get([
+                            'mo.id_modelo',
+                            'mo.nombre',
+                            'mo.descripcion',
+                            'mo.activo',
+                            'mo.fecha_creacion',
+                            'mo.fecha_actualizacion',
+
+                            'm.id_marca',
+                            'm.nombre as marca_nombre',
+
+                            'te.id_tipo_equipo',
+                            'te.nombre as tipo_equipo_nombre',
+
+                            DB::raw(
+                                'COALESCE(epm.total_equipos, 0) AS total_equipos'
+                            ),
+                        ]);
+
+                /*
+                |--------------------------------------------------------------------------
+                | Tipos de equipo disponibles para filtro
+                |--------------------------------------------------------------------------
+                */
+
+                $tiposEquipo =
+                    DB::table('tipos_equipo')
+                        ->where(
+                            'activo',
+                            true
+                        )
+                        ->orderBy(
+                            'nombre'
+                        )
+                        ->get([
+                            'id_tipo_equipo',
+                            'nombre',
+                        ]);
+
+                /*
+                |--------------------------------------------------------------------------
+                | Formato para Alpine
+                |--------------------------------------------------------------------------
+                */
+
+                $marcasFrontend =
+                    $marcas
+                        ->map(
+                            fn ($marca): array => [
+                                'id' =>
+                                    (int) $marca->id_marca,
+
+                                'nombre' =>
+                                    (string) $marca->nombre,
+
+                                'descripcion' =>
+                                    (string) (
+                                        $marca->descripcion
+                                        ?? ''
+                                    ),
+
+                                'activo' =>
+                                    (bool) $marca->activo,
+
+                                'fechaCreacion' =>
+                                    (string) (
+                                        $marca->fecha_creacion
+                                        ?? ''
+                                    ),
+
+                                'fechaActualizacion' =>
+                                    (string) (
+                                        $marca->fecha_actualizacion
+                                        ?? ''
+                                    ),
+
+                                'totalEquipos' =>
+                                    (int) $marca->total_equipos,
+
+                                'totalModelos' =>
+                                    (int) $marca->total_modelos,
+
+                                'editUrl' =>
+                                    route(
+                                        'catalogos.edit',
+                                        [
+                                            'tipo' =>
+                                                'marca',
+
+                                            'registro' =>
+                                                (int) $marca->id_marca,
+                                        ]
+                                    ),
+                            ]
+                        )
+                        ->values()
+                        ->all();
+
+                $modelosFrontend =
+                    $modelos
+                        ->map(
+                            fn ($modelo): array => [
+                                'id' =>
+                                    (int) $modelo->id_modelo,
+
+                                'nombre' =>
+                                    (string) $modelo->nombre,
+
+                                'descripcion' =>
+                                    (string) (
+                                        $modelo->descripcion
+                                        ?? ''
+                                    ),
+
+                                'activo' =>
+                                    (bool) $modelo->activo,
+
+                                'fechaCreacion' =>
+                                    (string) (
+                                        $modelo->fecha_creacion
+                                        ?? ''
+                                    ),
+
+                                'fechaActualizacion' =>
+                                    (string) (
+                                        $modelo->fecha_actualizacion
+                                        ?? ''
+                                    ),
+
+                                'idMarca' =>
+                                    (string) $modelo->id_marca,
+
+                                'marcaNombre' =>
+                                    (string) $modelo->marca_nombre,
+
+                                'idTipoEquipo' =>
+                                    (string) $modelo->id_tipo_equipo,
+
+                                'tipoEquipoNombre' =>
+                                    (string) $modelo->tipo_equipo_nombre,
+
+                                'totalEquipos' =>
+                                    (int) $modelo->total_equipos,
+
+                                'editUrl' =>
+                                    route(
+                                        'catalogos.edit',
+                                        [
+                                            'tipo' =>
+                                                'modelo',
+
+                                            'registro' =>
+                                                (int) $modelo->id_modelo,
+                                        ]
+                                    ),
+                            ]
+                        )
+                        ->values()
+                        ->all();
+
+                $tiposFrontend =
+                    $tiposEquipo
+                        ->map(
+                            fn ($tipo): array => [
+                                'value' =>
+                                    (string) $tipo->id_tipo_equipo,
+
+                                'label' =>
+                                    (string) $tipo->nombre,
+                            ]
+                        )
+                        ->values()
+                        ->all();
+
+                /*
+                |--------------------------------------------------------------------------
+                | Métricas
+                |--------------------------------------------------------------------------
+                |
+                | Ya tenemos todos los registros en memoria.
+                | No hacemos otras cuatro consultas COUNT().
+                |
+                */
+
+                $metrics = [
+                    'totalMarcas' =>
+                        count(
+                            $marcasFrontend
+                        ),
+
+                    'totalModelos' =>
+                        count(
+                            $modelosFrontend
+                        ),
+
+                    'marcasInactivas' =>
+                        collect(
+                            $marcasFrontend
+                        )
+                            ->where(
+                                'activo',
+                                false
+                            )
+                            ->count(),
+
+                    'modelosEnUso' =>
+                        collect(
+                            $modelosFrontend
+                        )
+                            ->filter(
+                                fn (array $modelo): bool =>
+                                    $modelo['totalEquipos'] > 0
+                            )
+                            ->count(),
+                ];
+
+                /*
+                |--------------------------------------------------------------------------
+                | Opciones estáticas
+                |--------------------------------------------------------------------------
+                */
+
+                return [
+                    'marcas' =>
+                        $marcasFrontend,
+
+                    'modelos' =>
+                        $modelosFrontend,
+
+                    'tiposEquipo' =>
+                        $tiposFrontend,
+
+                    'metrics' =>
+                        $metrics,
+
+                    'filters' => [
+                        'estados' => [
+                            [
+                                'value' => 'todos',
+                                'label' => 'Todos los estados',
+                            ],
+                            [
+                                'value' => 'activos',
+                                'label' => 'Activos',
+                            ],
+                            [
+                                'value' => 'inactivos',
+                                'label' => 'Inactivos',
+                            ],
+                        ],
+
+                        'perPage' => [
+                            [
+                                'value' => '10',
+                                'label' => '10',
+                            ],
+                            [
+                                'value' => '25',
+                                'label' => '25',
+                            ],
+                            [
+                                'value' => '50',
+                                'label' => '50',
+                            ],
+                            [
+                                'value' => '100',
+                                'label' => '100',
+                            ],
+                        ],
+
+                        'sort' => [
+                            [
+                                'value' => 'asc',
+                                'label' => 'ASC',
+                            ],
+                            [
+                                'value' => 'desc',
+                                'label' => 'DESC',
+                            ],
+                        ],
+                    ],
+
+                    'defaults' => [
+                        'search' => '',
+                        'estado' => 'todos',
+                        'tipo' => 'todos',
+
+                        'perPageMarcas' => '10',
+                        'perPageModelos' => '10',
+
+                        'sortMarcas' => 'asc',
+                        'sortModelos' => 'asc',
+                    ],
+                ];
+            }
+        );
+    }
 
     /*
     |--------------------------------------------------------------------------
@@ -1002,7 +1446,6 @@ class MarcasModelos extends Component
         );
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | Render
@@ -1011,397 +1454,11 @@ class MarcasModelos extends Component
 
     public function render(): View
     {
-        $search =
-            trim(
-                $this->search
-            );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Marcas
-        |--------------------------------------------------------------------------
-        */
-
-        $marcasQuery = DB::table('marcas as m')
-            ->select([
-                'm.id_marca',
-                'm.nombre',
-                'm.descripcion',
-                'm.activo',
-                'm.fecha_creacion',
-                'm.fecha_actualizacion',
-            ])
-            ->selectSub(
-                function ($query) {
-                    $query
-                        ->from('equipos as e')
-                        ->selectRaw('COUNT(*)')
-                        ->whereColumn(
-                            'e.id_marca',
-                            'm.id_marca'
-                        );
-                },
-                'total_equipos'
-            )
-            ->selectSub(
-                function ($query) {
-                    $query
-                        ->from('modelos as mo')
-                        ->selectRaw('COUNT(*)')
-                        ->whereColumn(
-                            'mo.id_marca',
-                            'm.id_marca'
-                        );
-                },
-                'total_modelos'
-            );
-
-
-        if ($search !== '') {
-            $marcasQuery->where(
-                function ($query) use ($search) {
-                    $query
-                        ->where(
-                            'm.nombre',
-                            'ilike',
-                            "%{$search}%"
-                        )
-                        ->orWhere(
-                            'm.descripcion',
-                            'ilike',
-                            "%{$search}%"
-                        );
-                }
-            );
-        }
-
-
-        if ($this->estado === 'activos') {
-            $marcasQuery->where(
-                'm.activo',
-                true
-            );
-        } elseif (
-            $this->estado === 'inactivos'
-        ) {
-            $marcasQuery->where(
-                'm.activo',
-                false
-            );
-        }
-
-
-            $marcas = $marcasQuery
-                ->orderBy(
-                    'm.nombre',
-                    $this->sortMarcas
-                )
-            ->paginate(
-                perPage: $this->perPageMarcas,
-                pageName: 'marcasPage'
-            );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Modelos
-        |--------------------------------------------------------------------------
-        */
-
-        $modelosQuery = DB::table('modelos as mo')
-            ->join(
-                'marcas as m',
-                'm.id_marca',
-                '=',
-                'mo.id_marca'
-            )
-            ->join(
-                'tipos_equipo as te',
-                'te.id_tipo_equipo',
-                '=',
-                'mo.id_tipo_equipo'
-            )
-            ->select([
-                'mo.id_modelo',
-                'mo.nombre',
-                'mo.descripcion',
-                'mo.activo',
-                'mo.fecha_creacion',
-                'mo.fecha_actualizacion',
-                'm.id_marca',
-                'm.nombre as marca_nombre',
-                'te.id_tipo_equipo',
-                'te.nombre as tipo_equipo_nombre',
-            ])
-            ->selectSub(
-                function ($query) {
-                    $query
-                        ->from('equipos as e')
-                        ->selectRaw('COUNT(*)')
-                        ->whereColumn(
-                            'e.id_modelo',
-                            'mo.id_modelo'
-                        );
-                },
-                'total_equipos'
-            );
-
-
-        if ($search !== '') {
-            $modelosQuery->where(
-                function ($query) use ($search) {
-                    $query
-                        ->where(
-                            'mo.nombre',
-                            'ilike',
-                            "%{$search}%"
-                        )
-                        ->orWhere(
-                            'm.nombre',
-                            'ilike',
-                            "%{$search}%"
-                        )
-                        ->orWhere(
-                            'te.nombre',
-                            'ilike',
-                            "%{$search}%"
-                        )
-                        ->orWhere(
-                            'mo.descripcion',
-                            'ilike',
-                            "%{$search}%"
-                        );
-                }
-            );
-        }
-
-
-        if ($this->estado === 'activos') {
-            $modelosQuery->where(
-                'mo.activo',
-                true
-            );
-        } elseif (
-            $this->estado === 'inactivos'
-        ) {
-            $modelosQuery->where(
-                'mo.activo',
-                false
-            );
-        }
-
-
-        if (
-            $this->tipo !== 'todos'
-            &&
-            ctype_digit($this->tipo)
-        ) {
-            $modelosQuery->where(
-                'mo.id_tipo_equipo',
-                (int) $this->tipo
-            );
-        }
-
-
-        $modelos = $modelosQuery
-            ->orderBy(
-                'm.nombre',
-                $this->sortModelos
-            )
-            ->orderBy(
-                'mo.nombre',
-                $this->sortModelos
-            )
-            ->paginate(
-                perPage: $this->perPageModelos,
-                pageName: 'modelosPage'
-            );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Métricas
-        |--------------------------------------------------------------------------
-        */
-
-        $totalMarcas =
-            DB::table('marcas')
-                ->count();
-
-
-        $totalModelos =
-            DB::table('modelos')
-                ->count();
-
-
-        $marcasInactivas =
-            DB::table('marcas')
-                ->where(
-                    'activo',
-                    false
-                )
-                ->count();
-
-
-        $modelosEnUso =
-            DB::table('equipos')
-                ->whereNotNull(
-                    'id_modelo'
-                )
-                ->distinct()
-                ->count(
-                    'id_modelo'
-                );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Tipos de equipo
-        |--------------------------------------------------------------------------
-        */
-
-        $tiposEquipo =
-            DB::table('tipos_equipo')
-                ->where(
-                    'activo',
-                    true
-                )
-                ->orderBy(
-                    'nombre'
-                )
-                ->get([
-                    'id_tipo_equipo',
-                    'nombre',
-                ]);
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Marcas para el select del modelo
-        |--------------------------------------------------------------------------
-        */
-
-        $marcasActivas =
-            DB::table('marcas')
-                ->where(
-                    'activo',
-                    true
-                )
-                ->orderBy(
-                    'nombre'
-                )
-                ->get([
-                    'id_marca',
-                    'nombre',
-                ]);
-
-
-        /*
-         * Si editamos un modelo perteneciente a
-         * una marca actualmente inactiva,
-         * la incluimos temporalmente en el select.
-         */
-        if (
-            $this->editingModeloId !== null
-            &&
-            $this->modeloMarcaId !== null
-            &&
-            ! $marcasActivas->contains(
-                'id_marca',
-                $this->modeloMarcaId
-            )
-        ) {
-            $inactiveBrand = DB::table('marcas')
-                ->where(
-                    'id_marca',
-                    $this->modeloMarcaId
-                )
-                ->first([
-                    'id_marca',
-                    'nombre',
-                ]);
-
-
-            if ($inactiveBrand) {
-                $marcasActivas =
-                    $marcasActivas
-                        ->push(
-                            $inactiveBrand
-                        )
-                        ->sortBy(
-                            'nombre'
-                        )
-                        ->values();
-            }
-        }
-
-
-        /*
-         * Lo mismo para un tipo de equipo inactivo
-         * que ya esté vinculado a un modelo existente.
-         */
-        if (
-            $this->editingModeloId !== null
-            &&
-            $this->modeloTipoEquipoId !== null
-            &&
-            ! $tiposEquipo->contains(
-                'id_tipo_equipo',
-                $this->modeloTipoEquipoId
-            )
-        ) {
-            $inactiveType = DB::table('tipos_equipo')
-                ->where(
-                    'id_tipo_equipo',
-                    $this->modeloTipoEquipoId
-                )
-                ->first([
-                    'id_tipo_equipo',
-                    'nombre',
-                ]);
-
-
-            if ($inactiveType) {
-                $tiposEquipo =
-                    $tiposEquipo
-                        ->push(
-                            $inactiveType
-                        )
-                        ->sortBy(
-                            'nombre'
-                        )
-                        ->values();
-            }
-        }
-
-
         return view(
             'livewire.catalogos.marcas-modelos',
             [
-                'marcas' =>
-                    $marcas,
-
-                'modelos' =>
-                    $modelos,
-
-                'totalMarcas' =>
-                    $totalMarcas,
-
-                'totalModelos' =>
-                    $totalModelos,
-
-                'marcasInactivas' =>
-                    $marcasInactivas,
-
-                'modelosEnUso' =>
-                    $modelosEnUso,
-
-                'tiposEquipo' =>
-                    $tiposEquipo,
-
-                'marcasActivas' =>
-                    $marcasActivas,
+                'catalogData' =>
+                    $this->getCatalogFrontendData(),
             ]
         );
     }

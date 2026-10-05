@@ -89,6 +89,82 @@ class EquipoEdit extends Component
 
     public int $formKey = 0;
 
+    /*
+    |--------------------------------------------------------------------------
+    | CACHE DE DATOS BASE PARA EDICIÓN
+    |--------------------------------------------------------------------------
+    |
+    | Esta caché puede ser alimentada previamente por EquiposIndex.
+    |
+    | Si el usuario llegó directamente a la URL de edición y no existe
+    | la caché, EquipoEdit consulta la base normalmente y la genera.
+    |
+    */
+
+    private const EDIT_BASE_CACHE_TTL_MINUTES = 10;
+
+    private const TABLE_CACHE_VERSION_KEY =
+        'equipos.index.version';
+
+
+    private function editBaseCacheKey(): string
+    {
+        return
+            'equipos.edit.base.'
+            . $this->equipoId;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | INVALIDAR CACHES DEL EQUIPO
+    |--------------------------------------------------------------------------
+    |
+    | Después de guardar cambios:
+    |
+    | 1. Eliminamos la cache base de edición de este equipo.
+    | 2. Incrementamos la versión de la tabla de Equipos.
+    |
+    | De esta forma no se reutilizan datos anteriores después de editar.
+    |
+    */
+
+    private function invalidateEquipoCaches(): void
+    {
+        /*
+        |--------------------------------------------------------------------------
+        | CACHE DE EDICIÓN
+        |--------------------------------------------------------------------------
+        */
+
+        Cache::forget(
+            $this->editBaseCacheKey()
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | CACHE DEL LISTADO
+        |--------------------------------------------------------------------------
+        |
+        | EquiposIndex utiliza esta versión dentro de la clave de cada página.
+        |
+        | Al incrementarla, las páginas anteriores dejan de utilizarse sin
+        | necesidad de ejecutar Cache::flush().
+        |
+        */
+
+        $currentVersion =
+            (int) Cache::get(
+                self::TABLE_CACHE_VERSION_KEY,
+                1
+            );
+
+
+        Cache::forever(
+            self::TABLE_CACHE_VERSION_KEY,
+            $currentVersion + 1
+        );
+    }
 
     /*
     |--------------------------------------------------------------------------
@@ -112,12 +188,61 @@ class EquipoEdit extends Component
 
     protected function cargarEquipo(): void
     {
-        $equipo = DB::table('equipos')
-            ->where(
-                'id_equipo',
-                $this->equipoId
-            )
-            ->first();
+        $equipoData =
+            Cache::remember(
+                $this->editBaseCacheKey(),
+
+                now()->addMinutes(
+                    self::EDIT_BASE_CACHE_TTL_MINUTES
+                ),
+
+                function (): ?array {
+                    $equipo =
+                        DB::table('equipos as e')
+
+                            /*
+                            |--------------------------------------------------------------------------
+                            | DEPARTAMENTO
+                            |--------------------------------------------------------------------------
+                            |
+                            | Aprovechamos la misma consulta para obtener también
+                            | el área correspondiente al departamento.
+                            |
+                            | Así eliminamos la segunda consulta que antes se hacía
+                            | más abajo en cargarEquipo().
+                            |
+                            */
+
+                            ->leftJoin(
+                                'departamentos as dep',
+                                'dep.id_departamento',
+                                '=',
+                                'e.id_departamento'
+                            )
+
+                            ->where(
+                                'e.id_equipo',
+                                $this->equipoId
+                            )
+
+                            ->first([
+                                'e.*',
+
+                                'dep.id_area as departamento_area_id',
+                            ]);
+
+
+                    return $equipo
+                        ? (array) $equipo
+                        : null;
+                }
+            );
+
+
+        $equipo =
+            $equipoData
+                ? (object) $equipoData
+                : null;
 
         abort_unless(
             $equipo,
@@ -229,93 +354,55 @@ class EquipoEdit extends Component
             );
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | Área / Departamento
-        |--------------------------------------------------------------------------
-        |
-        | En equipos solamente se guarda:
-        |
-        | - id_area
-        | o
-        | - id_departamento
-        |
-        | Cuando existe departamento obtenemos el área desde departamentos.
-        |
-        */
+            /*
+            |--------------------------------------------------------------------------
+            | Área / Departamento
+            |--------------------------------------------------------------------------
+            |
+            | departamento_area_id ya viene de la misma consulta del equipo.
+            |
+            | Si el equipo pertenece a un departamento, utilizamos el área
+            | obtenida mediante el LEFT JOIN.
+            |
+            | Si pertenece directamente a un área, utilizamos id_area
+            | del propio equipo.
+            |
+            */
 
-        if ($equipo->id_departamento !== null) {
-
-            $departamento = DB::table('departamentos')
-                ->where(
-                    'id_departamento',
-                    (int) $equipo->id_departamento
-                )
-                ->first([
-                    'id_departamento',
-                    'id_area',
-                ]);
-
-            if ($departamento) {
-
+            if (
+                $equipo->id_departamento
+                !== null
+            ) {
                 $this->idArea =
-                    $departamento->id_area !== null
-                        ? (string) $departamento->id_area
+                    $equipo->departamento_area_id !== null
+                        ? (string) $equipo->departamento_area_id
                         : '';
 
                 $this->idDepartamento =
-                    (string) $departamento->id_departamento;
+                    (string) $equipo->id_departamento;
+
+            } else {
+                $this->idArea =
+                    $equipo->id_area !== null
+                        ? (string) $equipo->id_area
+                        : '';
+
+                $this->idDepartamento = '';
             }
 
-        } else {
 
-            $this->idArea =
-                $equipo->id_area !== null
-                    ? (string) $equipo->id_area
-                    : '';
+            /*
+            |--------------------------------------------------------------------------
+            | DATOS COMPLEMENTARIOS
+            |--------------------------------------------------------------------------
+            |
+            | Responsable actual + datos específicos del tipo se obtienen
+            | en una sola consulta remota.
+            |
+            */
 
-            $this->idDepartamento = '';
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Responsable actual
-        |--------------------------------------------------------------------------
-        |
-        | Solo se muestra como referencia.
-        |
-        | No modificaremos asignaciones desde Editar equipo.
-        |
-        */
-
-        $asignacion = DB::table('asignaciones')
-            ->where(
-                'id_equipo',
-                $this->equipoId
-            )
-            ->orderByDesc(
-                'fecha_asignacion'
-            )
-            ->first([
-                'nombre_colaborador',
-            ]);
-
-        $this->propietario =
-            (string) (
-                $asignacion->nombre_colaborador
-                ?? ''
-            );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Cargar información específica
-        |--------------------------------------------------------------------------
-        */
-
-        $this->cargarChildData();
-    }
+            $this->cargarDatosComplementarios();
+            }
 
 
     /*
@@ -794,10 +881,40 @@ class EquipoEdit extends Component
     |--------------------------------------------------------------------------
     */
 
-    protected function cargarChildData(): void
+    /*
+    |--------------------------------------------------------------------------
+    | CARGAR DATOS COMPLEMENTARIOS
+    |--------------------------------------------------------------------------
+    |
+    | Obtiene en una sola consulta:
+    |
+    | - Responsable actual.
+    | - Información específica según el tipo de equipo.
+    |
+    | Se utiliza una fila virtual como punto de partida para garantizar
+    | que la consulta siempre pueda devolver el responsable aunque el
+    | registro específico del tipo todavía no exista.
+    |
+    */
+
+    protected function cargarDatosComplementarios(): void
     {
+        /*
+        |--------------------------------------------------------------------------
+        | ESTADO INICIAL
+        |--------------------------------------------------------------------------
+        */
+
+        $this->propietario = '';
+
         $this->childData = [];
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | CONFIGURACIÓN DEL TIPO
+        |--------------------------------------------------------------------------
+        */
 
         $tipo =
             (int) $this->idTipoEquipo;
@@ -808,29 +925,199 @@ class EquipoEdit extends Component
             ?? null;
 
 
-        if (!$config) {
-            return;
+        /*
+        |--------------------------------------------------------------------------
+        | FILA BASE VIRTUAL
+        |--------------------------------------------------------------------------
+        |
+        | Esto NO consulta una tabla.
+        |
+        | PostgreSQL genera simplemente:
+        |
+        | SELECT ?::bigint AS id_equipo
+        |
+        | y a partir de ese ID hacemos los JOIN/subqueries necesarios.
+        |
+        */
+
+        $anchor =
+            DB::query()
+                ->selectRaw(
+                    '?::bigint as id_equipo',
+                    [
+                        $this->equipoId,
+                    ]
+                );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | CONSULTA ÚNICA
+        |--------------------------------------------------------------------------
+        */
+
+        $query =
+            DB::query()
+
+                ->fromSub(
+                    $anchor,
+                    'anchor'
+                )
+
+                ->select([
+                    'anchor.id_equipo as anchor_equipo_id',
+                ]);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | RESPONSABLE ACTUAL
+        |--------------------------------------------------------------------------
+        |
+        | Se obtiene mediante una subconsulta correlacionada dentro de la
+        | misma consulta SQL.
+        |
+        */
+
+        $query->selectSub(
+            function ($subQuery): void {
+                $subQuery
+                    ->from(
+                        'asignaciones as asignacion'
+                    )
+
+                    ->select(
+                        'asignacion.nombre_colaborador'
+                    )
+
+                    ->whereColumn(
+                        'asignacion.id_equipo',
+                        'anchor.id_equipo'
+                    )
+
+                    ->orderByDesc(
+                        'asignacion.fecha_asignacion'
+                    )
+
+                    ->limit(1);
+            },
+            'responsable_actual'
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | TABLA ESPECÍFICA
+        |--------------------------------------------------------------------------
+        */
+
+        if ($config) {
+
+            $query->leftJoin(
+                $config['table'] . ' as child',
+                'child.id_equipo',
+                '=',
+                'anchor.id_equipo'
+            );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Saber si realmente existe el registro específico
+            |--------------------------------------------------------------------------
+            */
+
+            $query->addSelect(
+                'child.id_equipo as child_equipo_id'
+            );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Seleccionar únicamente los campos configurados
+            |--------------------------------------------------------------------------
+            */
+
+            foreach (
+                array_keys(
+                    $config['fields']
+                )
+                as $field
+            ) {
+                $query->addSelect(
+                    'child.' . $field
+                );
+            }
         }
 
 
-        $row = DB::table(
-            $config['table']
-        )
-            ->where(
-                'id_equipo',
-                $this->equipoId
-            )
-            ->first();
-
-
-        if (!$row) {
-            return;
-        }
-
+        /*
+        |--------------------------------------------------------------------------
+        | EJECUTAR
+        |--------------------------------------------------------------------------
+        |
+        | Esta es la única consulta remota de este método.
+        |
+        */
 
         $row =
-            (array) $row;
+            $query->first();
 
+
+        if (! $row) {
+            return;
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | RESPONSABLE
+        |--------------------------------------------------------------------------
+        */
+
+        $this->propietario =
+            (string) (
+                $row->responsable_actual
+                ?? ''
+            );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | SIN TABLA ESPECÍFICA
+        |--------------------------------------------------------------------------
+        */
+
+        if (! $config) {
+            return;
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | SIN REGISTRO ESPECÍFICO
+        |--------------------------------------------------------------------------
+        |
+        | El LEFT JOIN permite que el responsable siga cargándose aunque
+        | por alguna razón todavía no exista la fila específica.
+        |
+        */
+
+        if (
+            (
+                $row->child_equipo_id
+                ?? null
+            ) === null
+        ) {
+            return;
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | NORMALIZAR CAMPOS ESPECÍFICOS
+        |--------------------------------------------------------------------------
+        */
 
         foreach (
             $config['fields']
@@ -838,13 +1125,13 @@ class EquipoEdit extends Component
         ) {
 
             $value =
-                $row[$field]
+                $row->{$field}
                 ?? null;
 
 
             /*
             |--------------------------------------------------------------------------
-            | Checkbox
+            | BOOLEAN
             |--------------------------------------------------------------------------
             */
 
@@ -859,8 +1146,11 @@ class EquipoEdit extends Component
 
             /*
             |--------------------------------------------------------------------------
-            | El resto se mantiene como string para Livewire
+            | RESTO DE CAMPOS
             |--------------------------------------------------------------------------
+            |
+            | Livewire los maneja como string.
+            |
             */
 
             $this->childData[$field] =
@@ -999,44 +1289,49 @@ class EquipoEdit extends Component
     }
 
 
+    private function getAllModelos(): array
+    {
+        return Cache::remember(
+            'form.modelos.all.v2',
+            now()->addMinutes(30),
+            function () {
+                return $this->toPlainArray(
+                    DB::table('modelos')
+                        ->where('activo', true)
+                        ->orderBy('nombre')
+                        ->get([
+                            'id_modelo',
+                            'id_marca',
+                            'id_tipo_equipo',
+                            'nombre',
+                        ])
+                );
+            }
+        );
+    }
+
     public function getModelosProperty(): array
     {
         if (
-            $this->idMarca === '' ||
-            $this->idTipoEquipo === ''
+            $this->idMarca === ''
+            || $this->idTipoEquipo === ''
         ) {
             return [];
         }
 
-
-        return $this->toPlainArray(
-
-            DB::table('modelos')
-
-                ->where(
-                    'activo',
-                    true
-                )
-
-                ->where(
-                    'id_marca',
-                    (int) $this->idMarca
-                )
-
-                ->where(
-                    'id_tipo_equipo',
-                    (int) $this->idTipoEquipo
-                )
-
-                ->orderBy(
-                    'nombre'
-                )
-
-                ->get([
-                    'id_modelo',
-                    'nombre',
-                ])
-        );
+        return collect(
+            $this->getAllModelos()
+        )
+            ->filter(
+                fn (array $modelo): bool =>
+                    (string) $modelo['id_marca']
+                        === (string) $this->idMarca
+                    &&
+                    (string) $modelo['id_tipo_equipo']
+                        === (string) $this->idTipoEquipo
+            )
+            ->values()
+            ->all();
     }
 
 
@@ -1115,36 +1410,42 @@ class EquipoEdit extends Component
     }
 
 
+    private function getAllDepartamentos(): array
+    {
+        return Cache::remember(
+            'form.departamentos.all.v2',
+            now()->addMinutes(30),
+            function () {
+                return $this->toPlainArray(
+                    DB::table('departamentos')
+                        ->where('activo', true)
+                        ->orderBy('nombre')
+                        ->get([
+                            'id_departamento',
+                            'id_area',
+                            'nombre',
+                        ])
+                );
+            }
+        );
+    }
+
     public function getDepartamentosProperty(): array
     {
         if ($this->idArea === '') {
             return [];
         }
 
-
-        return $this->toPlainArray(
-
-            DB::table('departamentos')
-
-                ->where(
-                    'activo',
-                    true
-                )
-
-                ->where(
-                    'id_area',
-                    (int) $this->idArea
-                )
-
-                ->orderBy(
-                    'nombre'
-                )
-
-                ->get([
-                    'id_departamento',
-                    'nombre',
-                ])
-        );
+        return collect(
+            $this->getAllDepartamentos()
+        )
+            ->filter(
+                fn (array $departamento): bool =>
+                    (string) $departamento['id_area']
+                        === (string) $this->idArea
+            )
+            ->values()
+            ->all();
     }
 
 
@@ -1208,6 +1509,341 @@ class EquipoEdit extends Component
                 ])
         );
     }
+
+    /*
+|--------------------------------------------------------------------------
+| Datos iniciales para Alpine
+|--------------------------------------------------------------------------
+*/
+
+private function toFrontendOptions(
+    array $items,
+    string $valueKey,
+    string $labelKey = 'nombre'
+): array {
+    return collect($items)
+        ->map(
+            fn (array $item): array => [
+                'value' =>
+                    (string) (
+                        $item[$valueKey]
+                        ?? ''
+                    ),
+
+                'label' =>
+                    (string) (
+                        $item[$labelKey]
+                        ?? ''
+                    ),
+            ]
+        )
+        ->values()
+        ->all();
+}
+
+private function getDynamicCatalogKeys(): array
+{
+    return collect(
+        $this->childConfig()
+    )
+        ->flatMap(
+            fn (array $config): array =>
+                array_values(
+                    $config['fields']
+                    ?? []
+                )
+        )
+        ->filter(
+            fn ($type): bool =>
+                is_string($type)
+                && str_starts_with(
+                    $type,
+                    'catalog:'
+                )
+        )
+        ->map(
+            fn (string $type): string =>
+                substr(
+                    $type,
+                    8
+                )
+        )
+        ->unique()
+        ->values()
+        ->all();
+}
+
+private function getEquipmentFrontendData(): array
+{
+    /*
+    |--------------------------------------------------------------------------
+    | Opciones generales
+    |--------------------------------------------------------------------------
+    */
+
+    $estados =
+        $this->toFrontendOptions(
+            $this->estados,
+            'id_estado_equipo'
+        );
+
+    $tiposEquipo =
+        $this->toFrontendOptions(
+            $this->tiposEquipo,
+            'id_tipo_equipo'
+        );
+
+    $marcas =
+        $this->toFrontendOptions(
+            $this->marcas,
+            'id_marca'
+        );
+
+    $proveedores =
+        $this->toFrontendOptions(
+            $this->proveedores,
+            'id_proveedor'
+        );
+
+    $condiciones =
+        $this->toFrontendOptions(
+            $this->condiciones,
+            'id_valor'
+        );
+
+    $areas =
+        $this->toFrontendOptions(
+            $this->areas,
+            'id_area'
+        );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Todos los modelos
+    |--------------------------------------------------------------------------
+    |
+    | Alpine filtrará por Marca + Tipo.
+    |
+    */
+
+    $modelos =
+        collect(
+            $this->getAllModelos()
+        )
+            ->map(
+                fn (array $modelo): array => [
+                    'value' =>
+                        (string) $modelo['id_modelo'],
+
+                    'label' =>
+                        (string) $modelo['nombre'],
+
+                    'idMarca' =>
+                        (string) $modelo['id_marca'],
+
+                    'idTipoEquipo' =>
+                        (string) $modelo['id_tipo_equipo'],
+                ]
+            )
+            ->values()
+            ->all();
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Todos los departamentos
+    |--------------------------------------------------------------------------
+    |
+    | Alpine filtrará utilizando idArea.
+    |
+    */
+
+    $departamentos =
+        collect(
+            $this->getAllDepartamentos()
+        )
+            ->map(
+                fn (array $departamento): array => [
+                    'value' =>
+                        (string) $departamento['id_departamento'],
+
+                    'label' =>
+                        (string) $departamento['nombre'],
+
+                    'idArea' =>
+                        (string) $departamento['id_area'],
+                ]
+            )
+            ->values()
+            ->all();
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Configuración de campos específicos
+    |--------------------------------------------------------------------------
+    */
+
+    $childFieldsByType = [];
+
+    foreach (
+        $this->childConfig()
+        as $tipoId => $config
+    ) {
+        $childFieldsByType[
+            (string) $tipoId
+        ] =
+            $config['fields']
+            ?? [];
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Catálogos utilizados por campos específicos
+    |--------------------------------------------------------------------------
+    */
+
+    $dynamicCatalogs = [];
+
+    foreach (
+        $this->getDynamicCatalogKeys()
+        as $clave
+    ) {
+        $dynamicCatalogs[$clave] =
+            $this->toFrontendOptions(
+                $this->catalogOptions(
+                    $clave
+                ),
+                'id_valor'
+            );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Estado inicial del equipo
+    |--------------------------------------------------------------------------
+    |
+    | Estos valores ya fueron cargados por mount() / cargarEquipo().
+    |
+    */
+
+    $initial = [
+        'equipoId' =>
+            $this->equipoId,
+
+        'codigoInventario' =>
+            $this->codigoInventario,
+
+        'tipoEquipoOriginal' =>
+            (string) $this->tipoEquipoOriginal,
+
+        'nombreEquipo' =>
+            $this->nombreEquipo,
+
+        'host' =>
+            $this->host,
+
+        'idEstadoActivo' =>
+            $this->idEstadoActivo,
+
+        'idTipoEquipo' =>
+            $this->idTipoEquipo,
+
+        'idModelo' =>
+            $this->idModelo,
+
+        'fechaCompra' =>
+            $this->fechaCompra,
+
+        'idMarca' =>
+            $this->idMarca,
+
+        'direccionMac' =>
+            $this->direccionMac,
+
+        'numeroFactura' =>
+            $this->numeroFactura,
+
+        'numeroSerie' =>
+            $this->numeroSerie,
+
+        'idProveedor' =>
+            $this->idProveedor,
+
+        /*
+         * El responsable sólo se muestra como referencia.
+         * Editar equipo no modifica asignaciones.
+         */
+        'propietario' =>
+            $this->propietario,
+
+        'idCondicionActivo' =>
+            $this->idCondicionActivo,
+
+        'idArea' =>
+            $this->idArea,
+
+        'idDepartamento' =>
+            $this->idDepartamento,
+
+        'fechaFinGarantia' =>
+            $this->fechaFinGarantia,
+
+        'comentarios' =>
+            $this->comentarios,
+
+        'childData' =>
+            $this->childData,
+    ];
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Resultado
+    |--------------------------------------------------------------------------
+    */
+
+    return [
+        'estados' =>
+            $estados,
+
+        'tiposEquipo' =>
+            $tiposEquipo,
+
+        'marcas' =>
+            $marcas,
+
+        'modelos' =>
+            $modelos,
+
+        'proveedores' =>
+            $proveedores,
+
+        'condiciones' =>
+            $condiciones,
+
+        'areas' =>
+            $areas,
+
+        'departamentos' =>
+            $departamentos,
+
+        'childFieldsByType' =>
+            $childFieldsByType,
+
+        'fieldLabels' =>
+            $this->fieldLabels(),
+
+        'dynamicCatalogs' =>
+            $dynamicCatalogs,
+
+        'initial' =>
+            $initial,
+    ];
+}
 
 
     /*
@@ -1355,7 +1991,6 @@ class EquipoEdit extends Component
         | Transacción
         |--------------------------------------------------------------------------
         */
-
         DB::transaction(
             function () use (
                 $payload,
@@ -1615,6 +2250,18 @@ class EquipoEdit extends Component
             }
         );
 
+        /*
+        |--------------------------------------------------------------------------
+        | INVALIDAR CACHES
+        |--------------------------------------------------------------------------
+        |
+        | La transacción terminó correctamente, por lo que ya podemos descartar
+        | cualquier representación anterior del equipo.
+        |
+        */
+
+        $this->invalidateEquipoCaches();
+
 
         /*
         |--------------------------------------------------------------------------
@@ -1791,7 +2438,11 @@ class EquipoEdit extends Component
     public function render()
     {
         return view(
-            'livewire.equipo-edit'
+            'livewire.equipo-edit',
+            [
+                'equipmentData' =>
+                    $this->getEquipmentFrontendData(),
+            ]
         );
     }
 }

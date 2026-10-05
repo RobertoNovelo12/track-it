@@ -5,7 +5,6 @@
     ============================================================ --}}
     <section class="mb-6">
 
-        {{-- Breadcrumb --}}
         <div
             class="
                 flex
@@ -66,8 +65,6 @@
             </span>
         </div>
 
-
-        {{-- Título conocido --}}
         <h1
             class="
                 text-xl
@@ -78,12 +75,10 @@
         >
             Asignación de Equipo
         </h1>
+
     </section>
 
 
-    {{-- ============================================================
-        FORMULARIO
-    ============================================================ --}}
     <div class="space-y-5">
 
         {{-- ========================================================
@@ -106,6 +101,7 @@
                 class="
                     flex
                     flex-col
+
                     lg:flex-row
                     lg:items-center
 
@@ -125,7 +121,6 @@
                     Tipo de movimiento
                 </p>
 
-
                 <div
                     class="
                         grid
@@ -136,7 +131,6 @@
                     "
                 >
 
-                    {{-- Asignación --}}
                     <button
                         type="button"
                         disabled
@@ -179,11 +173,9 @@
                         Asignación
                     </button>
 
-
-                    {{-- Reasignación --}}
-                    <button
-                        type="button"
-                        disabled
+                    <a
+                        href="{{ route('asignaciones.reassign') }}"
+                        wire:navigate
                         class="
                             h-10
 
@@ -204,8 +196,10 @@
                             font-medium
                             text-[var(--theme-text-muted)]
 
-                            disabled:opacity-100
-                            disabled:cursor-default
+                            hover:bg-[var(--theme-surface-soft)]
+                            hover:text-[var(--theme-text)]
+
+                            transition-colors
                         "
                     >
                         <svg
@@ -222,7 +216,7 @@
                         </svg>
 
                         Reasignación
-                    </button>
+                    </a>
 
                 </div>
             </div>
@@ -256,10 +250,9 @@
                 "
             >
 
-                {{-- =================================================
-                    EQUIPO
-                ================================================= --}}
+                {{-- EQUIPO --}}
                 <div class="min-w-0">
+
                     <label
                         class="
                             block
@@ -292,7 +285,9 @@
                         <input
                             type="text"
                             disabled
-                            placeholder="Buscar equipo..."
+
+                            placeholder="Cargando equipos disponibles..."
+
                             class="
                                 w-full
 
@@ -308,38 +303,59 @@
 
                                 placeholder:text-[var(--theme-text-muted)]
 
-                                focus:ring-0
-
                                 disabled:opacity-100
                                 disabled:cursor-default
                             "
                         >
 
-                        <svg
+                        <div
                             class="
                                 absolute
                                 right-3
+                                top-1/2
+                                -translate-y-1/2
 
-                                w-4
-                                h-4
+                                flex
+                                items-center
+                                justify-center
 
-                                text-[var(--theme-text-muted)]
+                                text-[var(--theme-primary)]
                             "
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.5"
+                            aria-label="Cargando equipos"
                         >
-                            <path d="M6 9l6 6 6-6"/>
-                        </svg>
+                            <svg
+                                class="w-4 h-4 animate-spin"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                aria-hidden="true"
+                            >
+                                <circle
+                                    cx="12"
+                                    cy="12"
+                                    r="9"
+
+                                    stroke="currentColor"
+                                    stroke-width="2"
+
+                                    opacity="0.25"
+                                />
+
+                                <path
+                                    d="M21 12a9 9 0 0 0-9-9"
+
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                />
+                            </svg>
+                        </div>
                     </div>
                 </div>
 
 
-                {{-- =================================================
-                    COLABORADOR
-                ================================================= --}}
+                {{-- COLABORADOR --}}
                 <div class="min-w-0">
+
                     <label
                         class="
                             block
@@ -355,7 +371,9 @@
                     <input
                         type="text"
                         disabled
+
                         placeholder="Nombre completo del colaborador"
+
                         class="
                             w-full
 
@@ -378,13 +396,13 @@
                             disabled:cursor-default
                         "
                     >
+
                 </div>
 
 
-                {{-- =================================================
-                    NÚMERO DE COLABORADOR
-                ================================================= --}}
+                {{-- NÚMERO DE COLABORADOR --}}
                 <div class="min-w-0">
+
                     <label
                         class="
                             block
@@ -400,7 +418,9 @@
                     <input
                         type="text"
                         disabled
+
                         placeholder="Ej. 001245"
+
                         class="
                             w-full
 
@@ -423,13 +443,13 @@
                             disabled:cursor-default
                         "
                     >
+
                 </div>
 
 
-                {{-- =================================================
-                    HOST
-                ================================================= --}}
+                {{-- HOST --}}
                 <div class="min-w-0">
+
                     <label
                         class="
                             block
@@ -442,63 +462,41 @@
                         Host
                     </label>
 
-                    <div class="relative">
-                        <input
-                            type="text"
-                            disabled
-                            placeholder="Se obtiene del equipo seleccionado"
-                            class="
-                                w-full
+                    <input
+                        type="text"
+                        disabled
 
-                                px-3
-                                py-2.5
-                                pr-9
+                        placeholder="Se obtiene del equipo seleccionado"
 
-                                rounded-md
+                        class="
+                            w-full
 
-                                border
-                                border-[var(--theme-border)]
+                            px-3
+                            py-2.5
 
-                                bg-[var(--theme-surface-soft)]
+                            rounded-md
 
-                                text-sm
-                                text-[var(--theme-text-muted)]
+                            border
+                            border-[var(--theme-border)]
 
-                                placeholder:text-[var(--theme-text-muted)]
+                            bg-[var(--theme-surface-soft)]
 
-                                disabled:opacity-100
-                                disabled:cursor-default
-                            "
-                        >
+                            text-sm
+                            text-[var(--theme-text-muted)]
 
-                        <svg
-                            class="
-                                absolute
-                                right-3
-                                top-1/2
-                                -translate-y-1/2
+                            placeholder:text-[var(--theme-text-muted)]
 
-                                w-4
-                                h-4
+                            disabled:opacity-100
+                            disabled:cursor-default
+                        "
+                    >
 
-                                text-[var(--theme-text-muted)]
-                            "
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.6"
-                        >
-                            <rect x="6" y="10" width="12" height="9" rx="1.5"/>
-                            <path d="M8 10V7a4 4 0 018 0v3"/>
-                        </svg>
-                    </div>
                 </div>
 
 
-                {{-- =================================================
-                    SEDE
-                ================================================= --}}
+                {{-- SEDE --}}
                 <div class="min-w-0">
+
                     <label
                         class="
                             block
@@ -531,7 +529,9 @@
                         <input
                             type="text"
                             disabled
-                            placeholder="Buscar sede..."
+
+                            placeholder="Cargando sedes..."
+
                             class="
                                 w-full
 
@@ -573,10 +573,9 @@
                 </div>
 
 
-                {{-- =================================================
-                    ÁREA
-                ================================================= --}}
+                {{-- ÁREA --}}
                 <div class="min-w-0">
+
                     <label
                         class="
                             block
@@ -603,13 +602,15 @@
                             border
                             border-[var(--theme-border)]
 
-                            bg-[var(--theme-surface-soft)]
+                            bg-[var(--theme-surface)]
                         "
                     >
                         <input
                             type="text"
                             disabled
+
                             placeholder="Selecciona una sede primero"
+
                             class="
                                 w-full
 
@@ -651,10 +652,9 @@
                 </div>
 
 
-                {{-- =================================================
-                    DEPARTAMENTO
-                ================================================= --}}
+                {{-- DEPARTAMENTO --}}
                 <div class="min-w-0">
+
                     <label
                         class="
                             block
@@ -681,13 +681,15 @@
                             border
                             border-[var(--theme-border)]
 
-                            bg-[var(--theme-surface-soft)]
+                            bg-[var(--theme-surface)]
                         "
                     >
                         <input
                             type="text"
                             disabled
+
                             placeholder="Selecciona un área primero"
+
                             class="
                                 w-full
 
@@ -729,10 +731,9 @@
                 </div>
 
 
-                {{-- =================================================
-                    UBICACIÓN
-                ================================================= --}}
+                {{-- UBICACIÓN --}}
                 <div class="min-w-0">
+
                     <label
                         class="
                             block
@@ -759,13 +760,15 @@
                             border
                             border-[var(--theme-border)]
 
-                            bg-[var(--theme-surface-soft)]
+                            bg-[var(--theme-surface)]
                         "
                     >
                         <input
                             type="text"
                             disabled
+
                             placeholder="Selecciona una sede primero"
+
                             class="
                                 w-full
 
@@ -807,10 +810,9 @@
                 </div>
 
 
-                {{-- =================================================
-                    FECHA
-                ================================================= --}}
+                {{-- FECHA --}}
                 <div class="min-w-0">
+
                     <label
                         class="
                             block
@@ -826,6 +828,7 @@
                     <input
                         type="date"
                         disabled
+
                         class="
                             w-full
 
@@ -846,13 +849,13 @@
                             disabled:cursor-default
                         "
                     >
+
                 </div>
 
 
-                {{-- =================================================
-                    TIPO DE ASIGNACIÓN
-                ================================================= --}}
+                {{-- TIPO DE ASIGNACIÓN --}}
                 <div class="min-w-0">
+
                     <label
                         class="
                             block
@@ -885,7 +888,9 @@
                         <input
                             type="text"
                             disabled
-                            placeholder="Buscar tipo de asignación..."
+
+                            placeholder="Cargando tipos de asignación..."
+
                             class="
                                 w-full
 
@@ -927,10 +932,9 @@
                 </div>
 
 
-                {{-- =================================================
-                    OBSERVACIONES
-                ================================================= --}}
+                {{-- OBSERVACIONES --}}
                 <div class="lg:col-span-2 min-w-0">
+
                     <label
                         class="
                             block
@@ -942,7 +946,7 @@
                     >
                         Observaciones
 
-                        <span class="text-[var(--theme-text-muted)]">
+                        <span>
                             (Opcional)
                         </span>
                     </label>
@@ -950,7 +954,9 @@
                     <textarea
                         rows="5"
                         disabled
+
                         placeholder="Escribe alguna observación relacionada con la asignación..."
+
                         class="
                             w-full
 
@@ -975,6 +981,7 @@
                             disabled:cursor-default
                         "
                     ></textarea>
+
                 </div>
 
             </div>
@@ -1033,7 +1040,7 @@
                 </svg>
             </div>
 
-            <div class="min-w-0">
+            <div>
                 <p
                     class="
                         text-sm
@@ -1053,7 +1060,7 @@
                         text-[var(--theme-primary)]
                     "
                 >
-                    Al guardar la información, el equipo quedará asignado al colaborador y a la ubicación organizacional seleccionada.
+                    Preparando la información necesaria para registrar la asignación.
                 </p>
             </div>
         </section>
@@ -1066,6 +1073,7 @@
             class="
                 flex
                 flex-col-reverse
+
                 sm:flex-row
                 sm:items-center
                 sm:justify-end
@@ -1083,7 +1091,6 @@
                     sm:w-auto
 
                     h-11
-
                     px-5
 
                     flex
@@ -1110,16 +1117,15 @@
                 Cancelar
             </a>
 
-
             <button
                 type="button"
                 disabled
+
                 class="
                     w-full
                     sm:w-auto
 
                     h-11
-
                     px-5
 
                     flex
@@ -1135,23 +1141,37 @@
                     font-medium
                     text-white
 
-                    disabled:opacity-70
-                    disabled:cursor-default
+                    opacity-70
+                    cursor-default
                 "
             >
                 <svg
-                    class="w-4 h-4"
+                    class="w-4 h-4 animate-spin"
                     viewBox="0 0 24 24"
                     fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.7"
+                    aria-hidden="true"
                 >
-                    <path d="M5 4h12l2 2v14H5z"/>
-                    <path d="M8 4v6h8V4"/>
-                    <path d="M8 20v-6h8v6"/>
+                    <circle
+                        cx="12"
+                        cy="12"
+                        r="9"
+
+                        stroke="currentColor"
+                        stroke-width="2"
+
+                        opacity="0.25"
+                    />
+
+                    <path
+                        d="M21 12a9 9 0 0 0-9-9"
+
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                    />
                 </svg>
 
-                Guardar Asignación
+                Cargando...
             </button>
         </div>
 

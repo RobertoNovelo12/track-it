@@ -953,11 +953,27 @@ document.addEventListener(
                 USUARIO / PERFIL
             ======================================================== --}}
             @php
-                $initialUnreadNotifications = auth()->check()
-                    ? \Illuminate\Support\Facades\DB::table('notificaciones')
-                        ->where('id_usuario', auth()->id())
-                        ->where('leida', false)
-                        ->count()
+                $authenticatedUserId = auth()->id();
+
+                $initialUnreadNotifications = $authenticatedUserId
+                    ? \Illuminate\Support\Facades\Cache::remember(
+                        'notifications.unread.' . $authenticatedUserId,
+                        60,
+                        function () use ($authenticatedUserId): int {
+                            return (int) \Illuminate\Support\Facades\DB::table(
+                                'notificaciones'
+                            )
+                                ->where(
+                                    'id_usuario',
+                                    $authenticatedUserId
+                                )
+                                ->where(
+                                    'leida',
+                                    false
+                                )
+                                ->count();
+                        }
+                    )
                     : 0;
             @endphp
 
@@ -1858,7 +1874,9 @@ document.addEventListener(
     {{-- ============================================================
         PANEL GLOBAL DE NOTIFICACIONES
     ============================================================ --}}
-    <livewire:notifications-panel />
+    <livewire:notifications-panel
+        :initial-unread-count="$initialUnreadNotifications"
+    />
 
     <script>
         (() => {

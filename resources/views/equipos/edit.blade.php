@@ -50,15 +50,16 @@
                 "
             >
 
-                <a
-                    href="{{ route('equipos.index') }}"
-                    class="
-                        hover:text-[var(--theme-primary)]
-                        transition-colors
-                    "
-                >
-                    Equipos Tecnológicos
-                </a>
+            <a
+                href="{{ route('equipos.index') }}"
+                wire:navigate
+                class="
+                    hover:text-[var(--theme-primary)]
+                    transition-colors
+                "
+            >
+                Equipos Tecnológicos
+            </a>
 
                 <span
                     class="
@@ -101,6 +102,7 @@
         {{-- Volver --}}
         <a
             href="{{ route('equipos.index') }}"
+            wire:navigate
             class="
                 shrink-0
 
@@ -157,7 +159,6 @@
     ============================================================ --}}
     <livewire:equipo-edit
         :equipo-id="$equipoId"
-        lazy
     />
 
 </div>

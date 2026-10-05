@@ -1,64 +1,97 @@
 @props([
-    'wireModel',
-    'options',
+    'wireModel' => null,
+    'xModel' => null,
+
+    'options' => [],
+    'xOptions' => null,
+
     'label' => '',
+
     'placeholder' => 'Buscar...',
+    'xPlaceholder' => null,
+
     'disabled' => false,
+    'xDisabled' => null,
+
     'showClear' => true,
     'clearLabel' => 'Todos',
     'clearValue' => '',
+
     'compact' => false,
 ])
 
 @php
-    $optionsJson = collect($options)
-        ->map(fn ($option) => [
-            'value' => (string) $option['value'],
-            'label' => (string) $option['label'],
-        ])
-        ->values()
-        ->all();
+    /*
+    |--------------------------------------------------------------------------
+    | Modo del componente
+    |--------------------------------------------------------------------------
+    |
+    | wire-model=""
+    |     Comportamiento tradicional Livewire.
+    |
+    | x-model=""
+    |     Comportamiento completamente local con Alpine.
+    |
+    */
+
+    $localMode =
+        filled($xModel);
+
+    $optionsJson =
+        collect($options)
+            ->map(fn ($option) => [
+                ...$option,
+                'value' => (string) ($option['value'] ?? ''),
+                'label' => (string) ($option['label'] ?? ''),
+            ])
+            ->values()
+            ->all();
 @endphp
+
 
 <div
     x-data="{
         open: false,
         query: '',
 
-        selected: $wire.entangle('{{ $wireModel }}').live,
+        /*
+        |--------------------------------------------------------------------------
+        | Valor seleccionado
+        |--------------------------------------------------------------------------
+        */
 
-        options: @js($optionsJson),
-
-        disabled: @js((bool) $disabled),
-
-        showClear: @js((bool) $showClear),
-
-        clearLabel: @js((string) $clearLabel),
-
-        clearValue: @js($clearValue),
-
+        selected:
+            @if ($localMode)
+                ''
+            @elseif (filled($wireModel))
+                $wire.entangle('{{ $wireModel }}').live
+            @else
+                ''
+            @endif
+        ,
 
         /*
         |--------------------------------------------------------------------------
-        | Opciones filtradas
+        | Datos
         |--------------------------------------------------------------------------
         */
-        get filtered() {
-            const query =
-                String(this.query ?? '')
-                    .trim()
-                    .toLowerCase();
 
-            if (query === '') {
-                return this.options;
-            }
+        options: @js($optionsJson),
 
-            return this.options.filter(option =>
-                String(option.label ?? '')
-                    .toLowerCase()
-                    .includes(query)
-            );
-        },
+        disabled:
+            @js((bool) $disabled),
+
+        currentPlaceholder:
+            @js((string) $placeholder),
+
+        showClear:
+            @js((bool) $showClear),
+
+        clearLabel:
+            @js((string) $clearLabel),
+
+        clearValue:
+            @js($clearValue),
 
 
         /*
@@ -66,8 +99,11 @@
         | Inicialización
         |--------------------------------------------------------------------------
         */
+
         init() {
-            this.syncSelectedLabel();
+            this.$nextTick(() => {
+                this.syncSelectedLabel();
+            });
 
             this.$watch(
                 'selected',
@@ -82,9 +118,92 @@
 
         /*
         |--------------------------------------------------------------------------
+        | Opciones dinámicas locales
+        |--------------------------------------------------------------------------
+        */
+
+        normalizeOptions(value) {
+            if (!Array.isArray(value)) {
+                return [];
+            }
+
+            return value.map(option => ({
+                ...option,
+
+                value:
+                    String(
+                        option?.value ?? ''
+                    ),
+
+                label:
+                    String(
+                        option?.label ?? ''
+                    ),
+            }));
+        },
+
+        syncOptions(value) {
+            this.options =
+                this.normalizeOptions(value);
+
+            this.$nextTick(() => {
+                this.syncSelectedLabel();
+            });
+        },
+
+        syncDisabled(value) {
+            this.disabled =
+                Boolean(value);
+
+            if (this.disabled) {
+                this.open = false;
+                this.syncSelectedLabel();
+            }
+        },
+
+        syncPlaceholder(value) {
+            this.currentPlaceholder =
+                String(
+                    value ?? ''
+                );
+        },
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Opciones filtradas
+        |--------------------------------------------------------------------------
+        */
+
+        get filtered() {
+            const query =
+                String(
+                    this.query ?? ''
+                )
+                    .trim()
+                    .toLowerCase();
+
+            if (query === '') {
+                return this.options;
+            }
+
+            return this.options.filter(
+                option =>
+                    String(
+                        option.label ?? ''
+                    )
+                        .toLowerCase()
+                        .includes(query)
+            );
+        },
+
+
+        /*
+        |--------------------------------------------------------------------------
         | Obtener opción seleccionada
         |--------------------------------------------------------------------------
         */
+
         selectedOption() {
             if (
                 this.selected === null
@@ -99,16 +218,18 @@
 
             return this.options.find(
                 option =>
-                    String(option.value) === selectedValue
+                    String(option.value)
+                    === selectedValue
             ) ?? null;
         },
 
 
         /*
         |--------------------------------------------------------------------------
-        | Sincronizar texto visible
+        | Texto visible
         |--------------------------------------------------------------------------
         */
+
         syncSelectedLabel() {
             const option =
                 this.selectedOption();
@@ -126,7 +247,8 @@
                 && this.clearValue !== null
                 && this.selected !== null
                 && this.selected !== undefined
-                && String(this.selected) === String(this.clearValue)
+                && String(this.selected)
+                    === String(this.clearValue)
             ) {
                 this.query =
                     this.clearLabel;
@@ -143,6 +265,7 @@
         | Abrir
         |--------------------------------------------------------------------------
         */
+
         openAndFocus() {
             if (this.disabled) {
                 return;
@@ -165,6 +288,7 @@
         | Cerrar
         |--------------------------------------------------------------------------
         */
+
         closeDropdown() {
             if (!this.open) {
                 return;
@@ -178,9 +302,10 @@
 
         /*
         |--------------------------------------------------------------------------
-        | Abrir / cerrar con la flecha
+        | Flecha
         |--------------------------------------------------------------------------
         */
+
         toggleDropdown() {
             if (this.disabled) {
                 return;
@@ -201,6 +326,7 @@
         | Seleccionar
         |--------------------------------------------------------------------------
         */
+
         pick(value, label) {
             if (this.disabled) {
                 return;
@@ -209,21 +335,21 @@
             this.selected =
                 value === ''
                     ? null
-                    : value;
+                    : String(value);
 
             this.query =
-                label;
+                String(label ?? '');
 
-            this.open =
-                false;
+            this.open = false;
         },
 
 
         /*
         |--------------------------------------------------------------------------
-        | Limpiar / valor general
+        | Limpiar
         |--------------------------------------------------------------------------
         */
+
         clear() {
             if (this.disabled) {
                 return;
@@ -233,7 +359,7 @@
                 this.clearValue === ''
                 || this.clearValue === null
                     ? null
-                    : this.clearValue;
+                    : String(this.clearValue);
 
             this.query =
                 this.clearValue === ''
@@ -241,8 +367,7 @@
                     ? ''
                     : this.clearLabel;
 
-            this.open =
-                false;
+            this.open = false;
         },
 
 
@@ -251,26 +376,37 @@
         | Escritura
         |--------------------------------------------------------------------------
         */
+
         handleInput() {
             if (this.disabled) {
                 return;
             }
 
-            this.open =
-                true;
+            this.open = true;
         },
     }"
+
+    @if ($localMode)
+        x-modelable="selected"
+        x-model="{{ $xModel }}"
+    @endif
+
+    @if (filled($xOptions))
+        x-effect="syncOptions({{ $xOptions }})"
+    @endif
+
+    @if (filled($xDisabled))
+        x-effect="syncDisabled({{ $xDisabled }})"
+    @endif
+
+    @if (filled($xPlaceholder))
+        x-effect="syncPlaceholder({{ $xPlaceholder }})"
+    @endif
 
     @click.outside="closeDropdown()"
     @keydown.escape.window="closeDropdown()"
 
     class="relative"
-
-    :class="
-        disabled
-            ? 'opacity-50'
-            : ''
-    "
 >
 
     {{-- ============================================================
@@ -280,9 +416,10 @@
         <label
             class="
                 block
+                mb-1.5
+
                 text-xs
                 text-[var(--theme-text-muted)]
-                mb-1.5
             "
         >
             {{ $label }}
@@ -290,151 +427,146 @@
     @endif
 
 
-    {{-- ============================================================
-        CONTROL
-    ============================================================ --}}
-    <div
-        @click="
-            if (!open) {
+{{-- ============================================================
+    CONTROL
+============================================================ --}}
+<div
+    @click="
+        if (!disabled && !open) {
+            openAndFocus();
+        }
+    "
+
+    class="
+        relative
+        flex
+        items-center
+        w-full
+
+        border
+        border-[var(--theme-border-strong)]
+
+        rounded-md
+
+        bg-[var(--theme-surface)]
+
+        focus-within:ring-1
+        focus-within:ring-[var(--theme-primary)]
+        focus-within:border-[var(--theme-primary)]
+    "
+
+    :class="
+        disabled
+            ? 'cursor-not-allowed'
+            : ''
+    "
+>
+
+    {{-- INPUT VISIBLE --}}
+    <input
+        type="text"
+
+        x-ref="search"
+        x-model="query"
+
+        @focus="
+            if (!disabled && !open) {
                 openAndFocus();
             }
         "
 
-        class="
-            relative
-            flex
-            items-center
-            w-full
+        @input="handleInput()"
 
-            border
-            border-[var(--theme-border-strong)]
+        :disabled="disabled"
+        :placeholder="currentPlaceholder"
 
-            rounded-md
+        autocomplete="off"
 
-            focus-within:ring-1
-            focus-within:ring-[var(--theme-primary)]
-            focus-within:border-[var(--theme-primary)]
-        "
+        @class([
+            'w-full',
+            'min-w-0',
 
-        :class="
-            disabled
-                ? 'bg-[var(--theme-surface-soft)] cursor-not-allowed'
-                : 'bg-[var(--theme-surface)]'
-        "
+            'text-[var(--theme-text)]',
+
+            'border-0',
+            'bg-transparent',
+
+            'pl-3',
+            'pr-10',
+
+            'placeholder:text-[var(--theme-text-muted)]',
+
+            'focus:ring-0',
+
+            'disabled:cursor-not-allowed',
+
+            'text-xs py-2' => $compact,
+            'text-sm py-2.5' => ! $compact,
+        ])
     >
 
-        {{-- INPUT VISIBLE --}}
-        <input
-            type="text"
+    {{-- FLECHA --}}
+    <button
+        type="button"
 
-            x-ref="search"
+        @click.stop="toggleDropdown()"
 
-            x-model="query"
+        :disabled="disabled"
+        :aria-expanded="open ? 'true' : 'false'"
 
-            @focus="
-                if (!disabled && !open) {
-                    openAndFocus();
-                }
-            "
+        aria-label="Abrir o cerrar opciones"
 
-            @input="handleInput()"
+        class="
+            absolute
+            right-0
+            top-0
+            bottom-0
 
-            :disabled="disabled"
+            w-9
 
-            placeholder="{{ $placeholder }}"
+            flex
+            items-center
+            justify-center
 
-            autocomplete="off"
+            text-[var(--theme-text-muted)]
 
-            @class([
-                'w-full',
-                'min-w-0',
+            hover:text-[var(--theme-text)]
 
-                'text-[var(--theme-text)]',
+            disabled:cursor-not-allowed
 
-                'border-0',
-                'bg-transparent',
-
-                'pl-3',
-                'pr-10',
-
-                'placeholder:text-[var(--theme-text-muted)]',
-
-                'focus:ring-0',
-
-                'disabled:cursor-not-allowed',
-
-                'text-xs py-2' => $compact,
-                'text-sm py-2.5' => ! $compact,
-            ])
-        >
-
-
-        {{-- ========================================================
-            FLECHA
-        ======================================================== --}}
-        <button
-            type="button"
-
-            @click.stop="toggleDropdown()"
-
-            :disabled="disabled"
-
-            :aria-expanded="open ? 'true' : 'false'"
-
-            aria-label="Abrir o cerrar opciones"
-
+            transition-colors
+        "
+    >
+        <svg
             class="
-                absolute
+                w-4
+                h-4
 
-                right-0
-                top-0
-                bottom-0
+                pointer-events-none
 
-                w-9
-
-                flex
-                items-center
-                justify-center
-
-                text-[var(--theme-text-muted)]
-
-                hover:text-[var(--theme-text)]
-
-                disabled:cursor-not-allowed
-
-                transition-colors
+                transition-transform
+                duration-150
             "
+
+            :class="
+                open
+                    ? 'rotate-180'
+                    : ''
+            "
+
+            viewBox="0 0 24 24"
+
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+
+            aria-hidden="true"
         >
-            <svg
-                class="
-                    w-4
-                    h-4
+            <path d="M6 9l6 6 6-6"/>
+        </svg>
+    </button>
 
-                    pointer-events-none
-
-                    transition-transform
-                    duration-150
-                "
-
-                :class="
-                    open
-                        ? 'rotate-180'
-                        : ''
-                "
-
-                viewBox="0 0 24 24"
-
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.5"
-
-                aria-hidden="true"
-            >
-                <path d="M6 9l6 6 6-6"/>
-            </svg>
-        </button>
-
-    </div>
+</div>
 
 
     {{-- ============================================================
@@ -442,7 +574,6 @@
     ============================================================ --}}
     <div
         x-show="open && !disabled"
-
         x-cloak
 
         class="
@@ -478,9 +609,7 @@
 
                 @class([
                     'text-[var(--theme-text-muted)]',
-
                     'hover:bg-[var(--theme-primary-soft-subtle)]',
-
                     'cursor-pointer',
 
                     'px-3 py-2 text-xs' => $compact,
@@ -497,7 +626,6 @@
         ======================================================== --}}
         <template
             x-for="option in filtered"
-
             :key="option.value"
         >
             <div
@@ -512,9 +640,7 @@
 
                 @class([
                     'text-[var(--theme-text)]',
-
                     'hover:bg-[var(--theme-primary-soft-subtle)]',
-
                     'cursor-pointer',
 
                     'px-3 py-2 text-xs' => $compact,

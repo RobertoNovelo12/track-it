@@ -116,6 +116,6 @@
 
 
 {{-- Formulario Livewire --}}
-<livewire:equipo-create />
+<livewire:equipo-create lazy />
 
 @endsection

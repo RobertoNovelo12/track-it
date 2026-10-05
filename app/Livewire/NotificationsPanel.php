@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -29,15 +30,32 @@ class NotificationsPanel extends Component
     |--------------------------------------------------------------------------
     */
 
-    public function mount(): void
-    {
+    public function mount(
+        ?int $initialUnreadCount = null
+    ): void {
         /*
-         * Al cargar la página solamente necesitamos
-         * conocer cuántas notificaciones pendientes existen.
-         *
-         * El listado completo se cargará únicamente
-         * cuando el usuario abra el panel.
-         */
+        * Si el layout ya calculó el número de
+        * notificaciones pendientes, reutilizamos ese
+        * valor y evitamos ejecutar el mismo COUNT()
+        * por segunda vez durante la carga inicial.
+        */
+        if ($initialUnreadCount !== null) {
+            $this->unreadCount = max(
+                0,
+                $initialUnreadCount
+            );
+
+            return;
+        }
+
+
+        /*
+        * Fallback:
+        *
+        * Si el componente se utiliza en alguna otra
+        * vista sin proporcionar un contador inicial,
+        * conserva exactamente el comportamiento anterior.
+        */
         $this->refreshUnreadCount();
     }
 
@@ -866,6 +884,26 @@ class NotificationsPanel extends Component
 
     private function dispatchUnreadCount(): void
     {
+        $userId = auth()->id();
+
+
+        /*
+        * Mantener sincronizado el contador utilizado
+        * por el layout durante wire:navigate.
+        */
+        if ($userId) {
+            Cache::put(
+                'notifications.unread.' . $userId,
+                $this->unreadCount,
+                60
+            );
+        }
+
+
+        /*
+        * Actualizar inmediatamente la campana
+        * de la interfaz actual.
+        */
         $this->dispatch(
             'notifications-unread-updated',
             count: $this->unreadCount

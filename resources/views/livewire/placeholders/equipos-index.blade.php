@@ -1148,126 +1148,267 @@
 
         </div>
 
+    {{-- ========================================================
+        RESULTADOS
+    ======================================================== --}}
+    @php
+        $placeholderPerPage = (int) request(
+            'per_page',
+            10
+        );
 
-        {{-- ========================================================
-            RESULTADOS
-        ======================================================== --}}
+        if (
+            ! in_array(
+                $placeholderPerPage,
+                [10, 25, 50, 100],
+                true
+            )
+        ) {
+            $placeholderPerPage = 10;
+        }
+
+        $placeholderSort =
+            request('sort', 'asc') === 'desc'
+                ? 'desc'
+                : 'asc';
+    @endphp
+
+
+    <div
+        class="
+            bg-[var(--theme-surface)]
+
+            border
+            border-[var(--theme-border)]
+
+            rounded-lg
+
+            overflow-hidden
+        "
+    >
+
+        {{-- ====================================================
+            BARRA SUPERIOR
+        ==================================================== --}}
         <div
             class="
-                animate-pulse
+                flex
+                items-center
+                justify-between
 
-                bg-[var(--theme-surface)]
+                px-5
+                py-4
 
-                border
+                border-b
                 border-[var(--theme-border)]
-
-                rounded-lg
-
-                overflow-hidden
             "
         >
 
-            {{-- ====================================================
-                BARRA SUPERIOR
-            ==================================================== --}}
-            <div
-                class="
-                    flex
-                    items-center
-                    justify-between
+            {{-- =================================================
+                RESULTADOS
+            ================================================= --}}
+            <div class="flex items-center gap-2">
 
-                    px-5
-                    py-4
+                <span
+                    class="
+                        text-sm
+                        text-[var(--theme-text)]
+                    "
+                >
+                    Resultados:
+                </span>
 
-                    border-b
-                    border-[var(--theme-border)]
-                "
-            >
 
-                {{-- Resultados --}}
+                {{-- Único dato desconocido --}}
+                <div
+                    class="
+                        h-4
+                        w-8
+
+                        rounded
+
+                        bg-[var(--theme-surface-soft)]
+
+                        animate-pulse
+                    "
+                ></div>
+
+
+                <span
+                    class="
+                        text-sm
+                        text-[var(--theme-text)]
+                    "
+                >
+                    Equipos encontrados
+                </span>
+
+            </div>
+
+
+            {{-- =================================================
+                CONTROLES
+            ================================================= --}}
+            <div class="flex items-center gap-4">
+
+                {{-- =============================================
+                    CANTIDAD POR PÁGINA
+                ============================================== --}}
                 <div class="flex items-center gap-2">
-                    <span
-                        class="
-                            text-sm
-                            text-[var(--theme-text)]
-                        "
-                    >
-                        Resultados:
-                    </span>
-
-                    <div
-                        class="
-                            h-4
-                            w-8
-
-                            rounded
-
-                            bg-[var(--theme-surface-soft)]
-                        "
-                    ></div>
 
                     <span
                         class="
-                            text-sm
-                            text-[var(--theme-text)]
+                            text-xs
+                            text-[var(--theme-text-muted)]
                         "
                     >
-                        Equipos encontrados
+                        Mostrar
                     </span>
-                </div>
 
 
-                {{-- Controles --}}
-                <div class="flex items-center gap-4">
+                    <select
+                        disabled
 
-                    {{-- Por página --}}
-                    <div class="flex items-center gap-2">
-                        <span
-                            class="
-                                text-xs
-                                text-[var(--theme-text-muted)]
-                            "
-                        >
-                            Mostrar
-                        </span>
-
-                        <div
-                            class="
-                                h-7
-                                w-12
-
-                                rounded-md
-
-                                bg-[var(--theme-surface-soft)]
-                            "
-                        ></div>
-
-                        <span
-                            class="
-                                text-xs
-                                text-[var(--theme-text-muted)]
-                            "
-                        >
-                            Por página
-                        </span>
-                    </div>
-
-
-                    {{-- Orden --}}
-                    <div
                         class="
-                            h-7
-                            w-16
+                            text-xs
+
+                            border
+                            border-[var(--theme-border-strong)]
 
                             rounded-md
 
-                            bg-[var(--theme-surface-soft)]
+                            px-2
+                            py-1.5
+
+                            bg-[var(--theme-surface)]
+
+                            text-[var(--theme-text)]
+
+                            disabled:opacity-100
+                            disabled:cursor-default
                         "
-                    ></div>
+                    >
+                        <option>
+                            {{ $placeholderPerPage }}
+                        </option>
+                    </select>
+
+
+                    <span
+                        class="
+                            text-xs
+                            text-[var(--theme-text-muted)]
+                        "
+                    >
+                        Por página
+                    </span>
 
                 </div>
 
+
+                {{-- =============================================
+                    DIRECCIÓN DEL ORDENAMIENTO
+                ============================================== --}}
+                <select
+                    disabled
+
+                    class="
+                        text-xs
+
+                        border
+                        border-[var(--theme-border-strong)]
+
+                        rounded-md
+
+                        px-2
+                        py-1.5
+
+                        bg-[var(--theme-surface)]
+
+                        text-[var(--theme-text)]
+
+                        uppercase
+
+                        disabled:opacity-100
+                        disabled:cursor-default
+                    "
+                >
+                    <option>
+                        {{ strtoupper($placeholderSort) }}
+                    </option>
+                </select>
+
+
+                {{-- =============================================
+                    ACTUALIZAR TABLA
+                ============================================== --}}
+                <button
+                    type="button"
+                    disabled
+
+                    title="Actualizar tabla"
+                    aria-label="Actualizar tabla"
+
+                    class="
+                        w-8
+                        h-8
+
+                        shrink-0
+
+                        flex
+                        items-center
+                        justify-center
+
+                        rounded-md
+
+                        border
+                        border-[var(--theme-border-strong)]
+
+                        bg-[var(--theme-surface)]
+
+                        text-[var(--theme-text-muted)]
+
+                        disabled:opacity-100
+                        disabled:cursor-default
+                    "
+                >
+                    <svg
+                        class="
+                            w-4
+                            h-4
+                        "
+
+                        viewBox="0 0 24 24"
+
+                        fill="none"
+                        stroke="currentColor"
+
+                        stroke-width="1.7"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+
+                        aria-hidden="true"
+                    >
+                        <path
+                            d="
+                                M20 11
+                                a8 8 0 1 0-2.3 5.7
+                            "
+                        />
+
+                        <path
+                            d="
+                                M20 4
+                                v7
+                                h-7
+                            "
+                        />
+                    </svg>
+                </button>
+
             </div>
+
+        </div>
 
 
             {{-- ====================================================
