@@ -1,134 +1,346 @@
 @extends('layouts.app')
 
-@section('title', 'Vista General')
+@section('title', 'Vista general')
 
 @section('content')
 
-<div>
+<div class="space-y-4">
 
     {{-- ============================================================
         ENCABEZADO
     ============================================================ --}}
-    <div class="mb-8">
 
-        <h1
-            class="
-                text-xl
-                font-semibold
-                text-[var(--theme-text-strong)]
-            "
-        >
-            Módulos del Sistema
-        </h1>
-
-        <p
-            class="
-                mt-1
-                text-xs
-                text-[var(--theme-text-muted)]
-            "
-        >
-            Pantalla Principal
-
-            <span class="mx-1">
-                &gt;
-            </span>
-        </p>
-
-    </div>
-
-
-    {{-- ============================================================
-        INDICADORES
-    ============================================================ --}}
-    <livewire:dashboard-stats lazy />
-
-
-    {{-- ============================================================
-        TÍTULO DE MÓDULOS
-    ============================================================ --}}
-    <h2
-        class="
-            mb-6
-
-            text-xl
-            font-semibold
-
-            text-[var(--theme-text-strong)]
-        "
-    >
-        Módulos del Sistema
-    </h2>
-
-
-    {{-- ============================================================
-        TARJETAS DE MÓDULOS
-    ============================================================ --}}
     <div
         class="
-            grid
-            grid-cols-1
-            sm:grid-cols-2
-            lg:grid-cols-3
+            flex
+            flex-col
+            gap-4
 
-            gap-5
+            sm:flex-row
+            sm:items-center
+            sm:justify-between
         "
     >
 
-        <x-dashboard.module-card
-            title="Gestión de Activos"
-            description="Inventario general, registro de marcas, modelos, series y garantías de equipos."
-            action="Acceder al inventario"
-            route="equipos.index"
-            icon="laptop"
-        />
+        {{-- ========================================================
+            TÍTULO
+        ======================================================== --}}
+
+        <div class="min-w-0">
+
+            <h1
+                class="
+                    text-2xl
+                    font-semibold
+                    leading-tight
+
+                    text-[var(--theme-text-strong)]
+                "
+            >
+                Vista general
+            </h1>
 
 
-        <x-dashboard.module-card
-            title="Asignaciones y Movimientos"
-            description="Control de préstamos, entregas a personal, cambio de ubicación y bajas definitivas."
-            action="Gestionar entregas"
-            route="asignaciones.index"
-            icon="swap"
-        />
+            <p
+                class="
+                    mt-1
+
+                    text-xs
+
+                    text-[var(--theme-text-muted)]
+                "
+            >
+                Inicio
+            </p>
+
+        </div>
 
 
-        <x-dashboard.module-card
-            title="Mantenimiento Técnico"
-            description="Programación preventiva, registro de reparaciones correctivas e historial de fallas."
-            action="Ver intervenciones"
-            route="mantenimientos.index"
-            icon="tools"
-        />
+
+        {{-- ========================================================
+            ACCIONES RÁPIDAS
+        ======================================================== --}}
+
+        <div
+            class="
+                flex
+                flex-wrap
+                items-center
+                gap-2
+            "
+        >
+
+            {{-- EQUIPOS --}}
+
+            @if (\Illuminate\Support\Facades\Route::has('equipos.index'))
+
+                <a
+                    href="{{ route('equipos.index') }}"
+                    wire:navigate
+
+                    class="
+                        inline-flex
+                        h-9
+                        items-center
+                        justify-center
+                        gap-2
+
+                        rounded-lg
+
+                        border
+                        border-[var(--theme-border)]
+
+                        bg-[var(--theme-surface)]
+
+                        px-3
+
+                        text-xs
+                        font-medium
+
+                        text-[var(--theme-text)]
+
+                        hover:bg-[var(--theme-surface-soft)]
+                    "
+                >
+
+                    <svg
+                        class="
+                            h-4
+                            w-4
+                        "
+
+                        viewBox="0 0 24 24"
+
+                        fill="none"
+
+                        stroke="currentColor"
+
+                        stroke-width="1.5"
+                    >
+
+                        <rect
+                            x="3"
+                            y="4"
+                            width="18"
+                            height="12"
+                            rx="2"
+                        />
 
 
-        <x-dashboard.module-card
-            title="Reportes"
-            description="Generación de reportes ejecutivos en PDF/Excel e indicadores operativos."
-            action="Generar reportes"
-            route="reportes.index"
-            icon="report"
-        />
+                        <path
+                            d="
+                                M8 20
+                                h8
+                            "
+                        />
 
 
-        <x-dashboard.module-card
-            title="Usuarios y Roles"
-            description="Administración de usuarios internos, roles, permisos y bitácora de auditoría."
-            action="Administrar accesos"
-            route="usuarios.index"
-            icon="users"
-        />
+                        <path
+                            d="
+                                M12 16
+                                v4
+                            "
+                        />
+
+                    </svg>
 
 
-        <x-dashboard.module-card
-            title="Catálogos Base"
-            description="Parametrización de departamentos, áreas del hotel, estados y proveedores."
-            action="Configurar parámetros"
-            route="catalogos.index"
-            icon="list"
-        />
+                    <span>
+                        Equipos
+                    </span>
+
+                </a>
+
+            @endif
+
+
+
+            {{-- ASIGNAR --}}
+
+            @if (\Illuminate\Support\Facades\Route::has('asignaciones.index'))
+
+                <a
+                    href="{{ route('asignaciones.index') }}"
+                    wire:navigate
+
+                    class="
+                        inline-flex
+                        h-9
+                        items-center
+                        justify-center
+                        gap-2
+
+                        rounded-lg
+
+                        border
+                        border-[var(--theme-border)]
+
+                        bg-[var(--theme-surface)]
+
+                        px-3
+
+                        text-xs
+                        font-medium
+
+                        text-[var(--theme-text)]
+
+                        hover:bg-[var(--theme-surface-soft)]
+                    "
+                >
+
+                    <svg
+                        class="
+                            h-4
+                            w-4
+                        "
+
+                        viewBox="0 0 24 24"
+
+                        fill="none"
+
+                        stroke="currentColor"
+
+                        stroke-width="1.5"
+                    >
+
+                        <path
+                            d="
+                                M7 7
+                                h11
+                            "
+                        />
+
+
+                        <path
+                            d="
+                                M15 4
+                                l3 3
+                                -3 3
+                            "
+                        />
+
+
+                        <path
+                            d="
+                                M17 17
+                                H6
+                            "
+                        />
+
+
+                        <path
+                            d="
+                                M9 14
+                                l-3 3
+                                3 3
+                            "
+                        />
+
+                    </svg>
+
+
+                    <span>
+                        Asignar
+                    </span>
+
+                </a>
+
+            @endif
+
+
+
+            {{-- ACTUALIZAR DASHBOARD --}}
+
+            <button
+                type="button"
+
+                onclick="
+                    if (window.Livewire) {
+                        Livewire.dispatch(
+                            'dashboard-refresh-requested'
+                        );
+                    }
+                "
+
+                class="
+                    inline-flex
+                    h-9
+                    items-center
+                    justify-center
+                    gap-2
+
+                    rounded-lg
+
+                    border
+                    border-[var(--theme-border)]
+
+                    bg-[var(--theme-surface)]
+
+                    px-3
+
+                    text-xs
+                    font-medium
+
+                    text-[var(--theme-text)]
+
+                    hover:bg-[var(--theme-surface-soft)]
+                "
+            >
+
+                <svg
+                    class="
+                        h-4
+                        w-4
+                    "
+
+                    viewBox="0 0 24 24"
+
+                    fill="none"
+
+                    stroke="currentColor"
+
+                    stroke-width="1.5"
+                >
+
+                    <path
+                        d="
+                            M20 11
+
+                            a8 8
+                            0 1 0
+                            2 5.3
+                        "
+                    />
+
+
+                    <path
+                        d="
+                            M20 4
+                            v7
+                            h-7
+                        "
+                    />
+
+                </svg>
+
+
+                <span>
+                    Actualizar
+                </span>
+
+            </button>
+
+        </div>
 
     </div>
+
+
+
+    {{-- ============================================================
+        DASHBOARD OPERATIVO
+    ============================================================ --}}
+
+    <livewire:dashboard-overview />
 
 </div>
 
