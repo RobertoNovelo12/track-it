@@ -223,51 +223,59 @@
         </button>
 
 
-        {{-- Dar de baja: solo visual --}}
-        <button
-            type="button"
-            class="
-                w-full
-                sm:w-auto
+        {{-- Dar de baja --}}
+<a
+    href="{{ route('equipos.baja', $equipoId) }}"
+    class="
+        w-full
+        sm:w-auto
 
-                h-10
+        h-10
 
-                flex
-                items-center
-                justify-center
-                gap-2
+        flex
+        items-center
+        justify-center
+        gap-2
 
-                border
-                border-[var(--theme-danger)]
+        border
+        border-[var(--theme-danger)]
 
-                rounded-lg
+        rounded-lg
 
-                bg-[var(--theme-danger-soft)]
+        bg-[var(--theme-danger-soft)]
 
-                px-4
+        px-4
 
-                text-sm
-                font-medium
-                text-[var(--theme-danger)]
+        text-sm
+        font-medium
+        text-[var(--theme-danger)]
 
-                cursor-default
-            "
-            title="Función no habilitada por el momento"
-        >
-            <svg
-                class="w-4 h-4"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.7"
-            >
-                <rect x="5" y="5" width="14" height="14" rx="1.5"/>
-                <path d="M9 9l6 6"/>
-                <path d="M15 9l-6 6"/>
-            </svg>
+        hover:opacity-90
 
-            Dar de baja
-        </button>
+        transition-opacity
+    "
+>
+    <svg
+        class="w-4 h-4"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.7"
+    >
+        <rect
+            x="5"
+            y="5"
+            width="14"
+            height="14"
+            rx="1.5"
+        />
+
+        <path d="M9 9l6 6"/>
+        <path d="M15 9l-6 6"/>
+    </svg>
+
+    Dar de baja
+</a>
 
     </div>
 

@@ -112,6 +112,44 @@ Route::middleware([
         ->name('equipos.edit');
 
     /*
+|--------------------------------------------------------------------------
+| Dar de baja equipo
+|--------------------------------------------------------------------------
+*/
+
+    Route::get(
+        '/equipos/{equipo}/baja',
+        function (int $equipo) {
+
+            return view('equipos.baja', [
+                'equipoId' => $equipo,
+            ]);
+
+        }
+    )
+        ->whereNumber('equipo')
+        ->name('equipos.baja');
+
+/*
+|--------------------------------------------------------------------------
+| Dar de baja equipo
+|--------------------------------------------------------------------------
+*/
+
+    Route::get(
+        '/equipos/{equipo}/baja',
+        function (int $equipo) {
+
+            return view('equipos.baja', [
+                'equipoId' => $equipo,
+            ]);
+
+        }
+    )
+        ->whereNumber('equipo')
+        ->name('equipos.baja');
+
+    /*
     |--------------------------------------------------------------------------
     | Asignaciones y movimientos
     |--------------------------------------------------------------------------
@@ -121,6 +159,44 @@ Route::middleware([
         '/asignaciones',
         fn() => view('asignaciones.index')
     )->name('asignaciones.index');
+
+    /**
+     * |--------------------------------------------------------------------------
+     * | Mantenimientos
+     * |--------------------------------------------------------------------------
+     */
+
+    Route::get(
+        '/mantenimientos',
+        fn() => view('mantenimientos.index')
+    )->name('mantenimientos.index');
+
+    Route::get(
+        '/mantenimientos/crear',
+        fn() => view('mantenimientos.create')
+    )->name('mantenimientos.create');
+
+    Route::get(
+        '/mantenimientos/{mantenimiento}',
+        function (int $mantenimiento) {
+            return view('mantenimientos.show', [
+                'mantenimientoId' => $mantenimiento,
+            ]);
+        }
+    )
+        ->whereNumber('mantenimiento')
+        ->name('mantenimientos.show');
+
+    Route::get(
+        '/mantenimientos/{mantenimiento}/editar',
+        function (int $mantenimiento) {
+            return view('mantenimientos.edit', [
+                'mantenimientoId' => $mantenimiento,
+            ]);
+        }
+    )
+        ->whereNumber('mantenimiento')
+        ->name('mantenimientos.edit');
 
     /*
 |--------------------------------------------------------------------------
@@ -134,18 +210,18 @@ Route::middleware([
     )->name('reportes.index');
 
     Route::get(
-    '/reportes/{reporte}',
-    [ReporteController::class, 'show']
-)
-    ->whereNumber('reporte')
-    ->name('reportes.show');
+        '/reportes/{reporte}',
+        [ReporteController::class, 'show']
+    )
+        ->whereNumber('reporte')
+        ->name('reportes.show');
 
-Route::get(
-    '/reportes/{reporte}/descargar',
-    [ReporteController::class, 'download']
-)
-    ->whereNumber('reporte')
-    ->name('reportes.download');
+    Route::get(
+        '/reportes/{reporte}/descargar',
+        [ReporteController::class, 'download']
+    )
+        ->whereNumber('reporte')
+        ->name('reportes.download');
 
     /*
     |--------------------------------------------------------------------------

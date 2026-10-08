@@ -14,7 +14,6 @@
             href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
             rel="stylesheet"
         >
-
         <script>
         (() => {
             const storageKey = 'trackit_theme';
@@ -38,7 +37,6 @@
                 return 'system';
             }
 
-
             function resolveTheme(preference) {
                 if (preference === 'system') {
                     return window.matchMedia(
@@ -51,7 +49,6 @@
                 return preference;
             }
 
-
             function applyTheme(preference = getThemePreference()) {
                 const resolved = resolveTheme(preference);
                 const html = document.documentElement;
@@ -62,16 +59,8 @@
                 );
 
                 html.dataset.themePreference = preference;
-
                 html.style.colorScheme = resolved;
             }
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | Disponible para el botón que agregaremos después
-            |--------------------------------------------------------------------------
-            */
 
             window.setTrackItTheme = function (preference) {
                 if (
@@ -103,41 +92,100 @@
                 );
             };
 
-
             window.getTrackItTheme = getThemePreference;
-
 
             /*
             |--------------------------------------------------------------------------
-            | Aplicar ANTES de pintar la página
+            | Aplicar el tema antes de pintar la página
             |--------------------------------------------------------------------------
             */
-
             applyTheme();
 
+            /*
+            |--------------------------------------------------------------------------
+            | Reaplicar el tema después de navegación Livewire
+            |--------------------------------------------------------------------------
+            */
+            document.addEventListener(
+                'livewire:navigated',
+                () => {
+                    const preference = getThemePreference();
+
+                    applyTheme(preference);
+
+                    window.dispatchEvent(
+                        new CustomEvent(
+                            'trackit-theme-changed',
+                            {
+                                detail: {
+                                    preference: preference
+                                }
+                            }
+                        )
+                    );
+                }
+            );
 
             /*
             |--------------------------------------------------------------------------
             | Si está en "Sistema", reaccionar al cambio del SO
             |--------------------------------------------------------------------------
             */
-
             const systemTheme = window.matchMedia(
                 '(prefers-color-scheme: dark)'
             );
 
-            systemTheme.addEventListener(
-                'change',
-                () => {
-                    if (
-                        getThemePreference() === 'system'
-                    ) {
-                        applyTheme('system');
+            const handleSystemThemeChange = () => {
+                if (
+                    getThemePreference() === 'system'
+                ) {
+                    applyTheme('system');
+
+                    window.dispatchEvent(
+                        new CustomEvent(
+                            'trackit-theme-changed',
+                            {
+                                detail: {
+                                    preference: 'system'
+                                }
+                            }
+                        )
+                    );
+                }
+            };
+
+            if (
+                typeof systemTheme.addEventListener === 'function'
+            ) {
+                systemTheme.addEventListener(
+                    'change',
+                    handleSystemThemeChange
+                );
+            } else if (
+                typeof systemTheme.addListener === 'function'
+            ) {
+                systemTheme.addListener(
+                    handleSystemThemeChange
+                );
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Sincronizar el tema entre pestañas
+            |--------------------------------------------------------------------------
+            */
+            window.addEventListener(
+                'storage',
+                (event) => {
+                    if (event.key === storageKey) {
+                        applyTheme(
+                            getThemePreference()
+                        );
                     }
                 }
             );
         })();
-    </script>
+        </script>
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
 
@@ -862,22 +910,72 @@
                     MENÚ DE PERFIL
                 ==================================================== --}}
                     <div
-                        x-data="{
-                            open: false,
-                            theme: window.getTrackItTheme
-                                ? window.getTrackItTheme()
-                                : 'system'
-                        }"
+    x-data="{
+        open: false,
 
-                        @trackit-theme-changed.window="
-                            theme = $event.detail.preference
-                        "
+        theme: (() => {
+            try {
+                return localStorage.getItem('trackit_theme') || 'system';
+            } catch (error) {
+                return 'system';
+            }
+        })(),
 
-                        @click.outside="open = false"
-                        @keydown.escape.window="open = false"
+        setTheme(preference) {
+            this.theme = preference;
 
-                        class="relative"
-                    >
+            try {
+                localStorage.setItem(
+                    'trackit_theme',
+                    preference
+                );
+            } catch (error) {
+                //
+            }
+
+            let resolved = preference;
+
+            if (preference === 'system') {
+                resolved = window.matchMedia(
+                    '(prefers-color-scheme: dark)'
+                ).matches
+                    ? 'dark'
+                    : 'light';
+            }
+
+            document.documentElement.classList.toggle(
+                'dark',
+                resolved === 'dark'
+            );
+
+            document.documentElement.dataset.themePreference =
+                preference;
+
+            document.documentElement.style.colorScheme =
+                resolved;
+
+            window.dispatchEvent(
+                new CustomEvent(
+                    'trackit-theme-changed',
+                    {
+                        detail: {
+                            preference: preference
+                        }
+                    }
+                )
+            );
+        }
+    }"
+
+    @trackit-theme-changed.window="
+        theme = $event.detail.preference
+    "
+
+    @click.outside="open = false"
+    @keydown.escape.window="open = false"
+
+    class="relative"
+>
 
                     {{-- =================================================
                         CÁPSULA
