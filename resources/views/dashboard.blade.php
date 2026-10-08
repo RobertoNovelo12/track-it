@@ -76,7 +76,7 @@
 
                 <a
                     href="{{ route('equipos.index') }}"
-                    wire:navigate
+                    wire:navigate.hover
 
                     class="
                         inline-flex
@@ -161,7 +161,7 @@
 
                 <a
                     href="{{ route('asignaciones.index') }}"
-                    wire:navigate
+                    wire:navigate.hover
 
                     class="
                         inline-flex

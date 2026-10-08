@@ -1218,7 +1218,7 @@
 
             <a
                 href="{{ route('equipos.index') }}"
-                wire:navigate
+                wire:navigate.hover
                 class="
                     w-full
                     sm:w-auto

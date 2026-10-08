@@ -689,7 +689,7 @@
             >
                 <a
                     href="{{ route('dashboard') }}"
-                    wire:navigate
+                    wire:navigate.hover
                     class="
                         hover:text-[var(--theme-primary)]
                         transition-colors
@@ -710,7 +710,7 @@
 
                 <a
                     href="{{ route('asignaciones.index') }}"
-                    wire:navigate
+                    wire:navigate.hover
                     class="
                         hover:text-[var(--theme-primary)]
                         transition-colors
@@ -788,7 +788,7 @@
                         {{-- ASIGNACIÓN --}}
                         <a
                             href="{{ route('asignaciones.create') }}"
-                            wire:navigate
+                            wire:navigate.hover
                             class="
                                 h-10
                                 flex items-center justify-center gap-2
@@ -1544,7 +1544,7 @@
             >
                 <a
                     href="{{ route('asignaciones.index') }}"
-                    wire:navigate
+                    wire:navigate.hover
                     class="
                         w-full sm:w-auto
                         h-11 px-5

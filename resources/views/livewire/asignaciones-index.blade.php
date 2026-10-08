@@ -252,7 +252,7 @@
             {{-- ASIGNAR --}}
             <a
                 href="{{ route('asignaciones.create') }}"
-                wire:navigate
+                wire:navigate.hover
                 class="
                     h-9
                     px-4
@@ -292,7 +292,7 @@
             {{-- REASIGNAR --}}
             <a
                 href="{{ route('asignaciones.reassign') }}"
-                wire:navigate
+                wire:navigate.hover
                 class="
                     h-9
                     px-4
@@ -339,7 +339,7 @@
             {{-- HISTORIAL --}}
             <a
                 href="{{ route('asignaciones.history') }}"
-                wire:navigate
+                wire:navigate.hover
                 class="
                     h-9
                     px-4

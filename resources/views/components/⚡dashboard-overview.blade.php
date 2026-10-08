@@ -1,13 +1,21 @@
 <?php
 
+use App\Services\SystemCacheService;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\On;
 use Livewire\Component;
 
 new class extends Component
 {
+
+
+    private const CACHE_MODULE =
+        'dashboard';
+
+
+    private const CACHE_TTL_HOURS =
+        12;
     /*
     |--------------------------------------------------------------------------
     | KPIs
@@ -63,6 +71,19 @@ new class extends Component
 
     public array $actividadReciente = [];
 
+        /*
+        |--------------------------------------------------------------------------
+        | CACHE DEL SISTEMA
+        |--------------------------------------------------------------------------
+        */
+
+        private function systemCache(): SystemCacheService
+        {
+            return app(
+                SystemCacheService::class
+            );
+        }
+
 
     /*
     |--------------------------------------------------------------------------
@@ -85,22 +106,12 @@ new class extends Component
     #[On('dashboard-refresh-requested')]
     public function refreshDashboard(): void
     {
-        Cache::forget(
-            $this->cacheKey()
-        );
+        $this->systemCache()
+            ->refreshModule(
+                self::CACHE_MODULE
+            );
 
         $this->loadDashboard();
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | CACHE
-    |--------------------------------------------------------------------------
-    */
-
-    protected function cacheKey(): string
-    {
-        return 'dashboard.overview.v3';
     }
 
 
@@ -112,11 +123,18 @@ new class extends Component
 
     protected function loadDashboard(): void
     {
-        $data = Cache::remember(
-            $this->cacheKey(),
-            now()->addMinutes(2),
-            fn () => $this->buildDashboardData()
-        );
+    $data =
+        $this->systemCache()
+            ->rememberSimple(
+                self::CACHE_MODULE,
+
+                'overview',
+
+                fn () =>
+                    $this->buildDashboardData(),
+
+                self::CACHE_TTL_HOURS
+            );
 
 
         $this->totalEquipos =

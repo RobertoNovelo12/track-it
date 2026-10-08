@@ -52,7 +52,7 @@
 
             <a
                 href="{{ route('equipos.index') }}"
-                wire:navigate
+                wire:navigate.hover
                 class="
                     hover:text-[var(--theme-primary)]
                     transition-colors
@@ -102,7 +102,7 @@
         {{-- Volver --}}
         <a
             href="{{ route('equipos.index') }}"
-            wire:navigate
+            wire:navigate.hover
             class="
                 shrink-0
 

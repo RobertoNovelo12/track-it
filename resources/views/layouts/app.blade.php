@@ -144,7 +144,7 @@ document.addEventListener(
     |--------------------------------------------------------------------------
     */
     document.addEventListener(
-        'livewire:navigated',
+        'livewire:navigate.hoverd',
         () => {
             const preference =
                 getThemePreference();
@@ -735,7 +735,7 @@ document.addEventListener(
                             {{-- Mi perfil --}}
                             <a
                                 href="{{ route('ajustes.index', ['section' => 'cuenta']) }}"
-                                wire:navigate
+                                wire:navigate.hover
                                 class="
                                     w-full
 
@@ -1065,7 +1065,7 @@ document.addEventListener(
                             {{-- Seguridad --}}
                             <a
                                 href="{{ route('ajustes.index', ['section' => 'seguridad']) }}"
-                                wire:navigate
+                                wire:navigate.hover
                                 class="
                                     w-full
 

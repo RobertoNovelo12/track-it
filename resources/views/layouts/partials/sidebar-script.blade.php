@@ -1376,7 +1376,7 @@
             | INICIAR RESIZE
             |--------------------------------------------------------------------------
             |
-            | Delegación para que funcione también después de wire:navigate.
+            | Delegación para que funcione también después de wire:navigate.hover.
             |
             */
 
@@ -1553,7 +1553,7 @@
             */
 
             document.addEventListener(
-                'livewire:navigated',
+                'livewire:navigate.hoverd',
                 () => {
 
                     syncSidebarState();

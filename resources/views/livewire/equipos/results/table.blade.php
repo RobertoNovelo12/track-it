@@ -1432,19 +1432,21 @@
                                 {{-- =====================================
                                     VER DETALLE
                                 ====================================== --}}
-                                <a
-                                    href="{{ $detailUrl }}"
+                                    <a
+                                        href="{{ $detailUrl }}"
 
-                                    class="
-                                        shrink-0
+                                        wire:navigate.hover
 
-                                        text-[var(--theme-primary)]
+                                        class="
+                                            shrink-0
 
-                                        hover:text-[var(--theme-primary-hover)]
-                                    "
+                                            text-[var(--theme-primary)]
 
-                                    title="Ver detalle"
-                                >
+                                            hover:text-[var(--theme-primary-hover)]
+                                        "
+
+                                        title="Ver detalle"
+                                    >
 
                                     <svg
                                         class="w-4 h-4"
@@ -1547,7 +1549,7 @@
                                     {{-- EDITAR --}}
                                     <a
                                         href="{{ $editUrl }}"
-                                        wire:navigate
+                                        wire:navigate.hover
 
                                         class="
                                             block
@@ -1867,7 +1869,7 @@
             ==================================================== --}}
             <a
                 :href="editUrl"
-                wire:navigate
+                wire:navigate.hover
 
                 @click="
                     if (editUrl === '#') {
@@ -1949,6 +1951,8 @@
             ==================================================== --}}
             <a
                 :href="detailUrl"
+
+                wire:navigate.hover
 
                 @click="
                     if (detailUrl === '#') {

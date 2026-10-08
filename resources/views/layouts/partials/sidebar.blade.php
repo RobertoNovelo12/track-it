@@ -140,7 +140,7 @@
 
                 href="{{ route('dashboard') }}"
 
-                wire:navigate
+                wire:navigate.hover
 
                 class="
                     flex
@@ -606,7 +606,7 @@
             <a
                 href="{{ $item['url'] }}"
 
-                wire:navigate
+                wire:navigate.hover
 
                 class="
                     sidebar-nav-link
@@ -945,7 +945,7 @@
         <a
             href="{{ route('ajustes.index', ['section' => 'cuenta']) }}"
 
-            wire:navigate
+            wire:navigate.hover
 
             class="
                 sidebar-footer-link

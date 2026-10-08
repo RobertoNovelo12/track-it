@@ -824,7 +824,7 @@
             >
                 <a
                     href="{{ route('dashboard') }}"
-                    wire:navigate
+                    wire:navigate.hover
                     class="
                         hover:text-[var(--theme-primary)]
                         transition-colors
@@ -845,7 +845,7 @@
 
                 <a
                     href="{{ route('asignaciones.index') }}"
-                    wire:navigate
+                    wire:navigate.hover
                     class="
                         hover:text-[var(--theme-primary)]
                         transition-colors
@@ -984,7 +984,7 @@
                         {{-- REASIGNACIÓN --}}
                         <a
                             href="{{ route('asignaciones.reassign') }}"
-                            wire:navigate
+                            wire:navigate.hover
                             class="
                                 h-10
 
@@ -1696,7 +1696,7 @@
 
                 <a
                     href="{{ route('asignaciones.index') }}"
-                    wire:navigate
+                    wire:navigate.hover
                     class="
                         w-full
                         sm:w-auto

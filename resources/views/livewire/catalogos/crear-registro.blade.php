@@ -521,7 +521,7 @@
                 <div class="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-3 pt-1 pb-2">
                     <a
                         href="{{ route('catalogos.index') }}"
-                        wire:navigate
+                        wire:navigate.hover
                         class="w-full sm:w-auto h-11 flex items-center justify-center border border-[var(--theme-border-strong)] rounded-lg px-5 bg-[var(--theme-surface)] text-sm font-medium text-[var(--theme-text-muted)] hover:bg-[var(--theme-surface-soft)] hover:text-[var(--theme-text)] hover:border-[var(--theme-primary-border)] transition-colors"
                     >
                         Cancelar

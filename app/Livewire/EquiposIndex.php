@@ -7,6 +7,7 @@ use App\Models\CatalogoValor;
 use App\Models\Marca;
 use App\Models\Modelo;
 use App\Models\TipoEquipo;
+use App\Services\SystemCacheService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -36,12 +37,24 @@ class EquiposIndex extends Component
         100,
     ];
 
-    private const TABLE_CACHE_TTL_MINUTES = 10;
+    private const CACHE_MODULE =
+        'equipos';
 
-    private const EDIT_BASE_CACHE_TTL_MINUTES = 10;
 
-    private const TABLE_CACHE_VERSION_KEY =
-        'equipos.index.version';
+    private const CATALOG_CACHE_MODULE =
+        'catalogos';
+
+
+    private const TABLE_CACHE_TTL_HOURS =
+        12;
+
+
+    private const CATALOG_CACHE_TTL_HOURS =
+        24;
+
+
+    private const EDIT_BASE_CACHE_TTL_MINUTES =
+        10;
 
 
     private const SORTABLE_COLUMNS = [
@@ -308,6 +321,19 @@ class EquiposIndex extends Component
         $this->resetPage();
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | CACHE DEL SISTEMA
+    |--------------------------------------------------------------------------
+    */
+
+    private function systemCache(): SystemCacheService
+    {
+        return app(
+            SystemCacheService::class
+        );
+    }
+
 
     /*
     |--------------------------------------------------------------------------
@@ -317,25 +343,10 @@ class EquiposIndex extends Component
 
     public function refreshTable(): void
     {
-        Cache::forever(
-            self::TABLE_CACHE_VERSION_KEY,
-            $this->tableCacheVersion() + 1
-        );
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | VERSIÓN DE CACHÉ DE EQUIPOS
-    |--------------------------------------------------------------------------
-    */
-
-    private function tableCacheVersion(): int
-    {
-        return (int) Cache::rememberForever(
-            self::TABLE_CACHE_VERSION_KEY,
-            fn (): int => 1
-        );
+        $this->systemCache()
+            ->refreshModule(
+                self::CACHE_MODULE
+            );
     }
 
 
@@ -345,10 +356,10 @@ class EquiposIndex extends Component
     |--------------------------------------------------------------------------
     */
 
-    private function tableCacheKey(
-        int $perPage,
-        int $page
-    ): string {
+        private function tableCacheState(
+            int $perPage,
+            int $page
+        ): array {
         $state = [
             'page' =>
                 $page,
@@ -451,16 +462,7 @@ class EquiposIndex extends Component
         ];
 
 
-        return
-            'equipos.index.page.v'
-            . $this->tableCacheVersion()
-            . '.'
-            . hash(
-                'sha256',
-                serialize(
-                    $state
-                )
-            );
+        return $state;
     }
 
 
@@ -1306,107 +1308,127 @@ class EquiposIndex extends Component
 
     private function getTiposActivo(): array
     {
-        return Cache::remember(
-            'filtros.tipos_equipo',
-            now()->addMinutes(30),
-            fn () =>
-                TipoEquipo::where(
-                    'activo',
-                    true
-                )
-                    ->orderBy(
-                        'nombre'
+        return $this->systemCache()
+            ->rememberSimple(
+                self::CATALOG_CACHE_MODULE,
+                'filtros.tipos_equipo',
+
+                fn () =>
+                    TipoEquipo::where(
+                        'activo',
+                        true
                     )
-                    ->get([
-                        'id_tipo_equipo',
-                        'nombre',
-                    ])
-                    ->toArray()
-        );
+                        ->orderBy(
+                            'nombre'
+                        )
+                        ->get([
+                            'id_tipo_equipo',
+                            'nombre',
+                        ])
+                        ->toArray(),
+
+                self::CATALOG_CACHE_TTL_HOURS
+            );
     }
 
 
     private function getMarcas(): array
     {
-        return Cache::remember(
-            'filtros.marcas',
-            now()->addMinutes(30),
-            fn () =>
-                Marca::where(
-                    'activo',
-                    true
-                )
-                    ->orderBy(
-                        'nombre'
+        return $this->systemCache()
+            ->rememberSimple(
+                self::CATALOG_CACHE_MODULE,
+                'filtros.marcas',
+
+                fn () =>
+                    Marca::where(
+                        'activo',
+                        true
                     )
-                    ->get([
-                        'id_marca',
-                        'nombre',
-                    ])
-                    ->toArray()
-        );
+                        ->orderBy(
+                            'nombre'
+                        )
+                        ->get([
+                            'id_marca',
+                            'nombre',
+                        ])
+                        ->toArray(),
+
+                self::CATALOG_CACHE_TTL_HOURS
+            );
     }
 
 
     private function getModelos(): array
     {
-        return Cache::remember(
-            'filtros.modelos',
-            now()->addMinutes(30),
-            fn () =>
-                Modelo::where(
-                    'activo',
-                    true
-                )
-                    ->orderBy(
-                        'nombre'
+        return $this->systemCache()
+            ->rememberSimple(
+                self::CATALOG_CACHE_MODULE,
+                'filtros.modelos',
+
+                fn () =>
+                    Modelo::where(
+                        'activo',
+                        true
                     )
-                    ->get([
-                        'id_modelo',
-                        'nombre',
-                    ])
-                    ->toArray()
-        );
+                        ->orderBy(
+                            'nombre'
+                        )
+                        ->get([
+                            'id_modelo',
+                            'nombre',
+                        ])
+                        ->toArray(),
+
+                self::CATALOG_CACHE_TTL_HOURS
+            );
     }
 
 
     private function getEstados(): array
     {
-        return Cache::remember(
-            'filtros.estados_activo',
-            now()->addMinutes(30),
-            fn () =>
-                CatalogoValor::deCatalogo(
-                    'estado_activo'
-                )
-                    ->get([
-                        'id_valor',
-                        'nombre',
-                    ])
-                    ->toArray()
-        );
+        return $this->systemCache()
+            ->rememberSimple(
+                self::CATALOG_CACHE_MODULE,
+                'filtros.estados_activo',
+
+                fn () =>
+                    CatalogoValor::deCatalogo(
+                        'estado_activo'
+                    )
+                        ->get([
+                            'id_valor',
+                            'nombre',
+                        ])
+                        ->toArray(),
+
+                self::CATALOG_CACHE_TTL_HOURS
+            );
     }
 
 
     private function getAreas(): array
     {
-        return Cache::remember(
-            'filtros.areas',
-            now()->addMinutes(30),
-            fn () =>
-                Area::where(
-                    'activo',
-                    true
-                )
-                    ->orderBy(
-                        'nombre'
+        return $this->systemCache()
+            ->rememberSimple(
+                self::CATALOG_CACHE_MODULE,
+                'filtros.areas',
+
+                fn () =>
+                    Area::where(
+                        'activo',
+                        true
                     )
-                    ->get([
-                        'id_area',
-                        'nombre',
-                    ])
-                    ->toArray()
-        );
+                        ->orderBy(
+                            'nombre'
+                        )
+                        ->get([
+                            'id_area',
+                            'nombre',
+                        ])
+                        ->toArray(),
+
+                self::CATALOG_CACHE_TTL_HOURS
+            );
     }
 
 
@@ -1467,20 +1489,21 @@ class EquiposIndex extends Component
         */
 
         $cached =
-            Cache::remember(
-                $this->tableCacheKey(
-                    $perPage,
-                    $page
-                ),
+            $this->systemCache()
+                ->remember(
+                    self::CACHE_MODULE,
 
-                now()->addMinutes(
-                    self::TABLE_CACHE_TTL_MINUTES
-                ),
+                    'index.page',
 
-                function () use (
-                    $perPage,
-                    $page
-                ): array {
+                    $this->tableCacheState(
+                        $perPage,
+                        $page
+                    ),
+
+                    function () use (
+                        $perPage,
+                        $page
+                    ): array {
                     /*
                     |--------------------------------------------------------------------------
                     | CONSULTA
@@ -1573,7 +1596,8 @@ class EquiposIndex extends Component
                         'total' =>
                             $paginator->total(),
                     ];
-                }
+                },
+                self::TABLE_CACHE_TTL_HOURS
             );
 
 

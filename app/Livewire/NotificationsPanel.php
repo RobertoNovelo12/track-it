@@ -889,7 +889,7 @@ class NotificationsPanel extends Component
 
         /*
         * Mantener sincronizado el contador utilizado
-        * por el layout durante wire:navigate.
+        * por el layout durante wire:navigate.hover.
         */
         if ($userId) {
             Cache::put(

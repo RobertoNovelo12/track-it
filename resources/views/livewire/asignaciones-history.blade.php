@@ -14,7 +14,7 @@
         >
             <a
                 href="{{ route('dashboard') }}"
-                wire:navigate
+                wire:navigate.hover
                 class="
                     hover:text-[var(--theme-primary)]
                     transition-colors
@@ -35,7 +35,7 @@
 
             <a
                 href="{{ route('asignaciones.index') }}"
-                wire:navigate
+                wire:navigate.hover
                 class="
                     hover:text-[var(--theme-primary)]
                     transition-colors
@@ -93,7 +93,7 @@
 
             <a
                 href="{{ route('asignaciones.index') }}"
-                wire:navigate
+                wire:navigate.hover
                 class="
                     h-9
                     px-4
