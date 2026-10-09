@@ -49,7 +49,7 @@
             $end = $start + $percentage;
 
             $color = $chartColors[
-                $index % count($chartColors)
+                ((int) $index) % count($chartColors)
             ];
 
             $gradientParts[] =

@@ -1603,4 +1603,81 @@
         }
 
     })();
+
+    /*
+    |--------------------------------------------------------------------------
+    | PREFETCH DE NAVEGACIÓN EN MÓVIL
+    |--------------------------------------------------------------------------
+    |
+    | En escritorio wire:navigate.hover empieza a precargar cuando
+    | el cursor permanece sobre el enlace.
+    |
+    | En móvil no existe hover, así que cuando el usuario toca un enlace
+    | le damos focus inmediatamente. Livewire utiliza también el focus
+    | para iniciar el prefetch de wire:navigate.hover.
+    |
+    */
+
+    document.addEventListener(
+        'pointerdown',
+        (event) => {
+
+            /*
+            * Solamente nos interesa touch o lápiz.
+            * El mouse ya utiliza hover normalmente.
+            */
+            if (
+                event.pointerType !== 'touch'
+                &&
+                event.pointerType !== 'pen'
+            ) {
+                return;
+            }
+
+
+            const link =
+                event.target.closest(
+                    'a[href]'
+                );
+
+
+            if (! link) {
+                return;
+            }
+
+
+            /*
+            * Solamente enlaces que ya decidimos
+            * que son navegación Livewire.
+            */
+            if (
+                ! link.hasAttribute(
+                    'wire:navigate.hover'
+                )
+            ) {
+                return;
+            }
+
+
+            /*
+            * Dar focus dispara el prefetch de Livewire.
+            * preventScroll evita movimientos inesperados
+            * de la pantalla.
+            */
+            try {
+
+                link.focus({
+                    preventScroll: true,
+                });
+
+            } catch (error) {
+
+                link.focus();
+            }
+        },
+        {
+            capture: true,
+            passive: true,
+        }
+    );
 </script>
