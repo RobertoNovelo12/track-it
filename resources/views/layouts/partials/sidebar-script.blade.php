@@ -19,23 +19,20 @@
         const SIDEBAR_CLOSED_WIDTH =
             80;
 
-        /*
-        |--------------------------------------------------------------------------
-        | Punto de decisión del arrastre
-        |--------------------------------------------------------------------------
-        |
-        | Si el usuario suelta el sidebar por debajo de este ancho,
-        | se cerrará automáticamente.
-        |
-        | Por encima, volverá a abrirse completamente.
-        |
-        */
-
         const SIDEBAR_SNAP_THRESHOLD =
             150;
 
         const SIDEBAR_TRANSITION_MS =
             180;
+
+        const MOBILE_DRAWER_TRANSITION_MS =
+            300;
+
+        const MOBILE_OVERLAY_TRANSITION_MS =
+            220;
+
+        const MOBILE_PREFETCH_TTL =
+            60 * 1000;
 
 
         /*
@@ -64,7 +61,6 @@
 
             return window.innerWidth
                 < DESKTOP_BREAKPOINT;
-
         }
 
 
@@ -73,7 +69,6 @@
             return document.getElementById(
                 'sidebar'
             );
-
         }
 
 
@@ -82,7 +77,6 @@
             return document.getElementById(
                 'mainContent'
             );
-
         }
 
 
@@ -91,7 +85,6 @@
             return document.getElementById(
                 'sidebarOverlay'
             );
-
         }
 
 
@@ -100,7 +93,6 @@
             return document.getElementById(
                 'sidebarQuickSearchInput'
             );
-
         }
 
 
@@ -109,15 +101,16 @@
             return document.getElementById(
                 'sidebarCollapseButton'
             );
-
         }
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | CLAMP
-        |--------------------------------------------------------------------------
-        */
+        function getMobileHeader() {
+
+            return document.getElementById(
+                'mobileAppHeader'
+            );
+        }
+
 
         function clamp(
             value,
@@ -132,23 +125,16 @@
                 ),
                 max
             );
-
         }
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | ELEMENTO DE ESCRITURA
-        |--------------------------------------------------------------------------
-        |
-        | Ctrl+B no debe interferir cuando el usuario está escribiendo
-        | dentro de un formulario.
-        |
-        */
+        function isTypingTarget(
+            target
+        ) {
 
-        function isTypingTarget(target) {
-
-            if (!(target instanceof Element)) {
+            if (
+                !(target instanceof Element)
+            ) {
                 return false;
             }
 
@@ -174,13 +160,12 @@
                     '[contenteditable="true"]'
                 )
             );
-
         }
 
 
         /*
         |--------------------------------------------------------------------------
-        | LEER ESTADO GUARDADO
+        | ESTADO DE ESCRITORIO
         |--------------------------------------------------------------------------
         */
 
@@ -195,17 +180,9 @@
             } catch (error) {
 
                 return false;
-
             }
-
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | GUARDAR ESTADO
-        |--------------------------------------------------------------------------
-        */
 
         function saveDesktopState(
             collapsed
@@ -223,12 +200,10 @@
             } catch (error) {
 
                 /*
-                | El sidebar puede continuar funcionando aunque
-                | localStorage no esté disponible.
-                */
-
+                 * El sidebar puede seguir funcionando
+                 * aunque localStorage no esté disponible.
+                 */
             }
-
         }
 
 
@@ -236,11 +211,6 @@
         |--------------------------------------------------------------------------
         | LIMPIAR TAMAÑOS TEMPORALES
         |--------------------------------------------------------------------------
-        |
-        | Durante el drag utilizamos valores inline.
-        |
-        | Una vez decidido el estado final, CSS vuelve a tomar el control.
-        |
         */
 
         function clearTemporarySizing() {
@@ -257,7 +227,6 @@
                 sidebar.style.removeProperty(
                     'width'
                 );
-
             }
 
 
@@ -266,15 +235,13 @@
                 mainContent.style.removeProperty(
                     'margin-left'
                 );
-
             }
-
         }
 
 
         /*
         |--------------------------------------------------------------------------
-        | ACTUALIZAR BOTÓN
+        | BOTÓN DE COLAPSAR
         |--------------------------------------------------------------------------
         */
 
@@ -305,7 +272,6 @@
                     ? 'Abrir menú (Ctrl+B)'
                     : 'Colapsar menú (Ctrl+B)'
             );
-
         }
 
 
@@ -343,17 +309,9 @@
                 saveDesktopState(
                     collapsed
                 );
-
             }
-
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | ESTABLECER ESTADO FINAL
-        |--------------------------------------------------------------------------
-        */
 
         function setDesktopSidebarState(
             collapsed
@@ -371,13 +329,90 @@
                 collapsed,
                 true
             );
-
         }
 
 
         /*
         |--------------------------------------------------------------------------
-        | NORMALIZAR MÓVIL
+        | LIMPIAR ESTILOS MÓVILES AL VOLVER A ESCRITORIO
+        |--------------------------------------------------------------------------
+        */
+
+        function clearMobileDrawerStyles() {
+
+            const sidebar =
+                getSidebar();
+
+            const overlay =
+                getOverlay();
+
+            const header =
+                getMobileHeader();
+
+
+            if (sidebar) {
+
+                sidebar.style.removeProperty(
+                    'transform'
+                );
+
+                sidebar.style.removeProperty(
+                    'translate'
+                );
+
+                sidebar.style.removeProperty(
+                    'transition'
+                );
+
+                sidebar.style.removeProperty(
+                    'will-change'
+                );
+
+                delete sidebar.dataset
+                    .mobileOpen;
+            }
+
+
+            if (overlay) {
+
+                overlay.classList.add(
+                    'hidden'
+                );
+
+                overlay.style.removeProperty(
+                    'opacity'
+                );
+
+                overlay.style.removeProperty(
+                    'transition'
+                );
+
+                overlay.style.removeProperty(
+                    'will-change'
+                );
+
+                overlay.style.removeProperty(
+                    'pointer-events'
+                );
+            }
+
+
+            if (header) {
+
+                header.style.removeProperty(
+                    'filter'
+                );
+
+                header.style.removeProperty(
+                    'transition'
+                );
+            }
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | NORMALIZAR SIDEBAR MÓVIL
         |--------------------------------------------------------------------------
         */
 
@@ -386,20 +421,11 @@
             const sidebar =
                 getSidebar();
 
-            const overlay =
-                getOverlay();
-
 
             if (!sidebar) {
                 return;
             }
 
-
-            /*
-            |--------------------------------------------------------------------------
-            | El modo colapsado pertenece únicamente a escritorio
-            |--------------------------------------------------------------------------
-            */
 
             document.documentElement
                 .classList
@@ -421,26 +447,297 @@
 
 
             /*
-            |--------------------------------------------------------------------------
-            | Drawer inicialmente cerrado
-            |--------------------------------------------------------------------------
-            */
-
-            sidebar.classList.add(
-                '-translate-x-full'
+             * IMPORTANTE:
+             *
+             * Tailwind 4 puede utilizar la propiedad CSS
+             * individual "translate".
+             *
+             * Nosotros anulamos ese translate en móvil y
+             * controlamos TODO el desplazamiento mediante
+             * transform.
+             *
+             * Así la animación es totalmente predecible.
+             */
+            sidebar.style.setProperty(
+                'translate',
+                '0 0'
             );
 
-            sidebar.classList.remove(
-                'translate-x-0'
-            );
+
+            sidebar.style.transition =
+                `transform ${MOBILE_DRAWER_TRANSITION_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`;
 
 
-            overlay
-                ?.classList
-                .add(
-                    'hidden'
+            sidebar.style.willChange =
+                'transform';
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | PREPARAR OVERLAY
+        |--------------------------------------------------------------------------
+        */
+
+        function prepareMobileOverlay() {
+
+            const overlay =
+                getOverlay();
+
+
+            if (!overlay) {
+                return;
+            }
+
+
+            overlay.style.transition =
+                `opacity ${MOBILE_OVERLAY_TRANSITION_MS}ms ease-out`;
+
+
+            overlay.style.willChange =
+                'opacity';
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | OSCURECER HEADER MÓVIL
+        |--------------------------------------------------------------------------
+        |
+        | No colocamos el overlay por encima del header porque queremos
+        | que la campana y el perfil sigan siendo pulsables.
+        |
+        */
+
+        function setMobileHeaderDimmed(
+            dimmed
+        ) {
+
+            const header =
+                getMobileHeader();
+
+
+            if (!header) {
+                return;
+            }
+
+
+            if (!isMobileViewport()) {
+
+                header.style.removeProperty(
+                    'filter'
                 );
 
+                header.style.removeProperty(
+                    'transition'
+                );
+
+                return;
+            }
+
+
+            header.style.transition =
+                'transform 200ms ease-out, filter 180ms ease-out';
+
+
+            if (dimmed) {
+
+                header.style.filter =
+                    'brightness(0.55)';
+
+            } else {
+
+                header.style.removeProperty(
+                    'filter'
+                );
+            }
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | BLOQUEAR SCROLL EN MÓVIL
+        |--------------------------------------------------------------------------
+        */
+
+        function lockMobilePageScroll() {
+
+            if (!isMobileViewport()) {
+                return;
+            }
+
+
+            if (
+                window.__trackItSidebarScrollLock
+            ) {
+                return;
+            }
+
+
+            const body =
+                document.body;
+
+            const html =
+                document.documentElement;
+
+
+            if (
+                !body ||
+                !html
+            ) {
+                return;
+            }
+
+
+            const scrollY =
+                window.scrollY;
+
+
+            window.__trackItSidebarScrollLock = {
+
+                scrollY,
+
+                bodyPosition:
+                    body.style.position,
+
+                bodyTop:
+                    body.style.top,
+
+                bodyLeft:
+                    body.style.left,
+
+                bodyRight:
+                    body.style.right,
+
+                bodyWidth:
+                    body.style.width,
+
+                bodyOverflow:
+                    body.style.overflow,
+
+                htmlOverflow:
+                    html.style.overflow,
+            };
+
+
+            body.style.position =
+                'fixed';
+
+            body.style.top =
+                `-${scrollY}px`;
+
+            body.style.left =
+                '0';
+
+            body.style.right =
+                '0';
+
+            body.style.width =
+                '100%';
+
+            body.style.overflow =
+                'hidden';
+
+
+            html.style.overflow =
+                'hidden';
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | DESBLOQUEAR SCROLL
+        |--------------------------------------------------------------------------
+        */
+
+        function unlockMobilePageScroll() {
+
+            const lock =
+                window.__trackItSidebarScrollLock;
+
+
+            if (!lock) {
+                return;
+            }
+
+
+            const body =
+                document.body;
+
+            const html =
+                document.documentElement;
+
+
+            if (
+                !body ||
+                !html
+            ) {
+
+                window.__trackItSidebarScrollLock =
+                    null;
+
+                return;
+            }
+
+
+            body.style.position =
+                lock.bodyPosition;
+
+            body.style.top =
+                lock.bodyTop;
+
+            body.style.left =
+                lock.bodyLeft;
+
+            body.style.right =
+                lock.bodyRight;
+
+            body.style.width =
+                lock.bodyWidth;
+
+            body.style.overflow =
+                lock.bodyOverflow;
+
+
+            html.style.overflow =
+                lock.htmlOverflow;
+
+
+            const scrollY =
+                lock.scrollY;
+
+
+            window.__trackItSidebarScrollLock =
+                null;
+
+
+            window.scrollTo(
+                0,
+                scrollY
+            );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | CANCELAR TIMER DE CIERRE
+        |--------------------------------------------------------------------------
+        */
+
+        function cancelMobileCloseTimer() {
+
+            if (
+                window.__trackItSidebarCloseTimer
+            ) {
+
+                window.clearTimeout(
+                    window.__trackItSidebarCloseTimer
+                );
+
+
+                window.__trackItSidebarCloseTimer =
+                    null;
+            }
         }
 
 
@@ -451,7 +748,8 @@
         */
 
         function applyMobileSidebarState(
-            open
+            open,
+            immediate = false
         ) {
 
             const sidebar =
@@ -466,8 +764,34 @@
             }
 
 
+            normalizeMobileSidebar();
+            prepareMobileOverlay();
+            cancelMobileCloseTimer();
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | ABRIR
+            |--------------------------------------------------------------------------
+            */
+
             if (open) {
 
+                /*
+                 * Mantener el header visible antes
+                 * de abrir el drawer.
+                 */
+                window
+                    .showTrackItMobileHeader
+                    ?.();
+
+
+                /*
+                 * Conservamos estas clases como indicadores
+                 * de estado para app.blade.php.
+                 *
+                 * El movimiento real NO depende de ellas.
+                 */
                 sidebar.classList.remove(
                     '-translate-x-full'
                 );
@@ -477,16 +801,204 @@
                 );
 
 
-                overlay
-                    ?.classList
-                    .remove(
+                sidebar.dataset.mobileOpen =
+                    '1';
+
+
+                /*
+                 * Empezamos desde fuera de pantalla.
+                 */
+                sidebar.style.transition =
+                    'none';
+
+                sidebar.style.transform =
+                    'translate3d(-100%, 0, 0)';
+
+
+                if (overlay) {
+
+                    overlay.classList.remove(
                         'hidden'
                     );
 
+                    overlay.style.transition =
+                        'none';
+
+                    overlay.style.opacity =
+                        '0';
+
+                    overlay.style.pointerEvents =
+                        'auto';
+                }
+
+
+                /*
+                 * Forzamos al navegador a registrar el
+                 * estado inicial antes de animar.
+                 *
+                 * ESTA PARTE ES LA QUE GARANTIZA
+                 * LA ANIMACIÓN DE APERTURA.
+                 */
+                void sidebar.offsetWidth;
+
+                if (overlay) {
+                    void overlay.offsetWidth;
+                }
+
+
+                lockMobilePageScroll();
+                setMobileHeaderDimmed(true);
+
+
+                /*
+                 * Dos frames garantizan que el navegador
+                 * pinte primero -100% y después 0%.
+                 */
+                window.requestAnimationFrame(
+                    () => {
+
+                        window.requestAnimationFrame(
+                            () => {
+
+                                if (
+                                    sidebar.dataset
+                                        .mobileOpen
+                                    !== '1'
+                                ) {
+                                    return;
+                                }
+
+
+                                sidebar.style.transition =
+                                    `transform ${MOBILE_DRAWER_TRANSITION_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`;
+
+
+                                sidebar.style.transform =
+                                    'translate3d(0, 0, 0)';
+
+
+                                if (overlay) {
+
+                                    overlay.style.transition =
+                                        `opacity ${MOBILE_OVERLAY_TRANSITION_MS}ms ease-out`;
+
+
+                                    overlay.style.opacity =
+                                        '1';
+                                }
+
+                            }
+                        );
+
+                    }
+                );
+
 
                 return;
-
             }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | CERRAR INMEDIATAMENTE
+            |--------------------------------------------------------------------------
+            |
+            | Se usa durante:
+            |
+            | - primera carga
+            | - cambio de breakpoint
+            | - navegación Livewire
+            |
+            */
+
+            if (immediate) {
+
+                sidebar.dataset.mobileOpen =
+                    '0';
+
+
+                sidebar.classList.add(
+                    '-translate-x-full'
+                );
+
+                sidebar.classList.remove(
+                    'translate-x-0'
+                );
+
+
+                sidebar.style.transition =
+                    'none';
+
+
+                sidebar.style.transform =
+                    'translate3d(-100%, 0, 0)';
+
+
+                if (overlay) {
+
+                    overlay.style.transition =
+                        'none';
+
+                    overlay.style.opacity =
+                        '0';
+
+                    overlay.style.pointerEvents =
+                        'none';
+
+                    overlay.classList.add(
+                        'hidden'
+                    );
+                }
+
+
+                setMobileHeaderDimmed(
+                    false
+                );
+
+
+                unlockMobilePageScroll();
+
+
+                /*
+                 * Volvemos a dejar las transiciones listas
+                 * para la siguiente apertura.
+                 */
+                window.requestAnimationFrame(
+                    () => {
+
+                        if (
+                            !isMobileViewport()
+                        ) {
+                            return;
+                        }
+
+
+                        sidebar.style.transition =
+                            `transform ${MOBILE_DRAWER_TRANSITION_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`;
+
+
+                        if (overlay) {
+
+                            overlay.style.transition =
+                                `opacity ${MOBILE_OVERLAY_TRANSITION_MS}ms ease-out`;
+                        }
+
+                    }
+                );
+
+
+                return;
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | CERRAR CON ANIMACIÓN
+            |--------------------------------------------------------------------------
+            */
+
+            sidebar.dataset.mobileOpen =
+                '0';
 
 
             sidebar.classList.add(
@@ -498,36 +1010,174 @@
             );
 
 
-            overlay
-                ?.classList
-                .add(
-                    'hidden'
-                );
+            sidebar.style.transition =
+                `transform ${MOBILE_DRAWER_TRANSITION_MS}ms cubic-bezier(0.4, 0, 0.2, 1)`;
 
+
+            sidebar.style.transform =
+                'translate3d(-100%, 0, 0)';
+
+
+            if (overlay) {
+
+                overlay.style.transition =
+                    `opacity ${MOBILE_OVERLAY_TRANSITION_MS}ms ease-in`;
+
+
+                overlay.style.opacity =
+                    '0';
+
+
+                overlay.style.pointerEvents =
+                    'none';
+            }
+
+
+            setMobileHeaderDimmed(
+                false
+            );
+
+
+            /*
+             * Dejamos bloqueado el scroll mientras
+             * el drawer termina de salir.
+             */
+            window.__trackItSidebarCloseTimer =
+                window.setTimeout(
+                    () => {
+
+                        if (
+                            sidebar.dataset
+                                .mobileOpen
+                            === '1'
+                        ) {
+                            return;
+                        }
+
+
+                        overlay
+                            ?.classList
+                            .add(
+                                'hidden'
+                            );
+
+
+                        unlockMobilePageScroll();
+
+
+                        window.__trackItSidebarCloseTimer =
+                            null;
+
+                    },
+                    MOBILE_DRAWER_TRANSITION_MS
+                );
         }
 
 
         /*
         |--------------------------------------------------------------------------
-        | SINCRONIZAR ESTADO
+        | SINCRONIZAR ATAJO CTRL K
+        |--------------------------------------------------------------------------
+        */
+
+        function syncSearchShortcutHint() {
+
+            const search =
+                document.getElementById(
+                    'sidebarQuickSearch'
+                );
+
+            const input =
+                getSearchInput();
+
+
+            if (!search) {
+                return;
+            }
+
+
+            const shortcut =
+                Array.from(
+                    search.querySelectorAll(
+                        'span'
+                    )
+                )
+                    .find(
+                        element =>
+                            element.textContent
+                                ?.trim()
+                            === 'Ctrl K'
+                    );
+
+
+            if (isMobileViewport()) {
+
+                if (shortcut) {
+
+                    shortcut.style.display =
+                        'none';
+                }
+
+
+                if (input) {
+
+                    input.style.paddingRight =
+                        '1rem';
+                }
+
+
+                return;
+            }
+
+
+            if (shortcut) {
+
+                shortcut.style.removeProperty(
+                    'display'
+                );
+            }
+
+
+            if (input) {
+
+                input.style.removeProperty(
+                    'padding-right'
+                );
+            }
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | SINCRONIZAR SIDEBAR
         |--------------------------------------------------------------------------
         */
 
         function syncSidebarState() {
 
+            syncSearchShortcutHint();
+
+
             if (isMobileViewport()) {
 
                 normalizeMobileSidebar();
 
+
                 applyMobileSidebarState(
-                    false
+                    false,
+                    true
                 );
 
 
                 return;
-
             }
 
+
+            cancelMobileCloseTimer();
+
+            unlockMobilePageScroll();
+
+            clearMobileDrawerStyles();
 
             clearTemporarySizing();
 
@@ -540,13 +1190,12 @@
                 collapsed,
                 false
             );
-
         }
 
 
         /*
         |--------------------------------------------------------------------------
-        | ABRIR SIDEBAR DE ESCRITORIO
+        | ESCRITORIO
         |--------------------------------------------------------------------------
         */
 
@@ -560,15 +1209,8 @@
             setDesktopSidebarState(
                 false
             );
-
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | CERRAR SIDEBAR DE ESCRITORIO
-        |--------------------------------------------------------------------------
-        */
 
         function closeDesktopSidebar() {
 
@@ -580,253 +1222,200 @@
             setDesktopSidebarState(
                 true
             );
-
         }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | PREFETCH DEL MENÚ EN MÓVIL
-    |--------------------------------------------------------------------------
-    |
-    | Cada URL se precarga como máximo una vez cada 60 segundos.
-    |
-    | El registro vive en window, por lo que se conserva durante
-    | las navegaciones SPA de wire:navigate, pero se reinicia si
-    | se recarga completamente el navegador.
-    |
-    */
-
-    function prefetchMobileSidebarLinks() {
-        if (!isMobileViewport()) {
-            return;
-        }
-
-
-        const PREFETCH_TTL =
-            60 * 1000;
 
 
         /*
-        * Registro global de URLs ya precargadas.
-        *
-        * Se mantiene entre navegaciones de Livewire.
+        |--------------------------------------------------------------------------
+        | PREFETCH DEL MENÚ EN MÓVIL
+        |--------------------------------------------------------------------------
         */
-        window.__trackItMobilePrefetchCache ??=
-            new Map();
+
+        function prefetchMobileSidebarLinks() {
+
+            if (!isMobileViewport()) {
+                return;
+            }
 
 
-        const prefetchCache =
-            window.__trackItMobilePrefetchCache;
+            window.__trackItMobilePrefetchCache ??=
+                new Map();
 
 
-        const sidebarNav =
-            document.getElementById(
-                'sidebarNav'
-            );
+            const prefetchCache =
+                window.__trackItMobilePrefetchCache;
 
 
-        if (!sidebarNav) {
-            return;
-        }
+            const sidebarNav =
+                document.getElementById(
+                    'sidebarNav'
+                );
 
 
-        const now =
-            Date.now();
+            if (!sidebarNav) {
+                return;
+            }
 
 
-        const currentUrl =
-            new URL(
-                window.location.href
-            );
+            const now =
+                Date.now();
 
 
-        const links =
-            Array.from(
-                sidebarNav.querySelectorAll(
-                    'a[href][wire\\:navigate\\.hover]'
+            const currentUrl =
+                new URL(
+                    window.location.href
+                );
+
+
+            const links =
+                Array.from(
+                    sidebarNav.querySelectorAll(
+                        'a[href][wire\\:navigate\\.hover]'
+                    )
                 )
-            )
-                .filter(
-                    link => {
+                    .filter(
+                        link => {
 
-                        const href =
-                            link.getAttribute(
-                                'href'
-                            );
-
-
-                        if (
-                            !href
-                            ||
-                            href === '#'
-                        ) {
-                            return false;
-                        }
+                            const href =
+                                link.getAttribute(
+                                    'href'
+                                );
 
 
-                        const destination =
-                            new URL(
-                                href,
+                            if (
+                                !href ||
+                                href === '#'
+                            ) {
+                                return false;
+                            }
+
+
+                            const destination =
+                                new URL(
+                                    href,
+                                    window.location.origin
+                                );
+
+
+                            if (
+                                destination.origin
+                                !==
                                 window.location.origin
+                            ) {
+                                return false;
+                            }
+
+
+                            if (
+                                destination.pathname
+                                    === currentUrl.pathname
+                                &&
+                                destination.search
+                                    === currentUrl.search
+                            ) {
+                                return false;
+                            }
+
+
+                            const key =
+                                destination.pathname
+                                + destination.search;
+
+
+                            const lastPrefetch =
+                                prefetchCache.get(
+                                    key
+                                );
+
+
+                            if (
+                                lastPrefetch
+                                &&
+                                (
+                                    now
+                                    - lastPrefetch
+                                )
+                                < MOBILE_PREFETCH_TTL
+                            ) {
+                                return false;
+                            }
+
+
+                            prefetchCache.set(
+                                key,
+                                now
                             );
 
 
-                        /*
-                        * Solamente URLs internas.
-                        */
-                        if (
-                            destination.origin
-                            !==
-                            window.location.origin
-                        ) {
-                            return false;
+                            return true;
                         }
+                    );
 
 
-                        /*
-                        * No precargar la página actual.
-                        */
-                        if (
-                            destination.pathname
-                                === currentUrl.pathname
-                            &&
-                            destination.search
-                                === currentUrl.search
-                        ) {
-                            return false;
-                        }
+            links.forEach(
+                (
+                    link,
+                    index
+                ) => {
+
+                    window.setTimeout(
+                        () => {
+
+                            if (
+                                !document.contains(
+                                    link
+                                )
+                            ) {
+                                return;
+                            }
 
 
-                        /*
-                        * Usamos pathname + query para distinguir,
-                        * por ejemplo:
-                        *
-                        * /reportes
-                        * /reportes?tipo=bajas
-                        */
-                        const key =
-                            destination.pathname
-                            + destination.search;
-
-
-                        const lastPrefetch =
-                            prefetchCache.get(
-                                key
+                            link.dispatchEvent(
+                                new MouseEvent(
+                                    'mouseenter',
+                                    {
+                                        bubbles: true,
+                                        cancelable: false,
+                                        view: window,
+                                    }
+                                )
                             );
 
-
-                        /*
-                        * Si fue precargada hace menos de
-                        * 60 segundos, no hacemos nada.
-                        */
-                        if (
-                            lastPrefetch
-                            &&
-                            (
-                                now - lastPrefetch
-                            ) < PREFETCH_TTL
-                        ) {
-                            return false;
-                        }
+                        },
+                        index * 90
+                    );
+                }
+            );
 
 
-                        /*
-                        * Reservamos la URL desde ahora.
-                        *
-                        * Esto también evita duplicados si el
-                        * usuario abre/cierra el menú mientras
-                        * los setTimeout siguen pendientes.
-                        */
-                        prefetchCache.set(
-                            key,
-                            now
-                        );
-
-
-                        return true;
-                    }
-                );
-
-
-        links.forEach(
-            (
-                link,
-                index
-            ) => {
-
-                setTimeout(
-                    () => {
-
-                        /*
-                        * Si Livewire ya reemplazó el DOM,
-                        * ignoramos este elemento viejo.
-                        */
-                        if (
-                            !document.contains(
-                                link
-                            )
-                        ) {
-                            return;
-                        }
-
-
-                        link.dispatchEvent(
-                            new MouseEvent(
-                                'mouseenter',
-                                {
-                                    bubbles: false,
-                                    cancelable: false,
-                                    view: window,
-                                }
-                            )
-                        );
-                    },
-
-                    /*
-                    * Evitamos disparar todas las peticiones
-                    * exactamente al mismo tiempo.
-                    */
-                    index * 90
-                );
-            }
-        );
-
-
-        /*
-        * Limpieza del registro para que el Map no crezca
-        * indefinidamente.
-        */
-        for (
-            const [
-                key,
-                timestamp
-            ]
-            of prefetchCache.entries()
-        ) {
-
-            if (
-                now - timestamp
-                >
-                PREFETCH_TTL
+            /*
+             * Limpiar entradas vencidas.
+             */
+            for (
+                const [
+                    key,
+                    timestamp
+                ]
+                of prefetchCache.entries()
             ) {
-                prefetchCache.delete(
-                    key
-                );
+
+                if (
+                    now - timestamp
+                    > MOBILE_PREFETCH_TTL
+                ) {
+
+                    prefetchCache.delete(
+                        key
+                    );
+                }
             }
         }
-    }
 
 
         /*
         |--------------------------------------------------------------------------
         | TOGGLE PÚBLICO
         |--------------------------------------------------------------------------
-        |
-        | Sigue siendo compatible con:
-        |
-        | onclick="toggleSidebar()"
-        |
         */
 
         window.toggleSidebar =
@@ -839,10 +1428,9 @@
                 */
 
                 if (isMobileViewport()) {
+
                     const sidebar =
-                        document.getElementById(
-                            'sidebar'
-                        );
+                        getSidebar();
 
 
                     if (!sidebar) {
@@ -851,29 +1439,35 @@
 
 
                     const isOpen =
-                        sidebar.classList.contains(
-                            'translate-x-0'
-                        );
+                        sidebar.dataset
+                            .mobileOpen
+                        === '1'
+                        ||
+                        sidebar.classList
+                            .contains(
+                                'translate-x-0'
+                            );
 
 
                     const willOpen =
                         !isOpen;
 
 
-                    normalizeMobileSidebar();
-
-
-                    applyMobileSidebarState(
-                        willOpen
-                    );
-
-
-                    /*
-                    * Solamente cuando se abre
-                    * el menú móvil.
-                    */
                     if (willOpen) {
+
+                        applyMobileSidebarState(
+                            true
+                        );
+
+
                         prefetchMobileSidebarLinks();
+
+
+                    } else {
+
+                        applyMobileSidebarState(
+                            false
+                        );
                     }
 
 
@@ -888,8 +1482,7 @@
                 */
 
                 const collapsed =
-                    document
-                        .documentElement
+                    document.documentElement
                         .classList
                         .contains(
                             'sidebar-collapsed'
@@ -899,7 +1492,6 @@
                 setDesktopSidebarState(
                     !collapsed
                 );
-
             };
 
 
@@ -923,12 +1515,6 @@
             input.focus();
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | Colocar cursor al final
-            |--------------------------------------------------------------------------
-            */
-
             const value =
                 input.value;
 
@@ -943,17 +1529,16 @@
             } catch (error) {
 
                 /*
-                | Algunos tipos de input no admiten selección manual.
-                */
-
+                 * Algunos inputs no admiten
+                 * selección manual.
+                 */
             }
-
         }
 
 
         /*
         |--------------------------------------------------------------------------
-        | ABRIR Y ENFOCAR BÚSQUEDA
+        | ABRIR BÚSQUEDA
         |--------------------------------------------------------------------------
         */
 
@@ -978,12 +1563,11 @@
                         focusSidebarSearch();
 
                     },
-                    SIDEBAR_TRANSITION_MS + 40
+                    MOBILE_DRAWER_TRANSITION_MS + 40
                 );
 
 
                 return;
-
             }
 
 
@@ -994,8 +1578,7 @@
             */
 
             const collapsed =
-                document
-                    .documentElement
+                document.documentElement
                     .classList
                     .contains(
                         'sidebar-collapsed'
@@ -1007,7 +1590,6 @@
                 focusSidebarSearch();
 
                 return;
-
             }
 
 
@@ -1022,15 +1604,8 @@
                 },
                 SIDEBAR_TRANSITION_MS + 30
             );
-
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | EXPONER BÚSQUEDA
-        |--------------------------------------------------------------------------
-        */
 
         window.openSidebarSearch =
             openSidebarSearch;
@@ -1038,7 +1613,7 @@
 
         /*
         |--------------------------------------------------------------------------
-        | INICIO DEL ARRASTRE
+        | INICIAR RESIZE
         |--------------------------------------------------------------------------
         */
 
@@ -1096,16 +1671,9 @@
                 );
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | Capturar puntero
-            |--------------------------------------------------------------------------
-            */
-
             try {
 
-                event
-                    .target
+                event.target
                     .setPointerCapture(
                         event.pointerId
                     );
@@ -1113,30 +1681,23 @@
             } catch (error) {
 
                 /*
-                | No es obligatorio para continuar.
-                */
-
+                 * No es obligatorio.
+                 */
             }
 
-
-            /*
-            |--------------------------------------------------------------------------
-            | Evitar selección accidental de texto
-            |--------------------------------------------------------------------------
-            */
 
             document.body.style.userSelect =
                 'none';
 
+
             document.body.style.cursor =
                 'col-resize';
-
         }
 
 
         /*
         |--------------------------------------------------------------------------
-        | ACTUALIZAR ARRASTRE
+        | MOVER RESIZE
         |--------------------------------------------------------------------------
         */
 
@@ -1172,12 +1733,6 @@
             }
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | CALCULAR ANCHO
-            |--------------------------------------------------------------------------
-            */
-
             const width =
                 clamp(
                     event.clientX,
@@ -1189,12 +1744,6 @@
             resizeCurrentWidth =
                 width;
 
-
-            /*
-            |--------------------------------------------------------------------------
-            | MOVER SIDEBAR EN TIEMPO REAL
-            |--------------------------------------------------------------------------
-            */
 
             sidebar.style.setProperty(
                 'width',
@@ -1210,23 +1759,6 @@
             );
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | PREVISUALIZACIÓN DEL ESTADO
-            |--------------------------------------------------------------------------
-            |
-            | Antes manteníamos "sidebar-collapsed" hasta soltar el mouse.
-            |
-            | Eso provocaba:
-            |
-            | sidebar ancho
-            | +
-            | contenido todavía colapsado
-            |
-            | Ahora cambiamos el estado visual DURANTE el drag.
-            |
-            */
-
             const previewCollapsed =
                 width
                 <= SIDEBAR_SNAP_THRESHOLD;
@@ -1240,22 +1772,15 @@
                 );
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | SINCRONIZAR BOTÓN
-            |--------------------------------------------------------------------------
-            */
-
             syncCollapseButtonState(
                 previewCollapsed
             );
-
         }
 
 
         /*
         |--------------------------------------------------------------------------
-        | FINALIZAR ARRASTRE
+        | FINALIZAR RESIZE
         |--------------------------------------------------------------------------
         */
 
@@ -1269,9 +1794,12 @@
 
 
             if (
-                event &&
-                resizePointerId !== null &&
-                event.pointerId !== resizePointerId
+                event
+                &&
+                resizePointerId !== null
+                &&
+                event.pointerId
+                    !== resizePointerId
             ) {
                 return;
             }
@@ -1295,27 +1823,16 @@
                 'user-select'
             );
 
+
             document.body.style.removeProperty(
                 'cursor'
             );
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | SNAP AUTOMÁTICO
-            |--------------------------------------------------------------------------
-            */
-
             const shouldCollapse =
                 resizeCurrentWidth
                 <= SIDEBAR_SNAP_THRESHOLD;
 
-
-            /*
-            |--------------------------------------------------------------------------
-            | Primero definimos el estado final manteniendo el ancho temporal.
-            |--------------------------------------------------------------------------
-            */
 
             document.documentElement
                 .classList
@@ -1335,14 +1852,6 @@
             );
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | En el siguiente frame retiramos el ancho temporal.
-            |
-            | CSS realizará el snap final hacia 80px o 256px.
-            |--------------------------------------------------------------------------
-            */
-
             window.requestAnimationFrame(
                 () => {
 
@@ -1350,13 +1859,12 @@
 
                 }
             );
-
         }
 
 
         /*
         |--------------------------------------------------------------------------
-        | CANCELAR ARRASTRE
+        | CANCELAR RESIZE
         |--------------------------------------------------------------------------
         */
 
@@ -1385,16 +1893,13 @@
                 'user-select'
             );
 
+
             document.body.style.removeProperty(
                 'cursor'
             );
 
 
             clearTemporarySizing();
-
-
-            syncSidebarState();
-
         }
 
 
@@ -1402,12 +1907,6 @@
         |--------------------------------------------------------------------------
         | LISTENERS GLOBALES
         |--------------------------------------------------------------------------
-        |
-        | Sólo se registran una vez.
-        |
-        | Esto es importante porque Livewire puede volver a procesar
-        | scripts después de una navegación.
-        |
         */
 
         if (
@@ -1458,12 +1957,6 @@
                     }
 
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | No interferir mientras se escribe
-                    |--------------------------------------------------------------------------
-                    */
-
                     if (
                         isTypingTarget(
                             event.target
@@ -1477,7 +1970,6 @@
 
 
                     window.toggleSidebar();
-
                 }
             );
 
@@ -1486,11 +1978,21 @@
             |--------------------------------------------------------------------------
             | CTRL + K
             |--------------------------------------------------------------------------
+            |
+            | Sólo escritorio.
+            |
             */
 
             document.addEventListener(
                 'keydown',
                 event => {
+
+                    if (
+                        isMobileViewport()
+                    ) {
+                        return;
+                    }
+
 
                     if (
                         event.defaultPrevented
@@ -1526,25 +2028,30 @@
 
 
                     openSidebarSearch();
-
                 }
             );
 
 
             /*
             |--------------------------------------------------------------------------
-            | CLIC EN BUSCADOR COMPRIMIDO
+            | BUSCADOR DEL SIDEBAR COLAPSADO
             |--------------------------------------------------------------------------
-            |
-            | Como utilizamos EL MISMO buscador, no hay un segundo componente.
-            |
             */
 
             document.addEventListener(
                 'click',
                 event => {
 
-                    if (isMobileViewport()) {
+                    if (
+                        isMobileViewport()
+                    ) {
+                        return;
+                    }
+
+
+                    if (
+                        !(event.target instanceof Element)
+                    ) {
                         return;
                     }
 
@@ -1561,8 +2068,7 @@
 
 
                     const collapsed =
-                        document
-                            .documentElement
+                        document.documentElement
                             .classList
                             .contains(
                                 'sidebar-collapsed'
@@ -1578,7 +2084,6 @@
 
 
                     openSidebarSearch();
-
                 }
             );
 
@@ -1600,6 +2105,13 @@
                     }
 
 
+                    if (
+                        !(event.target instanceof Element)
+                    ) {
+                        return;
+                    }
+
+
                     const link =
                         event.target.closest(
                             '#sidebarNav a'
@@ -1614,7 +2126,6 @@
                     applyMobileSidebarState(
                         false
                     );
-
                 }
             );
 
@@ -1623,14 +2134,18 @@
             |--------------------------------------------------------------------------
             | INICIAR RESIZE
             |--------------------------------------------------------------------------
-            |
-            | Delegación para que funcione también después de wire:navigate.hover.
-            |
             */
 
             document.addEventListener(
                 'pointerdown',
                 event => {
+
+                    if (
+                        !(event.target instanceof Element)
+                    ) {
+                        return;
+                    }
+
 
                     const handle =
                         event.target.closest(
@@ -1646,7 +2161,6 @@
                     startSidebarResize(
                         event
                     );
-
                 }
             );
 
@@ -1664,7 +2178,6 @@
                     updateSidebarResize(
                         event
                     );
-
                 }
             );
 
@@ -1682,7 +2195,6 @@
                     finishSidebarResize(
                         event
                     );
-
                 }
             );
 
@@ -1698,14 +2210,13 @@
                 () => {
 
                     cancelSidebarResize();
-
                 }
             );
 
 
             /*
             |--------------------------------------------------------------------------
-            | PERDER FOCO DE LA VENTANA
+            | PERDER FOCO
             |--------------------------------------------------------------------------
             */
 
@@ -1716,9 +2227,7 @@
                     if (resizeActive) {
 
                         finishSidebarResize();
-
                     }
-
                 }
             );
 
@@ -1742,7 +2251,8 @@
 
 
                     if (
-                        nowMobile === wasMobile
+                        nowMobile
+                        === wasMobile
                     ) {
                         return;
                     }
@@ -1756,7 +2266,6 @@
 
 
                     syncSidebarState();
-
                 }
             );
 
@@ -1774,6 +2283,21 @@
                     cancelSidebarResize();
 
 
+                    /*
+                     * Aseguramos que el body jamás
+                     * llegue bloqueado a otra página.
+                     */
+                    if (
+                        isMobileViewport()
+                    ) {
+
+                        applyMobileSidebarState(
+                            false,
+                            true
+                        );
+                    }
+
+
                     if (
                         typeof event.detail?.onSwap
                         !== 'function'
@@ -1786,10 +2310,8 @@
                         () => {
 
                             syncSidebarState();
-
                         }
                     );
-
                 }
             );
 
@@ -1805,10 +2327,8 @@
                 () => {
 
                     syncSidebarState();
-
                 }
             );
-
         }
 
 
@@ -1837,7 +2357,6 @@
                 () => {
 
                     syncSidebarState();
-
                 },
                 {
                     once: true,
@@ -1847,7 +2366,6 @@
         } else {
 
             syncSidebarState();
-
         }
 
     })();

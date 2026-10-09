@@ -144,7 +144,7 @@ document.addEventListener(
     |--------------------------------------------------------------------------
     */
     document.addEventListener(
-        'livewire:navigate.hoverd',
+        'livewire:navigated',
         () => {
             const preference =
                 getThemePreference();
@@ -254,7 +254,7 @@ document.addEventListener(
                 flex-1
                 min-h-screen
 
-                overflow-x-hidden
+                overflow-x-clip
 
                 transition-[margin-left]
                 duration-300
@@ -265,27 +265,38 @@ document.addEventListener(
             {{-- ========================================================
                 HEADER
             ======================================================== --}}
-                <header
-                    class="
-                        h-16
-                        theme-bg
-                        border-b border-[var(--theme-border)]
+            <header
+                id="mobileAppHeader"
 
-                        grid
-                        grid-cols-[auto_minmax(0,1fr)_auto]
-                        items-center
+                class="
+                    h-16
 
-                        gap-2
-                        sm:gap-5
+                    theme-bg
 
-                        px-4
-                        sm:px-6
+                    border-b
+                    border-[var(--theme-border)]
 
-                        sticky
-                        top-0
-                        z-30
-                    "
-                >
+                    grid
+                    grid-cols-[auto_minmax(0,1fr)_auto]
+                    items-center
+
+                    gap-2
+                    sm:gap-5
+
+                    px-4
+                    sm:px-6
+
+                    sticky
+                    top-0
+                    z-30
+
+                    transition-transform
+                    duration-200
+                    ease-out
+
+                    will-change-transform
+                "
+            >
 
                     {{-- Hamburguesa móvil: abre el drawer --}}
                     <button
@@ -349,7 +360,21 @@ document.addEventListener(
                 ==================================================== --}}
                 <button
                     type="button"
-                    onclick="window.openNotificationsPanelFast()"
+                    onclick="
+                            if (window.innerWidth < 768) {
+                                const sidebar =
+                                    document.getElementById('sidebar');
+
+                                if (
+                                    sidebar &&
+                                    sidebar.classList.contains('translate-x-0')
+                                ) {
+                                    window.toggleSidebar();
+                                }
+                            }
+
+                            window.openNotificationsPanelFast();
+                        "
                     class="
                         relative
                         shrink-0
@@ -433,7 +458,21 @@ document.addEventListener(
                     ================================================= --}}
                     <button
                         type="button"
-                        @click="open = !open"
+                        @click="
+                                if (window.innerWidth < 768) {
+                                    const sidebar =
+                                        document.getElementById('sidebar');
+
+                                    if (
+                                        sidebar &&
+                                        sidebar.classList.contains('translate-x-0')
+                                    ) {
+                                        window.toggleSidebar();
+                                    }
+                                }
+
+                                open = !open;
+                            "
                         class="
                             group
 
@@ -1232,6 +1271,511 @@ document.addEventListener(
     />
 
     @include('layouts.partials.sidebar-script')
+
+
+    <script>    
+        (() => {
+
+            /*
+            |--------------------------------------------------------------------------
+            | HEADER AUTOMÁTICO EN MÓVIL
+            |--------------------------------------------------------------------------
+            |
+            | - Al bajar: se oculta.
+            | - Al subir ligeramente: reaparece.
+            | - Cerca del inicio: siempre visible.
+            | - En escritorio: siempre visible.
+            | - Si sidebar, perfil o notificaciones están abiertos:
+            |   permanece visible.
+            |
+            */
+
+            const MOBILE_HEADER_BREAKPOINT =
+                768;
+
+
+            const MOBILE_HEADER_HIDE_AFTER =
+                80;
+
+
+            const MOBILE_HEADER_HIDE_DISTANCE =
+                14;
+
+
+            const MOBILE_HEADER_SHOW_DISTANCE =
+                8;
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Estado global
+            |--------------------------------------------------------------------------
+            */
+
+            window.__trackItMobileHeaderState ??= {
+                lastScrollY: 0,
+                downDistance: 0,
+                upDistance: 0,
+                ticking: false,
+            };
+
+
+            const state =
+                window.__trackItMobileHeaderState;
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Helpers
+            |--------------------------------------------------------------------------
+            */
+
+            function isMobileHeaderViewport() {
+
+                return window.innerWidth
+                    < MOBILE_HEADER_BREAKPOINT;
+
+            }
+
+
+            function getMobileAppHeader() {
+
+                return document.getElementById(
+                    'mobileAppHeader'
+                );
+
+            }
+
+
+            function mobileOverlayIsOpen() {
+
+                /*
+                * Sidebar móvil.
+                */
+                const sidebar =
+                    document.getElementById(
+                        'sidebar'
+                    );
+
+
+                const sidebarOpen =
+                    sidebar
+                    ?.classList
+                    .contains(
+                        'translate-x-0'
+                    )
+                    ?? false;
+
+
+                /*
+                * Panel de notificaciones.
+                */
+                const notifications =
+                    document.getElementById(
+                        'notifications-panel-root'
+                    );
+
+
+                const notificationsOpen =
+                    Boolean(
+                        notifications
+                        &&
+                        !notifications
+                            .classList
+                            .contains(
+                                'hidden'
+                            )
+                    );
+
+
+                /*
+                * Dropdown del perfil.
+                *
+                * Alpine actualiza aria-expanded
+                * en el botón principal.
+                */
+                const profileButton =
+                    document.querySelector(
+                        '#mobileAppHeader button[aria-haspopup="true"][aria-expanded="true"]'
+                    );
+
+
+                const profileOpen =
+                    Boolean(
+                        profileButton
+                    );
+
+
+                return (
+                    sidebarOpen
+                    ||
+                    notificationsOpen
+                    ||
+                    profileOpen
+                );
+
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Mostrar
+            |--------------------------------------------------------------------------
+            */
+
+            function showMobileAppHeader() {
+
+                const header =
+                    getMobileAppHeader();
+
+
+                if (!header) {
+                    return;
+                }
+
+
+                header.style.transform =
+                    'translateY(0)';
+
+
+                header.dataset.mobileHeaderHidden =
+                    '0';
+
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Ocultar
+            |--------------------------------------------------------------------------
+            */
+
+            function hideMobileAppHeader() {
+
+                const header =
+                    getMobileAppHeader();
+
+
+                if (!header) {
+                    return;
+                }
+
+
+                if (!isMobileHeaderViewport()) {
+                    return;
+                }
+
+
+                header.style.transform =
+                    'translateY(-100%)';
+
+
+                header.dataset.mobileHeaderHidden =
+                    '1';
+
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Exponer mostrar header
+            |--------------------------------------------------------------------------
+            */
+
+            window.showTrackItMobileHeader =
+                showMobileAppHeader;
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Procesar scroll
+            |--------------------------------------------------------------------------
+            */
+
+            function handleMobileHeaderScroll() {
+
+                state.ticking =
+                    false;
+
+
+                /*
+                * Escritorio:
+                *
+                * nunca ocultamos el header.
+                */
+                if (!isMobileHeaderViewport()) {
+
+                    showMobileAppHeader();
+
+
+                    state.lastScrollY =
+                        window.scrollY;
+
+
+                    state.downDistance =
+                        0;
+
+
+                    state.upDistance =
+                        0;
+
+
+                    return;
+                }
+
+
+                const currentScrollY =
+                    Math.max(
+                        window.scrollY,
+                        0
+                    );
+
+
+                /*
+                * Cerca de la parte superior:
+                *
+                * header siempre visible.
+                */
+                if (
+                    currentScrollY
+                    <= 24
+                ) {
+
+                    showMobileAppHeader();
+
+
+                    state.lastScrollY =
+                        currentScrollY;
+
+
+                    state.downDistance =
+                        0;
+
+
+                    state.upDistance =
+                        0;
+
+
+                    return;
+                }
+
+
+                /*
+                * Si una interfaz superior está abierta,
+                * el header no debe desaparecer.
+                */
+                if (
+                    mobileOverlayIsOpen()
+                ) {
+
+                    showMobileAppHeader();
+
+
+                    state.lastScrollY =
+                        currentScrollY;
+
+
+                    state.downDistance =
+                        0;
+
+
+                    state.upDistance =
+                        0;
+
+
+                    return;
+                }
+
+
+                const delta =
+                    currentScrollY
+                    - state.lastScrollY;
+
+
+                /*
+                * Ignorar movimientos mínimos.
+                */
+                if (
+                    Math.abs(delta)
+                    < 2
+                ) {
+                    return;
+                }
+
+
+                /*
+                * Scroll hacia abajo.
+                */
+                if (delta > 0) {
+
+                    state.downDistance +=
+                        delta;
+
+
+                    state.upDistance =
+                        0;
+
+
+                    if (
+                        currentScrollY
+                            > MOBILE_HEADER_HIDE_AFTER
+                        &&
+                        state.downDistance
+                            >= MOBILE_HEADER_HIDE_DISTANCE
+                    ) {
+
+                        hideMobileAppHeader();
+
+
+                        state.downDistance =
+                            0;
+                    }
+
+                }
+
+
+                /*
+                * Scroll hacia arriba.
+                */
+                else {
+
+                    state.upDistance +=
+                        Math.abs(delta);
+
+
+                    state.downDistance =
+                        0;
+
+
+                    if (
+                        state.upDistance
+                        >= MOBILE_HEADER_SHOW_DISTANCE
+                    ) {
+
+                        showMobileAppHeader();
+
+
+                        state.upDistance =
+                            0;
+                    }
+
+                }
+
+
+                state.lastScrollY =
+                    currentScrollY;
+
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Scroll optimizado con requestAnimationFrame
+            |--------------------------------------------------------------------------
+            */
+
+            function requestMobileHeaderUpdate() {
+
+                if (state.ticking) {
+                    return;
+                }
+
+
+                state.ticking =
+                    true;
+
+
+                window.requestAnimationFrame(
+                    handleMobileHeaderScroll
+                );
+
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Sincronizar
+            |--------------------------------------------------------------------------
+            */
+
+            function resetMobileHeader() {
+
+                showMobileAppHeader();
+
+
+                state.lastScrollY =
+                    Math.max(
+                        window.scrollY,
+                        0
+                    );
+
+
+                state.downDistance =
+                    0;
+
+
+                state.upDistance =
+                    0;
+
+
+                state.ticking =
+                    false;
+
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Listeners una sola vez
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                !window.__trackItMobileHeaderListenersInstalled
+            ) {
+
+                window.__trackItMobileHeaderListenersInstalled =
+                    true;
+
+
+                window.addEventListener(
+                    'scroll',
+                    requestMobileHeaderUpdate,
+                    {
+                        passive: true,
+                    }
+                );
+
+
+                window.addEventListener(
+                    'resize',
+                    resetMobileHeader
+                );
+
+
+                /*
+                * Después de wire:navigate,
+                * el DOM del header puede haber cambiado.
+                */
+                document.addEventListener(
+                    'livewire:navigated',
+                    resetMobileHeader
+                );
+
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Primera carga
+            |--------------------------------------------------------------------------
+            */
+
+            resetMobileHeader();
+
+        })();
+    </script>
+
 
     @stack('scripts')
 
