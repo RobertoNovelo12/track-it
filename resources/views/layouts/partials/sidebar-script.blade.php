@@ -586,6 +586,193 @@
 
         /*
         |--------------------------------------------------------------------------
+        | PREFETCH DEL MENÚ EN MÓVIL
+        |--------------------------------------------------------------------------
+        |
+        | En escritorio el cursor nos avisa qué enlace probablemente
+        | abrirá el usuario.
+        |
+        | En móvil usamos la apertura del drawer como señal de intención.
+        |
+        | Los enlaces se precargan poco a poco para no lanzar todas
+        | las peticiones al mismo tiempo.
+        |
+        */
+
+        function prefetchMobileSidebarLinks() {
+            if (!isMobileViewport()) {
+                return;
+            }
+
+
+            const sidebarNav =
+                document.getElementById(
+                    'sidebarNav'
+                );
+
+
+            if (!sidebarNav) {
+                return;
+            }
+
+
+            const currentUrl =
+                new URL(
+                    window.location.href
+                );
+
+
+            const links =
+                Array.from(
+                    sidebarNav.querySelectorAll(
+                        'a[href]'
+                    )
+                )
+                    .filter(
+                        link =>
+                            link.hasAttribute(
+                                'wire:navigate.hover'
+                            )
+                    )
+                    .filter(
+                        link => {
+
+                            const href =
+                                link.getAttribute(
+                                    'href'
+                                );
+
+
+                            if (
+                                !href
+                                ||
+                                href === '#'
+                            ) {
+                                return false;
+                            }
+
+
+                            const destination =
+                                new URL(
+                                    href,
+                                    window.location.origin
+                                );
+
+
+                            /*
+                            * Solamente navegación interna.
+                            */
+                            if (
+                                destination.origin
+                                !==
+                                window.location.origin
+                            ) {
+                                return false;
+                            }
+
+
+                            /*
+                            * No necesitamos precargar
+                            * la página actual.
+                            */
+                            if (
+                                destination.pathname
+                                ===
+                                currentUrl.pathname
+                                &&
+                                destination.search
+                                ===
+                                currentUrl.search
+                            ) {
+                                return false;
+                            }
+
+
+                            return true;
+                        }
+                    );
+
+
+            links.forEach(
+                (
+                    link,
+                    index
+                ) => {
+
+                    /*
+                    * Evitar programarlo dos veces
+                    * en el mismo DOM.
+                    */
+                    if (
+                        link.dataset
+                            .mobilePrefetchQueued
+                        === '1'
+                    ) {
+                        return;
+                    }
+
+
+                    link.dataset
+                        .mobilePrefetchQueued =
+                            '1';
+
+
+                    /*
+                    * Escalonamos las precargas.
+                    *
+                    * 0 ms
+                    * 90 ms
+                    * 180 ms
+                    * 270 ms...
+                    *
+                    * Así no golpeamos el servidor
+                    * con todas las páginas al mismo tiempo.
+                    */
+                    setTimeout(
+                        () => {
+
+                            /*
+                            * El usuario pudo navegar mientras
+                            * este timeout esperaba.
+                            */
+                            if (
+                                !document.contains(
+                                    link
+                                )
+                            ) {
+                                return;
+                            }
+
+
+                            /*
+                            * wire:navigate.hover ya sabe
+                            * qué hacer cuando recibe
+                            * mouseenter.
+                            *
+                            * Nosotros únicamente lo
+                            * disparamos artificialmente.
+                            */
+                            link.dispatchEvent(
+                                new MouseEvent(
+                                    'mouseenter',
+                                    {
+                                        bubbles: false,
+                                        cancelable: false,
+                                        view: window,
+                                    }
+                                )
+                            );
+                        },
+
+                        index * 90
+                    );
+                }
+            );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
         | TOGGLE PÚBLICO
         |--------------------------------------------------------------------------
         |
@@ -605,9 +792,10 @@
                 */
 
                 if (isMobileViewport()) {
-
                     const sidebar =
-                        getSidebar();
+                        document.getElementById(
+                            'sidebar'
+                        );
 
 
                     if (!sidebar) {
@@ -616,20 +804,33 @@
 
 
                     const isOpen =
-                        sidebar
-                            .classList
-                            .contains(
-                                'translate-x-0'
-                            );
+                        sidebar.classList.contains(
+                            'translate-x-0'
+                        );
+
+
+                    const willOpen =
+                        !isOpen;
+
+
+                    normalizeMobileSidebar();
 
 
                     applyMobileSidebarState(
-                        !isOpen
+                        willOpen
                     );
 
 
-                    return;
+                    /*
+                    * Solamente cuando se abre
+                    * el menú móvil.
+                    */
+                    if (willOpen) {
+                        prefetchMobileSidebarLinks();
+                    }
 
+
+                    return;
                 }
 
 
@@ -1603,81 +1804,4 @@
         }
 
     })();
-
-    /*
-    |--------------------------------------------------------------------------
-    | PREFETCH DE NAVEGACIÓN EN MÓVIL
-    |--------------------------------------------------------------------------
-    |
-    | En escritorio wire:navigate.hover empieza a precargar cuando
-    | el cursor permanece sobre el enlace.
-    |
-    | En móvil no existe hover, así que cuando el usuario toca un enlace
-    | le damos focus inmediatamente. Livewire utiliza también el focus
-    | para iniciar el prefetch de wire:navigate.hover.
-    |
-    */
-
-    document.addEventListener(
-        'pointerdown',
-        (event) => {
-
-            /*
-            * Solamente nos interesa touch o lápiz.
-            * El mouse ya utiliza hover normalmente.
-            */
-            if (
-                event.pointerType !== 'touch'
-                &&
-                event.pointerType !== 'pen'
-            ) {
-                return;
-            }
-
-
-            const link =
-                event.target.closest(
-                    'a[href]'
-                );
-
-
-            if (! link) {
-                return;
-            }
-
-
-            /*
-            * Solamente enlaces que ya decidimos
-            * que son navegación Livewire.
-            */
-            if (
-                ! link.hasAttribute(
-                    'wire:navigate.hover'
-                )
-            ) {
-                return;
-            }
-
-
-            /*
-            * Dar focus dispara el prefetch de Livewire.
-            * preventScroll evita movimientos inesperados
-            * de la pantalla.
-            */
-            try {
-
-                link.focus({
-                    preventScroll: true,
-                });
-
-            } catch (error) {
-
-                link.focus();
-            }
-        },
-        {
-            capture: true,
-            passive: true,
-        }
-    );
 </script>
