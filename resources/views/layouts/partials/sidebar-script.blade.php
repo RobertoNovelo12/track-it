@@ -584,191 +584,238 @@
         }
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | PREFETCH DEL MENÚ EN MÓVIL
-        |--------------------------------------------------------------------------
-        |
-        | En escritorio el cursor nos avisa qué enlace probablemente
-        | abrirá el usuario.
-        |
-        | En móvil usamos la apertura del drawer como señal de intención.
-        |
-        | Los enlaces se precargan poco a poco para no lanzar todas
-        | las peticiones al mismo tiempo.
-        |
-        */
+    /*
+    |--------------------------------------------------------------------------
+    | PREFETCH DEL MENÚ EN MÓVIL
+    |--------------------------------------------------------------------------
+    |
+    | Cada URL se precarga como máximo una vez cada 60 segundos.
+    |
+    | El registro vive en window, por lo que se conserva durante
+    | las navegaciones SPA de wire:navigate, pero se reinicia si
+    | se recarga completamente el navegador.
+    |
+    */
 
-        function prefetchMobileSidebarLinks() {
-            if (!isMobileViewport()) {
-                return;
-            }
-
-
-            const sidebarNav =
-                document.getElementById(
-                    'sidebarNav'
-                );
-
-
-            if (!sidebarNav) {
-                return;
-            }
-
-
-            const currentUrl =
-                new URL(
-                    window.location.href
-                );
-
-
-            const links =
-                Array.from(
-                    sidebarNav.querySelectorAll(
-                        'a[href]'
-                    )
-                )
-                    .filter(
-                        link =>
-                            link.hasAttribute(
-                                'wire:navigate.hover'
-                            )
-                    )
-                    .filter(
-                        link => {
-
-                            const href =
-                                link.getAttribute(
-                                    'href'
-                                );
-
-
-                            if (
-                                !href
-                                ||
-                                href === '#'
-                            ) {
-                                return false;
-                            }
-
-
-                            const destination =
-                                new URL(
-                                    href,
-                                    window.location.origin
-                                );
-
-
-                            /*
-                            * Solamente navegación interna.
-                            */
-                            if (
-                                destination.origin
-                                !==
-                                window.location.origin
-                            ) {
-                                return false;
-                            }
-
-
-                            /*
-                            * No necesitamos precargar
-                            * la página actual.
-                            */
-                            if (
-                                destination.pathname
-                                ===
-                                currentUrl.pathname
-                                &&
-                                destination.search
-                                ===
-                                currentUrl.search
-                            ) {
-                                return false;
-                            }
-
-
-                            return true;
-                        }
-                    );
-
-
-            links.forEach(
-                (
-                    link,
-                    index
-                ) => {
-
-                    /*
-                    * Evitar programarlo dos veces
-                    * en el mismo DOM.
-                    */
-                    if (
-                        link.dataset
-                            .mobilePrefetchQueued
-                        === '1'
-                    ) {
-                        return;
-                    }
-
-
-                    link.dataset
-                        .mobilePrefetchQueued =
-                            '1';
-
-
-                    /*
-                    * Escalonamos las precargas.
-                    *
-                    * 0 ms
-                    * 90 ms
-                    * 180 ms
-                    * 270 ms...
-                    *
-                    * Así no golpeamos el servidor
-                    * con todas las páginas al mismo tiempo.
-                    */
-                    setTimeout(
-                        () => {
-
-                            /*
-                            * El usuario pudo navegar mientras
-                            * este timeout esperaba.
-                            */
-                            if (
-                                !document.contains(
-                                    link
-                                )
-                            ) {
-                                return;
-                            }
-
-
-                            /*
-                            * wire:navigate.hover ya sabe
-                            * qué hacer cuando recibe
-                            * mouseenter.
-                            *
-                            * Nosotros únicamente lo
-                            * disparamos artificialmente.
-                            */
-                            link.dispatchEvent(
-                                new MouseEvent(
-                                    'mouseenter',
-                                    {
-                                        bubbles: false,
-                                        cancelable: false,
-                                        view: window,
-                                    }
-                                )
-                            );
-                        },
-
-                        index * 90
-                    );
-                }
-            );
+    function prefetchMobileSidebarLinks() {
+        if (!isMobileViewport()) {
+            return;
         }
+
+
+        const PREFETCH_TTL =
+            60 * 1000;
+
+
+        /*
+        * Registro global de URLs ya precargadas.
+        *
+        * Se mantiene entre navegaciones de Livewire.
+        */
+        window.__trackItMobilePrefetchCache ??=
+            new Map();
+
+
+        const prefetchCache =
+            window.__trackItMobilePrefetchCache;
+
+
+        const sidebarNav =
+            document.getElementById(
+                'sidebarNav'
+            );
+
+
+        if (!sidebarNav) {
+            return;
+        }
+
+
+        const now =
+            Date.now();
+
+
+        const currentUrl =
+            new URL(
+                window.location.href
+            );
+
+
+        const links =
+            Array.from(
+                sidebarNav.querySelectorAll(
+                    'a[href][wire\\:navigate\\.hover]'
+                )
+            )
+                .filter(
+                    link => {
+
+                        const href =
+                            link.getAttribute(
+                                'href'
+                            );
+
+
+                        if (
+                            !href
+                            ||
+                            href === '#'
+                        ) {
+                            return false;
+                        }
+
+
+                        const destination =
+                            new URL(
+                                href,
+                                window.location.origin
+                            );
+
+
+                        /*
+                        * Solamente URLs internas.
+                        */
+                        if (
+                            destination.origin
+                            !==
+                            window.location.origin
+                        ) {
+                            return false;
+                        }
+
+
+                        /*
+                        * No precargar la página actual.
+                        */
+                        if (
+                            destination.pathname
+                                === currentUrl.pathname
+                            &&
+                            destination.search
+                                === currentUrl.search
+                        ) {
+                            return false;
+                        }
+
+
+                        /*
+                        * Usamos pathname + query para distinguir,
+                        * por ejemplo:
+                        *
+                        * /reportes
+                        * /reportes?tipo=bajas
+                        */
+                        const key =
+                            destination.pathname
+                            + destination.search;
+
+
+                        const lastPrefetch =
+                            prefetchCache.get(
+                                key
+                            );
+
+
+                        /*
+                        * Si fue precargada hace menos de
+                        * 60 segundos, no hacemos nada.
+                        */
+                        if (
+                            lastPrefetch
+                            &&
+                            (
+                                now - lastPrefetch
+                            ) < PREFETCH_TTL
+                        ) {
+                            return false;
+                        }
+
+
+                        /*
+                        * Reservamos la URL desde ahora.
+                        *
+                        * Esto también evita duplicados si el
+                        * usuario abre/cierra el menú mientras
+                        * los setTimeout siguen pendientes.
+                        */
+                        prefetchCache.set(
+                            key,
+                            now
+                        );
+
+
+                        return true;
+                    }
+                );
+
+
+        links.forEach(
+            (
+                link,
+                index
+            ) => {
+
+                setTimeout(
+                    () => {
+
+                        /*
+                        * Si Livewire ya reemplazó el DOM,
+                        * ignoramos este elemento viejo.
+                        */
+                        if (
+                            !document.contains(
+                                link
+                            )
+                        ) {
+                            return;
+                        }
+
+
+                        link.dispatchEvent(
+                            new MouseEvent(
+                                'mouseenter',
+                                {
+                                    bubbles: false,
+                                    cancelable: false,
+                                    view: window,
+                                }
+                            )
+                        );
+                    },
+
+                    /*
+                    * Evitamos disparar todas las peticiones
+                    * exactamente al mismo tiempo.
+                    */
+                    index * 90
+                );
+            }
+        );
+
+
+        /*
+        * Limpieza del registro para que el Map no crezca
+        * indefinidamente.
+        */
+        for (
+            const [
+                key,
+                timestamp
+            ]
+            of prefetchCache.entries()
+        ) {
+
+            if (
+                now - timestamp
+                >
+                PREFETCH_TTL
+            ) {
+                prefetchCache.delete(
+                    key
+                );
+            }
+        }
+    }
 
 
         /*
@@ -1754,7 +1801,7 @@
             */
 
             document.addEventListener(
-                'livewire:navigate.hoverd',
+                'livewire:navigated',
                 () => {
 
                     syncSidebarState();
