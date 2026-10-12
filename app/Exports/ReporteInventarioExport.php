@@ -4,7 +4,6 @@ namespace App\Exports;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Concerns\WithCustomCsvSettings;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -21,7 +20,6 @@ FromCollection,
 WithHeadings,
 WithMapping,
 WithStyles,
-ShouldAutoSize,
 WithColumnWidths,
 WithTitle,
 WithCustomCsvSettings
@@ -98,10 +96,20 @@ WithCustomCsvSettings
 
     public function columnWidths(): array
     {
+        /*
+         * Anchos fijos: ShouldAutoSize obliga a PhpSpreadsheet a medir
+         * todas las celdas y se vuelve lento con muchos registros.
+         */
         return [
             'A' => 20,
             'B' => 18,
             'C' => 28,
+            'D' => 20,
+            'E' => 18,
+            'F' => 22,
+            'G' => 22,
+            'H' => 16,
+            'I' => 14,
             'J' => 55,
         ];
     }
