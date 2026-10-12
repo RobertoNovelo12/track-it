@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EquipoController;
 use Illuminate\Support\Facades\Route;
@@ -110,6 +111,77 @@ Route::middleware([
     )
         ->whereNumber('equipo')
         ->name('equipos.edit');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Dar de baja equipo
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/equipos/{equipo}/baja',
+        function (int $equipo) {
+            return view('equipos.baja', [
+                'equipoId' => $equipo,
+            ]);
+        }
+    )
+        ->whereNumber('equipo')
+        ->name('equipos.baja');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Mantenimientos
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/mantenimientos',
+        fn () => view('mantenimientos.index')
+    )->name('mantenimientos.index');
+
+    Route::get(
+        '/mantenimientos/crear',
+        fn () => view('mantenimientos.create')
+    )->name('mantenimientos.create');
+
+    Route::get(
+        '/mantenimientos/{mantenimiento}/editar',
+        function (int $mantenimiento) {
+            return view('mantenimientos.edit', [
+                'mantenimientoId' => $mantenimiento,
+            ]);
+        }
+    )
+        ->whereNumber('mantenimiento')
+        ->name('mantenimientos.edit');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Generación de reportes
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/reportes',
+        fn () => view('reportes.index')
+    )->name('reportes.index');
+
+    Route::get(
+        '/reportes/{reporte}',
+        [ReporteController::class, 'show']
+    )
+        ->whereNumber('reporte')
+        ->name('reportes.show');
+
+    Route::get(
+        '/reportes/{reporte}/descargar',
+        [ReporteController::class, 'download']
+    )
+        ->whereNumber('reporte')
+        ->name('reportes.download');
 
 
     /*

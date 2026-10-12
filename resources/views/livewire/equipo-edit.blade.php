@@ -264,8 +264,9 @@
                 Exportar Alta
             </button>
 
-            <button
-                type="button"
+            {{-- Dar de baja --}}
+            <a
+                href="{{ route('equipos.baja', $equipoId) }}"
                 class="
                     w-full
                     sm:w-auto
@@ -282,9 +283,9 @@
                     text-sm
                     font-medium
                     text-[var(--theme-danger)]
-                    cursor-default
+                    hover:opacity-90
+                    transition-opacity
                 "
-                title="Función no habilitada por el momento"
             >
                 <svg
                     class="w-4 h-4"
@@ -305,7 +306,7 @@
                 </svg>
 
                 Dar de baja
-            </button>
+            </a>
         </div>
 
 
