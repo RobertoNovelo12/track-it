@@ -86,6 +86,19 @@
                 },
             });
 
+            base.vista =
+                @js($vista);
+
+
+            base.muestraMarcas =
+                base.vista === 'marcas'
+                || base.vista === 'ambos';
+
+
+            base.muestraModelos =
+                base.vista === 'modelos'
+                || base.vista === 'ambos';
+
 
         /*
         |--------------------------------------------------------------------------
@@ -1354,10 +1367,13 @@
                             setTimeout(
                                 () => {
 
-                                    this.loadMarcas();
+                                        if (this.muestraMarcas) {
+                                            this.loadMarcas();
+                                        }
 
-                                    this.loadModelos();
-
+                                        if (this.muestraModelos) {
+                                            this.loadModelos();
+                                        }
                                 },
                                 300
                             );
@@ -1382,9 +1398,13 @@
                             1;
 
 
+                    if (this.muestraMarcas) {
                         this.loadMarcas();
+                    }
 
+                    if (this.muestraModelos) {
                         this.loadModelos();
+                    }
                     }
                 );
 
@@ -1399,9 +1419,12 @@
                     'tipo',
                     () => {
 
+                        if (!this.muestraModelos) {
+                            return;
+                        }
+
                         this.modeloPage =
                             1;
-
 
                         this.loadModelos();
                     }
@@ -1481,12 +1504,29 @@
                 |
                 */
 
-                Promise.all([
+                const initialLoads = [
                     this.loadMetrics(),
-                    this.loadTiposEquipo(),
-                    this.loadMarcas(),
-                    this.loadModelos(),
-                ]);
+                ];
+
+
+                if (this.muestraMarcas) {
+                    initialLoads.push(
+                        this.loadMarcas()
+                    );
+                }
+
+
+                if (this.muestraModelos) {
+                    initialLoads.push(
+                        this.loadTiposEquipo(),
+                        this.loadModelos()
+                    );
+                }
+
+
+                Promise.all(
+                    initialLoads
+                );
             };
 
 
@@ -1533,16 +1573,24 @@
     {{-- ============================================================
         MARCAS
     ============================================================ --}}
-    @include(
-        'livewire.catalogos.marcas-modelos.marcas.section'
-    )
+    @if ($vista !== 'modelos')
+
+        @include(
+            'livewire.catalogos.marcas-modelos.marcas.section'
+        )
+
+    @endif
 
 
     {{-- ============================================================
         MODELOS
     ============================================================ --}}
-    @include(
-        'livewire.catalogos.marcas-modelos.modelos.section'
-    )
+    @if ($vista !== 'marcas')
+
+        @include(
+            'livewire.catalogos.marcas-modelos.modelos.section'
+        )
+
+    @endif
 
 </div>

@@ -63,7 +63,7 @@
         ],
 
         [
-            'label' => 'Catálogos Base',
+            'label' => 'Administración',
             'url' => Route::has('catalogos.index')
                 ? route('catalogos.index')
                 : '#',
@@ -846,7 +846,7 @@
                         @break
 
 
-                    {{-- Catálogos --}}
+                    {{-- Administración --}}
                     @case('catalogos')
 
                         <svg

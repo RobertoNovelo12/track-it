@@ -14,16 +14,22 @@
     "
 >
     <div
-        class="
-            grid
-            grid-cols-1
-            md:grid-cols-[minmax(0,1fr)_160px_190px]
+        @class([
+            'grid',
+            'grid-cols-1',
+            'gap-3',
 
-            gap-3
-        "
+            'md:grid-cols-[minmax(0,1fr)_160px]' =>
+                $vista === 'marcas',
+
+            'md:grid-cols-[minmax(0,1fr)_160px_190px]' =>
+                $vista !== 'marcas',
+        ])
     >
 
-        {{-- BUSCADOR --}}
+        {{-- ====================================================
+            BUSCADOR
+        ==================================================== --}}
         <div class="relative">
 
             <div
@@ -49,6 +55,8 @@
                     fill="none"
                     stroke="currentColor"
                     stroke-width="1.7"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
                 >
                     <circle
                         cx="11"
@@ -66,7 +74,11 @@
 
                 x-model="search"
 
-                placeholder="Buscar por marca, modelo, tipo o descripción..."
+                @if ($vista === 'marcas')
+                    placeholder="Buscar por marca o descripción..."
+                @else
+                    placeholder="Buscar por modelo, marca, tipo o descripción..."
+                @endif
 
                 class="
                     w-full
@@ -100,7 +112,9 @@
         </div>
 
 
-        {{-- ESTADO --}}
+        {{-- ====================================================
+            ESTADO
+        ==================================================== --}}
         <div class="min-w-0">
 
             <x-searchable-select
@@ -117,21 +131,28 @@
         </div>
 
 
-        {{-- TIPO --}}
-        <div class="min-w-0">
+        {{-- ====================================================
+            TIPO DE EQUIPO
+            Sólo aplica a Modelos
+        ==================================================== --}}
+        @if ($vista !== 'marcas')
 
-            <x-searchable-select
-                x-model="tipo"
-                x-options="tipoOptions"
+            <div class="min-w-0">
 
-                placeholder="Buscar tipo..."
+                <x-searchable-select
+                    x-model="tipo"
+                    x-options="tipoOptions"
 
-                :show-clear="false"
+                    placeholder="Buscar tipo..."
 
-                compact
-            />
+                    :show-clear="false"
 
-        </div>
+                    compact
+                />
+
+            </div>
+
+        @endif
 
     </div>
 </section>

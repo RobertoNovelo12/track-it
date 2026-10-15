@@ -54,6 +54,42 @@ class MarcasModelos extends Component
 
     public string $sortModelos = 'asc';
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | Vista activa del componente
+    |--------------------------------------------------------------------------
+    |
+    | Permite reutilizar este componente mostrando únicamente:
+    |
+    | - marcas
+    | - modelos
+    | - ambos
+    |
+    */
+
+    public string $vista = 'ambos';
+
+
+    public function mount(string $vista = 'ambos'): void
+    {
+        $vista = strtolower(
+            trim($vista)
+        );
+
+        $this->vista = in_array(
+            $vista,
+            [
+                'marcas',
+                'modelos',
+                'ambos',
+            ],
+            true
+        )
+            ? $vista
+            : 'ambos';
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Modal / formulario

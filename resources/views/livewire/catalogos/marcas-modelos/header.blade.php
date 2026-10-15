@@ -1,3 +1,39 @@
+@php
+    $isMarcas =
+        $vista === 'marcas';
+
+    $isModelos =
+        $vista === 'modelos';
+
+    $title =
+        $isMarcas
+            ? 'Marcas'
+            : (
+                $isModelos
+                    ? 'Modelos'
+                    : 'Marcas y modelos'
+            );
+
+    $description =
+        $isMarcas
+            ? 'Administra las marcas disponibles para los tipos de equipo.'
+            : (
+                $isModelos
+                    ? 'Administra los modelos disponibles y su relación con marcas y tipos de equipo.'
+                    : 'Administra las marcas y modelos disponibles.'
+            );
+
+    $buttonLabel =
+        $isMarcas
+            ? 'Añadir marca'
+            : (
+                $isModelos
+                    ? 'Añadir modelo'
+                    : 'Añadir'
+            );
+@endphp
+
+
 {{-- ============================================================
     ENCABEZADO
 ============================================================ --}}
@@ -13,6 +49,9 @@
         gap-4
     "
 >
+    {{-- ========================================================
+        TÍTULO / RUTA
+    ======================================================== --}}
     <div>
 
         <h1
@@ -22,7 +61,7 @@
                 text-[var(--theme-text-strong)]
             "
         >
-            Gestión de marcas y modelos
+            {{ $title }}
         </h1>
 
         <p
@@ -33,18 +72,15 @@
                 text-[var(--theme-text-muted)]
             "
         >
-            Inicio
-
-            <span class="mx-1">
-                &gt;
-            </span>
-
-            Catálogo
+            {{ $description }}
         </p>
 
     </div>
 
 
+    {{-- ========================================================
+        ACCIÓN
+    ======================================================== --}}
     <a
         href="{{ route('catalogos.create') }}"
 
@@ -77,11 +113,13 @@
             fill="none"
             stroke="currentColor"
             stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
         >
             <path d="M12 5v14"/>
             <path d="M5 12h14"/>
         </svg>
 
-        Añadir
+        {{ $buttonLabel }}
     </a>
 </div>
