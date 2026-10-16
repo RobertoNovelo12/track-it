@@ -172,9 +172,27 @@ class EquipoEdit extends Component
     |--------------------------------------------------------------------------
     */
 
+    private function equipoDadoDeBaja(): bool
+    {
+        return DB::table('equipos as e')
+            ->leftJoin('estados_equipo as ee', 'ee.id_estado_equipo', '=', 'e.id_estado_activo')
+            ->where('e.id_equipo', $this->equipoId)
+            ->where(function ($query): void {
+                $query->where('ee.clave', 'BAJA')
+                    ->orWhereExists(function ($subquery): void {
+                        $subquery->selectRaw('1')
+                            ->from('bajas as b')
+                            ->whereColumn('b.id_equipo', 'e.id_equipo');
+                    });
+            })
+            ->exists();
+    }
+
     public function mount(int $equipoId): void
     {
         $this->equipoId = $equipoId;
+
+        abort_if($this->equipoDadoDeBaja(), 403, 'Este equipo fue dado de baja y no puede editarse.');
 
         $this->cargarEquipo();
     }
@@ -1861,6 +1879,8 @@ private function getEquipmentFrontendData(): array
     #[Json]
     public function save(array $payload): array
     {
+        abort_if($this->equipoDadoDeBaja(), 403, 'Este equipo fue dado de baja y no puede editarse.');
+
         $payload =
             $this->normalizePayload(
                 $payload
@@ -2002,6 +2022,13 @@ private function getEquipmentFrontendData(): array
                 $childFields,
                 $childData
             ): void {
+                $equipoActual = DB::table('equipos')
+                    ->where('id_equipo', $this->equipoId)
+                    ->lockForUpdate()
+                    ->first(['id_equipo']);
+                abort_unless($equipoActual, 404);
+                abort_if($this->equipoDadoDeBaja(), 403, 'Este equipo fue dado de baja y no puede editarse.');
+
 
 
                 /*

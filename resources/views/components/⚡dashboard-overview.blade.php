@@ -205,6 +205,24 @@ new class extends Component
         $today =
             Carbon::today();
 
+        // Inventario operativo: excluye equipos con baja histórica
+        // o estado BAJA, sin borrar sus registros.
+        $equiposVigentes = static function () {
+            return DB::table('equipos as e')
+                ->whereNotExists(function ($query) {
+                    $query->selectRaw('1')
+                        ->from('bajas as b_inventario')
+                        ->whereColumn('b_inventario.id_equipo', 'e.id_equipo');
+                })
+                ->whereNotExists(function ($query) {
+                    $query->selectRaw('1')
+                        ->from('estados_equipo as ee_inventario')
+                        ->whereColumn('ee_inventario.id_estado_equipo', 'e.id_estado_activo')
+                        ->where('ee_inventario.clave', 'BAJA');
+                });
+        };
+
+
 
         /*
         |--------------------------------------------------------------------------
@@ -213,7 +231,7 @@ new class extends Component
         */
 
         $totalEquipos =
-            DB::table('equipos')
+            $equiposVigentes()
                 ->count();
 
 
@@ -225,6 +243,7 @@ new class extends Component
 
         $equiposAsignados =
             DB::table('asignaciones')
+                ->whereIn('id_equipo', $equiposVigentes()->select('e.id_equipo'))
                 ->whereNull('fecha_fin')
                 ->distinct()
                 ->count('id_equipo');
@@ -238,6 +257,7 @@ new class extends Component
 
         $enMantenimiento =
             DB::table('mantenimientos as m')
+                ->whereIn('m.id_equipo', $equiposVigentes()->select('e.id_equipo'))
 
                 ->leftJoin(
                     'catalogo_valores as cv',
@@ -264,6 +284,7 @@ new class extends Component
 
         $mantenimientosVencidos =
             DB::table('mantenimientos as m')
+                ->whereIn('m.id_equipo', $equiposVigentes()->select('e.id_equipo'))
 
                 ->leftJoin(
                     'catalogo_valores as cv',
@@ -302,7 +323,7 @@ new class extends Component
         */
 
         $garantiasVencidas =
-            DB::table('equipos')
+            $equiposVigentes()
 
                 ->whereNotNull(
                     'fecha_fin_garantia'
@@ -324,7 +345,7 @@ new class extends Component
         */
 
         $garantiasPorVencer =
-            DB::table('equipos')
+            $equiposVigentes()
 
                 ->whereNotNull(
                     'fecha_fin_garantia'
@@ -403,7 +424,7 @@ new class extends Component
                 'label' => '0 - 2 años',
 
                 'count' =>
-                    DB::table('equipos')
+                    $equiposVigentes()
 
                         ->whereNotNull(
                             'fecha_compra'
@@ -428,7 +449,7 @@ new class extends Component
                 'label' => '3 - 5 años',
 
                 'count' =>
-                    DB::table('equipos')
+                    $equiposVigentes()
 
                         ->whereNotNull(
                             'fecha_compra'
@@ -461,7 +482,7 @@ new class extends Component
                 'label' => '6+ años',
 
                 'count' =>
-                    DB::table('equipos')
+                    $equiposVigentes()
 
                         ->whereNotNull(
                             'fecha_compra'
@@ -486,7 +507,7 @@ new class extends Component
                 'label' => 'Sin fecha',
 
                 'count' =>
-                    DB::table('equipos')
+                    $equiposVigentes()
 
                         ->whereNull(
                             'fecha_compra'

@@ -1,4 +1,3 @@
-
 @php
     $dato = static fn ($valor) =>
         filled($valor) ? trim((string) $valor) : '—';
@@ -68,13 +67,22 @@
     .alta-vista {
         background: #fff;
         color: #273f57;
-        font: 7px/1.35 Arial, sans-serif;
+        font: 7px/1.35 'Aptos', 'Segoe UI', Arial, sans-serif;
         padding: 5%;
         overflow-wrap: anywhere;
     }
 
     .alta-vista * {
         box-sizing: border-box;
+    }
+
+    .alta-vista .logo-palladium-izquierda {
+        display: block;
+        float: none;
+        width: 32%;
+        max-width: 135px;
+        height: auto;
+        margin: 0 0 8px 0;
     }
 
     .alta-vista .marca {
@@ -90,6 +98,7 @@
     }
 
     .alta-vista .institucion {
+        clear: both;
         color: #718293;
         font-size: 6px;
         padding: 5px 0;
@@ -99,7 +108,7 @@
     .alta-vista h2 {
         font-size: 11px;
         color: #213c55;
-        font-weight: 800;
+        font-weight: 700;
         margin: 9px 0 3px;
     }
 
@@ -110,7 +119,7 @@
     }
 
     .alta-vista .seccion {
-        background: #eff1f3;
+        background: #fff;
         color: #2b435b;
         font-weight: bold;
         padding: 6px;
@@ -139,13 +148,15 @@
         margin-bottom: 4px;
     }
 
-    .alta-vista .valor {
-        color: #253d56;
-        font-weight: 600;
-        white-space: pre-line;
-        overflow-wrap: anywhere;
-        display: block;
-    }
+
+.alta-vista .valor {
+    color: #253d56;
+    font-weight: 400;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+    display: block;
+}
+
 
     .alta-vista .linea {
         height: 42px;
@@ -163,13 +174,14 @@
 
 <div class="overflow-hidden border border-slate-200 bg-white shadow-sm">
     <article class="alta-vista">
-
-        <div class="marca">PALLADIUM</div>
-        <div class="grupo">HOTEL GROUP</div>
+        <img
+            class="logo-palladium-izquierda"
+            src="{{ asset('images/logo-grand-palladium.png') }}"
+            alt="Palladium Hotel Group"
+        >
 
         <div class="institucion">
-            GRAND PALLADIUM RIVIERA MAYA |
-            CONTROL DE ACTIVOS TI
+            GRAND PALLADIUM RIVIERA MAYA | CONTROL DE ACTIVOS TI
         </div>
 
         <h2>
@@ -182,7 +194,6 @@
         </div>
 
         @foreach ($secciones as [$numero, $titulo, $filas])
-
             <div class="seccion">
                 {{ $numero }} &nbsp; {{ $titulo }}
             </div>
@@ -210,7 +221,6 @@
                     @endforeach
                 </tbody>
             </table>
-
         @endforeach
 
         <div class="seccion">
@@ -225,7 +235,6 @@
                     </strong>
 
                     <div class="linea"></div>
-
                     <div>Nombre y firma</div>
                     <div>Fecha: ____ / ____ / ______</div>
                 </td>
@@ -236,7 +245,6 @@
                     </strong>
 
                     <div class="linea"></div>
-
                     <div>Nombre y firma</div>
                     <div>Fecha: ____ / ____ / ______</div>
                 </td>
@@ -247,6 +255,5 @@
             Departamento de Sistemas ·
             Control de Activos TI · Vista previa
         </div>
-
     </article>
 </div>

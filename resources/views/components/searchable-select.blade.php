@@ -1,23 +1,19 @@
+
 @props([
     'wireModel' => null,
     'xModel' => null,
-
     'options' => [],
     'xOptions' => null,
-
     'label' => '',
-
     'placeholder' => 'Buscar...',
     'xPlaceholder' => null,
-
     'disabled' => false,
     'xDisabled' => null,
-
     'showClear' => true,
     'clearLabel' => 'Todos',
     'clearValue' => '',
-
     'compact' => false,
+    'reportAutoSearch' => false,
 ])
 
 @php
@@ -26,28 +22,22 @@
     | Modo del componente
     |--------------------------------------------------------------------------
     |
-    | wire-model=""
-    |     Comportamiento tradicional Livewire.
-    |
-    | x-model=""
-    |     Comportamiento completamente local con Alpine.
+    | wire-model: funcionamiento con Livewire.
+    | x-model: funcionamiento local con Alpine.
     |
     */
 
-    $localMode =
-        filled($xModel);
+    $localMode = filled($xModel);
 
-    $optionsJson =
-        collect($options)
-            ->map(fn ($option) => [
-                ...$option,
-                'value' => (string) ($option['value'] ?? ''),
-                'label' => (string) ($option['label'] ?? ''),
-            ])
-            ->values()
-            ->all();
+    $optionsJson = collect($options)
+        ->map(fn ($option) => [
+            ...$option,
+            'value' => (string) ($option['value'] ?? ''),
+            'label' => (string) ($option['label'] ?? ''),
+        ])
+        ->values()
+        ->all();
 @endphp
-
 
 <div
     x-data="{
@@ -64,7 +54,11 @@
             @if ($localMode)
                 ''
             @elseif (filled($wireModel))
-                $wire.entangle('{{ $wireModel }}').live
+                @if ($reportAutoSearch)
+                    $wire.entangle(@js($wireModel))
+                @else
+                    $wire.entangle(@js($wireModel)).live
+                @endif
             @else
                 ''
             @endif
@@ -78,21 +72,15 @@
 
         options: @js($optionsJson),
 
-        disabled:
-            @js((bool) $disabled),
+        disabled: @js((bool) $disabled),
 
-        currentPlaceholder:
-            @js((string) $placeholder),
+        currentPlaceholder: @js((string) $placeholder),
 
-        showClear:
-            @js((bool) $showClear),
+        showClear: @js((bool) $showClear),
 
-        clearLabel:
-            @js((string) $clearLabel),
+        clearLabel: @js((string) $clearLabel),
 
-        clearValue:
-            @js($clearValue),
-
+        clearValue: @js($clearValue),
 
         /*
         |--------------------------------------------------------------------------
@@ -105,20 +93,16 @@
                 this.syncSelectedLabel();
             });
 
-            this.$watch(
-                'selected',
-                () => {
-                    if (!this.open) {
-                        this.syncSelectedLabel();
-                    }
+            this.$watch('selected', () => {
+                if (!this.open) {
+                    this.syncSelectedLabel();
                 }
-            );
+            });
         },
-
 
         /*
         |--------------------------------------------------------------------------
-        | Opciones dinámicas locales
+        | Opciones dinámicas
         |--------------------------------------------------------------------------
         */
 
@@ -129,22 +113,13 @@
 
             return value.map(option => ({
                 ...option,
-
-                value:
-                    String(
-                        option?.value ?? ''
-                    ),
-
-                label:
-                    String(
-                        option?.label ?? ''
-                    ),
+                value: String(option?.value ?? ''),
+                label: String(option?.label ?? ''),
             }));
         },
 
         syncOptions(value) {
-            this.options =
-                this.normalizeOptions(value);
+            this.options = this.normalizeOptions(value);
 
             this.$nextTick(() => {
                 this.syncSelectedLabel();
@@ -152,8 +127,7 @@
         },
 
         syncDisabled(value) {
-            this.disabled =
-                Boolean(value);
+            this.disabled = Boolean(value);
 
             if (this.disabled) {
                 this.open = false;
@@ -162,12 +136,8 @@
         },
 
         syncPlaceholder(value) {
-            this.currentPlaceholder =
-                String(
-                    value ?? ''
-                );
+            this.currentPlaceholder = String(value ?? '');
         },
-
 
         /*
         |--------------------------------------------------------------------------
@@ -176,27 +146,20 @@
         */
 
         get filtered() {
-            const query =
-                String(
-                    this.query ?? ''
-                )
-                    .trim()
-                    .toLowerCase();
+            const query = String(this.query ?? '')
+                .trim()
+                .toLowerCase();
 
             if (query === '') {
                 return this.options;
             }
 
-            return this.options.filter(
-                option =>
-                    String(
-                        option.label ?? ''
-                    )
-                        .toLowerCase()
-                        .includes(query)
+            return this.options.filter(option =>
+                String(option.label ?? '')
+                    .toLowerCase()
+                    .includes(query)
             );
         },
-
 
         /*
         |--------------------------------------------------------------------------
@@ -206,23 +169,19 @@
 
         selectedOption() {
             if (
-                this.selected === null
-                || this.selected === undefined
-                || this.selected === ''
+                this.selected === null ||
+                this.selected === undefined ||
+                this.selected === ''
             ) {
                 return null;
             }
 
-            const selectedValue =
-                String(this.selected);
+            const selectedValue = String(this.selected);
 
             return this.options.find(
-                option =>
-                    String(option.value)
-                    === selectedValue
+                option => String(option.value) === selectedValue
             ) ?? null;
         },
-
 
         /*
         |--------------------------------------------------------------------------
@@ -231,34 +190,27 @@
         */
 
         syncSelectedLabel() {
-            const option =
-                this.selectedOption();
+            const option = this.selectedOption();
 
             if (option) {
-                this.query =
-                    option.label;
-
+                this.query = option.label;
                 return;
             }
 
             if (
-                this.showClear
-                && this.clearValue !== ''
-                && this.clearValue !== null
-                && this.selected !== null
-                && this.selected !== undefined
-                && String(this.selected)
-                    === String(this.clearValue)
+                this.showClear &&
+                this.clearValue !== '' &&
+                this.clearValue !== null &&
+                this.selected !== null &&
+                this.selected !== undefined &&
+                String(this.selected) === String(this.clearValue)
             ) {
-                this.query =
-                    this.clearLabel;
-
+                this.query = this.clearLabel;
                 return;
             }
 
             this.query = '';
         },
-
 
         /*
         |--------------------------------------------------------------------------
@@ -282,7 +234,6 @@
             });
         },
 
-
         /*
         |--------------------------------------------------------------------------
         | Cerrar
@@ -295,10 +246,8 @@
             }
 
             this.open = false;
-
             this.syncSelectedLabel();
         },
-
 
         /*
         |--------------------------------------------------------------------------
@@ -313,13 +262,25 @@
 
             if (this.open) {
                 this.closeDropdown();
-
                 return;
             }
 
             this.openAndFocus();
         },
 
+        /*
+        |--------------------------------------------------------------------------
+        | Notificar cambio para reportes
+        |--------------------------------------------------------------------------
+        */
+
+        notificarCambio() {
+            @if ($reportAutoSearch && filled($wireModel))
+                this.$dispatch('reporte-filtro-cambiado', {
+                    campo: @js($wireModel)
+                });
+            @endif
+        },
 
         /*
         |--------------------------------------------------------------------------
@@ -332,17 +293,23 @@
                 return;
             }
 
-            this.selected =
-                value === ''
-                    ? null
-                    : String(value);
+            const nuevoValor = value === ''
+                ? (@js($reportAutoSearch) ? '' : null)
+                : String(value);
 
-            this.query =
-                String(label ?? '');
+            const valorAnterior = this.selected;
 
+            this.selected = nuevoValor;
+            this.query = String(label ?? '');
             this.open = false;
-        },
 
+            if (
+                String(valorAnterior ?? '') !==
+                String(nuevoValor ?? '')
+            ) {
+                this.notificarCambio();
+            }
+        },
 
         /*
         |--------------------------------------------------------------------------
@@ -355,21 +322,31 @@
                 return;
             }
 
-            this.selected =
-                this.clearValue === ''
-                || this.clearValue === null
-                    ? null
+            const nuevoValor =
+                this.clearValue === '' ||
+                this.clearValue === null
+                    ? (@js($reportAutoSearch) ? '' : null)
                     : String(this.clearValue);
 
+            const valorAnterior = this.selected;
+
+            this.selected = nuevoValor;
+
             this.query =
-                this.clearValue === ''
-                || this.clearValue === null
+                this.clearValue === '' ||
+                this.clearValue === null
                     ? ''
                     : this.clearLabel;
 
             this.open = false;
-        },
 
+            if (
+                String(valorAnterior ?? '') !==
+                String(nuevoValor ?? '')
+            ) {
+                this.notificarCambio();
+            }
+        },
 
         /*
         |--------------------------------------------------------------------------
@@ -383,7 +360,7 @@
             }
 
             this.open = true;
-        },
+        }
     }"
 
     @if ($localMode)
@@ -408,16 +385,15 @@
 
     class="relative"
 >
-
     {{-- ============================================================
         LABEL
     ============================================================ --}}
+
     @if ($label)
         <label
             class="
                 block
                 mb-1.5
-
                 text-xs
                 text-[var(--theme-text-muted)]
             "
@@ -426,152 +402,148 @@
         </label>
     @endif
 
+    {{-- ============================================================
+        CONTROL
+    ============================================================ --}}
 
-{{-- ============================================================
-    CONTROL
-============================================================ --}}
-<div
-    @click="
-        if (!disabled && !open) {
-            openAndFocus();
-        }
-    "
-
-    class="
-        relative
-        flex
-        items-center
-        w-full
-
-        border
-        border-[var(--theme-border-strong)]
-
-        rounded-md
-
-        bg-[var(--theme-surface)]
-
-        focus-within:ring-1
-        focus-within:ring-[var(--theme-primary)]
-        focus-within:border-[var(--theme-primary)]
-    "
-
-    :class="
-        disabled
-            ? 'cursor-not-allowed'
-            : ''
-    "
->
-
-    {{-- INPUT VISIBLE --}}
-    <input
-        type="text"
-
-        x-ref="search"
-        x-model="query"
-
-        @focus="
+    <div
+        @click="
             if (!disabled && !open) {
                 openAndFocus();
             }
         "
 
-        @input="handleInput()"
-
-        :disabled="disabled"
-        :placeholder="currentPlaceholder"
-
-        autocomplete="off"
-
-        @class([
-            'w-full',
-            'min-w-0',
-
-            'text-[var(--theme-text)]',
-
-            'border-0',
-            'bg-transparent',
-
-            'pl-3',
-            'pr-10',
-
-            'placeholder:text-[var(--theme-text-muted)]',
-
-            'focus:ring-0',
-
-            'disabled:cursor-not-allowed',
-
-            'text-xs py-2' => $compact,
-            'text-sm py-2.5' => ! $compact,
-        ])
-    >
-
-    {{-- FLECHA --}}
-    <button
-        type="button"
-
-        @click.stop="toggleDropdown()"
-
-        :disabled="disabled"
-        :aria-expanded="open ? 'true' : 'false'"
-
-        aria-label="Abrir o cerrar opciones"
-
         class="
-            absolute
-            right-0
-            top-0
-            bottom-0
-
-            w-9
-
+            relative
             flex
             items-center
-            justify-center
+            w-full
+            border
+            border-[var(--theme-border-strong)]
+            rounded-md
+            bg-[var(--theme-surface)]
+            focus-within:ring-1
+            focus-within:ring-[var(--theme-primary)]
+            focus-within:border-[var(--theme-primary)]
+        "
 
-            text-[var(--theme-text-muted)]
-
-            hover:text-[var(--theme-text)]
-
-            disabled:cursor-not-allowed
-
-            transition-colors
+        :class="
+            disabled
+                ? 'cursor-not-allowed'
+                : ''
         "
     >
-        <svg
-            class="
-                w-4
-                h-4
+        {{-- INPUT VISIBLE --}}
 
-                pointer-events-none
+        <input
+            type="text"
 
-                transition-transform
-                duration-150
+            x-ref="search"
+            x-model="query"
+
+            @focus="
+                if (!disabled && !open) {
+                    openAndFocus();
+                }
             "
 
-            :class="
-                open
-                    ? 'rotate-180'
-                    : ''
-            "
+            @input="handleInput()"
 
-            viewBox="0 0 24 24"
+            :disabled="disabled"
+            :placeholder="currentPlaceholder"
 
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.5"
+            autocomplete="off"
 
-            aria-hidden="true"
+            @class([
+                'w-full',
+                'min-w-0',
+
+                'text-[var(--theme-text)]',
+
+                'border-0',
+                'bg-transparent',
+
+                'pl-3',
+                'pr-10',
+
+                'placeholder:text-[var(--theme-text-muted)]',
+
+                'focus:ring-0',
+
+                'disabled:cursor-not-allowed',
+
+                'text-xs py-2' => $compact,
+                'text-sm py-2.5' => ! $compact,
+            ])
         >
-            <path d="M6 9l6 6 6-6"/>
-        </svg>
-    </button>
 
-</div>
+        {{-- FLECHA --}}
 
+        <button
+            type="button"
+
+            @click.stop="toggleDropdown()"
+
+            :disabled="disabled"
+            :aria-expanded="open ? 'true' : 'false'"
+
+            aria-label="Abrir o cerrar opciones"
+
+            class="
+                absolute
+                right-0
+                top-0
+                bottom-0
+
+                w-9
+
+                flex
+                items-center
+                justify-center
+
+                text-[var(--theme-text-muted)]
+
+                hover:text-[var(--theme-text)]
+
+                disabled:cursor-not-allowed
+
+                transition-colors
+            "
+        >
+            <svg
+                class="
+                    w-4
+                    h-4
+
+                    pointer-events-none
+
+                    transition-transform
+                    duration-150
+                "
+
+                :class="
+                    open
+                        ? 'rotate-180'
+                        : ''
+                "
+
+                viewBox="0 0 24 24"
+
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+
+                aria-hidden="true"
+            >
+                <path d="M6 9l6 6 6-6"/>
+            </svg>
+        </button>
+    </div>
 
     {{-- ============================================================
         LISTADO
     ============================================================ --}}
+
     <div
         x-show="open && !disabled"
         x-cloak
@@ -599,17 +571,19 @@
             overflow-y-auto
         "
     >
-
         {{-- ========================================================
             LIMPIAR / VALOR GENERAL
         ======================================================== --}}
+
         @if ($showClear)
             <div
                 @click="clear()"
 
                 @class([
                     'text-[var(--theme-text-muted)]',
+
                     'hover:bg-[var(--theme-primary-soft-subtle)]',
+
                     'cursor-pointer',
 
                     'px-3 py-2 text-xs' => $compact,
@@ -620,10 +594,10 @@
             </div>
         @endif
 
-
         {{-- ========================================================
             OPCIONES
         ======================================================== --}}
+
         <template
             x-for="option in filtered"
             :key="option.value"
@@ -640,7 +614,9 @@
 
                 @class([
                     'text-[var(--theme-text)]',
+
                     'hover:bg-[var(--theme-primary-soft-subtle)]',
+
                     'cursor-pointer',
 
                     'px-3 py-2 text-xs' => $compact,
@@ -649,10 +625,10 @@
             ></div>
         </template>
 
-
         {{-- ========================================================
             SIN RESULTADOS
         ======================================================== --}}
+
         <div
             x-show="filtered.length === 0"
 
@@ -665,7 +641,5 @@
         >
             Sin resultados
         </div>
-
     </div>
-
 </div>

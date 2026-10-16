@@ -9,6 +9,7 @@
         value: '',
 
         editUrl: '#',
+        canEdit: true,
         detailUrl: '#',
 
         top: 0,
@@ -37,6 +38,7 @@
             this.editUrl =
                 element.dataset.editUrl
                 || '#';
+            this.canEdit = element.dataset.canEdit === '1';
 
             this.detailUrl =
                 element.dataset.detailUrl
@@ -228,7 +230,7 @@
         md:block
         relative
     "
->
+\>
 
     {{-- ========================================================
         CONTENEDOR CON SCROLL HORIZONTAL
@@ -940,6 +942,8 @@
                 @forelse ($equipos as $equipo)
 
                     @php
+                        $isBaja = (int) ($equipo->dado_de_baja ?? 0) === 1
+                            || strtoupper((string) ($equipo->estado_clave ?? '')) === 'BAJA';
                         $detailUrl = Route::has('equipos.show')
                             ? route(
                                 'equipos.show',
@@ -947,7 +951,7 @@
                             )
                             : '#';
 
-                        $editUrl = Route::has('equipos.edit')
+                        $editUrl = ! $isBaja && Route::has('equipos.edit')
                             ? route(
                                 'equipos.edit',
                                 $equipo->id_equipo
@@ -1014,6 +1018,7 @@
                                 data-popover-label="ID Equipo"
                                 data-popover-value="{{ $equipo->codigo_inventario }}"
                                 data-edit-url="{{ $editUrl }}"
+                                data-can-edit="{{ $isBaja ? '0' : '1' }}"
                                 data-detail-url="{{ $detailUrl }}"
 
                                 @mouseenter="showPopover($event.currentTarget)"
@@ -1059,6 +1064,7 @@
                                 data-popover-label="Nombre de equipo"
                                 data-popover-value="{{ $equipo->nombre_equipo ?? '—' }}"
                                 data-edit-url="{{ $editUrl }}"
+                                data-can-edit="{{ $isBaja ? '0' : '1' }}"
                                 data-detail-url="{{ $detailUrl }}"
 
                                 @mouseenter="showPopover($event.currentTarget)"
@@ -1104,6 +1110,7 @@
                                 data-popover-label="Tipo de equipo"
                                 data-popover-value="{{ $equipo->tipo_equipo_nombre ?? '—' }}"
                                 data-edit-url="{{ $editUrl }}"
+                                data-can-edit="{{ $isBaja ? '0' : '1' }}"
                                 data-detail-url="{{ $detailUrl }}"
 
                                 @mouseenter="showPopover($event.currentTarget)"
@@ -1149,6 +1156,7 @@
                                 data-popover-label="Marca"
                                 data-popover-value="{{ $equipo->marca_nombre ?? '—' }}"
                                 data-edit-url="{{ $editUrl }}"
+                                data-can-edit="{{ $isBaja ? '0' : '1' }}"
                                 data-detail-url="{{ $detailUrl }}"
 
                                 @mouseenter="showPopover($event.currentTarget)"
@@ -1194,6 +1202,7 @@
                                 data-popover-label="Modelo"
                                 data-popover-value="{{ $equipo->modelo_nombre ?? 'N/A' }}"
                                 data-edit-url="{{ $editUrl }}"
+                                data-can-edit="{{ $isBaja ? '0' : '1' }}"
                                 data-detail-url="{{ $detailUrl }}"
 
                                 @mouseenter="showPopover($event.currentTarget)"
@@ -1239,6 +1248,7 @@
                                 data-popover-label="Número de serie"
                                 data-popover-value="{{ $equipo->numero_serie ?? 'NA' }}"
                                 data-edit-url="{{ $editUrl }}"
+                                data-can-edit="{{ $isBaja ? '0' : '1' }}"
                                 data-detail-url="{{ $detailUrl }}"
 
                                 @mouseenter="showPopover($event.currentTarget)"
@@ -1284,6 +1294,7 @@
                                 data-popover-label="Dirección IP"
                                 data-popover-value="{{ $equipo->direccion_ip ?? 'NA' }}"
                                 data-edit-url="{{ $editUrl }}"
+                                data-can-edit="{{ $isBaja ? '0' : '1' }}"
                                 data-detail-url="{{ $detailUrl }}"
 
                                 @mouseenter="showPopover($event.currentTarget)"
@@ -1327,6 +1338,7 @@
                                 data-popover-label="Estado"
                                 data-popover-value="{{ $equipo->estado_nombre ?? 'Sin estado' }}"
                                 data-edit-url="{{ $editUrl }}"
+                                data-can-edit="{{ $isBaja ? '0' : '1' }}"
                                 data-detail-url="{{ $detailUrl }}"
 
                                 @mouseenter="showPopover($event.currentTarget)"
@@ -1382,6 +1394,7 @@
                                     ?? '—'
                                 }}"
                                 data-edit-url="{{ $editUrl }}"
+                                data-can-edit="{{ $isBaja ? '0' : '1' }}"
                                 data-detail-url="{{ $detailUrl }}"
 
                                 @mouseenter="showPopover($event.currentTarget)"
@@ -1473,6 +1486,7 @@
                                 </a>
 
 
+                                @unless ($isBaja)
                                 {{-- =====================================
                                     MÁS ACCIONES
                                 ====================================== --}}
@@ -1568,8 +1582,9 @@
 
 
                                     {{-- DAR DE BAJA --}}
-                                    <button
-                                        type="button"
+                                    <a
+                                        href="{{ route('equipos.baja', ['equipo' => $equipo->id_equipo]) }}"
+                                        wire:navigate.hover
 
                                         class="
                                             w-full
@@ -1588,10 +1603,16 @@
                                         "
                                     >
                                         Dar de baja
-                                    </button>
+                                    </a>
 
                                 </div>
 
+                                @endunless
+
+                                @if ($isBaja)
+                                    {{-- Reservar el espacio de Más acciones para alinear el icono de detalle --}}
+                                    <span class="w-4 h-4 shrink-0" aria-hidden="true"></span>
+                                @endif
                             </div>
 
                         </td>
@@ -1868,6 +1889,7 @@
                 EDITAR
             ==================================================== --}}
             <a
+                x-show="canEdit"
                 :href="editUrl"
                 wire:navigate.hover
 

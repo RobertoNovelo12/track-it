@@ -228,8 +228,8 @@
                         :options="
                             collect($tiposActivo)->map(
                                 fn ($t) => [
-                                    'value' => $t['id_tipo_equipo'],
-                                    'label' => $t['nombre'],
+                                    'value' => data_get ($t,'id_tipo_equipo'),
+                                    'label' => data_get($t,'nombre'),
                                 ]
                             )
                         "

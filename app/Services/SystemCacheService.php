@@ -16,14 +16,11 @@ class SystemCacheService
     private const GLOBAL_VERSION_KEY =
         'trackit.cache.global.version';
 
-
     private const MODULE_VERSION_PREFIX =
         'trackit.cache.module.';
 
-
     private const DEFAULT_TTL_HOURS =
         12;
-
 
     /*
     |--------------------------------------------------------------------------
@@ -39,7 +36,6 @@ class SystemCacheService
         );
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | VERSIÓN DE MÓDULO
@@ -49,15 +45,11 @@ class SystemCacheService
     public function moduleVersion(
         string $module
     ): int {
-
         return (int) Cache::rememberForever(
-            $this->moduleVersionKey(
-                $module
-            ),
+            $this->moduleVersionKey($module),
             fn (): int => 1
         );
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -67,19 +59,15 @@ class SystemCacheService
 
     public function refreshAll(): int
     {
-        $version =
-            $this->globalVersion() + 1;
-
+        $version = $this->globalVersion() + 1;
 
         Cache::forever(
             self::GLOBAL_VERSION_KEY,
             $version
         );
 
-
         return $version;
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -90,24 +78,15 @@ class SystemCacheService
     public function refreshModule(
         string $module
     ): int {
-
-        $version =
-            $this->moduleVersion(
-                $module
-            ) + 1;
-
+        $version = $this->moduleVersion($module) + 1;
 
         Cache::forever(
-            $this->moduleVersionKey(
-                $module
-            ),
+            $this->moduleVersionKey($module),
             $version
         );
 
-
         return $version;
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -120,50 +99,23 @@ class SystemCacheService
         string $resource,
         array $state = []
     ): string {
+        $normalizedModule = $this->normalize($module);
+        $normalizedResource = $this->normalize($resource);
 
-        $normalizedModule =
-            $this->normalize(
-                $module
-            );
-
-
-        $normalizedResource =
-            $this->normalize(
-                $resource
-            );
-
-
-        $stateHash =
-            hash(
-                'sha256',
-                serialize(
-                    $state
-                )
-            );
-
-
-        return implode(
-            '.',
-            [
-                'trackit',
-
-                'v'
-                    . $this->globalVersion(),
-
-                $normalizedModule,
-
-                'v'
-                    . $this->moduleVersion(
-                        $normalizedModule
-                    ),
-
-                $normalizedResource,
-
-                $stateHash,
-            ]
+        $stateHash = hash(
+            'sha256',
+            serialize($state)
         );
-    }
 
+        return implode('.', [
+            'trackit',
+            'v' . $this->globalVersion(),
+            $normalizedModule,
+            'v' . $this->moduleVersion($normalizedModule),
+            $normalizedResource,
+            $stateHash,
+        ]);
+    }
 
     /*
     |--------------------------------------------------------------------------
@@ -178,13 +130,9 @@ class SystemCacheService
         Closure $callback,
         ?int $hours = null
     ): mixed {
-
-        $ttl =
-            now()->addHours(
-                $hours
-                ?? self::DEFAULT_TTL_HOURS
-            );
-
+        $ttl = now()->addHours(
+            $hours ?? self::DEFAULT_TTL_HOURS
+        );
 
         return Cache::remember(
             $this->key(
@@ -196,7 +144,6 @@ class SystemCacheService
             $callback
         );
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -210,7 +157,6 @@ class SystemCacheService
         Closure $callback,
         ?int $hours = null
     ): mixed {
-
         return $this->remember(
             $module,
             $resource,
@@ -219,7 +165,6 @@ class SystemCacheService
             $hours
         );
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -230,14 +175,10 @@ class SystemCacheService
     private function moduleVersionKey(
         string $module
     ): string {
-
         return self::MODULE_VERSION_PREFIX
-            . $this->normalize(
-                $module
-            )
+            . $this->normalize($module)
             . '.version';
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -248,22 +189,13 @@ class SystemCacheService
     private function normalize(
         string $value
     ): string {
+        $value = strtolower(trim($value));
 
-        $value =
-            strtolower(
-                trim(
-                    $value
-                )
-            );
-
-
-        $value =
-            preg_replace(
-                '/[^a-z0-9._-]+/',
-                '-',
-                $value
-            );
-
+        $value = preg_replace(
+            '/[^a-z0-9._-]+/',
+            '-',
+            $value
+        );
 
         return trim(
             (string) $value,

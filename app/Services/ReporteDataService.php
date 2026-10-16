@@ -177,6 +177,8 @@ class ReporteDataService
                 DB::raw("'Registro de activo' as detalle"),
             ]);
 
+        $query = $this->soloEquiposVigentes($query);
+
         return $this->aplicarFiltros(
             $query,
             $filtros,
@@ -436,6 +438,8 @@ class ReporteDataService
                 "),
             ]);
 
+        $query = $this->soloEquiposVigentes($query);
+
         $query = $this->aplicarFiltros(
             $query,
             $filtros,
@@ -526,6 +530,8 @@ class ReporteDataService
                 "),
             ]);
 
+        $query = $this->soloEquiposVigentes($query);
+
         return $this->aplicarFiltros(
             $query,
             $filtros,
@@ -603,12 +609,37 @@ class ReporteDataService
                 "),
             ]);
 
+        $query = $this->soloEquiposVigentes($query);
+
         return $this->aplicarFiltros(
             $query,
             $filtros,
             'mt.fecha_intervencion',
             'mt.id_estado_mantenimiento'
         )->orderByDesc('mt.fecha_intervencion');
+    }
+
+    /**
+     * Mantiene los registros históricos en su tabla original, pero solo
+     * permite consultar aquí equipos que siguen vigentes.
+     * Se verifica tanto el estado BAJA como la existencia de una baja.
+     */
+    private function soloEquiposVigentes(Builder $query): Builder
+    {
+        return $query
+            ->whereNotExists(function (Builder $subquery): void {
+                $subquery
+                    ->selectRaw('1')
+                    ->from('bajas as baja_registrada')
+                    ->whereColumn('baja_registrada.id_equipo', 'e.id_equipo');
+            })
+            ->whereNotExists(function (Builder $subquery): void {
+                $subquery
+                    ->selectRaw('1')
+                    ->from('estados_equipo as estado_actual')
+                    ->whereColumn('estado_actual.id_estado_equipo', 'e.id_estado_activo')
+                    ->where('estado_actual.clave', 'BAJA');
+            });
     }
 
     private function aplicarFiltros(

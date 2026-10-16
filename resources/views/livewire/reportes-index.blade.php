@@ -1,958 +1,1831 @@
-
 <div
+
     x-data="{
+
         activo: @js($tiposReporte[0] ?? 'altas'),
+
         vistaLocalVacia: false,
+
         buscandoAutomaticamente: false,
+
         temporizadorBusqueda: null,
+
         versionBusqueda: 0,
+
         mensajeVisible: false,
+
         mensajeActual: '',
+
         mensajeTipo: 'success',
+
         temporizadorMensaje: null,
+
         generando: null,
 
+        reporteAEliminar: null,
+        eliminandoReporte: false,
+
         filtros: [
+
             'busquedaActivo',
+
             'tipoEquipo',
+
             'estado',
+
             'fechaInicio',
+
             'fechaFin',
+
             'modelo',
+
             'marca'
+
         ],
 
         iniciarMensaje(texto, tipo = 'success') {
+
             clearTimeout(this.temporizadorMensaje);
 
             if (!texto) {
+
                 this.mensajeVisible = false;
+
                 this.mensajeActual = '';
+
                 return;
+
             }
 
             this.mensajeActual = texto;
+
             this.mensajeTipo = tipo;
+
             this.mensajeVisible = true;
 
             this.temporizadorMensaje = setTimeout(() => {
+
                 this.mensajeVisible = false;
+
                 this.mensajeActual = '';
 
                 $wire.set('successMessage', '', false);
+
                 $wire.set('errorMessage', '', false);
+
             }, 2000);
+
         },
 
         limpiarMensajes() {
+
             clearTimeout(this.temporizadorMensaje);
 
             this.mensajeVisible = false;
+
             this.mensajeActual = '';
 
             $wire.set('successMessage', '', false);
+
             $wire.set('errorMessage', '', false);
+
         },
 
         elegir(tipo) {
+
             if (this.activo === tipo) {
+
                 return;
+
             }
 
             clearTimeout(this.temporizadorBusqueda);
+
             this.versionBusqueda++;
 
             /*
-             * Cambio instantáneo.
-             * No esperamos una petición a Laravel.
+
+             * Cambio instantáneo sin esperar a Laravel.
+
              */
+
             this.activo = tipo;
+
             this.vistaLocalVacia = true;
+
             this.buscandoAutomaticamente = false;
 
-            /*
-             * Actualizamos el estado de Livewire localmente.
-             * Se enviará en la próxima petición necesaria.
-             */
             $wire.set('tipoReporte', tipo, false);
+
             $wire.set('tiposReporte', [tipo], false);
 
             this.filtros.forEach(campo => {
+
                 $wire.set(campo, '', false);
+
             });
 
             $wire.set('previewReady', false, false);
+
             $wire.set('previewRecords', [], false);
+
             $wire.set('previewDocument', [], false);
+
             $wire.set('previewTotal', 0, false);
 
             this.limpiarMensajes();
+
             this.$dispatch('reportes-filtros-limpiados');
+
         },
 
         programarBusqueda(evento) {
+
             const elemento = evento.target;
 
             const modelo =
+
                 elemento.getAttribute('wire:model') ||
+
                 elemento.getAttribute('wire:model.live') ||
+
                 elemento.getAttribute('wire:model.blur');
 
             if (!this.filtros.includes(modelo)) {
+
                 return;
+
             }
 
             clearTimeout(this.temporizadorBusqueda);
 
             this.vistaLocalVacia = true;
+
             const version = ++this.versionBusqueda;
 
             const espera = modelo === 'busquedaActivo'
+
                 ? 400
+
                 : 250;
 
             this.temporizadorBusqueda = setTimeout(() => {
+
                 if (version !== this.versionBusqueda) {
+
                     return;
+
                 }
 
                 this.buscandoAutomaticamente = true;
 
                 $wire.buscarAutomaticamente()
+
                     .catch(error => {
+
                         console.error(
+
                             'Error en búsqueda automática:',
+
                             error
+
                         );
+
                     })
+
                     .finally(() => {
+
                         if (version === this.versionBusqueda) {
+
                             this.buscandoAutomaticamente = false;
+
                         }
+
                     });
+
             }, espera);
+
+        },
+
+        programarBusquedaCampo(campo) {
+
+            if (!this.filtros.includes(campo)) {
+
+                return;
+
+            }
+
+            clearTimeout(this.temporizadorBusqueda);
+
+            this.vistaLocalVacia = true;
+
+            const version = ++this.versionBusqueda;
+
+            this.temporizadorBusqueda = setTimeout(() => {
+
+                if (version !== this.versionBusqueda) {
+
+                    return;
+
+                }
+
+                this.buscandoAutomaticamente = true;
+
+                $wire.buscarAutomaticamente()
+
+                    .catch(error => {
+
+                        console.error(
+
+                            'Error en búsqueda automática:',
+
+                            error
+
+                        );
+
+                    })
+
+                    .finally(() => {
+
+                        if (version === this.versionBusqueda) {
+
+                            this.buscandoAutomaticamente = false;
+
+                        }
+
+                    });
+
+            }, 150);
+
         },
 
         aplicarManualmente() {
+
             clearTimeout(this.temporizadorBusqueda);
+
             this.versionBusqueda++;
+
             this.buscandoAutomaticamente = true;
+
         },
 
         limpiarLocalmente() {
+
             clearTimeout(this.temporizadorBusqueda);
+
             this.versionBusqueda++;
 
             this.vistaLocalVacia = true;
+
             this.buscandoAutomaticamente = false;
 
             this.filtros.forEach(campo => {
+
                 $wire.set(campo, '', false);
+
             });
 
             $wire.set('previewReady', false, false);
+
             $wire.set('previewRecords', [], false);
+
             $wire.set('previewDocument', [], false);
+
             $wire.set('previewTotal', 0, false);
 
             this.limpiarMensajes();
+
+        },
+
+        abrirModalEliminar(id) {
+            if (this.eliminandoReporte) return;
+            this.reporteAEliminar = Number(id);
+        },
+
+        cerrarModalEliminar() {
+            if (this.eliminandoReporte) return;
+            this.reporteAEliminar = null;
+        },
+
+        async confirmarEliminarReporte() {
+            if (this.reporteAEliminar === null || this.eliminandoReporte) return;
+
+            const id = this.reporteAEliminar;
+            this.eliminandoReporte = true;
+
+            try {
+                await $wire.eliminarReporte(id);
+                this.reporteAEliminar = null;
+            } catch (error) {
+                console.error('No fue posible eliminar el reporte:', error);
+                this.iniciarMensaje('No fue posible eliminar el reporte.', 'error');
+            } finally {
+                this.eliminandoReporte = false;
+            }
         },
 
         async generarArchivo(formato) {
+
             if (this.generando !== null) {
+
                 return;
+
             }
 
             clearTimeout(this.temporizadorBusqueda);
+
             this.versionBusqueda++;
 
             this.generando = formato;
+
             this.buscandoAutomaticamente = false;
+
             this.limpiarMensajes();
 
             try {
+
                 if (formato === 'pdf') {
+
                     await $wire.generarPdf();
+
                 } else if (
+
                     formato === 'xlsx' ||
+
                     formato === 'csv'
+
                 ) {
+
                     await $wire.generarHojaCalculo(formato);
+
                 }
+
             } catch (error) {
+
                 console.error(
+
                     'Error al generar el archivo:',
+
                     error
+
                 );
 
                 this.iniciarMensaje(
+
                     'No fue posible generar el archivo.',
+
                     'error'
+
                 );
+
             } finally {
+
                 this.generando = null;
+
             }
+
         }
+
     }"
+
     x-init="
+
         $watch('$wire.successMessage', valor => {
+
             if (valor) {
+
                 iniciarMensaje(valor, 'success');
+
             }
+
         });
 
         $watch('$wire.errorMessage', valor => {
+
             if (valor) {
+
                 iniciarMensaje(valor, 'error');
+
             }
+
         });
 
         if ($wire.successMessage) {
+
             iniciarMensaje($wire.successMessage, 'success');
+
         }
 
         if ($wire.errorMessage) {
+
             iniciarMensaje($wire.errorMessage, 'error');
+
         }
+
     "
+
     x-on:reportes-previa-lista.window="
+
         vistaLocalVacia = false;
+
         buscandoAutomaticamente = false
+
     "
+
     x-on:reportes-filtros-limpiados.window="
+
         vistaLocalVacia = true;
+
         buscandoAutomaticamente = false;
+
         clearTimeout(temporizadorBusqueda)
+
     "
+
     x-on:input.capture="programarBusqueda($event)"
+
     x-on:change.capture="programarBusqueda($event)"
+
+    x-on:reporte-filtro-cambiado="programarBusquedaCampo($event.detail.campo)"
+
 >
+
     @php
+
         $tabs = [
+
             'altas' => 'Altas',
+
             'bajas' => 'Bajas',
+
             'asignaciones' => 'Asignación',
+
             'reasignaciones' => 'Reasignación',
+
             'mantenimientos' => 'Mantenimiento',
+
         ];
 
         $resumenes = [
+
             'altas' => 'Equipos registrados en el sistema.',
+
             'bajas' => 'Equipos incluidos en procesos de baja.',
+
             'asignaciones' => 'Equipos asignados a usuarios o áreas.',
+
             'reasignaciones' => 'Cambios de asignación de equipos.',
+
             'mantenimientos' => 'Historial de mantenimientos.',
+
         ];
 
         $tipoSeleccionado = $tiposReporte[0] ?? 'altas';
 
         $estadoLabel = match ($tipoReporte) {
+
             'bajas' => 'Estado de baja',
+
             'asignaciones' => 'Estado de asignación',
+
             'mantenimientos' => 'Estado de mantenimiento',
+
             default => 'Estado del activo',
+
         };
 
         $campoClase = 'h-10 w-full rounded-lg border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 text-sm text-[var(--theme-text)] focus:border-[var(--theme-primary)] focus:ring-1 focus:ring-[var(--theme-primary)]';
+
     @endphp
 
     <div class="mt-4 grid grid-cols-1 items-stretch gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)]">
 
         {{-- CONFIGURACIÓN --}}
+
         <div class="min-w-0 space-y-4">
 
             {{-- NOTIFICACIÓN ÚNICA --}}
+
             <div
+
                 x-show="mensajeVisible && mensajeActual !== ''"
+
                 x-cloak
+
                 x-transition.opacity.duration.200ms
+
                 x-bind:class="
+
                     mensajeTipo === 'error'
+
                         ? 'border-[var(--theme-danger)] bg-[var(--theme-danger-soft)] text-[var(--theme-danger)]'
+
                         : 'border-[var(--theme-success-border)] bg-[var(--theme-success-soft)] text-[var(--theme-success)]'
+
                 "
+
                 class="flex items-center gap-2 rounded-lg border px-4 py-3 text-sm"
+
                 role="status"
+
                 aria-live="polite"
+
             >
+
                 <svg
+
                     class="h-5 w-5 shrink-0"
+
                     viewBox="0 0 24 24"
+
                     fill="none"
+
                     stroke="currentColor"
+
                     stroke-width="1.8"
+
                 >
+
                     <circle cx="12" cy="12" r="9"/>
+
                     <path
+
                         x-show="mensajeTipo === 'success'"
+
                         d="m8 12 2.5 2.5L16 9"
+
                     />
+
                     <path
+
                         x-show="mensajeTipo === 'error'"
+
                         d="M12 7v6M12 17h.01"
+
                     />
+
                 </svg>
 
                 <span x-text="mensajeActual"></span>
+
             </div>
 
             <form
+
                 wire:submit="aplicarFiltros"
+
                 x-on:submit="aplicarManualmente()"
+
                 class="grid gap-6 rounded-xl border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] p-4 sm:p-5 lg:grid-cols-[minmax(220px,0.85fr)_minmax(0,2fr)]"
+
             >
+
                 <div class="lg:col-span-2">
+
                     <h2 class="text-sm font-semibold text-[var(--theme-text-strong)]">
+
                         Configuración del reporte
+
                     </h2>
+
                 </div>
 
                 {{-- TIPOS DE REPORTE --}}
+
                 <section>
+
                     <div class="mb-3">
+
                         <h3 class="text-sm font-semibold text-[var(--theme-text-strong)]">
+
                             Tipos de reporte
+
                         </h3>
+
                         <p class="text-xs text-[var(--theme-text-muted)]">
+
                             Selecciona un tipo de reporte.
+
                         </p>
+
                     </div>
 
                     <div class="space-y-2">
+
                         @foreach ($tabs as $valor => $etiqueta)
+
                             <button
+
                                 type="button"
+
                                 wire:key="selector-reporte-{{ $valor }}"
+
                                 x-on:click="elegir(@js($valor))"
+
                                 x-bind:aria-pressed="activo === @js($valor)"
+
                                 x-bind:class="
+
                                     activo === @js($valor)
+
                                         ? '!border-[var(--theme-primary-border-strong)] !bg-[var(--theme-primary-soft)]'
+
                                         : ''
+
                                 "
+
                                 class="flex w-full items-center gap-3 rounded-lg border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-left transition-colors hover:border-[var(--theme-primary-border)]"
+
                             >
+
                                 <span
+
                                     x-bind:class="
+
                                         activo === @js($valor)
+
                                             ? 'border-[var(--theme-primary)] bg-[var(--theme-primary)] text-white'
+
                                             : 'border-[var(--theme-border-strong)] text-transparent'
+
                                     "
+
                                     class="flex h-5 w-5 shrink-0 items-center justify-center rounded border"
+
                                 >
+
                                     <svg
+
                                         class="h-3.5 w-3.5"
+
                                         viewBox="0 0 24 24"
+
                                         fill="none"
+
                                         stroke="currentColor"
+
                                         stroke-width="2.5"
+
                                     >
+
                                         <path d="m5 12 4 4L19 6"/>
+
                                     </svg>
+
                                 </span>
 
                                 <span class="min-w-0">
+
                                     <span class="block text-sm font-semibold text-[var(--theme-text-strong)]">
+
                                         {{ $etiqueta }}
+
                                     </span>
 
                                     <span class="block text-xs text-[var(--theme-text-muted)]">
+
                                         {{ $resumenes[$valor] }}
+
                                     </span>
+
                                 </span>
+
                             </button>
+
                         @endforeach
+
                     </div>
+
                 </section>
 
                 {{-- FILTROS --}}
+
                 <section class="min-w-0">
+
                     <div class="mb-4">
+
                         <h3 class="text-sm font-semibold text-[var(--theme-text-strong)]">
+
                             Filtros
+
                         </h3>
+
                         <p class="text-xs text-[var(--theme-text-muted)]">
+
                             Define los criterios para tu reporte.
+
                         </p>
+
                     </div>
 
                     <div class="grid gap-4 md:grid-cols-2">
 
                         {{-- BUSCAR ACTIVO --}}
+
                         <label class="block md:col-span-2">
+
                             <span class="mb-1.5 block text-xs font-medium text-[var(--theme-text)]">
+
                                 Buscar activo
+
                             </span>
 
                             <input
+
                                 type="search"
+
                                 wire:model="busquedaActivo"
+
                                 placeholder="Nombre del equipo o número de serie"
+
                                 autocomplete="off"
+
                                 class="{{ $campoClase }}"
+
                             >
+
                         </label>
 
                         {{-- TIPO DE EQUIPO --}}
+
                         <x-searchable-select
+
+                            :report-auto-search="true"
+
                             label="Tipo de equipo"
+
                             wire-model="tipoEquipo"
+
                             :options="collect($tiposEquipo)->map(fn ($item) => [
+
                                 'value' => data_get($item, 'id_tipo_equipo'),
+
                                 'label' => data_get($item, 'nombre'),
+
                             ])->filter(fn ($item) => filled($item['value']))->values()"
+
                             placeholder="Buscar tipo..."
+
                             :show-all-on-open="true"
+
                         />
 
                         {{-- ESTADO --}}
+
                         <x-searchable-select
+
+                            :report-auto-search="true"
+
                             :label="$estadoLabel"
+
                             wire-model="estado"
+
                             :options="collect($estados)->map(fn ($item) => [
+
                                 'value' => data_get($item, 'id_valor'),
+
                                 'label' => data_get($item, 'nombre'),
+
                             ])->filter(fn ($item) => filled($item['value']))->values()"
+
                             placeholder="Buscar estado..."
+
                             :show-all-on-open="true"
+
                         />
 
                         {{-- FECHA INICIAL --}}
+
                         <label class="block">
+
                             <span class="mb-1.5 block text-xs font-medium text-[var(--theme-text)]">
+
                                 Fecha inicial
+
                             </span>
 
                             <input
+
                                 type="date"
+
                                 wire:model="fechaInicio"
+
                                 class="{{ $campoClase }}"
+
                             >
 
                             @error('fechaInicio')
+
                                 <span class="mt-1 block text-xs text-[var(--theme-danger)]">
+
                                     {{ $message }}
+
                                 </span>
+
                             @enderror
+
                         </label>
 
                         {{-- FECHA FINAL --}}
+
                         <label class="block">
+
                             <span class="mb-1.5 block text-xs font-medium text-[var(--theme-text)]">
+
                                 Fecha final
+
                             </span>
 
                             <input
+
                                 type="date"
+
                                 wire:model="fechaFin"
+
                                 class="{{ $campoClase }}"
+
                             >
 
                             @error('fechaFin')
+
                                 <span class="mt-1 block text-xs text-[var(--theme-danger)]">
+
                                     {{ $message }}
+
                                 </span>
+
                             @enderror
+
                         </label>
 
                         {{-- MODELO --}}
+
                         <x-searchable-select
+
+                            :report-auto-search="true"
+
                             label="Modelo"
+
                             wire-model="modelo"
+
                             :options="collect($modelos)->map(fn ($item) => [
+
                                 'value' => data_get($item, 'id_modelo'),
+
                                 'label' => data_get($item, 'nombre'),
+
                             ])->filter(fn ($item) => filled($item['value']))->values()"
+
                             placeholder="Buscar modelo..."
+
                             :show-all-on-open="true"
+
                         />
 
                         {{-- MARCA --}}
+
                         <x-searchable-select
+
+                            :report-auto-search="true"
+
                             label="Marca"
+
                             wire-model="marca"
+
                             :options="collect($marcas)->map(fn ($item) => [
+
                                 'value' => data_get($item, 'id_marca'),
+
                                 'label' => data_get($item, 'nombre'),
+
                             ])->filter(fn ($item) => filled($item['value']))->values()"
+
                             placeholder="Buscar marca..."
+
                             :show-all-on-open="true"
+
                         />
+
                     </div>
 
                     {{-- ACCIONES DE FILTROS --}}
+
                     <div class="mt-4 flex flex-wrap items-center justify-end gap-3 border-t border-[var(--theme-border)] pt-4">
+
                         <button
+
                             type="button"
+
                             wire:click="limpiarFiltros"
+
                             x-on:click="limpiarLocalmente()"
+
                             wire:loading.attr="disabled"
+
                             wire:target="limpiarFiltros"
+
                             class="inline-flex h-10 items-center justify-center rounded-lg border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-5 text-sm font-semibold text-[var(--theme-text)] transition-colors hover:bg-[var(--theme-surface-soft)] disabled:opacity-60"
+
                         >
+
                             <span wire:loading.remove wire:target="limpiarFiltros">
+
                                 Limpiar filtros
+
                             </span>
+
                             <span wire:loading wire:target="limpiarFiltros">
+
                                 Limpiando…
+
                             </span>
+
                         </button>
 
                         <button
+
                             type="submit"
+
                             wire:loading.attr="disabled"
+
                             wire:target="aplicarFiltros"
+
                             class="inline-flex h-10 items-center justify-center rounded-lg border border-[var(--theme-primary)] bg-[var(--theme-primary)] px-5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+
                         >
+
                             <span wire:loading.remove wire:target="aplicarFiltros">
+
                                 Aplicar filtros
+
                             </span>
+
                             <span wire:loading wire:target="aplicarFiltros">
+
                                 Aplicando…
+
                             </span>
+
                         </button>
+
                     </div>
 
                     {{-- BOTONES DE DESCARGA TRADICIONAL --}}
+
                     <div class="mt-auto flex justify-end pt-4">
+
                         <div class="flex flex-wrap items-center gap-2">
 
                             @foreach ([
+
                                 'xlsx' => 'Excel',
+
                                 'pdf' => 'PDF',
+
                                 'csv' => 'CSV',
+
                             ] as $formato => $nombre)
 
                                 <button
+
                                     type="button"
+
                                     x-on:click="generarArchivo(@js($formato))"
+
                                     x-bind:disabled="generando !== null"
+
                                     class="
+
                                         inline-flex h-9 items-center
+
                                         justify-center gap-2
+
                                         whitespace-nowrap rounded-lg
+
                                         border px-3 text-xs font-semibold
+
                                         transition-colors
+
                                         disabled:cursor-wait disabled:opacity-60
 
                                         {{ $formato === 'xlsx'
+
                                             ? 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300'
+
                                             : ''
+
                                         }}
 
                                         {{ $formato === 'pdf'
+
                                             ? 'border-red-200 bg-red-50 text-red-700 hover:bg-red-100 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300'
+
                                             : ''
+
                                         }}
 
                                         {{ $formato === 'csv'
+
                                             ? 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-300'
+
                                             : ''
+
                                         }}
+
                                     "
+
                                 >
+
                                     {{-- ICONO NORMAL --}}
+
                                     <svg
+
                                         x-show="generando !== @js($formato)"
+
                                         class="h-4 w-4 shrink-0"
+
                                         viewBox="0 0 24 24"
+
                                         fill="none"
+
                                         stroke="currentColor"
+
                                         stroke-width="1.8"
+
                                         aria-hidden="true"
+
                                     >
+
                                         <path d="M6 2h8l4 4v16H6z"/>
+
                                         <path d="M14 2v5h5M8 12h8M8 16h8"/>
+
                                     </svg>
 
                                     {{-- ANIMACIÓN AL HACER CLIC --}}
+
                                     <svg
+
                                         x-show="generando === @js($formato)"
+
                                         x-cloak
+
                                         class="h-4 w-4 shrink-0 animate-spin"
+
                                         viewBox="0 0 24 24"
+
                                         fill="none"
+
                                         aria-hidden="true"
+
                                     >
+
                                         <circle
+
                                             cx="12"
+
                                             cy="12"
+
                                             r="9"
+
                                             stroke="currentColor"
+
                                             stroke-width="3"
+
                                             stroke-opacity=".25"
+
                                         />
+
                                         <path
+
                                             d="M21 12a9 9 0 0 0-9-9"
+
                                             stroke="currentColor"
+
                                             stroke-width="3"
+
                                             stroke-linecap="round"
+
                                         />
+
                                     </svg>
 
                                     <span>{{ $nombre }}</span>
+
                                 </button>
 
                             @endforeach
+
                         </div>
+
                     </div>
 
                 </section>
+
             </form>
+
         </div>
 
         {{-- VISTA PREVIA --}}
+
         <aside
+
             class="relative min-w-0 h-[650px] overflow-hidden rounded-xl border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] p-4 xl:h-auto xl:self-stretch"
+
         >
+
             <div class="flex items-center justify-between gap-3">
+
                 <h2 class="text-sm font-semibold text-[var(--theme-text-strong)]">
+
                     Vista rápida del documento final
+
                 </h2>
 
                 <span class="rounded border border-[var(--theme-border-strong)] px-2 py-1 text-[10px] font-semibold text-[var(--theme-text-muted)]">
+
                     PDF
+
                 </span>
+
             </div>
 
             <div
+
                 class="absolute inset-x-4 top-[62px] bottom-4 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain pr-1 [scrollbar-width:thin] [scrollbar-color:#64748b_transparent]"
+
                 tabindex="0"
+
                 aria-label="Vista previa desplazable del documento"
+
             >
+
                 {{-- VISTA VACÍA INSTANTÁNEA --}}
+
                 <div x-show="vistaLocalVacia" x-cloak>
 
                     <div x-show="activo === 'altas'">
+
                         @include('reportes.alta-previa', [
+
                             'alta' => []
+
                         ])
+
                     </div>
 
                     <div x-show="activo === 'bajas'">
+
                         @include('reportes.baja-acta-previa', [
+
                             'baja' => [
+
                                 'equipo' => [],
+
                                 'fotos' => []
+
                             ]
+
                         ])
+
                     </div>
 
                     <div x-show="activo === 'asignaciones'">
+
                         @include('reportes.acta-previa', [
+
                             'acta' => [
+
                                 'tipo' => 'asignaciones',
+
                                 'equipo' => [],
+
                                 'anterior' => [],
+
                                 'nuevo' => []
+
                             ]
+
                         ])
+
                     </div>
 
                     <div x-show="activo === 'reasignaciones'">
+
                         @include('reportes.acta-previa', [
+
                             'acta' => [
+
                                 'tipo' => 'reasignaciones',
+
                                 'equipo' => [],
+
                                 'anterior' => [],
+
                                 'nuevo' => []
+
                             ]
+
                         ])
+
                     </div>
 
                     <div x-show="activo === 'mantenimientos'">
+
                         @include('reportes.mantenimiento-previa', [
+
                             'm' => [
+
                                 'equipo' => [],
+
                                 'refacciones' => []
+
                             ]
+
                         ])
+
                     </div>
+
                 </div>
 
                 {{-- VISTA PREVIA CON RESULTADOS --}}
+
                 <div x-show="!vistaLocalVacia" x-cloak>
 
                     @if ($tipoSeleccionado === 'altas')
 
                         @if (!$previewReady)
+
                             @include('reportes.alta-previa', [
+
                                 'alta' => []
+
                             ])
+
                         @elseif (empty($previewDocument))
+
                             <div class="rounded-lg bg-white p-6 text-center text-sm text-slate-600">
+
                                 No se encontraron altas con estos filtros.
+
                             </div>
+
                         @else
+
                             @include('reportes.alta-previa', [
+
                                 'alta' => $previewDocument
+
                             ])
+
                         @endif
 
                     @elseif ($tipoSeleccionado === 'bajas')
 
                         @if (!$previewReady)
+
                             @include('reportes.baja-acta-previa', [
+
                                 'baja' => [
+
                                     'equipo' => [],
+
                                     'fotos' => []
+
                                 ]
+
                             ])
+
                         @elseif (empty($previewDocument))
+
                             <div class="rounded-lg bg-white p-6 text-center text-sm text-slate-600">
+
                                 No se encontraron bajas con estos filtros.
+
                             </div>
+
                         @else
+
                             @include('reportes.baja-acta-previa', [
+
                                 'baja' => $previewDocument
+
                             ])
+
                         @endif
 
                     @elseif (in_array(
+
                         $tipoSeleccionado,
+
                         ['asignaciones', 'reasignaciones'],
+
                         true
+
                     ))
 
                         @if (!$previewReady)
+
                             @include('reportes.acta-previa', [
+
                                 'acta' => [
+
                                     'tipo' => $tipoSeleccionado,
+
                                     'equipo' => [],
+
                                     'anterior' => [],
+
                                     'nuevo' => []
+
                                 ]
+
                             ])
+
                         @elseif (empty($previewDocument))
+
                             <div class="rounded-lg bg-white p-6 text-center text-sm text-slate-600">
+
                                 No se encontraron movimientos con estos filtros.
+
                             </div>
+
                         @else
+
                             @include('reportes.acta-previa', [
+
                                 'acta' => $previewDocument
+
                             ])
+
                         @endif
 
                     @elseif ($tipoSeleccionado === 'mantenimientos')
 
                         @if (!$previewReady)
+
                             @include('reportes.mantenimiento-previa', [
+
                                 'm' => [
+
                                     'equipo' => [],
+
                                     'refacciones' => []
+
                                 ]
+
                             ])
+
                         @elseif (empty($previewDocument))
+
                             <div class="rounded-lg bg-white p-6 text-center text-sm text-slate-600">
+
                                 No se encontraron mantenimientos con estos filtros.
+
                             </div>
+
                         @else
+
                             @include('reportes.mantenimiento-previa', [
+
                                 'm' => $previewDocument
+
                             ])
+
                         @endif
 
                     @else
+
                         <div class="rounded-lg bg-white p-6 text-center text-sm text-slate-600">
+
                             Selecciona un tipo de reporte.
+
                         </div>
+
                     @endif
+
                 </div>
+
             </div>
+
         </aside>
+
     </div>
 
     {{-- HISTORIAL --}}
+
     <section class="mt-5 overflow-hidden rounded-xl border border-[var(--theme-border-strong)] bg-[var(--theme-surface)]">
+
         <div class="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--theme-border)] px-4 py-4 sm:px-5">
 
             <h2 class="text-sm font-semibold text-[var(--theme-text-strong)]">
+
                 Historial de reportes
+
             </h2>
 
             <div class="flex items-center gap-3 text-xs text-[var(--theme-text-muted)]">
+
                 <label class="flex items-center gap-2">
+
                     <span>Mostrar</span>
 
                     <select
+
                         wire:model.live="perPage"
+
                         class="h-8 rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-2 text-xs text-[var(--theme-text)]"
+
                     >
+
                         <option value="10">10</option>
+
                         <option value="25">25</option>
+
                         <option value="50">50</option>
+
                     </select>
+
                 </label>
 
                 <button
+
                     type="button"
+
                     wire:click="$set('sort', '{{ $sort === 'asc' ? 'desc' : 'asc' }}')"
+
                     class="inline-flex h-8 items-center gap-1.5 rounded-md border border-[var(--theme-border-strong)] px-2.5 hover:bg-[var(--theme-surface-soft)]"
+
                 >
+
                     <svg
+
                         class="h-4 w-4"
+
                         viewBox="0 0 24 24"
+
                         fill="none"
+
                         stroke="currentColor"
+
                         stroke-width="1.8"
+
                     >
+
                         <path d="M8 4v16M5 7l3-3 3 3M16 20V4M13 17l3 3-3-3"/>
+
                     </svg>
 
                     {{ strtoupper($sort) }}
+
                 </button>
+
             </div>
+
         </div>
 
         <div class="overflow-x-auto">
+
             <table class="min-w-full text-left text-xs">
+
                 <thead class="bg-[var(--theme-surface-soft)] text-[var(--theme-text-muted)]">
+
                     <tr>
+
                         <th class="whitespace-nowrap px-4 py-3 font-medium">
+
                             Tipo de reporte
+
                         </th>
+
                         <th class="whitespace-nowrap px-4 py-3 font-medium">
+
                             Fecha inicial
+
                         </th>
+
                         <th class="whitespace-nowrap px-4 py-3 font-medium">
+
                             Fecha final
+
                         </th>
+
                         <th class="whitespace-nowrap px-4 py-3 font-medium">
+
                             Generado por
+
                         </th>
+
                         <th class="whitespace-nowrap px-4 py-3 font-medium">
+
                             Registros
+
                         </th>
+
                         <th class="whitespace-nowrap px-4 py-3 font-medium">
+
                             Formato
+
                         </th>
+
                         <th class="whitespace-nowrap px-4 py-3 font-medium">
+
                             Fecha de creación
+
                         </th>
+
                         <th class="whitespace-nowrap px-4 py-3 text-center font-medium">
+
                             Acciones
+
                         </th>
+
                     </tr>
+
                 </thead>
 
                 <tbody class="divide-y divide-[var(--theme-border)] text-[var(--theme-text)]">
+
                     @forelse ($historial as $reporte)
+
                         <tr
+
                             wire:key="historial-reporte-{{ $reporte->id_reporte }}"
+
                             class="hover:bg-[var(--theme-primary-soft-subtle)]"
+
                         >
+
                             <td class="whitespace-nowrap px-4 py-3 font-medium text-[var(--theme-text-strong)]">
+
                                 {{ $tabs[$reporte->tipo_reporte] ?? ucfirst($reporte->tipo_reporte) }}
+
                             </td>
 
                             <td class="whitespace-nowrap px-4 py-3">
+
                                 {{ $reporte->fecha_desde?->format('d/m/Y') ?? 'Sin límite' }}
+
                             </td>
 
                             <td class="whitespace-nowrap px-4 py-3">
+
                                 {{ $reporte->fecha_hasta?->format('d/m/Y') ?? 'Sin límite' }}
+
                             </td>
 
                             <td class="whitespace-nowrap px-4 py-3">
+
                                 {{ trim(($reporte->usuario?->nombres ?? '') . ' ' . ($reporte->usuario?->apellido_paterno ?? '')) ?: 'Usuario' }}
+
                             </td>
 
                             <td class="whitespace-nowrap px-4 py-3">
+
                                 {{ number_format($reporte->total_registros) }}
+
                             </td>
 
                             <td class="whitespace-nowrap px-4 py-3">
+
                                 <span class="rounded bg-[var(--theme-danger-soft)] px-2 py-1 text-[10px] font-semibold text-[var(--theme-danger)]">
+
                                     {{ strtoupper($reporte->formato) }}
+
                                 </span>
+
                             </td>
 
                             <td class="whitespace-nowrap px-4 py-3">
+
                                 {{ $reporte->fecha_generacion?->format('d/m/Y H:i') }}
+
                             </td>
 
                             <td class="px-4 py-3">
+
                                 <div class="flex items-center justify-center gap-1">
 
                                     {{-- VER --}}
+
                                     <a
+
                                         href="{{ route('reportes.show', $reporte) }}"
+
                                         target="_blank"
+
                                         class="inline-flex h-8 w-8 items-center justify-center rounded-md text-[var(--theme-text-muted)] hover:bg-[var(--theme-primary-soft)] hover:text-[var(--theme-primary)]"
+
                                         title="Ver reporte"
+
                                         aria-label="Ver reporte"
+
                                     >
+
                                         <svg
+
                                             class="h-4 w-4"
+
                                             viewBox="0 0 24 24"
+
                                             fill="none"
+
                                             stroke="currentColor"
+
                                             stroke-width="1.8"
+
                                         >
+
                                             <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6z"/>
+
                                             <circle cx="12" cy="12" r="2.5"/>
+
                                         </svg>
+
                                     </a>
 
                                     {{-- DESCARGAR --}}
+
                                     <a
+
                                         href="{{ route('reportes.download', $reporte) }}"
+
                                         class="inline-flex h-8 w-8 items-center justify-center rounded-md text-[var(--theme-text-muted)] hover:bg-[var(--theme-primary-soft)] hover:text-[var(--theme-primary)]"
+
                                         title="Descargar reporte"
+
                                         aria-label="Descargar reporte"
+
                                     >
+
                                         <svg
+
                                             class="h-4 w-4"
+
                                             viewBox="0 0 24 24"
+
                                             fill="none"
+
                                             stroke="currentColor"
+
                                             stroke-width="1.8"
+
                                         >
+
                                             <path d="M12 3v12M7 10l5 5 5-5M4 21h16"/>
+
                                         </svg>
+
                                     </a>
 
                                     {{-- ELIMINAR --}}
+
                                     <button
+
                                         type="button"
-                                        wire:click="eliminarReporte({{ $reporte->id_reporte }})"
-                                        wire:confirm="¿Deseas eliminar este reporte y su archivo?"
+
+                                        x-on:click="abrirModalEliminar({{ (int) $reporte->id_reporte }})"
+
+                                        
+
                                         class="inline-flex h-8 w-8 items-center justify-center rounded-md text-[var(--theme-text-muted)] hover:bg-[var(--theme-danger-soft)] hover:text-[var(--theme-danger)]"
+
                                         title="Eliminar reporte"
+
                                         aria-label="Eliminar reporte"
+
                                     >
+
                                         <svg
+
                                             class="h-4 w-4"
+
                                             viewBox="0 0 24 24"
+
                                             fill="none"
+
                                             stroke="currentColor"
+
                                             stroke-width="1.8"
+
                                         >
+
                                             <path d="M4 7h16M9 7V4h6v3M7 7l1 14h8l1-14M10 11v6M14 11v6"/>
+
                                         </svg>
+
                                     </button>
 
                                 </div>
+
                             </td>
+
                         </tr>
+
                     @empty
+
                         <tr>
+
                             <td
+
                                 colspan="8"
+
                                 class="px-4 py-12 text-center text-[var(--theme-text-muted)]"
+
                             >
+
                                 Todavía no se han generado reportes.
+
                             </td>
+
                         </tr>
+
                     @endforelse
+
                 </tbody>
+
             </table>
+
         </div>
 
         @if ($historial->hasPages())
+
             <div class="border-t border-[var(--theme-border)] px-4 py-3">
+
                 {{ $historial->links() }}
+
             </div>
+
         @endif
+
     </section>
+
+
+    {{-- MODAL DE CONFIRMACION DE ELIMINACION --}}
+    <div
+        x-show="reporteAEliminar !== null"
+        x-cloak
+        x-transition.opacity.duration.150ms
+        x-on:keydown.escape.window="cerrarModalEliminar()"
+        class="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 px-4 py-6"
+        x-on:click.self="cerrarModalEliminar()"
+        role="presentation"
+    >
+        <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="reporte-eliminar-titulo"
+            aria-describedby="reporte-eliminar-descripcion"
+            class="w-full max-w-md rounded-xl border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] p-5 shadow-2xl sm:p-6"
+            x-on:click.stop
+        >
+            <div class="flex items-start justify-between gap-3">
+                <h2 id="reporte-eliminar-titulo" class="text-base font-semibold text-[var(--theme-text-strong)]">
+                    Eliminar reporte
+                </h2>
+                <button
+                    type="button"
+                    x-on:click="cerrarModalEliminar()"
+                    x-bind:disabled="eliminandoReporte"
+                    class="rounded-md p-1 text-[var(--theme-text-muted)] hover:bg-[var(--theme-surface-soft)] disabled:opacity-50"
+                    aria-label="Cerrar ventana"
+                >
+                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                        <path d="M18 6 6 18M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <p id="reporte-eliminar-descripcion" class="mt-3 text-sm text-[var(--theme-text)]">
+                ¿Estás seguro de que deseas eliminar este reporte y su archivo generado?
+            </p>
+            <p class="mt-2 text-xs text-[var(--theme-text-muted)]">
+                Esta acción no se puede deshacer.
+            </p>
+
+            <div class="mt-6 flex flex-wrap justify-end gap-3">
+                <button
+                    type="button"
+                    x-on:click="cerrarModalEliminar()"
+                    x-bind:disabled="eliminandoReporte"
+                    class="inline-flex h-10 items-center justify-center rounded-lg border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-4 text-sm font-medium text-[var(--theme-text)] hover:bg-[var(--theme-surface-soft)] disabled:opacity-50"
+                >
+                    Cancelar
+                </button>
+                <button
+                    type="button"
+                    x-on:click="confirmarEliminarReporte()"
+                    x-bind:disabled="eliminandoReporte"
+                    class="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-[var(--theme-danger)] bg-[var(--theme-danger-soft)] px-4 text-sm font-semibold text-[var(--theme-danger)] hover:opacity-90 disabled:cursor-wait disabled:opacity-60"
+                >
+                    <svg x-show="eliminandoReporte" x-cloak class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="3" stroke-opacity=".25"/>
+                        <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+                    </svg>
+                    <span x-text="eliminandoReporte ? 'Eliminando...' : 'Confirmar eliminación'"></span>
+                </button>
+            </div>
+        </section>
+    </div>
+
 </div>

@@ -23,7 +23,7 @@
     .rp-acta {
         background: #ffffff;
         color: #253b54;
-        font-family: Arial, Helvetica, sans-serif;
+        font-family: 'Aptos', 'Segoe UI', Arial, sans-serif;
         padding: 5%;
         font-size: 7px;
         line-height: 1.35;
@@ -35,14 +35,18 @@
     }
 
     .rp-acta .logo {
+        float: none;
         display: block;
         width: 34%;
         max-width: 145px;
         height: auto;
-        margin-bottom: 5px;
+        margin: 0 0 5px 0;
+        margin-left: 0;
+        margin-right: auto;
     }
 
     .rp-acta .submarca {
+        clear: both;
         font-size: .9em;
         color: #788795;
         border-bottom: 2px solid #a08a3c;
@@ -53,7 +57,7 @@
         margin: 7px 0 2px;
         color: #233b54;
         font-size: 1.55em;
-        font-weight: 800;
+        font-weight: 700;
         line-height: 1.2;
     }
 
@@ -66,7 +70,7 @@
     .rp-acta .section {
         margin: 7px 0 4px;
         padding: 5px 7px;
-        background: #f0f1f3;
+        background: #ffffff;
         color: #253d55;
         font-weight: bold;
         font-size: 1.04em;
@@ -107,7 +111,7 @@
 
     .rp-acta .value {
         display: block;
-        font-weight: 600;
+        font-weight: 700;
         overflow-wrap: anywhere;
         white-space: pre-line;
     }
@@ -120,8 +124,8 @@
 
     .rp-acta th {
         padding: 6px 4px;
-        background: #233f59;
-        color: white;
+        background: #ffffff;
+        color: #253d55;
         text-align: left;
         font-size: .85em;
     }
@@ -183,6 +187,16 @@
         color: #8694a2;
         font-size: .85em;
     }
+
+    /* Imagen institucional en la esquina superior izquierda del documento. */
+    .logo-palladium-izquierda {
+        display: block;
+        float: none;
+        width: 32%;
+        max-width: 135px;
+        height: auto;
+        margin: 0 0 8px 0;
+    }
 </style>
 
 <div class="overflow-hidden border border-slate-200 bg-white shadow-sm">
@@ -195,8 +209,7 @@
         >
 
         <div class="submarca">
-            GRAND PALLADIUM RIVIERA MAYA |
-            CONTROL DE ACTIVOS TI
+            GRAND PALLADIUM RIVIERA MAYA | CONTROL DE ACTIVOS TI
         </div>
 
         <h2>

@@ -2,7 +2,9 @@
 
 namespace App\Livewire;
 
+use App\Services\SystemCacheService;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
@@ -15,7 +17,6 @@ class EquipoBaja extends Component
     use WithFileUploads;
 
     public int $equipoId;
-
     public array $equipo = [];
 
     public string $motivoBaja = '';
@@ -32,7 +33,6 @@ class EquipoBaja extends Component
     {
         $this->equipoId = $equipoId;
         $this->fechaBaja = now()->format('Y-m-d');
-
         $this->cargarEquipo();
     }
 
@@ -83,6 +83,7 @@ class EquipoBaja extends Component
                 'ma.nombre as marca',
                 'mo.nombre as modelo',
                 'ee.nombre as estado',
+                'ee.clave as estado_clave',
                 'p.nombre as proveedor',
             ])
             ->first();
@@ -93,66 +94,51 @@ class EquipoBaja extends Component
             ->where('id_equipo', $this->equipoId)
             ->exists();
 
-        abort_if($bajaExistente, 404);
+        abort_if(
+            $bajaExistente || $equipo->estado_clave === 'BAJA',
+            404
+        );
 
         $this->equipo = [
             'id_equipo' => (int) $equipo->id_equipo,
-
             'codigo_inventario' => (string) (
                 $equipo->codigo_inventario ?? ''
             ),
-
             'nombre_equipo' => (string) (
                 $equipo->nombre_equipo ?? ''
             ),
-
             'numero_serie' => (string) (
                 $equipo->numero_serie ?? ''
             ),
-
             'numero_factura' => (string) (
                 $equipo->numero_factura ?? ''
             ),
-
             'tipo_equipo' => (string) (
                 $equipo->tipo_equipo ?? ''
             ),
-
             'marca' => (string) (
                 $equipo->marca ?? ''
             ),
-
             'modelo' => (string) (
                 $equipo->modelo ?? ''
             ),
-
             'estado' => (string) (
                 $equipo->estado ?? ''
             ),
-
             'proveedor' => (string) (
                 $equipo->proveedor ?? ''
             ),
-
             'fecha_compra' => $this->formatearFecha(
                 $equipo->fecha_compra ?? null
             ),
-
             'fecha_fin_garantia' => $this->formatearFecha(
                 $equipo->fecha_fin_garantia ?? null
             ),
-
             'fecha_registro' => $this->formatearFecha(
                 $equipo->fecha_registro ?? null
             ),
         ];
     }
-
-    /*
-    |--------------------------------------------------------------------------
-    | VALIDACIÓN DE FOTOGRAFÍAS
-    |--------------------------------------------------------------------------
-    */
 
     public function updatedFotoFrontal(): void
     {
@@ -197,15 +183,8 @@ class EquipoBaja extends Component
         }
 
         $this->{$propiedad} = null;
-
         $this->resetValidation($propiedad);
     }
-
-    /*
-    |--------------------------------------------------------------------------
-    | CONFIRMAR BAJA
-    |--------------------------------------------------------------------------
-    */
 
     public function confirmar()
     {
@@ -215,25 +194,20 @@ class EquipoBaja extends Component
                 'string',
                 'max:500',
             ],
-
             'fechaBaja' => [
                 'required',
                 'date',
             ],
-
             'comentariosBaja' => [
                 'nullable',
                 'string',
                 'max:2000',
             ],
-
             'autoriza' => [
                 'required',
                 'string',
                 'max:255',
             ],
-
-            // Se mantienen opcionales.
             'fotoFrontal' => $this->photoRules(),
             'fotoTrasera' => $this->photoRules(),
             'fotoLateral1' => $this->photoRules(),
@@ -241,37 +215,26 @@ class EquipoBaja extends Component
         ], [
             'motivoBaja.required' =>
                 'Ingresa el motivo de la baja.',
-
             'fechaBaja.required' =>
                 'Selecciona la fecha de baja.',
-
             'fechaBaja.date' =>
                 'La fecha de baja no es válida.',
-
             'autoriza.required' =>
                 'Ingresa el nombre de la persona que autoriza la baja.',
-
             'fotoFrontal.image' =>
                 'La fotografía frontal debe ser una imagen.',
-
             'fotoTrasera.image' =>
                 'La fotografía trasera debe ser una imagen.',
-
             'fotoLateral1.image' =>
                 'La primera fotografía lateral debe ser una imagen.',
-
             'fotoLateral2.image' =>
                 'La segunda fotografía lateral debe ser una imagen.',
-
             'fotoFrontal.max' =>
                 'La fotografía frontal no debe superar 5 MB.',
-
             'fotoTrasera.max' =>
                 'La fotografía trasera no debe superar 5 MB.',
-
             'fotoLateral1.max' =>
                 'La primera fotografía lateral no debe superar 5 MB.',
-
             'fotoLateral2.max' =>
                 'La segunda fotografía lateral no debe superar 5 MB.',
         ]);
@@ -285,10 +248,6 @@ class EquipoBaja extends Component
             ]);
         }
 
-        /*
-         * Rutas almacenadas durante esta operación.
-         * Si ocurre un error, los archivos se eliminan.
-         */
         $archivosGuardados = [];
 
         try {
@@ -297,13 +256,6 @@ class EquipoBaja extends Component
                 $usuarioId,
                 &$archivosGuardados
             ): void {
-
-                /*
-                |--------------------------------------------------------------------------
-                | VERIFICAR EQUIPO
-                |--------------------------------------------------------------------------
-                */
-
                 $equipo = DB::table('equipos')
                     ->where('id_equipo', $this->equipoId)
                     ->lockForUpdate()
@@ -314,7 +266,7 @@ class EquipoBaja extends Component
                         'id_estado_activo',
                     ]);
 
-                if (! $equipo) {
+                if (!$equipo) {
                     throw ValidationException::withMessages([
                         'motivoBaja' =>
                             'El equipo seleccionado ya no existe.',
@@ -331,15 +283,6 @@ class EquipoBaja extends Component
                             'Este equipo ya se encuentra dado de baja.',
                     ]);
                 }
-
-                /*
-                |--------------------------------------------------------------------------
-                | MOTIVO INTERNO OTRO
-                |--------------------------------------------------------------------------
-                |
-                | El usuario escribe el motivo real.
-                | El catálogo conserva el valor OTRO.
-                */
 
                 $idMotivoOtro = DB::table(
                     'catalogo_valores as cv'
@@ -362,12 +305,6 @@ class EquipoBaja extends Component
                     ]);
                 }
 
-                /*
-                |--------------------------------------------------------------------------
-                | ESTADO COMPLETADA
-                |--------------------------------------------------------------------------
-                */
-
                 $idEstadoBajaCompletada = DB::table(
                     'catalogo_valores as cv'
                 )
@@ -389,15 +326,7 @@ class EquipoBaja extends Component
                     ]);
                 }
 
-                /*
-                |--------------------------------------------------------------------------
-                | ESTADO BAJA DEL EQUIPO
-                |--------------------------------------------------------------------------
-                */
-
-                $idEstadoEquipoBaja = DB::table(
-                    'estados_equipo'
-                )
+                $idEstadoEquipoBaja = DB::table('estados_equipo')
                     ->where('clave', 'BAJA')
                     ->where('activo', true)
                     ->value('id_estado_equipo');
@@ -409,11 +338,15 @@ class EquipoBaja extends Component
                     ]);
                 }
 
-                /*
-                |--------------------------------------------------------------------------
-                | GENERAR FOLIO
-                |--------------------------------------------------------------------------
-                */
+                if (
+                    (int) $equipo->id_estado_activo ===
+                    (int) $idEstadoEquipoBaja
+                ) {
+                    throw ValidationException::withMessages([
+                        'motivoBaja' =>
+                            'El equipo ya tiene estado BAJA.',
+                    ]);
+                }
 
                 $ultimoId = DB::table('bajas')
                     ->orderByDesc('id_baja')
@@ -428,61 +361,31 @@ class EquipoBaja extends Component
                     $consecutivo
                 );
 
-                /*
-                |--------------------------------------------------------------------------
-                | CREAR REGISTRO Y OBTENER ID
-                |--------------------------------------------------------------------------
-                |
-                | insertGetId permite asociar las evidencias
-                | con la baja recién creada.
-                */
-
                 $idBaja = DB::table('bajas')
                     ->insertGetId([
                         'folio' => $folio,
-
                         'id_equipo' => $this->equipoId,
-
-                        'id_motivo_baja' =>
-                            (int) $idMotivoOtro,
-
+                        'id_motivo_baja' => (int) $idMotivoOtro,
                         'motivo_baja' => trim(
                             (string) $validated['motivoBaja']
                         ),
-
                         'id_estado_baja' =>
                             (int) $idEstadoBajaCompletada,
-
                         'fecha_baja' => $validated['fechaBaja'],
-
-                        'comentarios' =>
-                            trim((string) (
+                        'comentarios' => trim((string) (
+                            $validated['comentariosBaja'] ?? ''
+                        )) !== ''
+                            ? trim((string) (
                                 $validated['comentariosBaja'] ?? ''
-                            )) !== ''
-                                ? trim((string) (
-                                    $validated['comentariosBaja'] ?? ''
-                                ))
-                                : null,
-
+                            ))
+                            : null,
                         'realizado_por' => (int) $usuarioId,
-
                         'autoriza' => trim(
                             (string) $validated['autoriza']
                         ),
-
                         'ruta_pdf' => null,
-
                         'fecha_registro' => now(),
                     ], 'id_baja');
-
-                /*
-                |--------------------------------------------------------------------------
-                | GUARDAR FOTOGRAFÍAS
-                |--------------------------------------------------------------------------
-                |
-                | Las rutas se almacenan en baja_evidencias.
-                | Los archivos se guardan en el disco local.
-                */
 
                 $fotografias = [
                     'foto_frontal' => $this->fotoFrontal,
@@ -511,7 +414,7 @@ class EquipoBaja extends Component
                         'local'
                     );
 
-                    if (! is_string($ruta) || $ruta === '') {
+                    if (!is_string($ruta) || $ruta === '') {
                         throw new \RuntimeException(
                             'No fue posible guardar la fotografía: ' .
                             $columna
@@ -519,7 +422,6 @@ class EquipoBaja extends Component
                     }
 
                     $archivosGuardados[] = $ruta;
-
                     $rutas[$columna] = $ruta;
                     $hayFotografias = true;
                 }
@@ -529,24 +431,12 @@ class EquipoBaja extends Component
                         ->insert($rutas);
                 }
 
-                /*
-                |--------------------------------------------------------------------------
-                | ACTUALIZAR ESTADO DEL EQUIPO
-                |--------------------------------------------------------------------------
-                */
-
                 DB::table('equipos')
                     ->where('id_equipo', $this->equipoId)
                     ->update([
                         'id_estado_activo' =>
                             (int) $idEstadoEquipoBaja,
                     ]);
-
-                /*
-                |--------------------------------------------------------------------------
-                | CERRAR ASIGNACIÓN ACTIVA
-                |--------------------------------------------------------------------------
-                */
 
                 DB::table('asignaciones')
                     ->where('id_equipo', $this->equipoId)
@@ -555,42 +445,21 @@ class EquipoBaja extends Component
                         'fecha_fin' => now(),
                     ]);
 
-                /*
-                |--------------------------------------------------------------------------
-                | REGISTRAR BITÁCORA
-                |--------------------------------------------------------------------------
-                */
-
                 DB::table('bitacora_auditoria')
                     ->insert([
                         'id_usuario' => (int) $usuarioId,
-
                         'accion' => 'EQUIPO_DADO_DE_BAJA',
-
                         'modulo' => 'EQUIPOS',
-
                         'descripcion' => sprintf(
                             'Se dio de baja el equipo %s. Folio: %s. Motivo: %s',
-                            $equipo->codigo_inventario
-                                ?: 'Sin código',
+                            $equipo->codigo_inventario ?: 'Sin código',
                             $folio,
                             trim((string) $validated['motivoBaja'])
                         ),
-
                         'fecha_hora' => now(),
                     ]);
             });
-
         } catch (Throwable $exception) {
-
-            /*
-             * El rollback de la transacción elimina
-             * los cambios de base de datos.
-             *
-             * Los archivos no forman parte de esa
-             * transacción, por eso se limpian aquí.
-             */
-
             if ($archivosGuardados !== []) {
                 Storage::disk('local')
                     ->delete($archivosGuardados);
@@ -600,10 +469,25 @@ class EquipoBaja extends Component
         }
 
         /*
-        |--------------------------------------------------------------------------
-        | MENSAJE DE ÉXITO Y REDIRECCIÓN
-        |--------------------------------------------------------------------------
-        */
+         * Invalidar estadísticas y listados solo después
+         * de una baja confirmada exitosamente.
+         */
+        $systemCache = app(SystemCacheService::class);
+
+        $systemCache->refreshModule('dashboard');
+        $systemCache->refreshModule('equipos');
+
+        Cache::forget('equipos.edit.base.' . $this->equipoId);
+
+        $version = (int) Cache::get(
+            'equipos.index.version',
+            1
+        );
+
+        Cache::forever(
+            'equipos.index.version',
+            $version + 1
+        );
 
         session()->flash(
             'success',
@@ -616,12 +500,6 @@ class EquipoBaja extends Component
         );
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | REGLAS DE FOTOGRAFÍAS
-    |--------------------------------------------------------------------------
-    */
-
     private function photoRules(): array
     {
         return [
@@ -630,12 +508,6 @@ class EquipoBaja extends Component
             'max:5120',
         ];
     }
-
-    /*
-    |--------------------------------------------------------------------------
-    | FORMATO DE FECHAS
-    |--------------------------------------------------------------------------
-    */
 
     private function formatearFecha(mixed $fecha): string
     {
@@ -646,17 +518,10 @@ class EquipoBaja extends Component
         try {
             return Carbon::parse($fecha)
                 ->format('d/m/Y');
-
         } catch (Throwable) {
             return (string) $fecha;
         }
     }
-
-    /*
-    |--------------------------------------------------------------------------
-    | VISTA
-    |--------------------------------------------------------------------------
-    */
 
     public function render()
     {

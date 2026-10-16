@@ -79,7 +79,7 @@ class EquiposIndex extends Component
 
         'direccion_ip' => 'e.direccion_ip',
 
-        'estado' => 'cv.nombre',
+        'estado' => 'ee.nombre',
 
         /*
          * Esta columna es calculada.
@@ -537,6 +537,11 @@ class EquiposIndex extends Component
             $row =
                 (array) $item;
 
+            if ((int) ($row['dado_de_baja'] ?? 0) === 1) {
+                Cache::forget('equipos.edit.base.' . (int) $row['id_equipo']);
+                continue;
+            }
+
 
             /*
             |--------------------------------------------------------------------------
@@ -683,8 +688,8 @@ class EquiposIndex extends Component
             )
 
             ->leftJoin(
-                'catalogo_valores as cv',
-                'cv.id_valor',
+                'estados_equipo as ee',
+                'ee.id_estado_equipo',
                 '=',
                 'e.id_estado_activo'
             )
@@ -727,7 +732,8 @@ class EquiposIndex extends Component
                 'te.nombre as tipo_equipo_nombre',
                 'ma.nombre as marca_nombre',
                 'mo.nombre as modelo_nombre',
-                'cv.nombre as estado_nombre',
+                'ee.nombre as estado_nombre',
+                'ee.clave as estado_clave',
 
 
                 /*
@@ -779,6 +785,9 @@ class EquiposIndex extends Component
                 'dep.id_area as departamento_area_id',
             ])
 
+            ->selectRaw("
+                CASE WHEN ee.clave = 'BAJA' OR EXISTS (SELECT 1 FROM bajas b WHERE b.id_equipo = e.id_equipo) THEN 1 ELSE 0 END as dado_de_baja
+            ")
             ->selectRaw("
                 COALESCE(
                     CASE
@@ -1308,127 +1317,92 @@ class EquiposIndex extends Component
 
     private function getTiposActivo(): array
     {
-        return $this->systemCache()
-            ->rememberSimple(
-                self::CATALOG_CACHE_MODULE,
-                'filtros.tipos_equipo',
-
-                fn () =>
-                    TipoEquipo::where(
-                        'activo',
-                        true
-                    )
-                        ->orderBy(
-                            'nombre'
-                        )
-                        ->get([
-                            'id_tipo_equipo',
-                            'nombre',
-                        ])
-                        ->toArray(),
-
-                self::CATALOG_CACHE_TTL_HOURS
-            );
+        return $this->systemCache()->rememberSimple(
+            self::CATALOG_CACHE_MODULE,
+            'filtros.tipos_equipo.arrays.v3',
+            fn (): array => TipoEquipo::where('activo', true)
+                    ->orderBy('nombre')
+                    ->get(['id_tipo_equipo', 'nombre'])
+                    ->map(fn ($row): array => [
+                        'id_tipo_equipo' => (int) $row->id_tipo_equipo,
+                        'nombre' => (string) $row->nombre,
+                    ])
+                    ->all(),
+            self::CATALOG_CACHE_TTL_HOURS
+        );
     }
 
 
     private function getMarcas(): array
     {
-        return $this->systemCache()
-            ->rememberSimple(
-                self::CATALOG_CACHE_MODULE,
-                'filtros.marcas',
-
-                fn () =>
-                    Marca::where(
-                        'activo',
-                        true
-                    )
-                        ->orderBy(
-                            'nombre'
-                        )
-                        ->get([
-                            'id_marca',
-                            'nombre',
-                        ])
-                        ->toArray(),
-
-                self::CATALOG_CACHE_TTL_HOURS
-            );
+        return $this->systemCache()->rememberSimple(
+            self::CATALOG_CACHE_MODULE,
+            'filtros.marcas.arrays.v3',
+            fn (): array => Marca::where('activo', true)
+                    ->orderBy('nombre')
+                    ->get(['id_marca', 'nombre'])
+                    ->map(fn ($row): array => [
+                        'id_marca' => (int) $row->id_marca,
+                        'nombre' => (string) $row->nombre,
+                    ])
+                    ->all(),
+            self::CATALOG_CACHE_TTL_HOURS
+        );
     }
 
 
     private function getModelos(): array
     {
-        return $this->systemCache()
-            ->rememberSimple(
-                self::CATALOG_CACHE_MODULE,
-                'filtros.modelos',
-
-                fn () =>
-                    Modelo::where(
-                        'activo',
-                        true
-                    )
-                        ->orderBy(
-                            'nombre'
-                        )
-                        ->get([
-                            'id_modelo',
-                            'nombre',
-                        ])
-                        ->toArray(),
-
-                self::CATALOG_CACHE_TTL_HOURS
-            );
+        return $this->systemCache()->rememberSimple(
+            self::CATALOG_CACHE_MODULE,
+            'filtros.modelos.arrays.v3',
+            fn (): array => Modelo::where('activo', true)
+                    ->orderBy('nombre')
+                    ->get(['id_modelo', 'nombre'])
+                    ->map(fn ($row): array => [
+                        'id_modelo' => (int) $row->id_modelo,
+                        'nombre' => (string) $row->nombre,
+                    ])
+                    ->all(),
+            self::CATALOG_CACHE_TTL_HOURS
+        );
     }
 
 
     private function getEstados(): array
     {
-        return $this->systemCache()
-            ->rememberSimple(
-                self::CATALOG_CACHE_MODULE,
-                'filtros.estados_activo',
-
-                fn () =>
-                    CatalogoValor::deCatalogo(
-                        'estado_activo'
-                    )
-                        ->get([
-                            'id_valor',
-                            'nombre',
-                        ])
-                        ->toArray(),
-
-                self::CATALOG_CACHE_TTL_HOURS
-            );
+        return $this->systemCache()->rememberSimple(
+            self::CATALOG_CACHE_MODULE,
+            'filtros.estados_equipo.arrays.v3',
+            fn (): array => DB::table('estados_equipo')
+                    ->where('activo', true)
+                    ->orderBy('orden')
+                    ->get(['id_estado_equipo', 'nombre'])
+                    ->map(fn ($row): array => [
+                        'id_valor' => (int) $row->id_estado_equipo,
+                        'nombre' => (string) $row->nombre,
+                    ])
+                    ->all(),
+            self::CATALOG_CACHE_TTL_HOURS
+        );
     }
 
 
     private function getAreas(): array
     {
-        return $this->systemCache()
-            ->rememberSimple(
-                self::CATALOG_CACHE_MODULE,
-                'filtros.areas',
-
-                fn () =>
-                    Area::where(
-                        'activo',
-                        true
-                    )
-                        ->orderBy(
-                            'nombre'
-                        )
-                        ->get([
-                            'id_area',
-                            'nombre',
-                        ])
-                        ->toArray(),
-
-                self::CATALOG_CACHE_TTL_HOURS
-            );
+        return $this->systemCache()->rememberSimple(
+            self::CATALOG_CACHE_MODULE,
+            'filtros.areas.arrays.v3',
+            fn (): array => Area::where('activo', true)
+                    ->orderBy('nombre')
+                    ->get(['id_area', 'nombre'])
+                    ->map(fn ($row): array => [
+                        'id_area' => (int) $row->id_area,
+                        'nombre' => (string) $row->nombre,
+                    ])
+                    ->all(),
+            self::CATALOG_CACHE_TTL_HOURS
+        );
     }
 
 
@@ -1493,7 +1467,7 @@ class EquiposIndex extends Component
                 ->remember(
                     self::CACHE_MODULE,
 
-                    'index.page',
+                    'index.page.bajas.v2',
 
                     $this->tableCacheState(
                         $perPage,
