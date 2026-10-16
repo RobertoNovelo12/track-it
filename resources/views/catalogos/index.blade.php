@@ -575,22 +575,18 @@
                     </p>
                 </div>
 
+                {{-- ========================================================
+                    EQUIPOS / TIPOS DE EQUIPO
+                ======================================================== --}}
                 <div
-                    class="
-                        px-4
-                        sm:px-5
-
-                        py-8
+                    x-show="
+                        section === 'equipos'
                     "
+                    x-cloak
                 >
-                    <p
-                        class="
-                            text-sm
-                            text-[var(--theme-text-muted)]
-                        "
-                    >
-                        La configuración de equipos se construirá en esta sección.
-                    </p>
+                    <livewire:catalogos.tipos-equipo
+                        :key="'administracion-tipos-equipo'"
+                    />
                 </div>
             </section>
         </div>

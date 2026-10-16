@@ -2,16 +2,18 @@
 
 namespace App\Livewire;
 
+use App\Services\TipoEquipoFormBuilderService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Json;
 use Livewire\Component;
 
 class EquipoCreate extends Component
 {
-    // --- Información general ---
+    // Información general.
     public string $nombreEquipo = '';
     public string $host = '';
     public string $idEstadoActivo = '';
@@ -24,7 +26,7 @@ class EquipoCreate extends Component
     public string $numeroSerie = '';
     public string $idProveedor = '';
 
-    // --- Información adicional (común) ---
+    // Información adicional.
     public string $propietario = '';
     public string $idCondicionActivo = '';
     public string $idArea = '';
@@ -32,15 +34,15 @@ class EquipoCreate extends Component
     public string $fechaFinGarantia = '';
     public string $comentarios = '';
 
-    // --- Campos dinámicos de la tabla hija (según tipo de equipo) ---
+    // Campos específicos y atributos dinámicos.
     public array $childData = [];
 
     public int $formKey = 0;
 
-    /**
-     * Convierte una colección de resultados de DB::table() (objetos stdClass)
-     * en un arreglo de arreglos asociativos planos.
-     */
+    // Cachés locales de esta petición.
+    private array $loadedForms = [];
+    private array $loadedOptions = [];
+
     private function toPlainArray($collection): array
     {
         return $collection
@@ -48,9 +50,16 @@ class EquipoCreate extends Component
             ->all();
     }
 
-    /**
-     * Mapa: id_tipo_equipo => [tabla hija, [campo => tipo de input]].
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | Almacenamiento físico existente
+    |--------------------------------------------------------------------------
+    |
+    | Este mapa conserva las tablas y columnas físicas de cada tipo.
+    | Los campos visibles se obtienen del constructor.
+    |
+    */
+
     protected function childConfig(): array
     {
         $baseCompu = [
@@ -198,58 +207,239 @@ class EquipoCreate extends Component
         ];
     }
 
-    /**
-     * Etiquetas legibles para los campos dinámicos.
-     */
-    protected function fieldLabels(): array
+    /*
+    |--------------------------------------------------------------------------
+    | Configuración del constructor
+    |--------------------------------------------------------------------------
+    */
+
+    private function configuredForm(int $tipoId): array
     {
-        return [
-            'procesador' => 'Procesador',
-            'ram_gb' => 'RAM (GB)',
-            'almacenamiento_gb' => 'Almacenamiento (GB)',
-            'id_tipo_almacenamiento' => 'Tipo de almacenamiento',
-            'sistema_operativo' => 'Sistema operativo',
-            'incluye_cargador' => 'Incluye cargador',
-            'tamano_pulgadas' => 'Tamaño (pulgadas)',
-            'id_tipo_conexion' => 'Tipo de conexión',
-            'imei' => 'IMEI',
-            'color' => 'Color',
-            'imei_1' => 'IMEI 1',
-            'imei_2' => 'IMEI 2',
-            'numero_telefonico' => 'Número telefónico',
-            'id_tipo_impresora' => 'Tipo de impresora',
-            'nombre_red' => 'Nombre en red',
-            'numero_puertos' => 'Número de puertos',
-            'velocidad' => 'Velocidad',
-            'administrable' => 'Administrable',
-            'nombre_ap' => 'Nombre del Access Point',
-            'id_tipo_servidor' => 'Tipo de servidor',
-            'capacidad_va' => 'Capacidad (VA)',
-            'fecha_cambio_bateria' => 'Fecha de cambio de batería',
-            'id_estado_bateria' => 'Estado de batería',
-            'id_tipo_telefono' => 'Tipo de teléfono',
-            'extension' => 'Extensión',
-        ];
+        if (! array_key_exists($tipoId, $this->loadedForms)) {
+            $this->loadedForms[$tipoId] = app(
+                TipoEquipoFormBuilderService::class
+            )->load($tipoId);
+        }
+
+        return $this->loadedForms[$tipoId];
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Campos específicos y atributos visibles
+    |--------------------------------------------------------------------------
+    |
+    | Los destinos de almacenamiento se leen del servidor.
+    | El navegador solamente envía valores.
+    |
+    */
+
+    private function configuredChildFields(int $tipoId): array
+    {
+        $form = $this->configuredForm($tipoId);
+
+        $physical = $this->childConfig()[$tipoId] ?? null;
+
+        $result = [];
+
+        foreach ($form['fields'] as $field) {
+            if (! $field['visible']) {
+                continue;
+            }
+
+            if (
+                ! in_array(
+                    $field['origen_dato'],
+                    ['tabla_tipo', 'atributo'],
+                    true
+                )
+            ) {
+                continue;
+            }
+
+            if ($field['origen_dato'] === 'tabla_tipo') {
+                $column = $field['columna_destino'];
+
+                if (
+                    ! $physical
+                    || $field['tabla_destino'] !== $physical['table']
+                    || ! array_key_exists(
+                        (string) $column,
+                        $physical['fields']
+                    )
+                ) {
+                    throw new \RuntimeException(
+                        'El campo '
+                        . $field['etiqueta']
+                        . ' tiene un destino físico no reconocido.'
+                    );
+                }
+            }
+
+            // Identidad estable, independiente de la etiqueta.
+            $key = 'tipo_'
+                . $tipoId
+                . '_campo_'
+                . $field['id_campo'];
+
+            $result[$key] = $field;
+        }
+
+        return $result;
+    }
+
+    private function frontendType(
+        string $key,
+        array $field
+    ): string {
+        return $field['tipo_control'] === 'select'
+            ? 'catalog:' . $key
+            : $field['tipo_control'];
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Opciones de listas
+    |--------------------------------------------------------------------------
+    */
+
+    private function fieldOptions(array $field): array
+    {
+        if ($field['tipo_control'] !== 'select') {
+            return [];
+        }
+
+        $cacheKey = (string) $field['id_tipo_campo'];
+
+        if (array_key_exists($cacheKey, $this->loadedOptions)) {
+            return $this->loadedOptions[$cacheKey];
+        }
+
+        if ($field['fuente_opciones'] === 'personalizado') {
+            $items = DB::table('tipo_equipo_campo_opciones')
+                ->where(
+                    'id_tipo_campo',
+                    $field['id_tipo_campo']
+                )
+                ->where('activo', true)
+                ->orderBy('orden')
+                ->orderBy('id_opcion')
+                ->get([
+                    'id_opcion as value',
+                    'nombre as label',
+                ]);
+        } elseif ($field['fuente_opciones'] === 'catalogo') {
+            $items = DB::table('catalogo_valores')
+                ->where('id_catalogo', $field['id_catalogo'])
+                ->where('activo', true)
+                ->orderBy('orden')
+                ->orderBy('nombre')
+                ->get([
+                    'id_valor as value',
+                    'nombre as label',
+                ]);
+        } else {
+            $sources = [
+                'estados_equipo' => [
+                    'estados_equipo',
+                    'id_estado_equipo',
+                ],
+                'marcas' => [
+                    'marcas',
+                    'id_marca',
+                ],
+                'modelos' => [
+                    'modelos',
+                    'id_modelo',
+                ],
+                'proveedores' => [
+                    'proveedores',
+                    'id_proveedor',
+                ],
+                'areas' => [
+                    'areas',
+                    'id_area',
+                ],
+                'departamentos' => [
+                    'departamentos',
+                    'id_departamento',
+                ],
+            ];
+
+            $source = $sources[
+                $field['fuente_opciones'] ?? ''
+            ] ?? null;
+
+            if (! $source) {
+                throw new \RuntimeException(
+                    'La lista '
+                    . $field['etiqueta']
+                    . ' no tiene una fuente de opciones reconocida.'
+                );
+            }
+
+            $items = DB::table($source[0])
+                ->where('activo', true)
+                ->orderBy('nombre')
+                ->get([
+                    $source[1] . ' as value',
+                    'nombre as label',
+                ]);
+        }
+
+        return $this->loadedOptions[$cacheKey] = $items
+            ->map(fn ($item): array => [
+                'value' => (string) $item->value,
+                'label' => (string) $item->label,
+            ])
+            ->values()
+            ->all();
     }
 
     public function getChildFieldsProperty(): array
     {
-        $config = $this->childConfig();
+        if ($this->idTipoEquipo === '') {
+            return [];
+        }
 
-        $tipo = (int) $this->idTipoEquipo;
+        $result = [];
 
-        return $config[$tipo]['fields'] ?? [];
+        foreach (
+            $this->configuredChildFields(
+                (int) $this->idTipoEquipo
+            ) as $key => $field
+        ) {
+            $result[$key] = $this->frontendType(
+                $key,
+                $field
+            );
+        }
+
+        return $result;
     }
 
     public function getFieldLabelsProperty(): array
     {
-        return $this->fieldLabels();
+        if ($this->idTipoEquipo === '') {
+            return [];
+        }
+
+        $result = [];
+
+        foreach (
+            $this->configuredChildFields(
+                (int) $this->idTipoEquipo
+            ) as $key => $field
+        ) {
+            $result[$key] = $field['etiqueta'];
+        }
+
+        return $result;
     }
 
     public function updatedIdTipoEquipo(): void
     {
         $this->childData = [];
-
         $this->idModelo = '';
     }
 
@@ -263,22 +453,23 @@ class EquipoCreate extends Component
         $this->idDepartamento = '';
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Listas generales
+    |--------------------------------------------------------------------------
+    */
+
     public function getEstadosProperty(): array
     {
         return Cache::remember(
             'form.estados_equipo.v2',
             now()->addMinutes(30),
-            function () {
-                return $this->toPlainArray(
-                    DB::table('estados_equipo')
-                        ->where('activo', true)
-                        ->orderBy('orden')
-                        ->get([
-                            'id_estado_equipo',
-                            'nombre',
-                        ])
-                );
-            }
+            fn () => $this->toPlainArray(
+                DB::table('estados_equipo')
+                    ->where('activo', true)
+                    ->orderBy('orden')
+                    ->get(['id_estado_equipo', 'nombre'])
+            )
         );
     }
 
@@ -287,17 +478,12 @@ class EquipoCreate extends Component
         return Cache::remember(
             'form.tipos_equipo.v2',
             now()->addMinutes(30),
-            function () {
-                return $this->toPlainArray(
-                    DB::table('tipos_equipo')
-                        ->where('activo', true)
-                        ->orderBy('nombre')
-                        ->get([
-                            'id_tipo_equipo',
-                            'nombre',
-                        ])
-                );
-            }
+            fn () => $this->toPlainArray(
+                DB::table('tipos_equipo')
+                    ->where('activo', true)
+                    ->orderBy('nombre')
+                    ->get(['id_tipo_equipo', 'nombre'])
+            )
         );
     }
 
@@ -306,26 +492,21 @@ class EquipoCreate extends Component
         return Cache::remember(
             'form.marcas.v2',
             now()->addMinutes(30),
-            function () {
-                return $this->toPlainArray(
-                    DB::table('marcas')
-                        ->where('activo', true)
-                        ->orderBy('nombre')
-                        ->get([
-                            'id_marca',
-                            'nombre',
-                        ])
-                );
-            }
+            fn () => $this->toPlainArray(
+                DB::table('marcas')
+                    ->where('activo', true)
+                    ->orderBy('nombre')
+                    ->get(['id_marca', 'nombre'])
+            )
         );
     }
-private function getAllModelos(): array
-{
-    return Cache::remember(
-        'form.modelos.all.v2',
-        now()->addMinutes(30),
-        function () {
-            return $this->toPlainArray(
+
+    private function getAllModelos(): array
+    {
+        return Cache::remember(
+            'form.modelos.all.v2',
+            now()->addMinutes(30),
+            fn () => $this->toPlainArray(
                 DB::table('modelos')
                     ->where('activo', true)
                     ->orderBy('nombre')
@@ -335,10 +516,9 @@ private function getAllModelos(): array
                         'id_tipo_equipo',
                         'nombre',
                     ])
-            );
-        }
-    );
-}
+            )
+        );
+    }
 
     public function getModelosProperty(): array
     {
@@ -349,16 +529,13 @@ private function getAllModelos(): array
             return [];
         }
 
-        return collect(
-            $this->getAllModelos()
-        )
+        return collect($this->getAllModelos())
             ->filter(
                 fn (array $modelo): bool =>
                     (string) $modelo['id_marca']
-                        === (string) $this->idMarca
-                    &&
-                    (string) $modelo['id_tipo_equipo']
-                        === (string) $this->idTipoEquipo
+                        === $this->idMarca
+                    && (string) $modelo['id_tipo_equipo']
+                        === $this->idTipoEquipo
             )
             ->values()
             ->all();
@@ -369,17 +546,12 @@ private function getAllModelos(): array
         return Cache::remember(
             'form.proveedores.v2',
             now()->addMinutes(30),
-            function () {
-                return $this->toPlainArray(
-                    DB::table('proveedores')
-                        ->where('activo', true)
-                        ->orderBy('nombre')
-                        ->get([
-                            'id_proveedor',
-                            'nombre',
-                        ])
-                );
-            }
+            fn () => $this->toPlainArray(
+                DB::table('proveedores')
+                    ->where('activo', true)
+                    ->orderBy('nombre')
+                    ->get(['id_proveedor', 'nombre'])
+            )
         );
     }
 
@@ -388,11 +560,9 @@ private function getAllModelos(): array
         return Cache::remember(
             'form.condicion_activo.v2',
             now()->addMinutes(30),
-            function () {
-                return $this->catalogoValores(
-                    'condicion_activo'
-                );
-            }
+            fn () => $this->catalogoValores(
+                'condicion_activo'
+            )
         );
     }
 
@@ -401,17 +571,12 @@ private function getAllModelos(): array
         return Cache::remember(
             'form.areas.v2',
             now()->addMinutes(30),
-            function () {
-                return $this->toPlainArray(
-                    DB::table('areas')
-                        ->where('activo', true)
-                        ->orderBy('nombre')
-                        ->get([
-                            'id_area',
-                            'nombre',
-                        ])
-                );
-            }
+            fn () => $this->toPlainArray(
+                DB::table('areas')
+                    ->where('activo', true)
+                    ->orderBy('nombre')
+                    ->get(['id_area', 'nombre'])
+            )
         );
     }
 
@@ -420,18 +585,16 @@ private function getAllModelos(): array
         return Cache::remember(
             'form.departamentos.all.v2',
             now()->addMinutes(30),
-            function () {
-                return $this->toPlainArray(
-                    DB::table('departamentos')
-                        ->where('activo', true)
-                        ->orderBy('nombre')
-                        ->get([
-                            'id_departamento',
-                            'id_area',
-                            'nombre',
-                        ])
-                );
-            }
+            fn () => $this->toPlainArray(
+                DB::table('departamentos')
+                    ->where('activo', true)
+                    ->orderBy('nombre')
+                    ->get([
+                        'id_departamento',
+                        'id_area',
+                        'nombre',
+                    ])
+            )
         );
     }
 
@@ -441,29 +604,22 @@ private function getAllModelos(): array
             return [];
         }
 
-        return collect(
-            $this->getAllDepartamentos()
-        )
+        return collect($this->getAllDepartamentos())
             ->filter(
-                fn (array $departamento): bool =>
-                    (string) $departamento['id_area']
-                        === (string) $this->idArea
+                fn (array $item): bool =>
+                    (string) $item['id_area']
+                        === $this->idArea
             )
             ->values()
             ->all();
     }
 
-    /**
-     * Opciones para un select de tipo catalog:<clave>.
-     */
     public function catalogOptions(string $clave): array
     {
         return Cache::remember(
-            "form.catalogo.$clave.v2",
+            'form.catalogo.' . $clave . '.v2',
             now()->addMinutes(30),
-            function () use ($clave) {
-                return $this->catalogoValores($clave);
-            }
+            fn () => $this->catalogoValores($clave)
         );
     }
 
@@ -477,17 +633,9 @@ private function getAllModelos(): array
                     '=',
                     'catalogo_valores.id_catalogo'
                 )
-                ->where(
-                    'catalogos.clave',
-                    $clave
-                )
-                ->where(
-                    'catalogo_valores.activo',
-                    true
-                )
-                ->orderBy(
-                    'catalogo_valores.orden'
-                )
+                ->where('catalogos.clave', $clave)
+                ->where('catalogo_valores.activo', true)
+                ->orderBy('catalogo_valores.orden')
                 ->get([
                     'catalogo_valores.id_valor',
                     'catalogo_valores.nombre',
@@ -495,288 +643,142 @@ private function getAllModelos(): array
         );
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Datos iniciales para Alpine
-    |--------------------------------------------------------------------------
-    */
-
     private function toFrontendOptions(
         array $items,
         string $valueKey,
         string $labelKey = 'nombre'
     ): array {
         return collect($items)
-            ->map(
-                fn (array $item): array => [
-                    'value' =>
-                        (string) (
-                            $item[$valueKey]
-                            ?? ''
-                        ),
-
-                    'label' =>
-                        (string) (
-                            $item[$labelKey]
-                            ?? ''
-                        ),
-                ]
-            )
+            ->map(fn (array $item): array => [
+                'value' => (string) (
+                    $item[$valueKey] ?? ''
+                ),
+                'label' => (string) (
+                    $item[$labelKey] ?? ''
+                ),
+            ])
             ->values()
             ->all();
     }
 
-    private function getDynamicCatalogKeys(): array
-    {
-        return collect(
-            $this->childConfig()
-        )
-            ->flatMap(
-                fn (array $config): array =>
-                    array_values(
-                        $config['fields']
-                        ?? []
-                    )
-            )
-            ->filter(
-                fn ($type): bool =>
-                    is_string($type)
-                    && str_starts_with(
-                        $type,
-                        'catalog:'
-                    )
-            )
-            ->map(
-                fn (string $type): string =>
-                    substr(
-                        $type,
-                        8
-                    )
-            )
-            ->unique()
-            ->values()
-            ->all();
-    }
+    /*
+    |--------------------------------------------------------------------------
+    | Datos iniciales de Alpine
+    |--------------------------------------------------------------------------
+    */
 
     private function getEquipmentFrontendData(): array
     {
-        /*
-        |--------------------------------------------------------------------------
-        | Estados
-        |--------------------------------------------------------------------------
-        */
-
-        $estados =
-            $this->toFrontendOptions(
-                $this->estados,
-                'id_estado_equipo'
-            );
-
-        /*
-        |--------------------------------------------------------------------------
-        | Tipos de equipo
-        |--------------------------------------------------------------------------
-        */
-
-        $tiposEquipo =
-            $this->toFrontendOptions(
-                $this->tiposEquipo,
-                'id_tipo_equipo'
-            );
-
-        /*
-        |--------------------------------------------------------------------------
-        | Marcas
-        |--------------------------------------------------------------------------
-        */
-
-        $marcas =
-            $this->toFrontendOptions(
-                $this->marcas,
-                'id_marca'
-            );
-
-        /*
-        |--------------------------------------------------------------------------
-        | Todos los modelos
-        |--------------------------------------------------------------------------
-        |
-        | Se envían una sola vez.
-        | Alpine filtrará por:
-        |
-        | idMarca + idTipoEquipo
-        |
-        */
-
-        $modelos =
-            collect(
-                $this->getAllModelos()
-            )
-                ->map(
-                    fn (array $modelo): array => [
-                        'value' =>
-                            (string) $modelo['id_modelo'],
-
-                        'label' =>
-                            (string) $modelo['nombre'],
-
-                        'idMarca' =>
-                            (string) $modelo['id_marca'],
-
-                        'idTipoEquipo' =>
-                            (string) $modelo['id_tipo_equipo'],
-                    ]
-                )
-                ->values()
-                ->all();
-
-        /*
-        |--------------------------------------------------------------------------
-        | Proveedores
-        |--------------------------------------------------------------------------
-        */
-
-        $proveedores =
-            $this->toFrontendOptions(
-                $this->proveedores,
-                'id_proveedor'
-            );
-
-        /*
-        |--------------------------------------------------------------------------
-        | Condiciones
-        |--------------------------------------------------------------------------
-        */
-
-        $condiciones =
-            $this->toFrontendOptions(
-                $this->condiciones,
-                'id_valor'
-            );
-
-        /*
-        |--------------------------------------------------------------------------
-        | Áreas
-        |--------------------------------------------------------------------------
-        */
-
-        $areas =
-            $this->toFrontendOptions(
-                $this->areas,
-                'id_area'
-            );
-
-        /*
-        |--------------------------------------------------------------------------
-        | Todos los departamentos
-        |--------------------------------------------------------------------------
-        |
-        | Alpine filtrará utilizando idArea.
-        |
-        */
-
-        $departamentos =
-            collect(
-                $this->getAllDepartamentos()
-            )
-                ->map(
-                    fn (array $departamento): array => [
-                        'value' =>
-                            (string) $departamento['id_departamento'],
-
-                        'label' =>
-                            (string) $departamento['nombre'],
-
-                        'idArea' =>
-                            (string) $departamento['id_area'],
-                    ]
-                )
-                ->values()
-                ->all();
-
-        /*
-        |--------------------------------------------------------------------------
-        | Configuración de campos dinámicos
-        |--------------------------------------------------------------------------
-        |
-        | No enviamos el nombre de la tabla al navegador.
-        | Solamente necesita conocer qué campos dibujar.
-        |
-        */
-
         $childFieldsByType = [];
+        $childFieldMetaByType = [];
+        $sectionsByType = [];
+        $labels = [];
+        $catalogs = [];
 
-        foreach (
-            $this->childConfig()
-            as $tipoId => $config
-        ) {
-            $childFieldsByType[
-                (string) $tipoId
-            ] =
-                $config['fields']
-                ?? [];
+        foreach ($this->tiposEquipo as $tipo) {
+            $tipoId = (int) $tipo['id_tipo_equipo'];
+
+            $form = $this->configuredForm($tipoId);
+
+            $childFieldsByType[$tipoId] = [];
+            $childFieldMetaByType[$tipoId] = [];
+
+            $sectionsByType[$tipoId] = array_map(
+                fn (array $section): array => [
+                    'id_seccion' => $section['id_seccion'],
+                    'clave' => $section['clave'],
+                    'nombre' => $section['nombre'],
+                    'orden' => $section['orden'],
+                    'es_base' => $section['es_base'],
+                ],
+                $form['sections']
+            );
+
+            foreach (
+                $this->configuredChildFields($tipoId)
+                as $key => $field
+            ) {
+                $childFieldsByType[$tipoId][$key] =
+                    $this->frontendType($key, $field);
+
+                $labels[$key] = $field['etiqueta'];
+
+                $childFieldMetaByType[$tipoId][$key] = [
+                    'id_campo' => $field['id_campo'],
+                    'id_seccion' => $field['id_seccion'],
+                    'etiqueta' => $field['etiqueta'],
+                    'tipo_control' => $field['tipo_control'],
+                    'obligatorio' => $field['obligatorio'],
+                    'placeholder' => $field['placeholder'],
+                    'descripcion' => $field['descripcion'],
+                ];
+
+                if ($field['tipo_control'] === 'select') {
+                    $catalogs[$key] =
+                        $this->fieldOptions($field);
+                }
+            }
         }
-
-        /*
-        |--------------------------------------------------------------------------
-        | Catálogos utilizados por campos dinámicos
-        |--------------------------------------------------------------------------
-        */
-
-        $dynamicCatalogs = [];
-
-        foreach (
-            $this->getDynamicCatalogKeys()
-            as $clave
-        ) {
-            $dynamicCatalogs[$clave] =
-                $this->toFrontendOptions(
-                    $this->catalogOptions(
-                        $clave
-                    ),
-                    'id_valor'
-                );
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | Resultado
-        |--------------------------------------------------------------------------
-        */
 
         return [
-            'estados' =>
-                $estados,
+            'estados' => $this->toFrontendOptions(
+                $this->estados,
+                'id_estado_equipo'
+            ),
 
-            'tiposEquipo' =>
-                $tiposEquipo,
+            'tiposEquipo' => $this->toFrontendOptions(
+                $this->tiposEquipo,
+                'id_tipo_equipo'
+            ),
 
-            'marcas' =>
-                $marcas,
+            'marcas' => $this->toFrontendOptions(
+                $this->marcas,
+                'id_marca'
+            ),
 
-            'modelos' =>
-                $modelos,
+            'modelos' => array_map(
+                fn (array $modelo): array => [
+                    'value' => (string) $modelo['id_modelo'],
+                    'label' => (string) $modelo['nombre'],
+                    'idMarca' => (string) $modelo['id_marca'],
+                    'idTipoEquipo' => (string) $modelo['id_tipo_equipo'],
+                ],
+                $this->getAllModelos()
+            ),
 
-            'proveedores' =>
-                $proveedores,
+            'proveedores' => $this->toFrontendOptions(
+                $this->proveedores,
+                'id_proveedor'
+            ),
 
-            'condiciones' =>
-                $condiciones,
+            'condiciones' => $this->toFrontendOptions(
+                $this->condiciones,
+                'id_valor'
+            ),
 
-            'areas' =>
-                $areas,
+            'areas' => $this->toFrontendOptions(
+                $this->areas,
+                'id_area'
+            ),
 
-            'departamentos' =>
-                $departamentos,
+            'departamentos' => array_map(
+                fn (array $item): array => [
+                    'value' => (string) $item['id_departamento'],
+                    'label' => (string) $item['nombre'],
+                    'idArea' => (string) $item['id_area'],
+                ],
+                $this->getAllDepartamentos()
+            ),
 
-            'childFieldsByType' =>
-                $childFieldsByType,
+            'childFieldsByType' => $childFieldsByType,
 
-            'fieldLabels' =>
-                $this->fieldLabels(),
+            'childFieldMetaByType' => $childFieldMetaByType,
 
-            'dynamicCatalogs' =>
-                $dynamicCatalogs,
+            'sectionsByType' => $sectionsByType,
+
+            'fieldLabels' => $labels,
+
+            'dynamicCatalogs' => $catalogs,
 
             'defaults' => [
                 'codigoInventarioPreview' =>
@@ -787,20 +789,121 @@ private function getAllModelos(): array
 
     /*
     |--------------------------------------------------------------------------
-    | Guardado optimista
+    | Validación de campos específicos y atributos
     |--------------------------------------------------------------------------
     |
-    | Recibimos una fotografía completa del formulario.
-    | El navegador puede limpiar la interfaz inmediatamente sin afectar
-    | los datos que esta petición ya está guardando.
+    | Solamente se aceptan los campos visibles configurados para el tipo.
+    | Las opciones se validan contra su catálogo o lista personalizada.
     |
     */
+
+    private function validatedChildData(
+        array $input,
+        array $definitions
+    ): array {
+        $values = [];
+        $rules = [];
+        $labels = [];
+
+        foreach ($definitions as $key => $field) {
+            $type = $field['tipo_control'];
+
+            $value = $input[$key] ?? null;
+
+            if (is_string($value)) {
+                $value = trim($value);
+
+                $value = $value === ''
+                    ? null
+                    : $value;
+            }
+
+            // Una casilla sin marcar representa No.
+            if ($type === 'boolean' && $value === null) {
+                $value = false;
+            }
+
+            $values[$key] = $value;
+
+            $path = 'childData.' . $key;
+
+            $labels[$path] = $field['etiqueta'];
+
+            $rules[$path] = [
+                $field['obligatorio']
+                    ? 'required'
+                    : 'nullable',
+            ];
+
+            $typeRules = match ($type) {
+                'text' => [
+                    'string',
+                    'max:255',
+                ],
+
+                'textarea' => [
+                    'string',
+                ],
+
+                'number' => [
+                    'numeric',
+                ],
+
+                'date' => [
+                    'date_format:Y-m-d',
+                ],
+
+                'boolean' => [
+                    'boolean',
+                ],
+
+                'select' => [
+                    'integer',
+                    Rule::in(
+                        array_column(
+                            $this->fieldOptions($field),
+                            'value'
+                        )
+                    ),
+                ],
+
+                default => throw new \RuntimeException(
+                    'Tipo de campo no reconocido: ' . $type
+                ),
+            };
+
+            $rules[$path] = array_merge(
+                $rules[$path],
+                $typeRules
+            );
+        }
+
+        Validator::make(
+            ['childData' => $values],
+            $rules,
+            [],
+            $labels
+        )->validate();
+
+        foreach ($definitions as $key => $field) {
+            if ($field['tipo_control'] === 'boolean') {
+                $values[$key] = (bool) $values[$key];
+            }
+        }
+
+        return $values;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Guardar equipo
+    |--------------------------------------------------------------------------
+    */
+
     #[Json]
     public function save(array $payload): array
     {
-        $payload = $this->normalizePayload(
-            $payload
-        );
+        $payload = $this->normalizePayload($payload);
 
         $validated = Validator::make(
             $payload,
@@ -817,6 +920,11 @@ private function getAllModelos(): array
 
                 'idTipoEquipo' => [
                     'required',
+                    'integer',
+                    Rule::exists(
+                        'tipos_equipo',
+                        'id_tipo_equipo'
+                    )->where('activo', true),
                 ],
 
                 'idMarca' => [
@@ -846,24 +954,19 @@ private function getAllModelos(): array
             ]
         )->validate();
 
-        $tipoEquipoId =
-            (int) $validated['idTipoEquipo'];
+        $tipoId = (int) $validated['idTipoEquipo'];
 
-        $config =
-            $this->childConfig();
+        $definitions = $this->configuredChildFields(
+            $tipoId
+        );
 
-        $childFields =
-            $config[$tipoEquipoId]['fields']
-            ?? [];
+        $values = $this->validatedChildData(
+            $payload['childData'],
+            $definitions
+        );
 
-        $childTable =
-            $config[$tipoEquipoId]['table']
+        $physical = $this->childConfig()[$tipoId]
             ?? null;
-
-        $childData =
-            is_array($payload['childData'])
-                ? $payload['childData']
-                : [];
 
         $codigoInventario =
             $this->generarCodigoInventario();
@@ -872,9 +975,9 @@ private function getAllModelos(): array
             function () use (
                 $payload,
                 $validated,
-                $childFields,
-                $childTable,
-                $childData,
+                $definitions,
+                $values,
+                $physical,
                 $codigoInventario
             ) {
                 $idEquipo = DB::table('equipos')
@@ -886,10 +989,9 @@ private function getAllModelos(): array
                             'nombre_equipo' =>
                                 $validated['nombreEquipo'],
 
-                            'host' =>
-                                $this->nullableString(
-                                    $payload['host']
-                                ),
+                            'host' => $this->nullableString(
+                                $payload['host']
+                            ),
 
                             'id_estado_activo' =>
                                 (int) $validated['idEstadoActivo'],
@@ -897,23 +999,20 @@ private function getAllModelos(): array
                             'id_tipo_equipo' =>
                                 (int) $validated['idTipoEquipo'],
 
-                            'id_modelo' =>
-                                $this->nullableInt(
-                                    $payload['idModelo']
-                                ),
+                            'id_modelo' => $this->nullableInt(
+                                $payload['idModelo']
+                            ),
 
-                            'fecha_compra' =>
-                                $this->nullableString(
-                                    $payload['fechaCompra']
-                                ),
+                            'fecha_compra' => $this->nullableString(
+                                $payload['fechaCompra']
+                            ),
 
                             'id_marca' =>
                                 (int) $validated['idMarca'],
 
-                            'direccion_mac' =>
-                                $this->nullableString(
-                                    $payload['direccionMac']
-                                ),
+                            'direccion_mac' => $this->nullableString(
+                                $payload['direccionMac']
+                            ),
 
                             'numero_factura' =>
                                 $validated['numeroFactura'],
@@ -921,88 +1020,114 @@ private function getAllModelos(): array
                             'numero_serie' =>
                                 $validated['numeroSerie'],
 
-                            'id_proveedor' =>
-                                $this->nullableInt(
-                                    $payload['idProveedor']
-                                ),
+                            'id_proveedor' => $this->nullableInt(
+                                $payload['idProveedor']
+                            ),
 
-                            'id_condicion_activo' =>
-                                $this->nullableInt(
-                                    $payload['idCondicionActivo']
-                                ),
+                            'id_condicion_activo' => $this->nullableInt(
+                                $payload['idCondicionActivo']
+                            ),
 
-                            'id_area' =>
-                                $this->nullableInt(
-                                    $payload['idDepartamento']
-                                ) !== null
-                                    ? null
-                                    : (int) $validated['idArea'],
+                            'id_area' => $this->nullableInt(
+                                $payload['idDepartamento']
+                            ) !== null
+                                ? null
+                                : (int) $validated['idArea'],
 
-                            'id_departamento' =>
-                                $this->nullableInt(
-                                    $payload['idDepartamento']
-                                ),
+                            'id_departamento' => $this->nullableInt(
+                                $payload['idDepartamento']
+                            ),
 
-                            'fecha_fin_garantia' =>
-                                $this->nullableString(
-                                    $payload['fechaFinGarantia']
-                                ),
+                            'fecha_fin_garantia' => $this->nullableString(
+                                $payload['fechaFinGarantia']
+                            ),
 
-                            'comentarios' =>
-                                $this->nullableString(
-                                    $payload['comentarios']
-                                ),
+                            'comentarios' => $this->nullableString(
+                                $payload['comentarios']
+                            ),
 
-                            'registrado_por' =>
-                                Auth::id(),
+                            'registrado_por' => Auth::id(),
                         ],
                         'id_equipo'
                     );
 
                 /*
                 |--------------------------------------------------------------------------
-                | Tabla hija según tipo
+                | Tabla física del tipo de equipo
                 |--------------------------------------------------------------------------
                 */
-                if ($childTable) {
+
+                if ($physical) {
                     $row = [
                         'id_equipo' => $idEquipo,
                     ];
 
                     foreach (
-                        $childFields as $field => $type
+                        $physical['fields']
+                        as $column => $type
                     ) {
-                        $value =
-                            $childData[$field]
-                            ?? null;
+                        $row[$column] = $type === 'boolean'
+                            ? false
+                            : null;
+                    }
 
-                        if ($type === 'boolean') {
-                            $row[$field] =
-                                (bool) ($value ?? false);
-
-                        } elseif (
-                            $value === null
-                            || $value === ''
-                        ) {
-                            $row[$field] = null;
-
-                        } elseif ($type === 'number') {
-                            $row[$field] =
-                                is_numeric($value)
-                                    ? $value + 0
-                                    : null;
-
-                        } else {
-                            $row[$field] =
-                                $value;
+                    foreach (
+                        $definitions
+                        as $key => $field
+                    ) {
+                        if ($field['origen_dato'] === 'tabla_tipo') {
+                            $row[
+                                $field['columna_destino']
+                            ] = $values[$key];
                         }
                     }
 
                     DB::table(
-                        $childTable
-                    )->insert(
-                        $row
-                    );
+                        $physical['table']
+                    )->insert($row);
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | Atributos dinámicos
+                |--------------------------------------------------------------------------
+                |
+                | Incluye campos personalizados y campos reutilizados que
+                | no pertenecen físicamente a la tabla de este tipo.
+                |
+                */
+
+                $attributes = [];
+
+                foreach ($definitions as $key => $field) {
+                    if ($field['origen_dato'] !== 'atributo') {
+                        continue;
+                    }
+
+                    $value = $values[$key];
+
+                    if ($value === null) {
+                        continue;
+                    }
+
+                    $attributes[] = [
+                        'id_equipo' => $idEquipo,
+
+                        'id_campo' =>
+                            (int) $field['id_campo'],
+
+                        'nombre' =>
+                            $field['etiqueta'],
+
+                        'valor' => is_bool($value)
+                            ? ($value ? '1' : '0')
+                            : (string) $value,
+                    ];
+                }
+
+                if ($attributes !== []) {
+                    DB::table('atributos_equipo')
+                        ->insert($attributes);
                 }
 
                 /*
@@ -1010,10 +1135,10 @@ private function getAllModelos(): array
                 | Asignación inicial
                 |--------------------------------------------------------------------------
                 */
-                $propietario =
-                    trim(
-                        (string) $payload['propietario']
-                    );
+
+                $propietario = trim(
+                    (string) $payload['propietario']
+                );
 
                 if ($propietario !== '') {
                     $idTipoAsignacion =
@@ -1037,35 +1162,28 @@ private function getAllModelos(): array
                             );
 
                     if ($idTipoAsignacion) {
-                        DB::table(
-                            'asignaciones'
-                        )->insert([
-                            'id_equipo' =>
-                                $idEquipo,
+                        DB::table('asignaciones')->insert([
+                            'id_equipo' => $idEquipo,
 
                             'nombre_colaborador' =>
                                 $propietario,
 
-                            'id_area' =>
-                                $this->nullableInt(
-                                    $payload['idDepartamento']
-                                ) !== null
-                                    ? null
-                                    : (int) $validated['idArea'],
+                            'id_area' => $this->nullableInt(
+                                $payload['idDepartamento']
+                            ) !== null
+                                ? null
+                                : (int) $validated['idArea'],
 
-                            'id_departamento' =>
-                                $this->nullableInt(
-                                    $payload['idDepartamento']
-                                ),
+                            'id_departamento' => $this->nullableInt(
+                                $payload['idDepartamento']
+                            ),
 
                             'id_tipo_asignacion' =>
                                 $idTipoAsignacion,
 
-                            'fecha_asignacion' =>
-                                now(),
+                            'fecha_asignacion' => now(),
 
-                            'asignado_por' =>
-                                Auth::id(),
+                            'asignado_por' => Auth::id(),
                         ]);
                     }
                 }
@@ -1081,18 +1199,12 @@ private function getAllModelos(): array
                 'Equipo añadido correctamente.',
 
             'record' => [
-                'id' =>
-                    $idEquipo,
-
-                'code' =>
-                    $codigoInventario,
-
-                'name' =>
-                    (string) $validated['nombreEquipo'],
+                'id' => $idEquipo,
+                'code' => $codigoInventario,
+                'name' => (string) $validated['nombreEquipo'],
             ],
 
-            'nextCode' =>
-                'ACT-'
+            'nextCode' => 'ACT-'
                 . str_pad(
                     (string) ($idEquipo + 1),
                     6,
@@ -1107,9 +1219,9 @@ private function getAllModelos(): array
     | Normalizar snapshot
     |--------------------------------------------------------------------------
     */
-    private function normalizePayload(
-        array $payload
-    ): array {
+
+    private function normalizePayload(array $payload): array
+    {
         return array_merge(
             [
                 'nombreEquipo' => '',
@@ -1135,13 +1247,9 @@ private function getAllModelos(): array
         );
     }
 
-    private function nullableInt(
-        mixed $value
-    ): ?int {
-        if (
-            $value === null
-            || $value === ''
-        ) {
+    private function nullableInt(mixed $value): ?int
+    {
+        if ($value === null || $value === '') {
             return null;
         }
 
@@ -1150,18 +1258,13 @@ private function getAllModelos(): array
             : null;
     }
 
-    private function nullableString(
-        mixed $value
-    ): ?string {
-        if (
-            $value === null
-            || ! is_string($value)
-        ) {
+    private function nullableString(mixed $value): ?string
+    {
+        if ($value === null || ! is_string($value)) {
             return null;
         }
 
-        $value =
-            trim($value);
+        $value = trim($value);
 
         return $value !== ''
             ? $value
@@ -1170,9 +1273,8 @@ private function getAllModelos(): array
 
     public function getCodigoInventarioPreviewProperty(): string
     {
-        $ultimo =
-            DB::table('equipos')
-                ->max('id_equipo');
+        $ultimo = DB::table('equipos')
+            ->max('id_equipo');
 
         return 'ACT-'
             . str_pad(
@@ -1185,9 +1287,8 @@ private function getAllModelos(): array
 
     private function generarCodigoInventario(): string
     {
-        $ultimo =
-            DB::table('equipos')
-                ->max('id_equipo');
+        $ultimo = DB::table('equipos')
+            ->max('id_equipo');
 
         return 'ACT-'
             . str_pad(
@@ -1198,10 +1299,6 @@ private function getAllModelos(): array
             );
     }
 
-    /**
-     * Placeholder que se muestra mientras el componente
-     * se carga de manera lazy.
-     */
     public function placeholder()
     {
         return view(

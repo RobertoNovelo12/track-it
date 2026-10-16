@@ -244,6 +244,30 @@ Route::middleware([
 
     /*
     |--------------------------------------------------------------------------
+    | Editar configuración de tipo de equipo
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/catalogos/tipos-equipo/{tipoEquipo}/editar',
+        function (int $tipoEquipo) {
+            return view(
+                'catalogos.tipos-equipo.edit',
+                [
+                    'tipoEquipoId' =>
+                        $tipoEquipo,
+                ]
+            );
+        }
+    )
+        ->whereNumber(
+            'tipoEquipo'
+        )
+        ->name('catalogos.tipos-equipo.edit');
+
+
+    /*
+    |--------------------------------------------------------------------------
     | Crear marca o modelo
     |--------------------------------------------------------------------------
     */
