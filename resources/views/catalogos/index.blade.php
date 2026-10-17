@@ -37,7 +37,7 @@
             'label' => 'Modelos',
         ],
         [
-            'key' => 'areas',
+            'key' => 'hoteles',
             'label' => 'Hoteles',
         ],
         [
@@ -625,80 +625,12 @@
 
 
         {{-- ========================================================
-            HOTELES / ÁREAS
+            HOTELES
         ======================================================== --}}
-        <div
-            x-show="
-                section === 'areas'
-            "
-            x-cloak
-        >
-            <section
-                class="
-                    bg-[var(--theme-surface)]
-
-                    border
-                    border-[var(--theme-border)]
-
-                    rounded-xl
-
-                    overflow-hidden
-                "
-            >
-                <div
-                    class="
-                        px-4
-                        sm:px-5
-
-                        py-4
-
-                        border-b
-                        border-[var(--theme-border)]
-                    "
-                >
-                    <h2
-                        class="
-                            text-sm
-                            font-semibold
-                            text-[var(--theme-text-strong)]
-                        "
-                        x-text="
-                            sectionLabel(
-                                'areas'
-                            )
-                        "
-                    ></h2>
-
-                    <p
-                        class="
-                            mt-1
-
-                            text-xs
-                            text-[var(--theme-text-muted)]
-                        "
-                    >
-                        Administra las áreas operativas asociadas a las sedes.
-                    </p>
-                </div>
-
-                <div
-                    class="
-                        px-4
-                        sm:px-5
-
-                        py-8
-                    "
-                >
-                    <p
-                        class="
-                            text-sm
-                            text-[var(--theme-text-muted)]
-                        "
-                    >
-                        Esta sección se conectará con la tabla interna de áreas.
-                    </p>
-                </div>
-            </section>
+        <div x-show="section === 'hoteles'" x-cloak>
+            <livewire:catalogos.hoteles
+                :key="'administracion-hoteles'"
+            />
         </div>
 
 

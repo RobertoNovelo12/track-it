@@ -277,6 +277,17 @@ Route::middleware([
         fn () => view('catalogos.create')
     )->name('catalogos.create');
 
+    Route::get(
+    '/catalogos/hoteles/{hotel}/editar',
+    function (int $hotel) {
+        return view('catalogos.hoteles.edit', [
+            'hotelId' => $hotel,
+        ]);
+    }
+)
+    ->whereNumber('hotel')
+    ->name('catalogos.hoteles.edit');
+
 
     /*
     |--------------------------------------------------------------------------

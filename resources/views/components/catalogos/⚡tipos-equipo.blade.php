@@ -571,7 +571,7 @@ new class extends Component
         )
     "
 
-    class="space-y-5"
+    class="min-w-0 space-y-5 p-4 sm:p-5"
 >
 
     {{-- ============================================================

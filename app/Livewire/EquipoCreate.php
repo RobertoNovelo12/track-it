@@ -50,6 +50,85 @@ class EquipoCreate extends Component
             ->all();
     }
 
+
+        private function validarOrganizacion(array $payload): array
+    {
+        $datos = Validator::make(
+            $payload,
+            [
+                'idHotel' => ['required', 'integer', 'min:1'],
+                'idDepartamento' => ['nullable', 'integer', 'min:1'],
+            ],
+            [
+                'idHotel.required' => 'Selecciona un hotel.',
+                'idHotel.integer' => 'Selecciona un hotel válido.',
+                'idDepartamento.integer' =>
+                    'Selecciona un departamento válido.',
+            ]
+        )->validate();
+
+        $hotel = DB::table('hoteles')
+            ->where('id_hotel', (int) $datos['idHotel'])
+            ->where('activo', true)
+            ->first([
+                'id_hotel',
+                'id_area_origen',
+            ]);
+
+        if (! $hotel) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'idHotel' =>
+                    'El hotel seleccionado no existe o está inactivo.',
+            ]);
+        }
+
+        $departamentoId = $this->nullableInt(
+            $datos['idDepartamento'] ?? null
+        );
+
+        if ($departamentoId !== null) {
+            $permitido = DB::table('departamentos as d')
+                ->where('d.id_departamento', $departamentoId)
+                ->whereNull('d.id_departamento_principal')
+                ->where('d.activo', true)
+                ->where(function ($query) use ($hotel) {
+                    $query
+                        ->where('d.atiende_todos_hoteles', true)
+                        ->orWhereExists(function ($subquery) use ($hotel) {
+                            $subquery
+                                ->selectRaw('1')
+                                ->from('departamento_hotel as dh')
+                                ->whereColumn(
+                                    'dh.id_departamento',
+                                    'd.id_departamento'
+                                )
+                                ->where(
+                                    'dh.id_hotel',
+                                    $hotel->id_hotel
+                                );
+                        });
+                })
+                ->exists();
+
+            if (! $permitido) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'idDepartamento' =>
+                        'El departamento no está disponible para este hotel.',
+                ]);
+            }
+        }
+
+        return [
+            'id_hotel' => (int) $hotel->id_hotel,
+            'id_departamento' => $departamentoId,
+
+            // Compatibilidad temporal con módulos que aún usan áreas.
+            'id_area' => $hotel->id_area_origen === null
+                ? null
+                : (int) $hotel->id_area_origen,
+        ];
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Almacenamiento físico existente
@@ -213,15 +292,162 @@ class EquipoCreate extends Component
     |--------------------------------------------------------------------------
     */
 
+    private bool $formsLoaded = false;
+
     private function configuredForm(int $tipoId): array
     {
-        if (! array_key_exists($tipoId, $this->loadedForms)) {
-            $this->loadedForms[$tipoId] = app(
-                TipoEquipoFormBuilderService::class
-            )->load($tipoId);
+        if (array_key_exists($tipoId, $this->loadedForms)) {
+            return $this->loadedForms[$tipoId];
         }
 
-        return $this->loadedForms[$tipoId];
+        if (! $this->formsLoaded) {
+            $sections = DB::table('tipo_equipo_secciones')
+                ->orderBy('orden')
+                ->orderBy('id_seccion')
+                ->get()
+                ->groupBy('id_tipo_equipo');
+
+            $fields = DB::table('tipo_equipo_campos as tec')
+                ->join(
+                    'campos_equipo as ce',
+                    'ce.id_campo',
+                    '=',
+                    'tec.id_campo'
+                )
+                ->where('ce.activo', true)
+                ->where('tec.visible', true)
+                ->whereIn('tec.origen_dato', [
+                    'tabla_tipo',
+                    'atributo',
+                ])
+                ->orderBy('tec.orden')
+                ->orderBy('tec.id_tipo_campo')
+                ->get([
+                    'tec.*',
+                    'ce.clave',
+                    'ce.nombre as nombre_base',
+                    'ce.tipo_control',
+                    'ce.descripcion',
+                    'ce.placeholder',
+                ]);
+
+            $selects = $fields->where('tipo_control', 'select');
+
+            $customIds = $selects
+                ->where('fuente_opciones', 'personalizado')
+                ->pluck('id_tipo_campo')
+                ->unique()
+                ->values()
+                ->all();
+
+            $catalogIds = $selects
+                ->where('fuente_opciones', 'catalogo')
+                ->pluck('id_catalogo')
+                ->filter()
+                ->unique()
+                ->values()
+                ->all();
+
+            $customOptions = $customIds
+                ? DB::table('tipo_equipo_campo_opciones')
+                    ->whereIn('id_tipo_campo', $customIds)
+                    ->where('activo', true)
+                    ->orderBy('orden')
+                    ->orderBy('id_opcion')
+                    ->get([
+                        'id_tipo_campo',
+                        'id_opcion as value',
+                        'nombre as label',
+                    ])
+                    ->groupBy('id_tipo_campo')
+                : collect();
+
+            $catalogOptions = $catalogIds
+                ? DB::table('catalogo_valores')
+                    ->whereIn('id_catalogo', $catalogIds)
+                    ->where('activo', true)
+                    ->orderBy('orden')
+                    ->orderBy('nombre')
+                    ->get([
+                        'id_catalogo',
+                        'id_valor as value',
+                        'nombre as label',
+                    ])
+                    ->groupBy('id_catalogo')
+                : collect();
+
+            foreach ($sections as $id => $items) {
+                $this->loadedForms[(int) $id] = [
+                    'sections' => $items
+                        ->map(function ($item): array {
+                            $section = (array) $item;
+
+                            $section['es_base'] = (bool) $item->es_base;
+
+                            return $section;
+                        })
+                        ->values()
+                        ->all(),
+
+                    'fields' => [],
+                ];
+            }
+
+            foreach ($fields as $row) {
+                $id = (int) $row->id_tipo_equipo;
+                $field = (array) $row;
+
+                $field['etiqueta'] = trim((string) $row->etiqueta) !== ''
+                    ? $row->etiqueta
+                    : $row->nombre_base;
+
+                $field['visible'] = (bool) $row->visible;
+                $field['obligatorio'] = (bool) $row->obligatorio;
+
+                $this->loadedForms[$id] ??= [
+                    'sections' => [],
+                    'fields' => [],
+                ];
+
+                $this->loadedForms[$id]['fields'][] = $field;
+
+                if ($row->tipo_control !== 'select') {
+                    continue;
+                }
+
+                $options = match ($row->fuente_opciones) {
+                    'personalizado' => $customOptions->get(
+                        $row->id_tipo_campo,
+                        collect()
+                    ),
+
+                    'catalogo' => $catalogOptions->get(
+                        $row->id_catalogo,
+                        collect()
+                    ),
+
+                    default => null,
+                };
+
+                if ($options !== null) {
+                    $this->loadedOptions[(string) $row->id_tipo_campo] =
+                        $options
+                            ->map(fn ($option): array => [
+                                'value' => (string) $option->value,
+                                'label' => (string) $option->label,
+                            ])
+                            ->values()
+                            ->all();
+                }
+            }
+
+            $this->formsLoaded = true;
+        }
+
+        return $this->loadedForms[$tipoId] ?? [
+            'sections' => [],
+            'fields' => [],
+        ];
     }
 
     /*
@@ -566,52 +792,70 @@ class EquipoCreate extends Component
         );
     }
 
-    public function getAreasProperty(): array
+    public function getHotelesProperty(): array
     {
-        return Cache::remember(
-            'form.areas.v2',
-            now()->addMinutes(30),
-            fn () => $this->toPlainArray(
-                DB::table('areas')
-                    ->where('activo', true)
-                    ->orderBy('nombre')
-                    ->get(['id_area', 'nombre'])
-            )
+        return $this->toPlainArray(
+            DB::table('hoteles')
+                ->where('activo', true)
+                ->orderBy('nombre')
+                ->get(['id_hotel', 'nombre'])
         );
     }
 
     private function getAllDepartamentos(): array
     {
-        return Cache::remember(
-            'form.departamentos.all.v2',
-            now()->addMinutes(30),
-            fn () => $this->toPlainArray(
-                DB::table('departamentos')
-                    ->where('activo', true)
-                    ->orderBy('nombre')
-                    ->get([
-                        'id_departamento',
-                        'id_area',
-                        'nombre',
-                    ])
+        $departamentos = DB::table('departamentos')
+            ->whereNull('id_departamento_principal')
+            ->where('activo', true)
+            ->orderBy('nombre')
+            ->get([
+                'id_departamento',
+                'nombre',
+                'atiende_todos_hoteles',
+            ]);
+
+        $vinculos = DB::table('departamento_hotel')
+            ->whereIn(
+                'id_departamento',
+                $departamentos->pluck('id_departamento')
             )
-        );
+            ->get([
+                'id_departamento',
+                'id_hotel',
+            ])
+            ->groupBy('id_departamento');
+
+        return $departamentos->map(fn ($item): array => [
+            'id_departamento' => (int) $item->id_departamento,
+            'nombre' => (string) $item->nombre,
+            'atiende_todos_hoteles' => (bool) $item->atiende_todos_hoteles,
+
+            'id_hoteles' => $vinculos
+                ->get($item->id_departamento, collect())
+                ->map(
+                    fn ($vinculo): string => (string) $vinculo->id_hotel
+                )
+                ->values()
+                ->all(),
+        ])->all();
     }
 
     public function getDepartamentosProperty(): array
     {
-        if ($this->idArea === '') {
+        if ($this->idHotel === '') {
             return [];
         }
 
-        return collect($this->getAllDepartamentos())
-            ->filter(
-                fn (array $item): bool =>
-                    (string) $item['id_area']
-                        === $this->idArea
-            )
-            ->values()
-            ->all();
+        return array_values(array_filter(
+            $this->getAllDepartamentos(),
+            fn (array $item): bool =>
+                $item['atiende_todos_hoteles']
+                || in_array(
+                    $this->idHotel,
+                    $item['id_hoteles'],
+                    true
+                )
+        ));
     }
 
     public function catalogOptions(string $clave): array
@@ -756,16 +1000,17 @@ class EquipoCreate extends Component
                 'id_valor'
             ),
 
-            'areas' => $this->toFrontendOptions(
-                $this->areas,
-                'id_area'
+            'hoteles' => $this->toFrontendOptions(
+                $this->hoteles,
+                'id_hotel'
             ),
 
             'departamentos' => array_map(
                 fn (array $item): array => [
                     'value' => (string) $item['id_departamento'],
                     'label' => (string) $item['nombre'],
-                    'idArea' => (string) $item['id_area'],
+                    'atiendeTodosHoteles' => $item['atiende_todos_hoteles'],
+                    'idHoteles' => $item['id_hoteles'],
                 ],
                 $this->getAllDepartamentos()
             ),
@@ -904,6 +1149,7 @@ class EquipoCreate extends Component
     public function save(array $payload): array
     {
         $payload = $this->normalizePayload($payload);
+        $organizacion = $this->validarOrganizacion($payload);
 
         $validated = Validator::make(
             $payload,
@@ -978,7 +1224,8 @@ class EquipoCreate extends Component
                 $definitions,
                 $values,
                 $physical,
-                $codigoInventario
+                $codigoInventario,
+                $organizacion
             ) {
                 $idEquipo = DB::table('equipos')
                     ->insertGetId(
@@ -1027,17 +1274,9 @@ class EquipoCreate extends Component
                             'id_condicion_activo' => $this->nullableInt(
                                 $payload['idCondicionActivo']
                             ),
-
-                            'id_area' => $this->nullableInt(
-                                $payload['idDepartamento']
-                            ) !== null
-                                ? null
-                                : (int) $validated['idArea'],
-
-                            'id_departamento' => $this->nullableInt(
-                                $payload['idDepartamento']
-                            ),
-
+                            'id_hotel' => $organizacion['id_hotel'],
+                            'id_area' => $organizacion['id_area'],
+                            'id_departamento' => $organizacion['id_departamento'],
                             'fecha_fin_garantia' => $this->nullableString(
                                 $payload['fechaFinGarantia']
                             ),
