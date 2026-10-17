@@ -86,6 +86,72 @@ class ReportesIndex extends Component
 
     public string $errorMessage = '';
 
+    public array $sugerenciasEquipos = [];
+    public bool $sugerenciasHayMas = false;
+    public int $sugerenciasPagina = 0;
+    public string $sugerenciasTermino = '';
+    public string $sugerenciasTipo = '';
+
+    /** Consulta ligera para el selector. Solo el primer lote se cachea. */
+    public function obtenerSugerenciasRapidas(string $tipo, string $texto = '', int $pagina = 1): array
+    {
+        $tipo = app(ReporteDataService::class)->normalizarTipo($tipo);
+        $texto = trim($texto);
+        $pagina = max(1, $pagina);
+
+        if ($texto !== '' || $pagina > 1) {
+            return app(ReporteDataService::class)->sugerenciasEquipos($tipo, $texto, $pagina, 10);
+        }
+
+        return Cache::remember(
+            'reportes:selector:v1:' . $tipo,
+            now()->addSeconds(90),
+            fn (): array => app(ReporteDataService::class)->sugerenciasEquipos($tipo, '', 1, 10)
+        );
+    }
+
+    /** Obtiene el primer lote o el siguiente sin traer todo el inventario. */
+    public function buscarSugerencias(
+        string $texto = '',
+        string $tipo = 'altas',
+        bool $reiniciar = true
+    ): void {
+        $tipo = app(ReporteDataService::class)->normalizarTipo($tipo);
+        $texto = trim($texto);
+
+        if ($reiniciar || $texto !== $this->sugerenciasTermino || $tipo !== $this->sugerenciasTipo) {
+            $this->sugerenciasEquipos = [];
+            $this->sugerenciasPagina = 0;
+            $this->sugerenciasHayMas = false;
+            $this->sugerenciasTermino = $texto;
+            $this->sugerenciasTipo = $tipo;
+        }
+
+        if ($this->sugerenciasPagina > 0 && !$this->sugerenciasHayMas) {
+            return;
+        }
+
+        $pagina = $this->sugerenciasPagina + 1;
+        $resultado = app(ReporteDataService::class)
+            ->sugerenciasEquipos($tipo, $texto, $pagina, 10);
+
+        $this->sugerenciasEquipos = array_merge(
+            $this->sugerenciasEquipos,
+            $resultado['registros']
+        );
+        $this->sugerenciasPagina = $pagina;
+        $this->sugerenciasHayMas = $resultado['hayMas'];
+    }
+
+    public function seleccionarSugerencia(string $codigo): void
+    {
+        $this->busquedaActivo = $codigo;
+        $this->sugerenciasEquipos = [];
+        $this->sugerenciasHayMas = false;
+        $this->dispatch('reporte-sugerencia-seleccionada');
+        $this->buscarAutomaticamente();
+    }
+
     public function mount(): void
 
     {
@@ -1218,8 +1284,18 @@ class ReportesIndex extends Component
 
         );
 
+        // Lee solo datos ya cacheados: nunca consulta PostgreSQL durante render.
+        $listasIniciales = [];
+        foreach (['altas', 'bajas', 'asignaciones', 'reasignaciones', 'mantenimientos'] as $tipoLista) {
+            $lote = Cache::get('reportes:selector:v1:' . $tipoLista);
+            if (is_array($lote) && isset($lote['registros'])) {
+                $listasIniciales[$tipoLista] = $lote;
+            }
+        }
+
         return view('livewire.reportes-index', [
 
+            'listasIniciales' => $listasIniciales,
             'historial' => $historial,
 
             'tiposEquipo' => $tiposEquipo,

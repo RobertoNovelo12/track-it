@@ -22,7 +22,136 @@
 
         generando: null,
 
+        sugerenciasAbiertas: false,
+        nombreEquipoVisible: null,
+        sugerenciasLista: [],
+        sugerenciasHayMasLocal: false,
+        sugerenciasPaginaLocal: 0,
+        sugerenciasTerminoLocal: '',
+        consultandoSugerencias: false,
+        temporizadorSugerencias: null,
+        consultaSugerenciasVersion: 0,
+        precargadas: @js($listasIniciales),
+        precargasEnCurso: {},
+
+        async precargarListas() {
+            // Priorizar lo que el usuario está viendo; no esperar otras categorías.
+            const tipos = ['altas', 'bajas', 'asignaciones', 'reasignaciones', 'mantenimientos'];
+            const pendientes = [this.activo, ...tipos.filter(tipo => tipo !== this.activo)];
+            const cargar = async (tipo) => {
+                if (this.precargadas[tipo]) return this.precargadas[tipo];
+                if (this.precargasEnCurso[tipo]) return this.precargasEnCurso[tipo];
+                const promesa = $wire.obtenerSugerenciasRapidas(tipo, '', 1);
+                this.precargasEnCurso[tipo] = promesa;
+                try {
+                    const datos = await promesa;
+                    this.precargadas[tipo] = datos;
+                    if (this.sugerenciasAbiertas && this.activo === tipo && this.sugerenciasTerminoLocal === '') {
+                        this.mostrarLote(datos, true);
+                    }
+                    return datos;
+                } catch (error) {
+                    console.error('No fue posible precargar equipos:', tipo, error);
+                    return null;
+                } finally {
+                    delete this.precargasEnCurso[tipo];
+                }
+            };
+            // Lanza la categoría actual primero, después prepara las restantes.
+            void cargar(pendientes[0]);
+            // El resto va en lotes pequeños para no saturar la conexión.
+            for (let i = 1; i < pendientes.length; i += 2) {
+                await Promise.all(pendientes.slice(i, i + 2).map(cargar));
+            }
+        },
+
+        mostrarLote(datos, reiniciar = true) {
+            if (reiniciar) {
+                this.sugerenciasLista = [];
+                this.sugerenciasPaginaLocal = 0;
+            }
+            const nuevos = Array.isArray(datos?.registros) ? datos.registros : [];
+            this.sugerenciasLista = reiniciar ? nuevos : [...this.sugerenciasLista, ...nuevos];
+            this.sugerenciasPaginaLocal += 1;
+            this.sugerenciasHayMasLocal = !!datos?.hayMas;
+        },
+
+        async solicitarSugerencias(texto = '', tipo = this.activo, reiniciar = true) {
+            const version = ++this.consultaSugerenciasVersion;
+            this.consultandoSugerencias = true;
+            this.sugerenciasTerminoLocal = texto;
+            try {
+                const datos = texto === '' && this.precargadas[tipo]
+                    ? this.precargadas[tipo]
+                    : texto === '' && this.precargasEnCurso[tipo]
+                        ? await this.precargasEnCurso[tipo]
+                        : await $wire.obtenerSugerenciasRapidas(tipo, texto, 1);
+                if (version !== this.consultaSugerenciasVersion || tipo !== this.activo) return;
+                this.mostrarLote(datos, reiniciar);
+            } catch (error) {
+                console.error('Error al consultar equipos:', error);
+            } finally {
+                if (version === this.consultaSugerenciasVersion) this.consultandoSugerencias = false;
+            }
+        },
+
+        mostrarSugerencias() {
+            this.sugerenciasAbiertas = true;
+            this.sugerenciasTerminoLocal = '';
+            // Reutilizar el lote precargado si ya está listo.
+            if (this.precargadas[this.activo]) {
+                this.consultaSugerenciasVersion++;
+                this.mostrarLote(this.precargadas[this.activo]);
+                this.consultandoSugerencias = false;
+                return;
+            }
+            this.solicitarSugerencias('', this.activo);
+        },
+
+        programarSugerencias(evento) {
+            this.nombreEquipoVisible = null;
+            clearTimeout(this.temporizadorSugerencias);
+            const texto = evento.target.value.trim();
+            const tipo = this.activo;
+            this.sugerenciasAbiertas = true;
+            this.sugerenciasLista = [];
+            this.sugerenciasHayMasLocal = false;
+            const version = ++this.consultaSugerenciasVersion;
+            this.temporizadorSugerencias = setTimeout(() => {
+                if (version !== this.consultaSugerenciasVersion) return;
+                this.solicitarSugerencias(texto, tipo);
+            }, 280);
+        },
+
+        async cargarMasSugerencias(evento) {
+            const nodo = evento.target;
+            if (!this.sugerenciasAbiertas || this.consultandoSugerencias ||
+                !this.sugerenciasHayMasLocal ||
+                nodo.scrollTop + nodo.clientHeight < nodo.scrollHeight - 45) return;
+            this.consultandoSugerencias = true;
+            const tipo = this.activo;
+            const version = this.consultaSugerenciasVersion;
+            try {
+                const datos = await $wire.obtenerSugerenciasRapidas(tipo, this.sugerenciasTerminoLocal, this.sugerenciasPaginaLocal + 1);
+                if (version !== this.consultaSugerenciasVersion || tipo !== this.activo) return;
+                this.mostrarLote(datos, false);
+            } catch (error) {
+                console.error('Error al cargar más equipos:', error);
+            } finally {
+                this.consultandoSugerencias = false;
+            }
+        },
+
+        seleccionarEquipo(codigo, nombre) {
+            this.sugerenciasAbiertas = false;
+            clearTimeout(this.temporizadorSugerencias);
+            this.consultaSugerenciasVersion++;
+            this.nombreEquipoVisible = nombre;
+            $wire.seleccionarSugerencia(codigo);
+        },
+
         reporteAEliminar: null,
+
         eliminandoReporte: false,
 
         filtros: [
@@ -92,6 +221,7 @@
         },
 
         elegir(tipo) {
+            this.nombreEquipoVisible = null;
 
             if (this.activo === tipo) {
 
@@ -109,6 +239,12 @@
 
              */
 
+            this.sugerenciasAbiertas = false;
+            clearTimeout(this.temporizadorSugerencias);
+            this.consultaSugerenciasVersion++;
+            this.sugerenciasLista = [];
+            this.sugerenciasHayMasLocal = false;
+            this.sugerenciasPaginaLocal = 0;
             this.activo = tipo;
 
             this.vistaLocalVacia = true;
@@ -155,6 +291,16 @@
 
                 return;
 
+            }
+
+            // El campo de equipo es un selector. No generar la vista previa
+            // mientras se escribe: esperar a que el usuario elija un equipo.
+            if (modelo === 'busquedaActivo') {
+                clearTimeout(this.temporizadorBusqueda);
+                this.versionBusqueda++;
+                this.vistaLocalVacia = true;
+                this.buscandoAutomaticamente = false;
+                return;
             }
 
             clearTimeout(this.temporizadorBusqueda);
@@ -270,6 +416,7 @@
         },
 
         limpiarLocalmente() {
+            this.nombreEquipoVisible = null;
 
             clearTimeout(this.temporizadorBusqueda);
 
@@ -298,30 +445,47 @@
         },
 
         abrirModalEliminar(id) {
+
             if (this.eliminandoReporte) return;
+
             this.reporteAEliminar = Number(id);
+
         },
 
         cerrarModalEliminar() {
+
             if (this.eliminandoReporte) return;
+
             this.reporteAEliminar = null;
+
         },
 
         async confirmarEliminarReporte() {
+
             if (this.reporteAEliminar === null || this.eliminandoReporte) return;
 
             const id = this.reporteAEliminar;
+
             this.eliminandoReporte = true;
 
             try {
+
                 await $wire.eliminarReporte(id);
+
                 this.reporteAEliminar = null;
+
             } catch (error) {
+
                 console.error('No fue posible eliminar el reporte:', error);
+
                 this.iniciarMensaje('No fue posible eliminar el reporte.', 'error');
+
             } finally {
+
                 this.eliminandoReporte = false;
+
             }
+
         },
 
         async generarArchivo(formato) {
@@ -422,6 +586,9 @@
 
         }
 
+        // Precarga diferida: no ralentiza la primera pintura de la página.
+        setTimeout(() => precargarListas(), 0);
+
     "
 
     x-on:reportes-previa-lista.window="
@@ -447,6 +614,9 @@
     x-on:change.capture="programarBusqueda($event)"
 
     x-on:reporte-filtro-cambiado="programarBusquedaCampo($event.detail.campo)"
+
+    x-on:reporte-sugerencia-seleccionada.window="sugerenciasAbiertas = false"
+    x-on:keydown.escape.window="sugerenciasAbiertas = false"
 
 >
 
@@ -722,29 +892,45 @@
 
                         {{-- BUSCAR ACTIVO --}}
 
-                        <label class="block md:col-span-2">
-
-                            <span class="mb-1.5 block text-xs font-medium text-[var(--theme-text)]">
-
+                        <div class="relative block md:col-span-2" x-on:click.outside="sugerenciasAbiertas = false">
+                            <label for="busqueda-activo-reporte" class="mb-1.5 block text-xs font-medium text-[var(--theme-text)]">
                                 Buscar activo
-
-                            </span>
+                            </label>
 
                             <input
-
+                                id="busqueda-activo-reporte"
                                 type="search"
-
                                 wire:model="busquedaActivo"
-
-                                placeholder="Nombre del equipo o número de serie"
-
+                                x-bind:value="nombreEquipoVisible ?? $wire.busquedaActivo"
+                                x-on:focus="mostrarSugerencias($event)"
+                                x-on:click="if (!sugerenciasAbiertas) mostrarSugerencias($event)"
+                                x-on:input="programarSugerencias($event)"
+                                placeholder="Nombre, código de inventario o número de serie"
                                 autocomplete="off"
-
                                 class="{{ $campoClase }}"
-
                             >
 
-                        </label>
+                            <div
+                                x-show="sugerenciasAbiertas && sugerenciasLista.length > 0"
+                                x-cloak
+                                x-on:scroll.passive="cargarMasSugerencias($event)"
+                                class="absolute inset-x-0 top-full z-50 mt-1 max-h-64 overflow-y-auto rounded-lg border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] shadow-xl"
+                            >
+                                <template x-for="sugerencia in sugerenciasLista" :key="sugerencia.id">
+                                    <button
+                                        type="button"
+                                        x-on:click="seleccionarEquipo(sugerencia.codigo, sugerencia.nombre)"
+                                        class="block w-full border-b border-[var(--theme-border)] px-3 py-2.5 text-left hover:bg-[var(--theme-surface-soft)]"
+                                    >
+                                        <span class="block truncate text-sm font-medium text-[var(--theme-text-strong)]" x-text="sugerencia.nombre"></span>
+                                        <span class="block truncate text-xs text-[var(--theme-text-muted)]" x-text="sugerencia.codigo + (sugerencia.serie ? ' · ' + sugerencia.serie : '')"></span>
+                                    </button>
+                                </template>
+                                <div x-show="sugerenciasHayMasLocal" class="px-3 py-2 text-center text-xs text-[var(--theme-text-muted)]">
+                                    Desplázate para ver más equipos
+                                </div>
+                            </div>
+                        </div>
 
                         {{-- TIPO DE EQUIPO --}}
 
@@ -1686,8 +1872,6 @@
 
                                         x-on:click="abrirModalEliminar({{ (int) $reporte->id_reporte }})"
 
-                                        
-
                                         class="inline-flex h-8 w-8 items-center justify-center rounded-md text-[var(--theme-text-muted)] hover:bg-[var(--theme-danger-soft)] hover:text-[var(--theme-danger)]"
 
                                         title="Eliminar reporte"
@@ -1760,72 +1944,132 @@
 
     </section>
 
-
     {{-- MODAL DE CONFIRMACION DE ELIMINACION --}}
+
     <div
+
         x-show="reporteAEliminar !== null"
+
         x-cloak
+
         x-transition.opacity.duration.150ms
+
         x-on:keydown.escape.window="cerrarModalEliminar()"
+
         class="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 px-4 py-6"
+
         x-on:click.self="cerrarModalEliminar()"
+
         role="presentation"
+
     >
+
         <section
+
             role="dialog"
+
             aria-modal="true"
+
             aria-labelledby="reporte-eliminar-titulo"
+
             aria-describedby="reporte-eliminar-descripcion"
+
             class="w-full max-w-md rounded-xl border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] p-5 shadow-2xl sm:p-6"
+
             x-on:click.stop
+
         >
+
             <div class="flex items-start justify-between gap-3">
+
                 <h2 id="reporte-eliminar-titulo" class="text-base font-semibold text-[var(--theme-text-strong)]">
+
                     Eliminar reporte
+
                 </h2>
+
                 <button
+
                     type="button"
+
                     x-on:click="cerrarModalEliminar()"
+
                     x-bind:disabled="eliminandoReporte"
+
                     class="rounded-md p-1 text-[var(--theme-text-muted)] hover:bg-[var(--theme-surface-soft)] disabled:opacity-50"
+
                     aria-label="Cerrar ventana"
+
                 >
+
                     <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+
                         <path d="M18 6 6 18M6 6l12 12"/>
+
                     </svg>
+
                 </button>
+
             </div>
 
             <p id="reporte-eliminar-descripcion" class="mt-3 text-sm text-[var(--theme-text)]">
+
                 ¿Estás seguro de que deseas eliminar este reporte y su archivo generado?
+
             </p>
+
             <p class="mt-2 text-xs text-[var(--theme-text-muted)]">
+
                 Esta acción no se puede deshacer.
+
             </p>
 
             <div class="mt-6 flex flex-wrap justify-end gap-3">
+
                 <button
+
                     type="button"
+
                     x-on:click="cerrarModalEliminar()"
+
                     x-bind:disabled="eliminandoReporte"
+
                     class="inline-flex h-10 items-center justify-center rounded-lg border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-4 text-sm font-medium text-[var(--theme-text)] hover:bg-[var(--theme-surface-soft)] disabled:opacity-50"
+
                 >
+
                     Cancelar
+
                 </button>
+
                 <button
+
                     type="button"
+
                     x-on:click="confirmarEliminarReporte()"
+
                     x-bind:disabled="eliminandoReporte"
+
                     class="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-[var(--theme-danger)] bg-[var(--theme-danger-soft)] px-4 text-sm font-semibold text-[var(--theme-danger)] hover:opacity-90 disabled:cursor-wait disabled:opacity-60"
+
                 >
+
                     <svg x-show="eliminandoReporte" x-cloak class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+
                         <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="3" stroke-opacity=".25"/>
+
                         <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+
                     </svg>
+
                     <span x-text="eliminandoReporte ? 'Eliminando...' : 'Confirmar eliminación'"></span>
+
                 </button>
+
             </div>
+
         </section>
+
     </div>
 
 </div>

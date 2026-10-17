@@ -107,7 +107,6 @@
             </button>
         </div>
 
-
         {{-- ============================================================
             MENSAJE DE ERROR
         ============================================================ --}}
@@ -212,7 +211,6 @@
             </button>
         </div>
 
-
         {{-- ============================================================
             ACCIONES SUPERIORES
         ============================================================ --}}
@@ -309,7 +307,6 @@
             </a>
         </div>
 
-
         {{-- ============================================================
             FORMULARIO
         ============================================================ --}}
@@ -382,7 +379,6 @@
                         </div>
                     </div>
 
-
                     <div
                         class="
                             grid
@@ -449,7 +445,6 @@
                             ></p>
                         </div>
 
-
                         {{-- HOST --}}
                         <div class="min-w-0">
                             <label
@@ -490,7 +485,6 @@
                             >
                         </div>
 
-
                         {{-- ESTADO --}}
                         <div class="min-w-0">
                             <x-searchable-select
@@ -511,7 +505,6 @@
                                 "
                             ></p>
                         </div>
-
 
                         {{-- TIPO --}}
                         <div class="min-w-0">
@@ -534,7 +527,6 @@
                             ></p>
                         </div>
 
-
                         {{-- MARCA --}}
                         <div class="min-w-0">
                             <x-searchable-select
@@ -556,7 +548,6 @@
                             ></p>
                         </div>
 
-
                         {{-- MODELO --}}
                         <div class="min-w-0">
                             <x-searchable-select
@@ -576,7 +567,6 @@
                                 "
                             />
                         </div>
-
 
                         {{-- CÓDIGO INVENTARIO --}}
                         <div class="min-w-0">
@@ -639,7 +629,6 @@
                             </div>
                         </div>
 
-
                         {{-- FECHA COMPRA --}}
                         <div class="min-w-0">
                             <label
@@ -677,7 +666,6 @@
                                 "
                             >
                         </div>
-
 
                         {{-- FACTURA --}}
                         <div class="min-w-0">
@@ -735,7 +723,6 @@
                             ></p>
                         </div>
 
-
                         {{-- NÚMERO DE SERIE --}}
                         <div class="min-w-0">
                             <label
@@ -792,7 +779,6 @@
                             ></p>
                         </div>
 
-
                         {{-- ESTATUS / CONDICIÓN --}}
                         <div class="min-w-0">
                             <x-searchable-select
@@ -803,7 +789,6 @@
                             />
                         </div>
 
-
                         {{-- PROVEEDOR --}}
                         <div class="min-w-0">
                             <x-searchable-select
@@ -813,7 +798,6 @@
                                 placeholder="Buscar proveedor..."
                             />
                         </div>
-
 
                         {{-- MAC --}}
                         <div class="min-w-0">
@@ -857,7 +841,6 @@
 
                     </div>
                 </section>
-
 
                 {{-- ====================================================
                     CAMPOS DINÁMICOS
@@ -952,7 +935,6 @@
                                     </div>
                                 </template>
 
-
                                 {{-- CATÁLOGO --}}
                                 <template
                                     x-if="
@@ -987,7 +969,6 @@
                                         />
                                     </div>
                                 </template>
-
 
                                 {{-- FECHA --}}
                                 <template
@@ -1036,7 +1017,6 @@
                                     </div>
                                 </template>
 
-
                                 {{-- NÚMERO --}}
                                 <template
                                     x-if="entry.type === 'number'"
@@ -1083,7 +1063,6 @@
                                         >
                                     </div>
                                 </template>
-
 
                                 {{-- TEXTO --}}
                                 <template
@@ -1136,7 +1115,6 @@
                         </template>
                     </div>
                 </section>
-
 
                 {{-- ====================================================
                     INFORMACIÓN ADICIONAL
@@ -1219,20 +1197,19 @@
                             </p>
                         </div>
 
-
-                        {{-- ÁREA --}}
+                        {{-- HOTEL --}}
                         <div class="min-w-0">
                             <x-searchable-select
-                                x-model="idArea"
-                                x-options="data.areas"
-                                label="Área *"
-                                placeholder="Buscar área..."
+                                x-model="idHotel"
+                                x-options="data.hoteles"
+                                label="Hotel *"
+                                placeholder="Buscar hotel..."
                             />
 
                             <p
-                                x-show="fieldError('idArea')"
+                                x-show="fieldError('idHotel')"
                                 x-cloak
-                                x-text="fieldError('idArea')"
+                                x-text="fieldError('idHotel')"
                                 class="
                                     mt-1
                                     text-xs
@@ -1241,23 +1218,21 @@
                             ></p>
                         </div>
 
-
                         {{-- DEPARTAMENTO --}}
                         <div class="min-w-0">
                             <x-searchable-select
                                 x-model="idDepartamento"
                                 x-options="departamentosDisponibles"
                                 label="Departamento"
-                                placeholder="Elige un área primero"
+                                placeholder="Elige un hotel primero"
                                 x-placeholder="
-                                    idArea === ''
-                                        ? 'Elige un área primero'
+                                    idHotel === ''
+                                        ? 'Elige un hotel primero'
                                         : 'Buscar departamento...'
                                 "
-                                x-disabled="idArea === ''"
+                                x-disabled="idHotel === ''"
                             />
                         </div>
-
 
                         {{-- GARANTÍA --}}
                         <div class="min-w-0">
@@ -1298,7 +1273,6 @@
                         </div>
 
                     </div>
-
 
                     {{-- COMENTARIOS --}}
                     <div>
@@ -1342,7 +1316,6 @@
                     </div>
 
                 </section>
-
 
                 {{-- ====================================================
                     ACCIONES
@@ -1468,7 +1441,6 @@
         </form>
 
     </div>
-
 
     {{-- ============================================================
         ALPINE
@@ -1614,10 +1586,10 @@
                             ?? ''
                         ),
 
-                    idArea:
+                    idHotel:
                         String(
                             data?.initial
-                                ?.idArea
+                                ?.idHotel
                             ?? ''
                         ),
 
@@ -1650,7 +1622,6 @@
                                 ?? {}
                             )
                         ),
-
 
                     init() {
                         this.$watch(
@@ -1729,7 +1700,7 @@
                         );
 
                         this.$watch(
-                            'idArea',
+                            'idHotel',
                             (value, previous) => {
                                 if (
                                     this.suspendDependencies
@@ -1752,7 +1723,7 @@
                                 this.idDepartamento = '';
 
                                 this.clearValidationError(
-                                    'idArea'
+                                    'idHotel'
                                 );
                             }
                         );
@@ -1771,7 +1742,6 @@
                             }
                         );
                     },
-
 
                     get modelosDisponibles() {
                         const marcaId =
@@ -1810,32 +1780,16 @@
                         );
                     },
 
-
                     get departamentosDisponibles() {
-                        const areaId =
-                            String(
-                                this.idArea
-                                ?? ''
-                            );
-
-                        if (areaId === '') {
-                            return [];
-                        }
-
-                        return (
-                            this.data
-                                ?.departamentos
-                            ?? []
-                        ).filter(
-                            departamento =>
-                                String(
-                                    departamento
-                                        ?.idArea
-                                    ?? ''
-                                ) === areaId
+                        const hotelId = String(this.idHotel ?? '');
+                        if (hotelId === '') return [];
+                        return (this.data?.departamentos ?? []).filter(
+                            departamento => departamento.atiendeTodosHoteles
+                                || (departamento.idHoteles ?? []).some(
+                                    id => String(id) === hotelId
+                                )
                         );
                     },
-
 
                     get selectedTypeLabel() {
                         const tipoId =
@@ -1867,7 +1821,6 @@
                         );
                     },
 
-
                     get childFields() {
                         const tipoId =
                             String(
@@ -1887,7 +1840,6 @@
                         );
                     },
 
-
                     get childFieldEntries() {
                         return Object.entries(
                             this.childFields
@@ -1899,14 +1851,12 @@
                         );
                     },
 
-
                     get hasChildFields() {
                         return (
                             this.childFieldEntries
                                 .length > 0
                         );
                     },
-
 
                     fieldLabel(field) {
                         return String(
@@ -1916,7 +1866,6 @@
                             ?? field
                         );
                     },
-
 
                     isCatalogField(type) {
                         return (
@@ -1928,7 +1877,6 @@
                             )
                         );
                     },
-
 
                     catalogKey(type) {
                         if (
@@ -1943,7 +1891,6 @@
                             8
                         );
                     },
-
 
                     dynamicCatalogOptions(type) {
                         const key =
@@ -1962,7 +1909,6 @@
                             ?? []
                         );
                     },
-
 
                     clearValidationError(field) {
                         if (
@@ -1995,7 +1941,6 @@
                             errors;
                     },
 
-
                     showSuccess(message) {
                         this.successMessage =
                             message
@@ -2022,7 +1967,6 @@
                             );
                     },
 
-
                     showError(message) {
                         this.errorMessage =
                             message
@@ -2048,7 +1992,6 @@
                                 5000
                             );
                     },
-
 
                     firstError(error) {
                         const errors =
@@ -2099,7 +2042,6 @@
                         );
                     },
 
-
                     fieldError(field) {
                         const value =
                             this
@@ -2129,7 +2071,6 @@
                         );
                     },
 
-
                     clone(value) {
                         return JSON.parse(
                             JSON.stringify(
@@ -2137,7 +2078,6 @@
                             )
                         );
                     },
-
 
                     captureSnapshot() {
                         return {
@@ -2223,9 +2163,9 @@
                                     ?? ''
                                 ),
 
-                            idArea:
+                            idHotel:
                                 String(
-                                    this.idArea
+                                    this.idHotel
                                     ?? ''
                                 ),
 
@@ -2253,7 +2193,6 @@
                                 ),
                         };
                     },
-
 
                     validateSnapshot(payload) {
                         const errors = {};
@@ -2326,12 +2265,12 @@
 
                         if (
                             String(
-                                payload.idArea
+                                payload.idHotel
                                 ?? ''
                             ) === ''
                         ) {
-                            errors.idArea = [
-                                'Selecciona un área.'
+                            errors.idHotel = [
+                                'Selecciona un hotel.'
                             ];
                         }
 
@@ -2365,7 +2304,6 @@
                         return false;
                     },
 
-
                     pulseSpinner() {
                         this.savingVisual =
                             true;
@@ -2387,7 +2325,6 @@
                                 350
                             );
                     },
-
 
                     async sendPayload(payload) {
                         this.requestPending =
@@ -2479,7 +2416,6 @@
                             }
                         }
                     },
-
 
                     saveOptimistically() {
                         const payload =
