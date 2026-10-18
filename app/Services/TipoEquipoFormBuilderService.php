@@ -8,8 +8,12 @@ use Illuminate\Support\Str;
 class TipoEquipoFormBuilderService
 {
     private const PROTECTED_FIELDS = [
+        'nombre_equipo',
         'id_estado_activo',
         'id_marca',
+        'numero_serie',
+        'numero_factura',
+        'id_hotel',
     ];
 
 
@@ -62,11 +66,7 @@ class TipoEquipoFormBuilderService
         |
         */
 
-        $sections =
-            $this->ensureBaseSections(
-                $tipoEquipoId,
-                (string) $tipo->nombre
-            );
+        $sections = $this->ensureRequiredFields($tipoEquipoId);
 
 
         $sectionsById =
@@ -1569,6 +1569,166 @@ class TipoEquipoFormBuilderService
         return $this->load(
             $tipoEquipoId
         );
+    }
+
+    public function ensureRequiredFields(int $tipoEquipoId): array
+    {
+        return DB::transaction(function () use ($tipoEquipoId): array {
+            $tipo = DB::table('tipos_equipo')
+                ->where('id_tipo_equipo', $tipoEquipoId)
+                ->lockForUpdate()
+                ->first();
+
+            abort_unless($tipo, 404);
+
+            $sections = $this->ensureBaseSections(
+                $tipoEquipoId,
+                (string) $tipo->nombre
+            );
+
+            $sectionIds = collect($sections)
+                ->pluck('id_seccion', 'clave')
+                ->all();
+
+            /*
+            * Clave => nombre, control, fuente de opciones, sección inicial.
+            */
+            $definitions = [
+                'nombre_equipo' => [
+                    'Nombre del equipo',
+                    'text',
+                    null,
+                    'general',
+                ],
+
+                'id_estado_activo' => [
+                    'Estado',
+                    'select',
+                    'estados_equipo',
+                    'general',
+                ],
+
+                'id_marca' => [
+                    'Marca',
+                    'select',
+                    'marcas',
+                    'general',
+                ],
+
+                'numero_serie' => [
+                    'Número de serie',
+                    'text',
+                    null,
+                    'general',
+                ],
+
+                'numero_factura' => [
+                    'Número de factura',
+                    'text',
+                    null,
+                    'general',
+                ],
+
+                'id_hotel' => [
+                    'Hotel',
+                    'select',
+                    'hoteles',
+                    'adicional',
+                ],
+            ];
+
+            /*
+            * Crear únicamente los campos maestros que todavía no existen.
+            */
+            $masters = [];
+
+            foreach (
+                $definitions as $key => [$name, $control, $source, $section]
+            ) {
+                $masters[] = [
+                    'clave' => $key,
+                    'nombre' => $name,
+                    'tipo_control' => $control,
+                    'es_sistema' => true,
+                    'activo' => true,
+                ];
+            }
+
+            DB::table('campos_equipo')->insertOrIgnore($masters);
+
+            DB::table('campos_equipo')
+                ->whereIn('clave', array_keys($definitions))
+                ->update([
+                    'activo' => true,
+                    'es_sistema' => true,
+                ]);
+
+            $fieldIds = DB::table('campos_equipo')
+                ->whereIn('clave', array_keys($definitions))
+                ->pluck('id_campo', 'clave');
+
+            $relations = DB::table('tipo_equipo_campos')
+                ->where('id_tipo_equipo', $tipoEquipoId)
+                ->get()
+                ->keyBy('id_campo');
+
+            $order = (int) ($relations->max('orden') ?? 0);
+
+            $rows = [];
+
+            /*
+            * Agregar los obligatorios que falten.
+            * Los existentes conservan su etiqueta, sección y orden.
+            */
+            foreach (
+                $definitions as $key => [$name, $control, $source, $section]
+            ) {
+                $id = (int) $fieldIds[$key];
+
+                if ($relations->has($id)) {
+                    continue;
+                }
+
+                $order += 10;
+
+                $rows[] = [
+                    'id_tipo_equipo' => $tipoEquipoId,
+                    'id_campo' => $id,
+                    'etiqueta' => $name,
+
+                    'origen_dato' => 'equipos',
+                    'tabla_destino' => 'equipos',
+                    'columna_destino' => $key,
+
+                    'fuente_opciones' => $source,
+                    'id_catalogo' => null,
+
+                    'id_seccion' => $sectionIds[$section],
+                    'seccion' => $section,
+
+                    'visible' => true,
+                    'obligatorio' => true,
+                    'orden' => $order,
+                ];
+            }
+
+            if ($rows !== []) {
+                DB::table('tipo_equipo_campos')->insert($rows);
+            }
+
+            /*
+            * Garantizar que los obligatorios permanezcan visibles.
+            */
+            DB::table('tipo_equipo_campos')
+                ->where('id_tipo_equipo', $tipoEquipoId)
+                ->whereIn('id_campo', $fieldIds->values()->all())
+                ->update([
+                    'visible' => true,
+                    'obligatorio' => true,
+                ]);
+
+            return $sections;
+        });
     }
 
 

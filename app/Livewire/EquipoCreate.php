@@ -29,7 +29,7 @@ class EquipoCreate extends Component
     // Información adicional.
     public string $propietario = '';
     public string $idCondicionActivo = '';
-    public string $idArea = '';
+    public string $idHotel = '';
     public string $idDepartamento = '';
     public string $fechaFinGarantia = '';
     public string $comentarios = '';
@@ -582,9 +582,9 @@ class EquipoCreate extends Component
                     'proveedores',
                     'id_proveedor',
                 ],
-                'areas' => [
-                    'areas',
-                    'id_area',
+                'hoteles' => [
+                    'hoteles',
+                    'id_hotel',
                 ],
                 'departamentos' => [
                     'departamentos',
@@ -674,7 +674,7 @@ class EquipoCreate extends Component
         $this->idModelo = '';
     }
 
-    public function updatedIdArea(): void
+    public function updatedIdHotel(): void
     {
         $this->idDepartamento = '';
     }
@@ -905,6 +905,50 @@ class EquipoCreate extends Component
             ->all();
     }
 
+    private function getConfiguredBaseFields(): array
+    {
+        $rows = DB::table('tipo_equipo_campos as tec')
+            ->join(
+                'campos_equipo as ce',
+                'ce.id_campo',
+                '=',
+                'tec.id_campo'
+            )
+            ->where('ce.activo', true)
+            ->where('tec.visible', true)
+            ->whereIn('tec.origen_dato', [
+                'equipos',
+                'asignacion',
+            ])
+            ->orderBy('tec.orden')
+            ->get([
+                'tec.id_tipo_equipo',
+                'ce.clave',
+                'ce.nombre',
+                'tec.etiqueta',
+                'tec.id_seccion',
+                'tec.obligatorio',
+                'tec.orden',
+            ]);
+
+        $result = [];
+
+        foreach ($rows as $row) {
+            $result[(int) $row->id_tipo_equipo][$row->clave] = [
+                'etiqueta' => $row->etiqueta ?: $row->nombre,
+
+                'id_seccion' => $row->id_seccion !== null
+                    ? (int) $row->id_seccion
+                    : null,
+
+                'obligatorio' => (bool) $row->obligatorio,
+                'orden' => (int) $row->orden,
+            ];
+        }
+
+        return $result;
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Datos iniciales de Alpine
@@ -955,6 +999,7 @@ class EquipoCreate extends Component
                     'obligatorio' => $field['obligatorio'],
                     'placeholder' => $field['placeholder'],
                     'descripcion' => $field['descripcion'],
+                    'orden' => $field['orden'] ?? 0,
                 ];
 
                 if ($field['tipo_control'] === 'select') {
@@ -1020,6 +1065,8 @@ class EquipoCreate extends Component
             'childFieldMetaByType' => $childFieldMetaByType,
 
             'sectionsByType' => $sectionsByType,
+
+            'baseFieldsByType' => $this->getConfiguredBaseFields(),
 
             'fieldLabels' => $labels,
 
@@ -1190,8 +1237,10 @@ class EquipoCreate extends Component
                     'max:255',
                 ],
 
-                'idArea' => [
+                'idHotel' => [
                     'required',
+                    'integer',
+                    'min:1',
                 ],
 
                 'childData' => [
@@ -1407,15 +1456,11 @@ class EquipoCreate extends Component
                             'nombre_colaborador' =>
                                 $propietario,
 
-                            'id_area' => $this->nullableInt(
-                                $payload['idDepartamento']
-                            ) !== null
-                                ? null
-                                : (int) $validated['idArea'],
+                            'id_hotel' => $organizacion['id_hotel'],
 
-                            'id_departamento' => $this->nullableInt(
-                                $payload['idDepartamento']
-                            ),
+                            'id_area' => $organizacion['id_area'],
+
+                            'id_departamento' => $organizacion['id_departamento'],
 
                             'id_tipo_asignacion' =>
                                 $idTipoAsignacion,
@@ -1476,7 +1521,7 @@ class EquipoCreate extends Component
                 'idProveedor' => '',
                 'propietario' => '',
                 'idCondicionActivo' => '',
-                'idArea' => '',
+                'idHotel' => '',
                 'idDepartamento' => '',
                 'fechaFinGarantia' => '',
                 'comentarios' => '',

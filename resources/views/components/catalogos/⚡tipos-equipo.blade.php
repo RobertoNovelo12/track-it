@@ -167,111 +167,95 @@ new class extends Component
 
     public function saveTipo(): void
     {
-        $validated =
-            $this->validate(
-                [
-                    'nombre' => [
-                        'required',
-                        'string',
-                        'max:100',
+        $validated = $this->validate(
+            [
+                'nombre' => [
+                    'required',
+                    'string',
+                    'max:100',
 
-                        Rule::unique(
-                            'tipos_equipo',
-                            'nombre'
-                        )->ignore(
+                    Rule::unique('tipos_equipo', 'nombre')
+                        ->ignore(
                             $this->editingTipoId,
                             'id_tipo_equipo'
                         ),
-                    ],
-
-                    'descripcion' => [
-                        'nullable',
-                        'string',
-                    ],
-
-                    'activo' => [
-                        'boolean',
-                    ],
                 ],
-                [
-                    'nombre.required' =>
-                        'El nombre del tipo de equipo es obligatorio.',
 
-                    'nombre.max' =>
-                        'El nombre no puede superar los 100 caracteres.',
+                'descripcion' => [
+                    'nullable',
+                    'string',
+                ],
 
-                    'nombre.unique' =>
-                        'Ya existe un tipo de equipo con ese nombre.',
-                ]
-            );
+                'activo' => [
+                    'boolean',
+                ],
+            ],
+            [
+                'nombre.required' =>
+                    'El nombre del tipo de equipo es obligatorio.',
 
+                'nombre.max' =>
+                    'El nombre no puede superar los 100 caracteres.',
+
+                'nombre.unique' =>
+                    'Ya existe un tipo de equipo con ese nombre.',
+            ]
+        );
+
+        $attributes = [
+            'nombre' => trim($validated['nombre']),
+
+            'descripcion' => $this->normalizeNullableText(
+                $validated['descripcion'] ?? null
+            ),
+
+            'activo' => (bool) $validated['activo'],
+        ];
 
         if (
             $this->formMode === 'edit'
-            &&
-            $this->editingTipoId
+            && $this->editingTipoId
         ) {
-            $tipo =
-                TipoEquipo::query()
-                    ->find(
-                        $this->editingTipoId
-                    );
+            $tipo = TipoEquipo::query()
+                ->find($this->editingTipoId);
 
-            if (! $tipo) {
+            if (!$tipo) {
                 $this->closeModal();
-
                 return;
             }
 
-            $tipo->update([
-                'nombre' =>
-                    trim(
-                        $validated['nombre']
-                    ),
+            \Illuminate\Support\Facades\DB::transaction(
+                function () use ($tipo, $attributes): void {
+                    $tipo->update($attributes);
 
-                'descripcion' =>
-                    $this->normalizeNullableText(
-                        $validated['descripcion']
-                        ?? null
-                    ),
+                    app(
+                        \App\Services\TipoEquipoFormBuilderService::class
+                    )->ensureRequiredFields(
+                        (int) $tipo->id_tipo_equipo
+                    );
+                }
+            );
 
-                'activo' =>
-                    (bool) $validated['activo'],
-            ]);
-
-            $message =
-                'Tipo de equipo actualizado correctamente.';
+            $message = 'Tipo de equipo actualizado correctamente.';
         } else {
-            TipoEquipo::query()
-                ->create([
-                    'nombre' =>
-                        trim(
-                            $validated['nombre']
-                        ),
+            \Illuminate\Support\Facades\DB::transaction(
+                function () use ($attributes): void {
+                    $tipo = TipoEquipo::query()->create($attributes);
 
-                    'descripcion' =>
-                        $this->normalizeNullableText(
-                            $validated['descripcion']
-                            ?? null
-                        ),
+                    app(
+                        \App\Services\TipoEquipoFormBuilderService::class
+                    )->ensureRequiredFields(
+                        (int) $tipo->id_tipo_equipo
+                    );
+                }
+            );
 
-                    'activo' =>
-                        (bool) $validated['activo'],
-                ]);
-
-            $message =
-                'Tipo de equipo creado correctamente.';
+            $message = 'Tipo de equipo creado correctamente.';
         }
 
-
         $this->refreshCatalogCache();
-
         $this->closeModal();
-
-        $this->resetPage(
-            pageName: 'tiposPage'
-        );
-
+        $this->resetPage(pageName: 'tiposPage');
 
         $this->dispatch(
             'tipo-equipo-guardado',
@@ -514,11 +498,15 @@ new class extends Component
 
     private function refreshCatalogCache(): void
     {
-        app(
-            SystemCacheService::class
-        )->refreshModule(
-            'catalogos'
+        // Actualizar la lista utilizada por los formularios de equipos.
+        \Illuminate\Support\Facades\Cache::forget(
+            'form.tipos_equipo.v2'
         );
+
+        // Actualizar el catálogo de Administración.
+        app(
+            \App\Services\SystemCacheService::class
+        )->refreshModule('catalogos');
     }
 };
 
