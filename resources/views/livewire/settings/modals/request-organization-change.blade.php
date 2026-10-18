@@ -58,9 +58,7 @@
         class="
             absolute
             inset-0
-
-            bg-[var(--theme-overlay)]
-            backdrop-blur-[2px]
+            bg-black/40
         "
     ></div>
 

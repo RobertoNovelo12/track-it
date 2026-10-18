@@ -264,9 +264,4 @@
                     xl:block
                 "
             ></div>
-
-        </div>
-
-    </div>
-
 </section>

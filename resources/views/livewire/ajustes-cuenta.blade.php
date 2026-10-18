@@ -1,4 +1,10 @@
 <div>
+{{--
+    Contenedor con wire:key: este componente se carga en diferido (lazy).
+    Sin él, Livewire reutiliza elementos del placeholder para los modales
+    y Alpine no inicializa su x-data, por lo que no se abren.
+--}}
+<div wire:key="ajustes-cuenta-contenido">
 
     {{-- ============================================================
         TOAST
@@ -95,4 +101,5 @@
 
     @include('livewire.settings.modals.active-sessions')
 
+</div>
 </div>
