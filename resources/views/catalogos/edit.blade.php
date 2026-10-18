@@ -9,18 +9,10 @@
 
 @section('content')
 
-    <div
-        class="
-            w-full
-            max-w-[1600px]
-            mx-auto
-        "
-    >
-        <livewire:catalogos.editar-registro
-            :tipo="$tipo"
-            :registro-id="$registroId"
-            lazy
-        />
-    </div>
+    <livewire:catalogos.editar-registro
+        :tipo="$tipo"
+        :registro-id="$registroId"
+        lazy
+    />
 
 @endsection

@@ -88,29 +88,26 @@
         {{-- ============================================================
             CABECERA
         ============================================================ --}}
-        <div class="mb-5">
-            <h1 class="text-xl font-semibold text-[var(--theme-text-strong)]">
-                Gestión de marcas y modelos
-            </h1>
-
-            <div class="flex flex-wrap items-center gap-2 mt-1 text-xs text-[var(--theme-text-muted)]">
-                <span>Catálogo base</span>
-                <span>›</span>
-                <span class="text-[var(--theme-text)]">Nuevo registro</span>
-            </div>
-        </div>
+        <x-form.page-header
+            title="Nueva marca o modelo"
+            :crumbs="[
+                ['label' => 'Administración', 'href' => route('catalogos.index')],
+                ['label' => 'Marcas y modelos', 'href' => route('catalogos.index', ['section' => 'marcas'])],
+                ['label' => 'Nuevo registro'],
+            ]"
+        />
 
         {{-- ============================================================
             FORMULARIO
         ============================================================ --}}
         <form @submit.prevent="saveRecord()" class="relative">
-            <fieldset class="space-y-4 sm:space-y-6">
+            <fieldset class="space-y-5">
 
                 {{-- ====================================================
                     INFORMACIÓN GENERAL
                 ==================================================== --}}
-                <section class="bg-[var(--theme-surface)] border border-[var(--theme-border)] rounded-xl p-4 sm:p-6">
-                    <h2 class="text-sm font-semibold text-[var(--theme-text-strong)] mb-5">
+                <section class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 sm:p-6">
+                    <h2 class="mb-5 text-sm font-semibold text-[var(--theme-text-strong)]">
                         Información general
                     </h2>
 
@@ -119,26 +116,28 @@
                         {{-- TIPO DE REGISTRO --}}
                         <div class="min-w-0">
                             <label
-                                for="tipoRegistro"
-                                class="block text-xs text-[var(--theme-text-muted)] mb-1.5"
+                                class="mb-1.5 block text-xs text-[var(--theme-text-muted)]"
                             >
                                 Tipo de registro *
                             </label>
 
-                            <select
-                                id="tipoRegistro"
-                                x-model="recordType"
-                                @change="changeRecordType($event.target.value)"
-                                class="w-full min-w-0 text-sm text-[var(--theme-text)] bg-[var(--theme-surface)] border border-[var(--theme-border-strong)] rounded-md px-3 py-2.5 focus:ring-1 focus:ring-[var(--theme-primary)] focus:border-[var(--theme-primary)] outline-none transition-colors"
-                            >
-                                <option value="marca">Marca</option>
-                                <option value="modelo">Modelo</option>
-                            </select>
+                            {{-- Lista con buscador del proyecto; al cambiar se ejecuta changeRecordType() --}}
+                            <div x-init="$watch('recordType', valor => changeRecordType(valor))">
+                                <x-searchable-select
+                                    x-model="recordType"
+                                    :options="[
+                                        ['value' => 'marca', 'label' => 'Marca'],
+                                        ['value' => 'modelo', 'label' => 'Modelo'],
+                                    ]"
+                                    placeholder="Tipo de registro"
+                                    :show-clear="false"
+                                />
+                            </div>
                         </div>
 
                         {{-- CÓDIGO INTERNO --}}
                         <div class="min-w-0">
-                            <label class="block text-xs text-[var(--theme-text-muted)] mb-1.5">
+                            <label class="mb-1.5 block text-xs text-[var(--theme-text-muted)]">
                                 Código interno
                             </label>
 
@@ -147,7 +146,7 @@
                                     type="text"
                                     value="Se genera automáticamente"
                                     readonly
-                                    class="w-full min-w-0 text-sm text-[var(--theme-text-muted)] border border-[var(--theme-border)] rounded-md px-3 py-2.5 pr-9 bg-[var(--theme-surface-soft)] cursor-not-allowed"
+                                    class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)] pr-9 cursor-not-allowed"
                                 >
 
                                 <svg
@@ -165,7 +164,7 @@
 
                         {{-- ESTADO INICIAL --}}
                         <div class="min-w-0">
-                            <label class="block text-xs text-[var(--theme-text-muted)] mb-1.5">
+                            <label class="mb-1.5 block text-xs text-[var(--theme-text-muted)]">
                                 Estado inicial
                             </label>
 
@@ -180,7 +179,7 @@
                         <div class="min-w-0">
                             <label
                                 for="catalog-name"
-                                class="block text-xs text-[var(--theme-text-muted)] mb-1.5"
+                                class="mb-1.5 block text-xs text-[var(--theme-text-muted)]"
                             >
                                 <span
                                     x-text="
@@ -201,7 +200,7 @@
                                         ? 'Ej. Latitude 5440'
                                         : 'Ej. Apple'
                                 "
-                                class="w-full min-w-0 text-sm text-[var(--theme-text)] bg-[var(--theme-surface)] border border-[var(--theme-border-strong)] rounded-md px-3 py-2.5 placeholder:text-[var(--theme-text-muted)] focus:ring-1 focus:ring-[var(--theme-primary)] focus:border-[var(--theme-primary)] outline-none transition-colors"
+                                class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)]"
                             >
 
                             <p
@@ -306,7 +305,7 @@
                         <div class="min-w-0">
                             <label
                                 for="catalog-web"
-                                class="block text-xs text-[var(--theme-text-muted)] mb-1.5"
+                                class="mb-1.5 block text-xs text-[var(--theme-text-muted)]"
                             >
                                 Enlace a sitio web
                             </label>
@@ -316,7 +315,7 @@
                                 type="url"
                                 wire:model="sitioWeb"
                                 placeholder="https://..."
-                                class="w-full min-w-0 text-sm text-[var(--theme-text)] bg-[var(--theme-surface)] border border-[var(--theme-border-strong)] rounded-md px-3 py-2.5 placeholder:text-[var(--theme-text-muted)] focus:ring-1 focus:ring-[var(--theme-primary)] focus:border-[var(--theme-primary)] outline-none transition-colors"
+                                class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)]"
                             >
 
                             <p
@@ -333,7 +332,7 @@
                             x-cloak
                             class="min-w-0"
                         >
-                            <label class="block text-xs text-[var(--theme-text-muted)] mb-1.5">
+                            <label class="mb-1.5 block text-xs text-[var(--theme-text-muted)]">
                                 País de origen
                             </label>
 
@@ -342,7 +341,7 @@
                                 type="text"
                                 value="{{ $paisOrigenModelo ?: 'Se toma de la marca seleccionada' }}"
                                 readonly
-                                class="w-full min-w-0 text-sm text-[var(--theme-text-muted)] border border-[var(--theme-border)] rounded-md px-3 py-2.5 bg-[var(--theme-surface-soft)] cursor-not-allowed"
+                                class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)] cursor-not-allowed"
                             >
                         </div>
 
@@ -350,7 +349,7 @@
                         <div class="min-w-0 xl:col-span-3">
                             <label
                                 for="catalog-description"
-                                class="block text-xs text-[var(--theme-text-muted)] mb-1.5"
+                                class="mb-1.5 block text-xs text-[var(--theme-text-muted)]"
                             >
                                 Descripción
                             </label>
@@ -360,7 +359,7 @@
                                 wire:model="descripcion"
                                 rows="3"
                                 placeholder="Descripción de esta marca o modelo"
-                                class="w-full min-w-0 text-sm text-[var(--theme-text)] bg-[var(--theme-surface)] border border-[var(--theme-border-strong)] rounded-md px-3 py-2.5 placeholder:text-[var(--theme-text-muted)] resize-y focus:ring-1 focus:ring-[var(--theme-primary)] focus:border-[var(--theme-primary)] outline-none transition-colors"
+                                class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)] resize-y"
                             ></textarea>
 
                             <p
@@ -376,8 +375,8 @@
                 {{-- ====================================================
                     INFORMACIÓN ADICIONAL
                 ==================================================== --}}
-                <section class="bg-[var(--theme-surface)] border border-[var(--theme-border)] rounded-xl p-4 sm:p-6">
-                    <h2 class="text-sm font-semibold text-[var(--theme-text-strong)] mb-5">
+                <section class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 sm:p-6">
+                    <h2 class="mb-5 text-sm font-semibold text-[var(--theme-text-strong)]">
                         Información adicional
                     </h2>
 
@@ -410,7 +409,7 @@
                         <div class="min-w-0">
                             <label
                                 for="catalog-warranty"
-                                class="block text-xs text-[var(--theme-text-muted)] mb-1.5"
+                                class="mb-1.5 block text-xs text-[var(--theme-text-muted)]"
                             >
                                 Garantía estándar
                             </label>
@@ -423,7 +422,7 @@
                                     max="600"
                                     wire:model="garantiaEstandarMeses"
                                     placeholder="Ej. 36"
-                                    class="w-full min-w-0 text-sm text-[var(--theme-text)] bg-[var(--theme-surface)] border border-[var(--theme-border-strong)] rounded-md px-3 py-2.5 pr-16 placeholder:text-[var(--theme-text-muted)] focus:ring-1 focus:ring-[var(--theme-primary)] focus:border-[var(--theme-primary)] outline-none transition-colors"
+                                    class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)] pr-16"
                                 >
 
                                 <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[var(--theme-text-muted)]">
@@ -441,7 +440,7 @@
 
                         {{-- CONTACTO --}}
                         <div class="min-w-0">
-                            <label class="block text-xs text-[var(--theme-text-muted)] mb-1.5">
+                            <label class="mb-1.5 block text-xs text-[var(--theme-text-muted)]">
                                 Contacto de proveedor
                             </label>
 
@@ -450,7 +449,7 @@
                                 type="text"
                                 value="{{ $contactoProveedor ?: 'Selecciona un proveedor' }}"
                                 readonly
-                                class="w-full min-w-0 text-sm text-[var(--theme-text-muted)] border border-[var(--theme-border)] rounded-md px-3 py-2.5 bg-[var(--theme-surface-soft)] cursor-not-allowed"
+                                class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)] cursor-not-allowed"
                             >
                         </div>
 
@@ -492,7 +491,7 @@
                         >
                             <label
                                 for="catalog-comments"
-                                class="block text-xs text-[var(--theme-text-muted)] mb-1.5"
+                                class="mb-1.5 block text-xs text-[var(--theme-text-muted)]"
                             >
                                 Comentarios
                             </label>
@@ -502,7 +501,7 @@
                                 wire:model="comentarios"
                                 rows="4"
                                 placeholder="Escribe algún comentario adicional..."
-                                class="w-full min-w-0 text-sm text-[var(--theme-text)] bg-[var(--theme-surface)] border border-[var(--theme-border-strong)] rounded-md px-3 py-2.5 placeholder:text-[var(--theme-text-muted)] resize-y focus:ring-1 focus:ring-[var(--theme-primary)] focus:border-[var(--theme-primary)] outline-none transition-colors"
+                                class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)] resize-y"
                             ></textarea>
 
                             <p
@@ -522,7 +521,7 @@
                     <a
                         href="{{ route('catalogos.index') }}"
                         wire:navigate.hover
-                        class="w-full sm:w-auto h-11 flex items-center justify-center border border-[var(--theme-border-strong)] rounded-lg px-5 bg-[var(--theme-surface)] text-sm font-medium text-[var(--theme-text-muted)] hover:bg-[var(--theme-surface-soft)] hover:text-[var(--theme-text)] hover:border-[var(--theme-primary-border)] transition-colors"
+                        class="inline-flex h-11 w-full items-center justify-center rounded-lg border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-5 text-sm font-medium text-[var(--theme-text)] transition-colors hover:bg-[var(--theme-surface-soft)] sm:w-auto"
                     >
                         Cancelar
                     </a>
@@ -531,7 +530,7 @@
                         type="submit"
                         :disabled="savingVisual"
                         :aria-busy="savingVisual ? 'true' : 'false'"
-                        class="w-full sm:w-auto h-11 flex items-center justify-center gap-2 bg-[var(--theme-primary)] hover:bg-[var(--theme-primary-hover)] disabled:opacity-70 disabled:cursor-not-allowed rounded-lg px-5 text-sm font-medium text-white transition-colors"
+                        class="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[var(--theme-primary)] px-5 text-sm font-medium text-white transition-colors hover:bg-[var(--theme-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                     >
                         <svg
                             x-show="!savingVisual"

@@ -4,7 +4,7 @@
 
 @section('content')
 
-@include('catalogos.partials.marcas-modelos-alpine')
+{{-- Marcas y Modelos ya no usan el script Alpine de catalogos.partials.marcas-modelos-alpine: sus tablas se generan en el servidor. --}}
 
 @php
     /*
@@ -26,33 +26,59 @@
     $administrationSections = [
         [
             'key' => 'equipos',
+            'crumb' => 'Tipos de equipo',
             'label' => 'Equipos',
         ],
         [
             'key' => 'marcas',
+            'crumb' => 'Marcas',
             'label' => 'Marcas',
         ],
         [
             'key' => 'modelos',
+            'crumb' => 'Modelos',
             'label' => 'Modelos',
         ],
         [
             'key' => 'hoteles',
+            'crumb' => app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['unidad_plural'],
             'label' => app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['unidad_plural'],
         ],
         [
             'key' => 'departamentos',
+            'crumb' => 'Departamentos',
             'label' => 'Departamentos',
         ],
         [
             'key' => 'plantillas',
+            'crumb' => 'Plantillas',
             'label' => 'Plantillas',
         ],
         [
             'key' => 'organizacion',
+            'crumb' => 'Organización',
             'label' => 'Organización',
         ],
     ];
+
+    /*
+    |--------------------------------------------------------------------------
+    | Carga por sección
+    |--------------------------------------------------------------------------
+    |
+    | Solo la sección abierta se procesa con la página. Las demás se
+    | cargan (lazy) la primera vez que el usuario las muestra: al estar
+    | ocultas con x-show, su x-intersect no se activa hasta entonces.
+    |
+    */
+
+    $seccionInicial = collect($administrationSections)
+        ->pluck('key')
+        ->contains(request()->query('section'))
+            ? request()->query('section')
+            : 'equipos';
+
+    $diferir = fn (string $seccion): bool => $seccionInicial !== $seccion;
 @endphp
 
 
@@ -63,7 +89,7 @@
         mx-auto
     "
     x-data="{
-        section: 'equipos',
+        section: @js($seccionInicial),
 
         mobileMenuOpen: false,
 
@@ -136,6 +162,13 @@
 
             return item?.label ?? '';
         },
+
+        sectionCrumb(section = null) {
+            const key = section ?? this.section;
+            const item = this.sections.find(sectionItem => sectionItem.key === key);
+
+            return item?.crumb ?? item?.label ?? '';
+        },
     }"
 >
 
@@ -143,17 +176,35 @@
     {{-- ============================================================
         ENCABEZADO
     ============================================================ --}}
-    <div class="mb-6">
+    {{--
+        Único título de la pantalla. Cada sección solo agrega su
+        ubicación en la ruta; los componentes no repiten títulos.
+    --}}
+    <div class="mb-5">
 
-        <h1
-            class="
-                text-xl
-                font-semibold
-                text-[var(--theme-text-strong)]
-            "
-        >
+        <h1 class="text-xl font-semibold text-[var(--theme-text-strong)]">
             Administración
         </h1>
+
+        <nav
+            aria-label="Ubicación"
+            class="mt-1 flex items-center gap-2 text-xs text-[var(--theme-text-muted)]"
+        >
+            <a
+                href="{{ route('dashboard') }}"
+                wire:navigate.hover
+                class="hover:text-[var(--theme-primary)]"
+            >
+                Inicio
+            </a>
+
+            <span aria-hidden="true">›</span>
+
+            <span
+                class="text-[var(--theme-text)]"
+                x-text="sectionCrumb()"
+            >{{ collect($administrationSections)->firstWhere('key', $seccionInicial)['crumb'] ?? '' }}</span>
+        </nav>
 
     </div>
 
@@ -527,68 +578,10 @@
             "
             x-cloak
         >
-            <section
-                class="
-                    bg-[var(--theme-surface)]
-
-                    border
-                    border-[var(--theme-border)]
-
-                    rounded-xl
-
-                    overflow-hidden
-                "
-            >
-                <div
-                    class="
-                        px-4
-                        sm:px-5
-
-                        py-4
-
-                        border-b
-                        border-[var(--theme-border)]
-                    "
-                >
-                    <h2
-                        class="
-                            text-sm
-                            font-semibold
-                            text-[var(--theme-text-strong)]
-                        "
-                        x-text="
-                            sectionLabel(
-                                'equipos'
-                            )
-                        "
-                    ></h2>
-
-                    <p
-                        class="
-                            mt-1
-
-                            text-xs
-                            text-[var(--theme-text-muted)]
-                        "
-                    >
-                        Administra los tipos de equipo y su configuración.
-                    </p>
-                </div>
-
-                {{-- ========================================================
-                    EQUIPOS / TIPOS DE EQUIPO
-                ======================================================== --}}
-                <div
-                    x-show="
-                        section === 'equipos'
-                    "
-                    x-cloak
-                >
-                    <livewire:catalogos.tipos-equipo
-                        :key="'administracion-tipos-equipo'"
-                    />
-                </div>
-            </section>
+            <livewire:catalogos.tipos-equipo
+                :key="'administracion-tipos-equipo'"
+                :lazy="$diferir('equipos')"
+            />
         </div>
 
 
@@ -604,6 +597,7 @@
             <livewire:catalogos.marcas-modelos
                 vista="marcas"
                 :key="'administracion-marcas'"
+                :lazy="$diferir('marcas')"
             />
         </div>
 
@@ -620,6 +614,7 @@
             <livewire:catalogos.marcas-modelos
                 vista="modelos"
                 :key="'administracion-modelos'"
+                :lazy="$diferir('modelos')"
             />
         </div>
 
@@ -630,6 +625,7 @@
         <div x-show="section === 'hoteles'" x-cloak>
             <livewire:catalogos.hoteles
                 :key="'administracion-hoteles'"
+                :lazy="$diferir('hoteles')"
             />
         </div>
 
@@ -643,6 +639,7 @@
         >
             <livewire:catalogos.departamentos
                 :key="'administracion-departamentos'"
+                :lazy="$diferir('departamentos')"
             />
         </div>
 
@@ -669,69 +666,10 @@
             "
             x-cloak
         >
-            <section
-                class="
-                    bg-[var(--theme-surface)]
-
-                    border
-                    border-[var(--theme-border)]
-
-                    rounded-xl
-
-                    overflow-hidden
-                "
-            >
-                <div
-                    class="
-                        px-4
-                        sm:px-5
-
-                        py-4
-
-                        border-b
-                        border-[var(--theme-border)]
-                    "
-                >
-                    <h2
-                        class="
-                            text-sm
-                            font-semibold
-                            text-[var(--theme-text-strong)]
-                        "
-                    >
-                        Organización
-                    </h2>
-
-                    <p
-                        class="
-                            mt-1
-
-                            text-xs
-                            text-[var(--theme-text-muted)]
-                        "
-                    >
-                        Configuración general de la estructura organizacional.
-                    </p>
-                </div>
-
-                <div
-                    class="
-                        px-4
-                        sm:px-5
-
-                        py-8
-                    "
-                >
-                    <p
-                        class="
-                            text-sm
-                            text-[var(--theme-text-muted)]
-                        "
-                    >
-                        La configuración organizacional se construirá en esta sección.
-                    </p>
-                </div>
-            </section>
+            <livewire:catalogos.organizacion
+                :key="'administracion-organizacion'"
+                :lazy="$diferir('organizacion')"
+            />
         </div>
 
 

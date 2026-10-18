@@ -49,6 +49,46 @@ class MantenimientosIndex extends Component
 
     public string $sort = 'desc';
 
+    /*
+    |--------------------------------------------------------------------------
+    | Ordenamiento por columna
+    |--------------------------------------------------------------------------
+    |
+    | Clave pública => expresión SQL segura.
+    |
+    */
+
+    private const SORTABLE_COLUMNS = [
+        'folio' => 'm.folio',
+        'tipo' => 'tipo_mantenimiento.nombre',
+        'marca' => 'marca.nombre',
+        'modelo' => 'modelo.nombre',
+        'numero_serie' => 'e.numero_serie',
+        'intervencion' => 'm.intervencion_realizada',
+        'equipo' => 'e.nombre_equipo',
+        'fecha' => 'm.fecha_intervencion',
+        'tecnico' => 'tecnico.nombres',
+        'estado' => 'estado_mantenimiento.nombre',
+    ];
+
+    public string $sortField = 'fecha';
+
+    public function sortBy(string $field): void
+    {
+        if (! array_key_exists($field, self::SORTABLE_COLUMNS)) {
+            return;
+        }
+
+        if ($this->sortField === $field) {
+            $this->sort = $this->sort === 'asc' ? 'desc' : 'asc';
+        } else {
+            $this->sortField = $field;
+            $this->sort = 'asc';
+        }
+
+        $this->resetPage();
+    }
+
     public function aplicarFiltros(): void
     {
         $this->filtroTipo = $this->tipo;
@@ -345,14 +385,16 @@ class MantenimientosIndex extends Component
         |--------------------------------------------------------------------------
         */
 
+        $columnaOrden = self::SORTABLE_COLUMNS[$this->sortField]
+            ?? self::SORTABLE_COLUMNS['fecha'];
+
+        $direccion = $this->sort === 'asc' ? 'asc' : 'desc';
+
         $mantenimientos = $query
-            ->orderBy(
-                'm.fecha_intervencion',
-                $this->sort
-            )
+            ->orderByRaw($columnaOrden.' '.$direccion.' NULLS LAST')
             ->orderBy(
                 'm.id_mantenimiento',
-                $this->sort
+                $direccion
             )
             ->paginate($this->perPage);
 

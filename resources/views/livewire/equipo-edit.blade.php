@@ -475,26 +475,7 @@
                 >
                     <a
                         href="{{ route('equipos.index') }}"
-                        class="
-                            w-full
-                            sm:w-auto
-                            h-11
-                            flex
-                            items-center
-                            justify-center
-                            border
-                            border-[var(--theme-border-strong)]
-                            rounded-lg
-                            px-5
-                            bg-[var(--theme-surface)]
-                            text-sm
-                            font-medium
-                            text-[var(--theme-text-muted)]
-                            hover:bg-[var(--theme-surface-soft)]
-                            hover:text-[var(--theme-text)]
-                            hover:border-[var(--theme-primary-border)]
-                            transition-colors
-                        "
+                        class="inline-flex h-11 w-full items-center justify-center rounded-lg border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-5 text-sm font-medium text-[var(--theme-text)] transition-colors hover:bg-[var(--theme-surface-soft)] sm:w-auto"
                     >
                         Cancelar
                     </a>
@@ -507,25 +488,7 @@
                                 ? 'true'
                                 : 'false'
                         "
-                        class="
-                            w-full
-                            sm:w-auto
-                            h-11
-                            flex
-                            items-center
-                            justify-center
-                            gap-2
-                            bg-[var(--theme-primary)]
-                            hover:bg-[var(--theme-primary-hover)]
-                            disabled:opacity-60
-                            disabled:cursor-not-allowed
-                            rounded-lg
-                            px-5
-                            text-sm
-                            font-medium
-                            text-white
-                            transition-colors
-                        "
+                        class="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[var(--theme-primary)] px-5 text-sm font-medium text-white transition-colors hover:bg-[var(--theme-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                     >
                         <svg
                             x-show="!savingVisual"

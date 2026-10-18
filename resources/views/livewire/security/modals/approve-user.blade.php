@@ -346,46 +346,16 @@
                     </label>
 
 
-                    <select
-                        id="approvalRoleId"
-
-                        wire:model="approvalRoleId"
-
-                        class="
-                            w-full
-                            h-10
-
-                            px-3
-
-                            rounded-md
-
-                            bg-[var(--theme-surface)]
-
-                            border
-                            border-[var(--theme-border-strong)]
-
-                            text-sm
-                            text-[var(--theme-text)]
-
-                            focus:ring-1
-                            focus:ring-[var(--theme-primary)]
-                            focus:border-[var(--theme-primary)]
-                        "
-                    >
-
-                        <option value="">
-                            Selecciona un rol
-                        </option>
-
-                        @foreach ($roles as $rol)
-
-                            <option value="{{ $rol->id_rol }}">
-                                {{ $rol->nombre }}
-                            </option>
-
-                        @endforeach
-
-                    </select>
+                    <x-searchable-select
+                        wire-model="approvalRoleId"
+                        :empty-as-null="false"
+                        placeholder="Selecciona un rol"
+                        :show-clear="true"
+                        clear-label="Selecciona un rol"
+                        :options="[
+                            ...collect($roles)->map(fn ($rol) => ['value' => $rol->id_rol, 'label' => $rol->nombre])->all(),
+                        ]"
+                    />
 
 
                     @error('approvalRoleId')

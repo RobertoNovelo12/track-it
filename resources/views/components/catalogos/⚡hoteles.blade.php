@@ -12,6 +12,14 @@ new class extends Component
 {
     use WithPagination;
 
+    /*
+     * Vista mientras la sección se carga en Administración.
+     */
+    public function placeholder(array $params = [])
+    {
+        return view('livewire.placeholders.administracion-seccion');
+    }
+
     #[Locked]
     public bool $paginaEdicion = false;
 
@@ -20,6 +28,15 @@ new class extends Component
 
     public string $search = '';
     public string $estado = 'todos';
+
+    /*
+     * Tabla: registros por página y ordenamiento.
+     */
+    public int $perPage = 10;
+    public string $sortField = 'nombre';
+    public string $sortDirection = 'asc';
+
+    private const ORDENABLES = ['nombre', 'sede', 'codigo', 'activo'];
     public bool $formOpen = false;
     public string $message = '';
 
@@ -48,6 +65,40 @@ new class extends Component
 
     public function updatedEstado(): void
     {
+        $this->resetPage(pageName: 'hotelesPage');
+    }
+
+    public function updatedPerPage(): void
+    {
+        if (! in_array((int) $this->perPage, [10, 25, 50, 100], true)) {
+            $this->perPage = 10;
+        }
+
+        $this->resetPage(pageName: 'hotelesPage');
+    }
+
+    public function updatedSortDirection(): void
+    {
+        if (! in_array($this->sortDirection, ['asc', 'desc'], true)) {
+            $this->sortDirection = 'asc';
+        }
+
+        $this->resetPage(pageName: 'hotelesPage');
+    }
+
+    public function sortBy(string $campo): void
+    {
+        if (! in_array($campo, self::ORDENABLES, true)) {
+            return;
+        }
+
+        if ($this->sortField === $campo) {
+            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            $this->sortField = $campo;
+            $this->sortDirection = 'asc';
+        }
+
         $this->resetPage(pageName: 'hotelesPage');
     }
 
@@ -241,6 +292,26 @@ new class extends Component
         $this->message = ucfirst($unidad).' guardado correctamente.';
     }
 
+    /*
+     * Totales para las tarjetas de métricas.
+     */
+    public function metricas(): array
+    {
+        $fila = Hotel::query()
+            ->selectRaw('COUNT(*) AS total')
+            ->selectRaw('COUNT(*) FILTER (WHERE activo) AS activos')
+            ->first();
+
+        $total = (int) ($fila->total ?? 0);
+        $activos = (int) ($fila->activos ?? 0);
+
+        return [
+            'total' => $total,
+            'activos' => $activos,
+            'inactivos' => $total - $activos,
+        ];
+    }
+
     public function hoteles()
     {
         $search = trim($this->search);
@@ -269,43 +340,66 @@ new class extends Component
                     $this->estado === 'activos'
                 )
             )
-            ->orderBy('nombre')
+            ->when(
+                $this->sortField === 'sede',
+                fn ($query) => $query->orderBy(
+                    \App\Models\Sede::select('nombre')
+                        ->whereColumn('sedes.id_sede', 'unidades_organizativas.id_sede')
+                        ->limit(1),
+                    $this->sortDirection
+                ),
+                fn ($query) => $query->orderBy(
+                    in_array($this->sortField, self::ORDENABLES, true) ? $this->sortField : 'nombre',
+                    $this->sortDirection === 'desc' ? 'desc' : 'asc'
+                )
+            )
             ->orderBy('id_unidad')
-            ->paginate(15, ['*'], 'hotelesPage');
+            ->paginate($this->perPage, ['*'], 'hotelesPage');
     }
 };
 ?>
 
-<div class="min-w-0 space-y-5 rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 sm:p-5">
+<div class="min-w-0 space-y-5">
     @php
         $hoteles = $paginaEdicion ? null : $this->hoteles();
+        $metricas = $paginaEdicion ? [] : $this->metricas();
         $etiquetasUnidad = app(\App\Services\PlantillaInstalacionService::class)->etiquetas();
         $unidad = mb_strtolower($etiquetasUnidad['unidad_singular']);
         $unidades = mb_strtolower($etiquetasUnidad['unidad_plural']);
     @endphp
 
-    {{-- Encabezado del listado --}}
+    {{-- Buscador, filtros y acción (el título está en Administración) --}}
     @if (! $paginaEdicion)
-        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-                <h2 class="text-lg font-semibold text-[var(--theme-text-strong)]">
-                    {{ app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['unidad_plural'] }}
-                </h2>
+        <x-admin.filter-bar>
+            <x-admin.search
+                id="hoteles-search"
+                wire:model.live.debounce.350ms="search"
+                placeholder="Buscar por nombre, código o sede..."
+                :label="'Buscar '.$unidades"
+            />
 
-                <p class="mt-1 text-xs text-[var(--theme-text-muted)]">
-                    Administra los {{ $unidades }} y sus datos de contacto.
-                </p>
-            </div>
+            <x-admin.select
+                model="estado"
+                placeholder="Estado"
+                :options="[
+                    ['value' => 'todos', 'label' => 'Todos los estados'],
+                    ['value' => 'activos', 'label' => 'Activos'],
+                    ['value' => 'inactivos', 'label' => 'Inactivos'],
+                ]"
+            />
 
-            <button
-                type="button"
-                wire:click="createHotel"
-                wire:loading.attr="disabled"
-                class="rounded-lg bg-[var(--theme-primary)] px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-50"
-            >
-                + Añadir {{ $unidad }}
-            </button>
-        </div>
+            <x-slot:actions>
+                <x-admin.action-button wire:click="createHotel" wire:loading.attr="disabled">
+                    Añadir {{ $unidad }}
+                </x-admin.action-button>
+            </x-slot:actions>
+        </x-admin.filter-bar>
+
+        <x-admin.metrics :items="[
+            ['label' => 'Total de '.$unidades, 'value' => $metricas['total']],
+            ['label' => ucfirst($unidades).' activos', 'value' => $metricas['activos']],
+            ['label' => ucfirst($unidades).' inactivos', 'value' => $metricas['inactivos']],
+        ]" />
     @endif
 
     {{-- Confirmación --}}
@@ -323,44 +417,35 @@ new class extends Component
         <form
             wire:submit="saveHotel"
             wire:key="hotel-form-{{ $editingId ?? 'new' }}"
-            class="space-y-5 rounded-xl border border-[var(--theme-border)] p-4 sm:p-5"
+            class="space-y-5"
         >
-            <div>
-                <h3 class="font-semibold text-[var(--theme-text-strong)]">
-                    {{ $paginaEdicion ? 'Datos del '.$unidad : 'Nuevo '.$unidad }}
-                </h3>
+            {{-- Mismo diseño que Nueva Alta de equipo --}}
+            <section class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 sm:p-6">
+            <h2 class="mb-5 text-sm font-semibold text-[var(--theme-text-strong)]">
+                {{ $paginaEdicion ? 'Información del '.$unidad : 'Nuevo '.$unidad }}
+            </h2>
 
-                <p class="mt-1 text-xs text-[var(--theme-text-muted)]">
-                    Los campos con * son obligatorios.
-                </p>
-            </div>
-
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                 <div>
                     <label
-                        for="hotel-sede"
                         class="mb-1.5 block text-xs text-[var(--theme-text-muted)]"
                     >
                         Sede *
                     </label>
 
-                    <select
-                        id="hotel-sede"
-                        wire:model="idSede"
-                        required
-                        class="w-full rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)]"
-                    >
-                        <option value="">Selecciona una sede</option>
-
-                        @foreach (\App\Models\Sede::orderBy('nombre')->get() as $sede)
-                            <option value="{{ $sede->id_sede }}">
-                                {{ $sede->nombre }}{{ $sede->activo ? '' : ' (inactiva)' }}
-                            </option>
-                        @endforeach
-                    </select>
+                    <x-searchable-select
+                        wire-model="idSede"
+                        :empty-as-null="false"
+                        placeholder="Selecciona una sede"
+                        :show-clear="false"
+                        :options="\App\Models\Sede::orderBy('nombre')->get()->map(fn ($sede) => [
+                            'value' => (string) $sede->id_sede,
+                            'label' => $sede->nombre.($sede->activo ? '' : ' (inactiva)'),
+                        ])->values()->all()"
+                    />
 
                     @error('idSede')
-                        <p class="mt-1 text-xs text-red-500">
+                        <p class="mt-1 text-xs text-[var(--theme-danger)]">
                             {{ $message }}
                         </p>
                     @enderror
@@ -387,18 +472,18 @@ new class extends Component
                             type="{{ $field === 'correo' ? 'email' : 'text' }}"
                             maxlength="255"
                             @required($field === 'nombre')
-                            class="w-full rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)]"
+                            class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)]"
                         >
 
                         @error($field)
-                            <p class="mt-1 text-xs text-red-500">
+                            <p class="mt-1 text-xs text-[var(--theme-danger)]">
                                 {{ $message }}
                             </p>
                         @enderror
                     </div>
                 @endforeach
 
-                <div class="md:col-span-2">
+                <div class="md:col-span-2 xl:col-span-3">
                     <label
                         for="hotel-descripcion"
                         class="mb-1.5 block text-xs text-[var(--theme-text-muted)]"
@@ -411,38 +496,39 @@ new class extends Component
                         wire:model="descripcion"
                         rows="3"
                         maxlength="10000"
-                        class="min-h-24 w-full resize-y rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)]"
+                        class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)] min-h-24 resize-y"
                     ></textarea>
 
                     @error('descripcion')
-                        <p class="mt-1 text-xs text-red-500">
+                        <p class="mt-1 text-xs text-[var(--theme-danger)]">
                             {{ $message }}
                         </p>
                     @enderror
                 </div>
             </div>
 
-            <label class="flex items-center gap-2 text-sm text-[var(--theme-text)]">
+            <label class="mt-4 inline-flex items-center gap-2 text-sm text-[var(--theme-text)]">
                 <input
                     type="checkbox"
                     wire:model="activo"
-                    class="h-4 w-4 accent-[var(--theme-primary)]"
+                    class="rounded border-[var(--theme-border-strong)] text-[var(--theme-primary)]"
                 >
 
                 {{ $etiquetasUnidad['unidad_singular'] }} activo
             </label>
 
             @error('activo')
-                <p class="text-xs text-red-500">{{ $message }}</p>
+                <p class="mt-1 text-xs text-[var(--theme-danger)]">{{ $message }}</p>
             @enderror
+            </section>
 
-            <fieldset class="space-y-3 border-t border-[var(--theme-border)] pt-5">
-                <legend class="px-1 text-sm font-semibold text-[var(--theme-text-strong)]">Departamentos</legend>
-                <p class="text-xs text-[var(--theme-text-muted)]">
+            <section class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 sm:p-6">
+                <h2 class="text-sm font-semibold text-[var(--theme-text-strong)]">Departamentos</h2>
+                <p class="mt-1 mb-4 text-xs text-[var(--theme-text-muted)]">
                     Selecciona los departamentos que atienden esta unidad. Los de cobertura global se incluyen automáticamente, también en las nuevas unidades.
                     Los inactivos conservan su asignación, pero no estarán disponibles al registrar equipos.
                 </p>
-                <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                     @forelse (\App\Models\Departamento::principales()->orderBy('nombre')->get() as $departamento)
                         <label wire:key="hotel-departamento-{{ $departamento->id_departamento }}" class="flex items-start gap-3 rounded-lg border border-[var(--theme-border)] p-3 text-sm text-[var(--theme-text)]">
                             @if ($departamento->atiende_todas_unidades)
@@ -465,27 +551,27 @@ new class extends Component
                     @endforelse
                 </div>
                 @error('idDepartamentos')
-                    <p class="text-xs text-red-500">{{ $message }}</p>
+                    <p class="mt-3 text-xs text-[var(--theme-danger)]">{{ $message }}</p>
                 @enderror
                 @error('idDepartamentos.*')
-                    <p class="text-xs text-red-500">{{ $message }}</p>
+                    <p class="mt-3 text-xs text-[var(--theme-danger)]">{{ $message }}</p>
                 @enderror
-            </fieldset>
+            </section>
 
-            <div class="flex flex-wrap justify-end gap-3 border-t border-[var(--theme-border)] pt-4">
+            <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
                 <button
                     type="button"
                     wire:click="closeForm"
                     wire:loading.attr="disabled"
-                    class="rounded-lg border border-[var(--theme-border)] px-4 py-2.5 text-xs text-[var(--theme-text)] disabled:opacity-50"
+                    class="inline-flex h-11 w-full items-center justify-center rounded-lg border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-5 text-sm font-medium text-[var(--theme-text)] transition-colors hover:bg-[var(--theme-surface-soft)] sm:w-auto"
                 >
-                    {{ $paginaEdicion ? 'Volver a '.$unidades : 'Cancelar' }}
+                    Cancelar
                 </button>
 
                 <button
                     type="submit"
                     wire:loading.attr="disabled"
-                    class="rounded-lg bg-[var(--theme-primary)] px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-50"
+                    class="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[var(--theme-primary)] px-5 text-sm font-medium text-white transition-colors hover:bg-[var(--theme-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                 >
                     <span wire:loading.remove wire:target="saveHotel">
                         {{ $paginaEdicion ? 'Guardar cambios' : 'Guardar '.$unidad }}
@@ -499,131 +585,69 @@ new class extends Component
         </form>
     @endif
 
-    {{-- Filtros y listado: solo en Administración --}}
+    {{-- Listado: solo en Administración --}}
     @if (! $paginaEdicion)
-        <div class="flex flex-col gap-3 sm:flex-row">
-            <div class="flex-1">
-                <label for="hoteles-search" class="sr-only">
-                    Buscar {{ $unidades }}
-                </label>
+        {{-- Listado: componente reutilizable <x-data-table> --}}
+        <x-data-table
+            :rows="$hoteles"
+            row-key="id_unidad"
+            key-prefix="hotel"
 
-                <input
-                    id="hoteles-search"
-                    type="search"
-                    wire:model.live.debounce.350ms="search"
-                    placeholder="Buscar por nombre, código o sede..."
-                    class="w-full rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)]"
-                >
-            </div>
+            :sort-field="$sortField"
+            :sort-direction="$sortDirection"
+            sort-action="sortBy"
 
-            <div>
-                <label for="hoteles-estado" class="sr-only">
-                    Estado del {{ $unidad }}
-                </label>
+            per-page-model="perPage"
+            sort-model="sortDirection"
+            refresh-action="$refresh"
 
-                <select
-                    id="hoteles-estado"
-                    wire:model.live="estado"
-                    class="w-full rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] sm:w-44"
-                >
-                    <option value="todos">Todos los estados</option>
-                    <option value="activos">Activos</option>
-                    <option value="inactivos">Inactivos</option>
-                </select>
-            </div>
-        </div>
+            page-name="hotelesPage"
+            :result-singular="$unidad.' encontrado'"
+            :result-plural="$unidades.' encontrados'"
+            :empty-message="'No se encontraron '.$unidades.' con estos filtros.'"
+            min-width="760px"
 
-        <div class="overflow-hidden rounded-xl border border-[var(--theme-border)]">
-            <div class="border-b border-[var(--theme-border)] px-4 py-4 sm:px-5">
-                <h3 class="text-sm font-semibold text-[var(--theme-text-strong)]">
-                    {{ $etiquetasUnidad['unidad_plural'] }} registrados
-                </h3>
+            :columns="[
+                [
+                    'key' => 'nombre',
+                    'label' => $etiquetasUnidad['unidad_singular'],
+                    'width' => '32%',
+                    'sort' => 'nombre',
+                    'strong' => true,
+                ],
+                [
+                    'key' => 'sede',
+                    'label' => 'Sede',
+                    'width' => '24%',
+                    'sort' => 'sede',
+                    'value' => fn ($hotel) => $hotel->sede?->nombre,
+                    'default' => 'Sin sede',
+                ],
+                [
+                    'key' => 'codigo',
+                    'label' => 'Código',
+                    'width' => '16%',
+                    'sort' => 'codigo',
+                ],
+                [
+                    'key' => 'activo',
+                    'label' => 'Estado',
+                    'width' => '16%',
+                    'sort' => 'activo',
+                    'type' => 'status',
+                    'value' => fn ($hotel) => $hotel->activo ? 'Activo' : 'Inactivo',
+                ],
+            ]"
 
-                <p class="mt-1 text-xs text-[var(--theme-text-muted)]">
-                    {{ $hoteles->total() }} resultados encontrados
-                </p>
-            </div>
-
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm">
-                    <thead class="bg-[var(--theme-surface-soft)] text-xs text-[var(--theme-text-muted)]">
-                        <tr>
-                            <th scope="col" class="px-4 py-3 sm:px-5">
-                                {{ app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['unidad_singular'] }}
-                            </th>
-
-                            <th scope="col" class="px-4 py-3">
-                                Sede
-                            </th>
-
-                            <th scope="col" class="px-4 py-3">
-                                Código
-                            </th>
-
-                            <th scope="col" class="px-4 py-3">
-                                Estado
-                            </th>
-
-                            <th scope="col" class="px-4 py-3 text-right sm:px-5">
-                                Acciones
-                            </th>
-                        </tr>
-                    </thead>
-
-                    <tbody class="divide-y divide-[var(--theme-border)]">
-                        @forelse ($hoteles as $hotel)
-                            <tr wire:key="hotel-row-{{ $hotel->id_unidad }}">
-                                <td class="px-4 py-4 font-medium text-[var(--theme-text-strong)] sm:px-5">
-                                    {{ $hotel->nombre }}
-                                </td>
-
-                                <td class="px-4 py-4 text-[var(--theme-text-muted)]">
-                                    {{ $hotel->sede?->nombre ?? 'Sin sede' }}
-                                </td>
-
-                                <td class="px-4 py-4 text-[var(--theme-text-muted)]">
-                                    {{ $hotel->codigo ?: '—' }}
-                                </td>
-
-                                <td class="px-4 py-4">
-                                    <span @class([
-                                        'rounded-full px-2.5 py-1 text-xs font-medium',
-                                        'bg-emerald-500/10 text-emerald-500' => $hotel->activo,
-                                        'bg-amber-500/10 text-amber-500' => ! $hotel->activo,
-                                    ])>
-                                        {{ $hotel->activo ? 'Activo' : 'Inactivo' }}
-                                    </span>
-                                </td>
-
-                                <td class="px-4 py-4 text-right sm:px-5">
-                                    <a
-                                        href="{{ route('catalogos.hoteles.edit', ['hotel' => $hotel->id_unidad]) }}"
-                                        aria-label="Editar {{ $hotel->nombre }}"
-                                        class="inline-flex items-center justify-center rounded-lg border border-[var(--theme-border)] px-3 py-2 text-xs text-[var(--theme-text)] hover:bg-[var(--theme-surface-soft)]"
-                                    >
-                                        Editar
-                                    </a>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td
-                                    colspan="5"
-                                    class="px-5 py-10 text-center text-sm text-[var(--theme-text-muted)]"
-                                >
-                                    No se encontraron {{ $unidades }} con estos filtros.
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-
-            @if ($hoteles->hasPages())
-                <div class="border-t border-[var(--theme-border)] px-4 py-4 sm:px-5">
-                    {{ $hoteles->links() }}
-                </div>
-            @endif
-        </div>
+            :actions="fn ($hotel) => [
+                'edit' => route('catalogos.hoteles.edit', ['hotel' => $hotel->id_unidad]),
+                'menu' => [
+                    [
+                        'label' => 'Editar',
+                        'href' => route('catalogos.hoteles.edit', ['hotel' => $hotel->id_unidad]),
+                    ],
+                ],
+            ]"
+        />
     @endif
 </div>

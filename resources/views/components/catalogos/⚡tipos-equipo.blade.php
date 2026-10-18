@@ -11,6 +11,14 @@ new class extends Component
     use WithPagination;
 
     /*
+     * Vista mientras la sección se carga en Administración.
+     */
+    public function placeholder(array $params = [])
+    {
+        return view('livewire.placeholders.administracion-seccion');
+    }
+
+    /*
     |--------------------------------------------------------------------------
     | Filtros
     |--------------------------------------------------------------------------
@@ -22,6 +30,45 @@ new class extends Component
 
     public int $perPage = 10;
 
+    /*
+     * Ordenamiento de la tabla.
+     */
+    public string $sortField = 'nombre';
+
+    public string $sortDirection = 'asc';
+
+    private const ORDENABLES = [
+        'id' => 'id_tipo_equipo',
+        'nombre' => 'nombre',
+        'descripcion' => 'descripcion',
+        'activo' => 'activo',
+    ];
+
+    public function sortBy(string $campo): void
+    {
+        if (! array_key_exists($campo, self::ORDENABLES)) {
+            return;
+        }
+
+        if ($this->sortField === $campo) {
+            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            $this->sortField = $campo;
+            $this->sortDirection = 'asc';
+        }
+
+        $this->resetPage(pageName: 'tiposPage');
+    }
+
+    public function updatedSortDirection(): void
+    {
+        if (! in_array($this->sortDirection, ['asc', 'desc'], true)) {
+            $this->sortDirection = 'asc';
+        }
+
+        $this->resetPage(pageName: 'tiposPage');
+    }
+
 
     /*
     |--------------------------------------------------------------------------
@@ -30,6 +77,12 @@ new class extends Component
     */
 
     public bool $modalOpen = false;
+
+    /*
+     * Cambia en cada apertura para que el modal se cree de nuevo
+     * (el cierre se hace en el navegador sin petición).
+     */
+    public string $modalToken = '';
 
     public string $formMode = 'create';
 
@@ -110,6 +163,9 @@ new class extends Component
         $this->activo =
             true;
 
+        $this->modalToken =
+            uniqid('tipo-modal-');
+
         $this->modalOpen =
             true;
     }
@@ -154,6 +210,9 @@ new class extends Component
         $this->activo =
             (bool) $tipo->activo;
 
+        $this->modalToken =
+            uniqid('tipo-modal-');
+
         $this->modalOpen =
             true;
     }
@@ -185,10 +244,6 @@ new class extends Component
                     'nullable',
                     'string',
                 ],
-
-                'activo' => [
-                    'boolean',
-                ],
             ],
             [
                 'nombre.required' =>
@@ -208,8 +263,6 @@ new class extends Component
             'descripcion' => $this->normalizeNullableText(
                 $validated['descripcion'] ?? null
             ),
-
-            'activo' => (bool) $validated['activo'],
         ];
 
         if (
@@ -240,7 +293,8 @@ new class extends Component
         } else {
             \Illuminate\Support\Facades\DB::transaction(
                 function () use ($attributes): void {
-                    $tipo = TipoEquipo::query()->create($attributes);
+                    // Los tipos nuevos siempre se crean activos.
+                    $tipo = TipoEquipo::query()->create($attributes + ['activo' => true]);
 
                     app(
                         \App\Services\TipoEquipoFormBuilderService::class
@@ -411,9 +465,12 @@ new class extends Component
 
 
         return $query
-            ->orderBy(
-                'nombre'
+            ->orderByRaw(
+                (self::ORDENABLES[$this->sortField] ?? 'nombre')
+                .' '.($this->sortDirection === 'desc' ? 'desc' : 'asc')
+                .' NULLS LAST'
             )
+            ->orderBy('id_tipo_equipo')
             ->paginate(
                 perPage:
                     $this->perPage,
@@ -522,7 +579,18 @@ new class extends Component
 @endphp
 
 
+{{--
+    Contenedor raíz sin Alpine: el x-data va en el elemento interno
+    para que se inicialice también cuando la sección se carga en
+    diferido (lazy) desde Administración.
+
+    El wire:key evita que Livewire reutilice un elemento del
+    placeholder para este contenedor: así Alpine lo trata como
+    elemento nuevo y ejecuta su x-data.
+--}}
+<div>
 <div
+    wire:key="tipos-equipo-contenido"
     x-data="{
         toastOpen: false,
         toastMessage: '',
@@ -559,7 +627,7 @@ new class extends Component
         )
     "
 
-    class="min-w-0 space-y-5 p-4 sm:p-5"
+    class="min-w-0 space-y-5"
 >
 
     {{-- ============================================================
@@ -738,1205 +806,136 @@ new class extends Component
 
 
     {{-- ============================================================
-        ENCABEZADO
+        BUSCADOR, FILTROS Y ACCIÓN
+        (El título está en Administración; aquí no se repite.)
     ============================================================ --}}
-    <div
-        class="
-            flex
-            flex-col
-
-            lg:flex-row
-            lg:items-end
-            lg:justify-between
-
-            gap-4
-        "
-    >
-        <div>
-
-            <h1
-                class="
-                    text-xl
-                    font-semibold
-                    text-[var(--theme-text-strong)]
-                "
-            >
-                Tipos de equipo
-            </h1>
-
-            <p
-                class="
-                    mt-1
-
-                    text-xs
-                    text-[var(--theme-text-muted)]
-                "
-            >
-                Administra los tipos de equipo disponibles para el inventario tecnológico.
-            </p>
-
-        </div>
-
-
-        <button
-            type="button"
-
-            wire:click="createTipo"
-
-            class="
-                h-9
-                px-4
-
-                inline-flex
-                items-center
-                justify-center
-                gap-2
-
-                rounded-md
-
-                bg-[var(--theme-primary)]
-                text-white
-
-                text-xs
-                font-medium
-
-                hover:bg-[var(--theme-primary-hover)]
-
-                transition-colors
-            "
-        >
-            <svg
-                class="w-4 h-4"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-            >
-                <path d="M12 5v14"/>
-                <path d="M5 12h14"/>
-            </svg>
-
-            Añadir tipo
-        </button>
-    </div>
-
-
-    {{-- ============================================================
-        FILTROS
-    ============================================================ --}}
-    <section
-        class="
-            p-4
-
-            rounded-xl
-
-            border
-            border-[var(--theme-border)]
-
-            bg-[var(--theme-surface)]
-        "
-    >
-        <div
-            class="
-                grid
-                grid-cols-1
-
-                md:grid-cols-[minmax(0,1fr)_180px_140px]
-
-                gap-3
-            "
-        >
-
-            {{-- BUSCADOR --}}
-            <div class="relative">
-
-                <div
-                    class="
-                        pointer-events-none
-
-                        absolute
-                        inset-y-0
-                        left-0
-
-                        w-10
-
-                        flex
-                        items-center
-                        justify-center
-
-                        text-[var(--theme-text-muted)]
-                    "
-                >
-                    <svg
-                        class="w-4 h-4"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.7"
-                    >
-                        <circle
-                            cx="11"
-                            cy="11"
-                            r="7"
-                        />
-
-                        <path d="M20 20l-3.5-3.5"/>
-                    </svg>
-                </div>
-
-
-                <input
-                    type="search"
-
-                    wire:model.live.debounce.300ms="search"
-
-                    placeholder="Buscar por nombre o descripción..."
-
-                    class="
-                        w-full
-                        h-10
-
-                        pl-10
-                        pr-3
-
-                        rounded-md
-
-                        border
-                        border-[var(--theme-border-strong)]
-
-                        bg-[var(--theme-surface-soft)]
-
-                        text-xs
-                        text-[var(--theme-text)]
-
-                        placeholder:text-[var(--theme-text-muted)]
-
-                        focus:outline-none
-                        focus:border-[var(--theme-primary)]
-
-                        focus:ring-2
-                        focus:ring-[var(--theme-primary-soft)]
-
-                        transition-colors
-                    "
-                >
-
-            </div>
-
-
-            {{-- ESTADO --}}
-            <select
-                wire:model.live="estado"
-
-                class="
-                    w-full
-                    h-10
-
-                    px-3
-
-                    rounded-md
-
-                    border
-                    border-[var(--theme-border-strong)]
-
-                    bg-[var(--theme-surface-soft)]
-
-                    text-xs
-                    text-[var(--theme-text)]
-
-                    focus:outline-none
-                    focus:border-[var(--theme-primary)]
-
-                    focus:ring-2
-                    focus:ring-[var(--theme-primary-soft)]
-                "
-            >
-                <option value="todos">
-                    Todos los estados
-                </option>
-
-                <option value="activos">
-                    Activos
-                </option>
-
-                <option value="inactivos">
-                    Inactivos
-                </option>
-            </select>
-
-
-            {{-- REGISTROS --}}
-            <select
-                wire:model.live="perPage"
-
-                class="
-                    w-full
-                    h-10
-
-                    px-3
-
-                    rounded-md
-
-                    border
-                    border-[var(--theme-border-strong)]
-
-                    bg-[var(--theme-surface-soft)]
-
-                    text-xs
-                    text-[var(--theme-text)]
-
-                    focus:outline-none
-                    focus:border-[var(--theme-primary)]
-
-                    focus:ring-2
-                    focus:ring-[var(--theme-primary-soft)]
-                "
-            >
-                <option value="10">
-                    10
-                </option>
-
-                <option value="25">
-                    25
-                </option>
-
-                <option value="50">
-                    50
-                </option>
-
-                <option value="100">
-                    100
-                </option>
-            </select>
-
-        </div>
-    </section>
+    <x-admin.filter-bar>
+        <x-admin.search
+            wire:model.live.debounce.300ms="search"
+            placeholder="Buscar por nombre o descripción..."
+            label="Buscar tipo de equipo"
+        />
+
+        <x-admin.select
+            model="estado"
+            placeholder="Estado"
+            :options="[
+                ['value' => 'todos', 'label' => 'Todos los estados'],
+                ['value' => 'activos', 'label' => 'Activos'],
+                ['value' => 'inactivos', 'label' => 'Inactivos'],
+            ]"
+        />
+
+        <x-slot:actions>
+            <x-admin.action-button x-on:click="$dispatch('abrir-tipo-equipo', {})">
+                Añadir tipo
+            </x-admin.action-button>
+        </x-slot:actions>
+    </x-admin.filter-bar>
 
 
     {{-- ============================================================
         MÉTRICAS
     ============================================================ --}}
-    <div
-        class="
-            grid
-            grid-cols-1
-            sm:grid-cols-3
-
-            gap-3
-        "
-    >
-
-        {{-- TOTAL --}}
-        <div
-            class="
-                p-4
-
-                rounded-xl
-
-                border
-                border-[var(--theme-primary)]
-
-                bg-[var(--theme-surface)]
-            "
-        >
-            <p
-                class="
-                    text-2xl
-                    font-semibold
-                    text-[var(--theme-primary)]
-                "
-            >
-                {{ number_format($metricas['total']) }}
-            </p>
-
-            <p
-                class="
-                    mt-0.5
-
-                    text-[11px]
-                    text-[var(--theme-text-muted)]
-                "
-            >
-                Total de tipos
-            </p>
-        </div>
-
-
-        {{-- ACTIVOS --}}
-        <div
-            class="
-                p-4
-
-                rounded-xl
-
-                border
-                border-[var(--theme-border)]
-
-                bg-[var(--theme-surface)]
-            "
-        >
-            <p
-                class="
-                    text-2xl
-                    font-semibold
-                    text-[var(--theme-text-strong)]
-                "
-            >
-                {{ number_format($metricas['activos']) }}
-            </p>
-
-            <p
-                class="
-                    mt-0.5
-
-                    text-[11px]
-                    text-[var(--theme-text-muted)]
-                "
-            >
-                Tipos activos
-            </p>
-        </div>
-
-
-        {{-- INACTIVOS --}}
-        <div
-            class="
-                p-4
-
-                rounded-xl
-
-                border
-                border-[var(--theme-border)]
-
-                bg-[var(--theme-surface)]
-            "
-        >
-            <p
-                class="
-                    text-2xl
-                    font-semibold
-                    text-[var(--theme-text-strong)]
-                "
-            >
-                {{ number_format($metricas['inactivos']) }}
-            </p>
-
-            <p
-                class="
-                    mt-0.5
-
-                    text-[11px]
-                    text-[var(--theme-text-muted)]
-                "
-            >
-                Tipos inactivos
-            </p>
-        </div>
-
-    </div>
+    <x-admin.metrics :items="[
+        ['label' => 'Total de tipos', 'value' => $metricas['total'] ?? 0],
+        ['label' => 'Tipos activos', 'value' => $metricas['activos'] ?? 0],
+        ['label' => 'Tipos inactivos', 'value' => $metricas['inactivos'] ?? 0],
+    ]" />
 
 
     {{-- ============================================================
-        TABLA
+        TABLA: componente reutilizable <x-data-table>
     ============================================================ --}}
-    <section
-        class="
-            overflow-hidden
-
-            rounded-xl
-
-            border
-            border-[var(--theme-border)]
-
-            bg-[var(--theme-surface)]
-        "
-    >
-
-        {{-- ENCABEZADO --}}
-        <div
-            class="
-                px-4
-                sm:px-5
-                py-4
-
-                border-b
-                border-[var(--theme-border)]
-            "
-        >
-            <div
-                class="
-                    flex
-                    items-center
-                    justify-between
-                    gap-3
-                "
-            >
-                <div>
-
-                    <h2
-                        class="
-                            text-sm
-                            font-semibold
-                            text-[var(--theme-text-strong)]
-                        "
-                    >
-                        Tipos registrados
-                    </h2>
-
-                    <p
-                        class="
-                            mt-0.5
-
-                            text-[11px]
-                            text-[var(--theme-text-muted)]
-                        "
-                    >
-                        {{ number_format($tipos->total()) }}
-                        resultados encontrados
-                    </p>
-
-                </div>
-            </div>
-        </div>
-
-
-        {{-- ESCRITORIO --}}
-        <div
-            class="
-                hidden
-                md:block
-
-                overflow-x-auto
-            "
-        >
-            <table
-                class="
-                    w-full
-
-                    text-left
-                "
-            >
-                <thead
-                    class="
-                        bg-[var(--theme-surface-soft)]
-
-                        border-b
-                        border-[var(--theme-border)]
-                    "
-                >
-                    <tr>
-
-                        <th
-                            class="
-                                px-5
-                                py-3
-
-                                text-[10px]
-                                font-semibold
-                                uppercase
-                                tracking-wide
-                                text-[var(--theme-text-muted)]
-                            "
-                        >
-                            ID
-                        </th>
-
-                        <th
-                            class="
-                                px-5
-                                py-3
-
-                                text-[10px]
-                                font-semibold
-                                uppercase
-                                tracking-wide
-                                text-[var(--theme-text-muted)]
-                            "
-                        >
-                            Nombre
-                        </th>
-
-                        <th
-                            class="
-                                px-5
-                                py-3
-
-                                text-[10px]
-                                font-semibold
-                                uppercase
-                                tracking-wide
-                                text-[var(--theme-text-muted)]
-                            "
-                        >
-                            Descripción
-                        </th>
-
-                        <th
-                            class="
-                                px-5
-                                py-3
-
-                                text-[10px]
-                                font-semibold
-                                uppercase
-                                tracking-wide
-                                text-[var(--theme-text-muted)]
-                            "
-                        >
-                            Estado
-                        </th>
-
-                        <th
-                            class="
-                                px-5
-                                py-3
-
-                                text-right
-                                text-[10px]
-                                font-semibold
-                                uppercase
-                                tracking-wide
-                                text-[var(--theme-text-muted)]
-                            "
-                        >
-                            Acciones
-                        </th>
-
-                    </tr>
-                </thead>
-
-
-                <tbody
-                    class="
-                        divide-y
-                        divide-[var(--theme-border)]
-                    "
-                >
-                    @forelse ($tipos as $tipo)
-
-                        <tr
-                            wire:key="tipo-equipo-{{ $tipo->id_tipo_equipo }}"
-
-                            class="
-                                hover:bg-[var(--theme-surface-soft)]
-
-                                transition-colors
-                            "
-                        >
-
-                            <td
-                                class="
-                                    px-5
-                                    py-3.5
-
-                                    text-xs
-                                    text-[var(--theme-text-muted)]
-                                "
-                            >
-                                {{ $tipo->id_tipo_equipo }}
-                            </td>
-
-
-                            <td
-                                class="
-                                    px-5
-                                    py-3.5
-
-                                    text-xs
-                                    font-semibold
-                                    text-[var(--theme-text-strong)]
-                                "
-                            >
-                                {{ $tipo->nombre }}
-                            </td>
-
-
-                            <td
-                                class="
-                                    px-5
-                                    py-3.5
-
-                                    max-w-[440px]
-
-                                    text-xs
-                                    text-[var(--theme-text-muted)]
-                                "
-                            >
-                                {{ $tipo->descripcion ?: 'Sin descripción' }}
-                            </td>
-
-
-                            <td
-                                class="
-                                    px-5
-                                    py-3.5
-                                "
-                            >
-                                @if ($tipo->activo)
-
-                                    <span
-                                        class="
-                                            inline-flex
-                                            items-center
-
-                                            px-2.5
-                                            py-1
-
-                                            rounded-full
-
-                                            bg-[var(--theme-success-soft)]
-                                            text-[var(--theme-success)]
-
-                                            text-[10px]
-                                            font-semibold
-                                        "
-                                    >
-                                        Activo
-                                    </span>
-
-                                @else
-
-                                    <span
-                                        class="
-                                            inline-flex
-                                            items-center
-
-                                            px-2.5
-                                            py-1
-
-                                            rounded-full
-
-                                            bg-[var(--theme-surface-soft)]
-                                            text-[var(--theme-text-muted)]
-
-                                            text-[10px]
-                                            font-semibold
-                                        "
-                                    >
-                                        Inactivo
-                                    </span>
-
-                                @endif
-                            </td>
-
-
-                            <td
-                                class="
-                                    px-5
-                                    py-3.5
-                                "
-                            >
-                                <div
-                                    class="
-                                        flex
-                                        items-center
-                                        justify-end
-                                        gap-1
-                                    "
-                                >
-
-                                    {{-- EDITAR --}}
-                                    <a
-                                        href="{{ route(
-                                            'catalogos.tipos-equipo.edit',
-                                            [
-                                                'tipoEquipo' =>
-                                                    $tipo->id_tipo_equipo,
-                                            ]
-                                        ) }}"
-
-                                        wire:navigate.hover
-
-                                        class="
-                                            w-8
-                                            h-8
-
-                                            rounded-md
-
-                                            flex
-                                            items-center
-                                            justify-center
-
-                                            text-[var(--theme-text-muted)]
-
-                                            hover:bg-[var(--theme-primary-soft)]
-                                            hover:text-[var(--theme-primary)]
-
-                                            transition-colors
-                                        "
-
-                                        title="Editar"
-                                        aria-label="Editar tipo de equipo"
-                                    >
-                                        <svg
-                                            class="w-4 h-4"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            stroke-width="1.7"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                        >
-                                            <path d="M12 20h9"/>
-                                            <path d="M16.5 3.5a2.1 2.1 0 013 3L8 18l-4 1 1-4z"/>
-                                        </svg>
-                                    </a>
-
-
-                                    {{-- ESTADO --}}
-                                    <button
-                                        type="button"
-
-                                        wire:click="
-                                            toggleTipoStatus(
-                                                {{ $tipo->id_tipo_equipo }}
-                                            )
-                                        "
-
-                                        class="
-                                            w-8
-                                            h-8
-
-                                            rounded-md
-
-                                            flex
-                                            items-center
-                                            justify-center
-
-                                            text-[var(--theme-text-muted)]
-
-                                            hover:bg-[var(--theme-surface-soft)]
-                                            hover:text-[var(--theme-text-strong)]
-
-                                            transition-colors
-                                        "
-
-                                        title="{{ $tipo->activo ? 'Desactivar' : 'Activar' }}"
-                                        aria-label="{{ $tipo->activo ? 'Desactivar tipo' : 'Activar tipo' }}"
-                                    >
-                                        @if ($tipo->activo)
-
-                                            <svg
-                                                class="w-4 h-4"
-                                                viewBox="0 0 24 24"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                stroke-width="1.7"
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                            >
-                                                <circle
-                                                    cx="12"
-                                                    cy="12"
-                                                    r="9"
-                                                />
-
-                                                <path d="M8 8l8 8"/>
-                                            </svg>
-
-                                        @else
-
-                                            <svg
-                                                class="w-4 h-4"
-                                                viewBox="0 0 24 24"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                stroke-width="1.7"
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                            >
-                                                <circle
-                                                    cx="12"
-                                                    cy="12"
-                                                    r="9"
-                                                />
-
-                                                <path d="M8 12l2.5 2.5L16 9"/>
-                                            </svg>
-
-                                        @endif
-                                    </button>
-
-                                </div>
-                            </td>
-
-                        </tr>
-
-                    @empty
-
-                        <tr>
-                            <td
-                                colspan="5"
-
-                                class="
-                                    px-5
-                                    py-12
-
-                                    text-center
-
-                                    text-xs
-                                    text-[var(--theme-text-muted)]
-                                "
-                            >
-                                No se encontraron tipos de equipo.
-                            </td>
-                        </tr>
-
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-
-
-        {{-- MÓVIL --}}
-        <div
-            class="
-                md:hidden
-
-                divide-y
-                divide-[var(--theme-border)]
-            "
-        >
-            @forelse ($tipos as $tipo)
-
-                <div
-                    wire:key="tipo-equipo-mobile-{{ $tipo->id_tipo_equipo }}"
-
-                    class="
-                        p-4
-
-                        space-y-3
-                    "
-                >
-                    <div
-                        class="
-                            flex
-                            items-start
-                            justify-between
-                            gap-3
-                        "
-                    >
-                        <div
-                            class="
-                                min-w-0
-                                flex-1
-                            "
-                        >
-                            <p
-                                class="
-                                    text-sm
-                                    font-semibold
-                                    text-[var(--theme-text-strong)]
-                                "
-                            >
-                                {{ $tipo->nombre }}
-                            </p>
-
-                            <p
-                                class="
-                                    mt-0.5
-
-                                    text-[10px]
-                                    text-[var(--theme-text-muted)]
-                                "
-                            >
-                                ID #{{ $tipo->id_tipo_equipo }}
-                            </p>
-                        </div>
-
-
-                        @if ($tipo->activo)
-
-                            <span
-                                class="
-                                    shrink-0
-
-                                    px-2
-                                    py-1
-
-                                    rounded-full
-
-                                    bg-[var(--theme-success-soft)]
-                                    text-[var(--theme-success)]
-
-                                    text-[9px]
-                                    font-semibold
-                                "
-                            >
-                                Activo
-                            </span>
-
-                        @else
-
-                            <span
-                                class="
-                                    shrink-0
-
-                                    px-2
-                                    py-1
-
-                                    rounded-full
-
-                                    bg-[var(--theme-surface-soft)]
-                                    text-[var(--theme-text-muted)]
-
-                                    text-[9px]
-                                    font-semibold
-                                "
-                            >
-                                Inactivo
-                            </span>
-
-                        @endif
-                    </div>
-
-
-                    <p
-                        class="
-                            text-xs
-                            leading-relaxed
-                            text-[var(--theme-text-muted)]
-                        "
-                    >
-                        {{ $tipo->descripcion ?: 'Sin descripción' }}
-                    </p>
-
-
-                    <div
-                        class="
-                            flex
-                            items-center
-                            gap-2
-                        "
-                    >
-                        <button
-                            type="button"
-
-                            wire:click="
-                                editTipo(
-                                    {{ $tipo->id_tipo_equipo }}
-                                )
-                            "
-
-                            class="
-                                h-8
-
-                                px-3
-
-                                inline-flex
-                                items-center
-                                justify-center
-                                gap-1.5
-
-                                rounded-md
-
-                                border
-                                border-[var(--theme-border)]
-
-                                text-[10px]
-                                font-medium
-                                text-[var(--theme-text)]
-
-                                hover:bg-[var(--theme-surface-soft)]
-
-                                transition-colors
-                            "
-                        >
-                            Editar
-                        </button>
-
-
-                        <button
-                            type="button"
-
-                            wire:click="
-                                toggleTipoStatus(
-                                    {{ $tipo->id_tipo_equipo }}
-                                )
-                            "
-
-                            class="
-                                h-8
-
-                                px-3
-
-                                inline-flex
-                                items-center
-                                justify-center
-
-                                rounded-md
-
-                                border
-                                border-[var(--theme-border)]
-
-                                text-[10px]
-                                font-medium
-                                text-[var(--theme-text-muted)]
-
-                                hover:bg-[var(--theme-surface-soft)]
-
-                                transition-colors
-                            "
-                        >
-                            {{ $tipo->activo ? 'Desactivar' : 'Activar' }}
-                        </button>
-                    </div>
-
-                </div>
-
-            @empty
-
-                <div
-                    class="
-                        px-4
-                        py-12
-
-                        text-center
-
-                        text-xs
-                        text-[var(--theme-text-muted)]
-                    "
-                >
-                    No se encontraron tipos de equipo.
-                </div>
-
-            @endforelse
-        </div>
-
-
-        {{-- ========================================================
-            PAGINACIÓN
-        ======================================================== --}}
-        @if ($tipos->hasPages())
-
-            <div
-                class="
-                    px-4
-                    sm:px-5
-                    py-3
-
-                    border-t
-                    border-[var(--theme-border)]
-
-                    flex
-                    items-center
-                    justify-between
-                    gap-3
-                "
-            >
-                <p
-                    class="
-                        hidden
-                        sm:block
-
-                        text-[10px]
-                        text-[var(--theme-text-muted)]
-                    "
-                >
-                    Página
-                    {{ $tipos->currentPage() }}
-                    de
-                    {{ $tipos->lastPage() }}
-                </p>
-
-
-                <div
-                    class="
-                        flex
-                        items-center
-                        gap-2
-
-                        sm:ml-auto
-                    "
-                >
-                    <button
-                        type="button"
-
-                        wire:click="
-                            previousPage(
-                                'tiposPage'
-                            )
-                        "
-
-                        @disabled($tipos->onFirstPage())
-
-                        class="
-                            h-8
-
-                            px-3
-
-                            rounded-md
-
-                            border
-                            border-[var(--theme-border)]
-
-                            text-[10px]
-                            font-medium
-                            text-[var(--theme-text)]
-
-                            hover:bg-[var(--theme-surface-soft)]
-
-                            disabled:opacity-40
-                            disabled:cursor-not-allowed
-
-                            transition-colors
-                        "
-                    >
-                        Anterior
-                    </button>
-
-
-                    <button
-                        type="button"
-
-                        wire:click="
-                            nextPage(
-                                'tiposPage'
-                            )
-                        "
-
-                        @disabled(! $tipos->hasMorePages())
-
-                        class="
-                            h-8
-
-                            px-3
-
-                            rounded-md
-
-                            border
-                            border-[var(--theme-border)]
-
-                            text-[10px]
-                            font-medium
-                            text-[var(--theme-text)]
-
-                            hover:bg-[var(--theme-surface-soft)]
-
-                            disabled:opacity-40
-                            disabled:cursor-not-allowed
-
-                            transition-colors
-                        "
-                    >
-                        Siguiente
-                    </button>
-                </div>
-            </div>
-
-        @endif
-
-    </section>
+    <x-data-table
+        :rows="$tipos"
+        row-key="id_tipo_equipo"
+        key-prefix="tipo-equipo"
+
+        :sort-field="$sortField"
+        :sort-direction="$sortDirection"
+        sort-action="sortBy"
+
+        per-page-model="perPage"
+        sort-model="sortDirection"
+        refresh-action="$refresh"
+
+        page-name="tiposPage"
+        result-singular="tipo de equipo encontrado"
+        result-plural="tipos de equipo encontrados"
+        empty-message="No se encontraron tipos de equipo con estos filtros."
+        min-width="760px"
+
+        :columns="[
+            ['key' => 'id_tipo_equipo', 'label' => 'ID', 'width' => '80px', 'sort' => 'id', 'mobile' => false],
+            ['key' => 'nombre', 'label' => 'Tipo de equipo', 'width' => '26%', 'sort' => 'nombre', 'strong' => true],
+            ['key' => 'descripcion', 'label' => 'Descripción', 'width' => '44%', 'sort' => 'descripcion', 'default' => 'Sin descripción', 'mobile' => 'filled'],
+            ['key' => 'activo', 'label' => 'Estado', 'width' => '120px', 'sort' => 'activo', 'type' => 'status', 'value' => fn ($t) => $t->activo ? 'Activo' : 'Inactivo'],
+        ]"
+
+        :actions="fn ($tipo) => [
+            'edit' => route('catalogos.tipos-equipo.edit', ['tipoEquipo' => $tipo->id_tipo_equipo]),
+            'menu' => [
+                [
+                    'label' => 'Editar formulario',
+                    'href' => route('catalogos.tipos-equipo.edit', ['tipoEquipo' => $tipo->id_tipo_equipo]),
+                ],
+                [
+                    'label' => 'Editar nombre',
+                    'js' => '$dispatch(\'abrir-tipo-equipo\', '.\Illuminate\Support\Js::from([
+                        'id' => $tipo->id_tipo_equipo,
+                        'nombre' => $tipo->nombre,
+                        'descripcion' => $tipo->descripcion ?? '',
+                    ]).')',
+                ],
+            ],
+        ]"
+    />
 
 
     {{-- ============================================================
         MODAL CREAR / EDITAR
     ============================================================ --}}
-    @if ($modalOpen)
-
+    {{--
+        El modal se abre y se cierra en el navegador con los datos que ya
+        tiene la tabla: no hay consulta extra al abrir ni al cancelar.
+        Solo "Guardar" va al servidor (saveTipo), que valida y avisa con
+        el evento tipo-equipo-guardado para cerrarlo.
+    --}}
         <div
+            wire:ignore.self
+            x-data="{
+                visible: false,
+                modo: 'create',
+                id: null,
+
+                abrir(datos = {}) {
+                    this.modo = datos.id ? 'edit' : 'create';
+                    this.id = datos.id ?? null;
+
+                    this.$wire.$set('formMode', this.modo, false);
+                    this.$wire.$set('editingTipoId', this.id, false);
+                    this.$wire.$set('nombre', datos.nombre ?? '', false);
+                    this.$wire.$set('descripcion', datos.descripcion ?? '', false);
+
+                    /* Quitar errores de un intento anterior. */
+                    this.$root.querySelectorAll('[data-error]').forEach(error => error.remove());
+
+                    this.visible = true;
+
+                    this.$nextTick(() => document.getElementById('tipo-equipo-nombre')?.focus());
+                },
+
+                cerrar() {
+                    this.visible = false;
+                },
+            }"
+            x-show="visible"
+            x-cloak
+            @abrir-tipo-equipo.window="abrir($event.detail ?? {})"
+            @tipo-equipo-guardado.window="cerrar()"
+            @keydown.escape.window="cerrar()"
+
             class="
                 fixed
                 inset-0
@@ -1953,7 +952,7 @@ new class extends Component
             <button
                 type="button"
 
-                wire:click="closeModal"
+                @click="cerrar()"
 
                 class="
                     absolute
@@ -2015,10 +1014,7 @@ new class extends Component
                                 text-[var(--theme-text-strong)]
                             "
                         >
-                            {{ $formMode === 'edit'
-                                ? 'Editar tipo de equipo'
-                                : 'Nuevo tipo de equipo'
-                            }}
+                            <span x-text="modo === 'edit' ? 'Editar tipo de equipo' : 'Nuevo tipo de equipo'"></span>
                         </h2>
 
                         <p
@@ -2029,10 +1025,7 @@ new class extends Component
                                 text-[var(--theme-text-muted)]
                             "
                         >
-                            {{ $formMode === 'edit'
-                                ? 'Estos son los datos almacenados para este tipo de equipo.'
-                                : 'Registra un nuevo tipo de equipo.'
-                            }}
+                            <span x-text="modo === 'edit' ? 'Estos son los datos almacenados para este tipo de equipo.' : 'Registra un nuevo tipo de equipo.'"></span>
                         </p>
 
                     </div>
@@ -2041,7 +1034,7 @@ new class extends Component
                     <button
                         type="button"
 
-                        wire:click="closeModal"
+                        @click="cerrar()"
 
                         class="
                             w-8
@@ -2092,19 +1085,9 @@ new class extends Component
                     >
 
                         {{-- ID --}}
-                        @if ($formMode === 'edit')
-
-                            <div>
+                            <div x-show="modo === 'edit'">
                                 <label
-                                    class="
-                                        block
-
-                                        mb-1.5
-
-                                        text-[11px]
-                                        font-medium
-                                        text-[var(--theme-text)]
-                                    "
+                                    class="mb-1.5 block text-xs text-[var(--theme-text-muted)]"
                                 >
                                     ID del tipo
                                 </label>
@@ -2112,28 +1095,11 @@ new class extends Component
                                 <input
                                     type="text"
 
-                                    value="{{ $editingTipoId }}"
+                                    :value="id"
 
                                     disabled
 
-                                    class="
-                                        w-full
-                                        h-10
-
-                                        px-3
-
-                                        rounded-md
-
-                                        border
-                                        border-[var(--theme-border)]
-
-                                        bg-[var(--theme-surface-soft)]
-
-                                        text-xs
-                                        text-[var(--theme-text-muted)]
-
-                                        cursor-not-allowed
-                                    "
+                                    class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)] cursor-not-allowed"
                                 >
 
                                 <p
@@ -2148,23 +1114,13 @@ new class extends Component
                                 </p>
                             </div>
 
-                        @endif
-
 
                         {{-- NOMBRE --}}
                         <div>
                             <label
                                 for="tipo-equipo-nombre"
 
-                                class="
-                                    block
-
-                                    mb-1.5
-
-                                    text-[11px]
-                                    font-medium
-                                    text-[var(--theme-text)]
-                                "
+                                class="mb-1.5 block text-xs text-[var(--theme-text-muted)]"
                             >
                                 Nombre
                                 <span
@@ -2190,39 +1146,15 @@ new class extends Component
                                 placeholder="Ej. Laptop"
 
                                 class="
-                                    w-full
-                                    h-10
-
-                                    px-3
-
-                                    rounded-md
-
-                                    border
-
-                                    @error('nombre')
-                                        border-[var(--theme-danger)]
-                                    @else
-                                        border-[var(--theme-border-strong)]
-                                    @enderror
-
-                                    bg-[var(--theme-surface-soft)]
-
-                                    text-xs
-                                    text-[var(--theme-text)]
-
-                                    placeholder:text-[var(--theme-text-muted)]
-
-                                    focus:outline-none
-                                    focus:border-[var(--theme-primary)]
-
-                                    focus:ring-2
-                                    focus:ring-[var(--theme-primary-soft)]
+                                    w-full rounded-md border bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)]
+                                    @error('nombre') border-[var(--theme-danger)] @else border-[var(--theme-border-strong)] @enderror
                                 "
                             >
 
                             @error('nombre')
 
                                 <p
+                                    data-error
                                     class="
                                         mt-1.5
 
@@ -2242,15 +1174,7 @@ new class extends Component
                             <label
                                 for="tipo-equipo-descripcion"
 
-                                class="
-                                    block
-
-                                    mb-1.5
-
-                                    text-[11px]
-                                    font-medium
-                                    text-[var(--theme-text)]
-                                "
+                                class="mb-1.5 block text-xs text-[var(--theme-text-muted)]"
                             >
                                 Descripción
                             </label>
@@ -2264,37 +1188,13 @@ new class extends Component
 
                                 placeholder="Describe brevemente este tipo de equipo..."
 
-                                class="
-                                    w-full
-
-                                    px-3
-                                    py-2.5
-
-                                    rounded-md
-
-                                    border
-                                    border-[var(--theme-border-strong)]
-
-                                    bg-[var(--theme-surface-soft)]
-
-                                    text-xs
-                                    text-[var(--theme-text)]
-
-                                    placeholder:text-[var(--theme-text-muted)]
-
-                                    resize-none
-
-                                    focus:outline-none
-                                    focus:border-[var(--theme-primary)]
-
-                                    focus:ring-2
-                                    focus:ring-[var(--theme-primary-soft)]
-                                "
+                                class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)] resize-none"
                             ></textarea>
 
                             @error('descripcion')
 
                                 <p
+                                    data-error
                                     class="
                                         mt-1.5
 
@@ -2308,105 +1208,6 @@ new class extends Component
                             @enderror
                         </div>
 
-
-                        {{-- ESTADO --}}
-                        <div
-                            class="
-                                flex
-                                items-center
-                                justify-between
-                                gap-4
-
-                                p-3.5
-
-                                rounded-lg
-
-                                border
-                                border-[var(--theme-border)]
-
-                                bg-[var(--theme-surface-soft)]
-                            "
-                        >
-                            <div>
-                                <p
-                                    class="
-                                        text-[11px]
-                                        font-medium
-                                        text-[var(--theme-text-strong)]
-                                    "
-                                >
-                                    Tipo activo
-                                </p>
-
-                                <p
-                                    class="
-                                        mt-0.5
-
-                                        text-[10px]
-                                        text-[var(--theme-text-muted)]
-                                    "
-                                >
-                                    Los tipos inactivos permanecen registrados pero no deben utilizarse en nuevos registros.
-                                </p>
-                            </div>
-
-
-                            <label
-                                class="
-                                    relative
-
-                                    inline-flex
-                                    items-center
-
-                                    shrink-0
-
-                                    cursor-pointer
-                                "
-                            >
-                                <input
-                                    type="checkbox"
-
-                                    wire:model="activo"
-
-                                    class="
-                                        peer
-                                        sr-only
-                                    "
-                                >
-
-                                <span
-                                    class="
-                                        w-10
-                                        h-5
-
-                                        rounded-full
-
-                                        bg-[var(--theme-border-strong)]
-
-                                        peer-checked:bg-[var(--theme-primary)]
-
-                                        transition-colors
-
-                                        after:content-['']
-
-                                        after:absolute
-                                        after:top-0.5
-                                        after:left-0.5
-
-                                        after:w-4
-                                        after:h-4
-
-                                        after:rounded-full
-
-                                        after:bg-white
-
-                                        after:transition-transform
-
-                                        peer-checked:after:translate-x-5
-                                    "
-                                ></span>
-                            </label>
-                        </div>
 
                     </div>
 
@@ -2429,28 +1230,9 @@ new class extends Component
                         <button
                             type="button"
 
-                            wire:click="closeModal"
+                            @click="cerrar()"
 
-                            class="
-                                h-9
-
-                                px-4
-
-                                rounded-md
-
-                                border
-                                border-[var(--theme-border)]
-
-                                bg-[var(--theme-surface)]
-
-                                text-xs
-                                font-medium
-                                text-[var(--theme-text)]
-
-                                hover:bg-[var(--theme-surface-soft)]
-
-                                transition-colors
-                            "
+                            class="inline-flex h-11 w-full items-center justify-center rounded-lg border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-5 text-sm font-medium text-[var(--theme-text)] transition-colors hover:bg-[var(--theme-surface-soft)] sm:w-auto"
                         >
                             Cancelar
                         </button>
@@ -2462,32 +1244,7 @@ new class extends Component
                             wire:loading.attr="disabled"
                             wire:target="saveTipo"
 
-                            class="
-                                min-w-[118px]
-                                h-9
-
-                                px-4
-
-                                rounded-md
-
-                                inline-flex
-                                items-center
-                                justify-center
-                                gap-2
-
-                                bg-[var(--theme-primary)]
-                                text-white
-
-                                text-xs
-                                font-medium
-
-                                hover:bg-[var(--theme-primary-hover)]
-
-                                disabled:opacity-60
-                                disabled:cursor-not-allowed
-
-                                transition-colors
-                            "
+                            class="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[var(--theme-primary)] px-5 text-sm font-medium text-white transition-colors hover:bg-[var(--theme-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                         >
                             <svg
                                 wire:loading
@@ -2525,10 +1282,7 @@ new class extends Component
                                 wire:loading.remove
                                 wire:target="saveTipo"
                             >
-                                {{ $formMode === 'edit'
-                                    ? 'Guardar cambios'
-                                    : 'Crear tipo'
-                                }}
+                                <span x-text="modo === 'edit' ? 'Guardar cambios' : 'Crear tipo'"></span>
                             </span>
 
 
@@ -2545,6 +1299,6 @@ new class extends Component
             </div>
         </div>
 
-    @endif
+</div>
 
 </div>

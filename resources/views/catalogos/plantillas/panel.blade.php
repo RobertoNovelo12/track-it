@@ -3,10 +3,6 @@
     $etiquetas = $plantilla['etiquetas'];
 @endphp
 <section class="overflow-hidden rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)]">
-    <header class="border-b border-[var(--theme-border)] px-4 py-5 sm:px-6">
-        <h2 class="text-lg font-semibold text-[var(--theme-text-strong)]">Plantilla de la aplicación</h2>
-        <p class="mt-2 text-sm text-[var(--theme-text-muted)]">Define cómo se organiza esta instalación.</p>
-    </header>
     <div class="space-y-6 p-4 sm:p-6">
         <div class="rounded-xl border border-[var(--theme-primary)] bg-[var(--theme-primary-soft)] p-4 sm:p-5">
             <div class="flex flex-wrap items-center justify-between gap-3">

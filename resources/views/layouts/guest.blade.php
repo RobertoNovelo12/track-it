@@ -172,6 +172,8 @@
         'resources/js/app.js'
     ])
 
+    @include('layouts.partials.organizacion-logo-styles')
+
 
     {{-- ============================================================
         FUENTE
@@ -428,13 +430,18 @@
                 "
             >
 
+                @php
+                    $organizacion = app(\App\Services\OrganizacionService::class);
+                @endphp
+
                 <img
                     id="guestLogo"
-                    src="{{ asset('images/logo-grand-palladium.png') }}"
-                    alt="Grand Palladium Hotels & Resorts"
+                    src="{{ $organizacion->logoUrl() }}"
+                    alt="{{ $organizacion->nombre() }}"
+                    data-dark-mode="{{ $organizacion->logoModoOscuro() }}"
+                    style="--org-logo-w: {{ $organizacion->logoAncho(150) }}px; --org-logo-w-sm: {{ $organizacion->logoAncho(170) }}px;"
                     class="
-                        w-[150px]
-                        sm:w-[170px]
+                        org-logo
 
                         h-auto
 

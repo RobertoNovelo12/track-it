@@ -252,40 +252,15 @@
                     Tipo
                 </label>
 
-                <select
-                    id="history-type"
-                    wire:model="tipo"
-                    class="
-                        w-full
-                        h-10
-
-                        px-3
-
-                        rounded-md
-
-                        border
-                        border-[var(--theme-border-strong)]
-
-                        bg-[var(--theme-surface)]
-
-                        text-sm
-                        text-[var(--theme-text)]
-
-                        outline-none
-
-                        focus:ring-1
-                        focus:ring-[var(--theme-primary)]
-                        focus:border-[var(--theme-primary)]
-
-                        transition-colors
-                    "
-                >
-                    @foreach ($tiposFiltro as $opcion)
-                        <option value="{{ $opcion['value'] }}">
-                            {{ $opcion['label'] }}
-                        </option>
-                    @endforeach
-                </select>
+                <x-searchable-select
+                    wire-model="tipo"
+                    :empty-as-null="false"
+                    placeholder="Selecciona..."
+                    :show-clear="false"
+                    :options="[
+                        ...collect($tiposFiltro)->map(fn ($opcion) => ['value' => $opcion['value'], 'label' => $opcion['label']])->all(),
+                    ]"
+                />
             </div>
 
 
@@ -663,30 +638,20 @@
                     Mostrar
                 </label>
 
-                <select
-                    id="history-per-page"
-                    wire:model.live="perPage"
-                    class="
-                        h-9
-                        px-2
-
-                        rounded-md
-
-                        border
-                        border-[var(--theme-border-strong)]
-
-                        bg-[var(--theme-surface)]
-
-                        text-xs
-                        text-[var(--theme-text)]
-
-                        outline-none
-                    "
-                >
-                    <option value="10">10</option>
-                    <option value="25">25</option>
-                    <option value="50">50</option>
-                </select>
+                <div class="w-20 shrink-0">
+                    <x-searchable-select
+                        wire-model="perPage"
+                        :empty-as-null="false"
+                        placeholder="Selecciona..."
+                        :show-clear="false"
+                        compact
+                        :options="[
+                            ['value' => '10', 'label' => '10'],
+                            ['value' => '25', 'label' => '25'],
+                            ['value' => '50', 'label' => '50'],
+                        ]"
+                    />
+                </div>
             </div>
         </div>
 

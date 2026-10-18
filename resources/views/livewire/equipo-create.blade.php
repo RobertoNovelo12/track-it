@@ -169,7 +169,7 @@
             <div class="flex justify-end gap-3">
                 <a
                     href="{{ route('equipos.index') }}"
-                    class="rounded-lg border border-[var(--theme-border-strong)] px-5 py-3 text-sm text-[var(--theme-text)]"
+                    class="inline-flex h-11 w-full items-center justify-center rounded-lg border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-5 text-sm font-medium text-[var(--theme-text)] transition-colors hover:bg-[var(--theme-surface-soft)] sm:w-auto"
                 >
                     Cancelar
                 </a>
@@ -179,7 +179,7 @@
                     :disabled="savingVisual"
                     :aria-busy="savingVisual"
                     x-text="savingVisual ? 'Guardando...' : 'Añadir equipo'"
-                    class="rounded-lg bg-[var(--theme-primary)] px-5 py-3 text-sm font-medium text-white disabled:opacity-50"
+                    class="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[var(--theme-primary)] px-5 text-sm font-medium text-white transition-colors hover:bg-[var(--theme-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                 ></button>
             </div>
         </form>

@@ -14,6 +14,19 @@
     'clearValue' => '',
     'compact' => false,
     'reportAutoSearch' => false,
+
+    /*
+     * Valor al limpiar o elegir la opción vacía:
+     * true  -> null (comportamiento original)
+     * false -> '' (igual que un <select> nativo con <option value="">)
+     */
+    'emptyAsNull' => true,
+
+    /*
+     * Para formularios HTML normales (sin Livewire): agrega un
+     * <input type="hidden" name="..."> con el valor seleccionado.
+     */
+    'name' => null,
 ])
 
 @php
@@ -294,7 +307,7 @@
             }
 
             const nuevoValor = value === ''
-                ? (@js($reportAutoSearch) ? '' : null)
+                ? (@js($reportAutoSearch || ! $emptyAsNull) ? '' : null)
                 : String(value);
 
             const valorAnterior = this.selected;
@@ -325,7 +338,7 @@
             const nuevoValor =
                 this.clearValue === '' ||
                 this.clearValue === null
-                    ? (@js($reportAutoSearch) ? '' : null)
+                    ? (@js($reportAutoSearch || ! $emptyAsNull) ? '' : null)
                     : String(this.clearValue);
 
             const valorAnterior = this.selected;
@@ -400,6 +413,10 @@
         >
             {{ $label }}
         </label>
+    @endif
+
+    @if (filled($name))
+        <input type="hidden" name="{{ $name }}" :value="selected ?? ''">
     @endif
 
     {{-- ============================================================

@@ -11,7 +11,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Una sola lectura de la configuración de Organización por petición.
+        $this->app->singleton(
+            \App\Services\OrganizacionService::class
+        );
     }
 
     /**

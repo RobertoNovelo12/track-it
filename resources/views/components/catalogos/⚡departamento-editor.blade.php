@@ -193,7 +193,7 @@ new class extends Component
                 Información del departamento
             </h2>
 
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                 <div>
                     <label
                         for="department-name"
@@ -229,7 +229,7 @@ new class extends Component
                     </label>
                 </div>
 
-                <div class="md:col-span-2">
+                <div class="md:col-span-2 xl:col-span-3">
                     <label
                         for="department-description"
                         class="mb-1.5 block text-xs text-[var(--theme-text-muted)]"
@@ -287,7 +287,7 @@ new class extends Component
                     Para elegir hoteles específicos, desmarca la opción anterior.
                 </div>
             @else
-                <div class="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+                <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
                     @forelse ($hoteles as $hotel)
                         <label
                             wire:key="department-hotel-{{ $hotel->id_unidad }}"
@@ -341,19 +341,20 @@ new class extends Component
         </section>
 
         {{-- ACCIONES --}}
-        <div class="flex justify-end gap-3">
+        <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
             <a
                 href="{{ route('catalogos.index', ['section' => 'departamentos']) }}"
-                class="rounded-lg border border-[var(--theme-border-strong)] px-5 py-3 text-sm text-[var(--theme-text)]"
+                wire:navigate.hover
+                class="inline-flex h-11 w-full items-center justify-center rounded-lg border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-5 text-sm font-medium text-[var(--theme-text)] transition-colors hover:bg-[var(--theme-surface-soft)] sm:w-auto"
             >
-                Volver
+                Cancelar
             </a>
 
             <button
                 type="submit"
                 wire:loading.attr="disabled"
                 wire:target="save"
-                class="rounded-lg bg-[var(--theme-primary)] px-5 py-3 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
+                class="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[var(--theme-primary)] px-5 text-sm font-medium text-white transition-colors hover:bg-[var(--theme-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
             >
                 <span wire:loading.remove wire:target="save">
                     Guardar cambios

@@ -5,6 +5,26 @@
 
 @section('content')
 
+{{--
+    Las listas usan <x-searchable-select> (Alpine). Esta página no tiene
+    componentes Livewire, por eso se fuerza la carga de sus scripts.
+--}}
+@php
+    \Livewire\Livewire::forceAssetInjection();
+@endphp
+
+@php
+    /*
+     * Campos configurables en Administración › Organización:
+     * obligatorio | opcional | oculto
+     */
+    $visible = fn (string $campo): bool => ($campos[$campo] ?? 'opcional') !== 'oculto';
+    $obligatorio = fn (string $campo): bool => ($campos[$campo] ?? 'opcional') === 'obligatorio';
+    $sufijo = fn (string $campo): string => $obligatorio($campo) ? '' : ' (opcional)';
+
+    $unidadSingular = mb_strtolower($etiquetas['unidad_singular']);
+@endphp
+
 <x-auth-card
     heading="Crear cuenta"
     icon="user-plus"
@@ -16,6 +36,54 @@
         method="POST"
         action="{{ route('register') }}"
         class="space-y-4"
+        x-data="{
+            sede: @js((string) old('id_sede', '')),
+            unidad: @js((string) old('id_unidad', '')),
+            departamento: @js((string) old('id_departamento', '')),
+            rol: @js((string) old('id_rol', '')),
+
+            unidades: @js($unidades->map(fn ($u) => [
+                'value' => (string) $u->id_unidad,
+                'label' => $u->nombre,
+                'sede' => (string) $u->id_sede,
+            ])->values()),
+
+            departamentos: @js($departamentos->map(fn ($d) => [
+                'value' => (string) $d->id_departamento,
+                'label' => $d->nombre,
+                'global' => (bool) $d->global,
+                'unidades' => array_map('strval', $d->unidades),
+            ])->values()),
+
+            /* Sede -> Hotel -> Departamento (cobertura del departamento) */
+            get unidadesDeSede() {
+                return this.unidades.filter(u => u.sede === String(this.sede ?? ''));
+            },
+
+            get departamentosDeUnidad() {
+                const unidad = String(this.unidad ?? '');
+
+                if (unidad === '') {
+                    return [];
+                }
+
+                return this.departamentos.filter(d => d.global || d.unidades.includes(unidad));
+            },
+
+            init() {
+                this.$watch('sede', () => {
+                    if (! this.unidadesDeSede.some(u => u.value === String(this.unidad ?? ''))) {
+                        this.unidad = '';
+                    }
+                });
+
+                this.$watch('unidad', () => {
+                    if (! this.departamentosDeUnidad.some(d => d.value === String(this.departamento ?? ''))) {
+                        this.departamento = '';
+                    }
+                });
+            },
+        }"
     >
 
         @csrf
@@ -159,6 +227,7 @@
             </div>
 
 
+            @if ($visible('apellido_materno'))
             {{-- Apellido materno --}}
             <div>
 
@@ -166,7 +235,8 @@
                     type="text"
                     name="apellido_materno"
                     value="{{ old('apellido_materno') }}"
-                    placeholder="Apellido materno"
+                    placeholder="Apellido materno{{ $sufijo('apellido_materno') }}"
+                    @required($obligatorio('apellido_materno'))
                     autocomplete="additional-name"
                     class="
                         w-full
@@ -202,8 +272,60 @@
                 @enderror
 
             </div>
+            @endif
 
         </div>
+
+
+        {{-- ============================================================
+            TELÉFONO
+        ============================================================ --}}
+        @if ($visible('telefono'))
+            <div>
+
+                <input
+                    type="tel"
+                    name="telefono"
+                    value="{{ old('telefono') }}"
+                    placeholder="Teléfono{{ $sufijo('telefono') }}"
+                    autocomplete="tel"
+                    maxlength="30"
+                    @required($obligatorio('telefono'))
+                    class="
+                        w-full
+
+                        bg-[var(--theme-surface)]
+
+                        border
+                        border-[var(--theme-border-strong)]
+
+                        rounded-md
+
+                        px-4
+                        py-2.5
+
+                        text-sm
+                        text-[var(--theme-text)]
+
+                        placeholder:text-[var(--theme-text-muted)]
+
+                        focus:outline-none
+                        focus:ring-2
+                        focus:ring-[var(--theme-primary-soft)]
+                        focus:border-[var(--theme-primary)]
+
+                        transition-colors
+                    "
+                >
+
+                @error('telefono')
+                    <p class="mt-1 text-xs text-[var(--theme-danger)]">
+                        {{ $message }}
+                    </p>
+                @enderror
+
+            </div>
+        @endif
 
 
         {{-- ============================================================
@@ -218,7 +340,7 @@
                     type="email"
                     name="correo"
                     value="{{ old('correo') }}"
-                    placeholder="Correo electrónico"
+                    placeholder="{{ $dominios !== [] ? 'Correo corporativo' : 'Correo electrónico' }}"
                     autocomplete="email"
                     class="
                         w-full
@@ -246,6 +368,13 @@
                         transition-colors
                     "
                 >
+
+                @if ($dominios !== [])
+                    <p class="mt-1 text-[11px] text-[var(--theme-text-muted)]">
+                        Utiliza tu correo
+                        {{ collect($dominios)->map(fn ($dominio) => '@'.$dominio)->implode(', ') }}
+                    </p>
+                @endif
 
                 @error('correo')
                     <p class="mt-1 text-xs text-[var(--theme-danger)]">
@@ -348,6 +477,7 @@
         ============================================================ --}}
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
 
+            @if ($visible('numero_colaborador'))
             {{-- Número de colaborador --}}
             <div>
 
@@ -355,7 +485,8 @@
                     type="text"
                     name="numero_colaborador"
                     value="{{ old('numero_colaborador') }}"
-                    placeholder="Número de colaborador"
+                    placeholder="Número de colaborador{{ $sufijo('numero_colaborador') }}"
+                    @required($obligatorio('numero_colaborador'))
                     autocomplete="off"
                     class="
                         w-full
@@ -391,8 +522,10 @@
                 @enderror
 
             </div>
+            @endif
 
 
+            @if ($visible('puesto'))
             {{-- Puesto --}}
             <div>
 
@@ -400,7 +533,8 @@
                     type="text"
                     name="puesto"
                     value="{{ old('puesto') }}"
-                    placeholder="Puesto"
+                    placeholder="Puesto{{ $sufijo('puesto') }}"
+                    @required($obligatorio('puesto'))
                     autocomplete="organization-title"
                     class="
                         w-full
@@ -436,61 +570,27 @@
                 @enderror
 
             </div>
+            @endif
 
         </div>
 
 
         {{-- ============================================================
-            SEDE / ÁREA
+            SEDE / HOTEL
         ============================================================ --}}
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
 
             {{-- Sede --}}
             <div>
 
-                <select
-                    id="registerSede"
+                <x-searchable-select
                     name="id_sede"
-                    class="
-                        w-full
-
-                        bg-[var(--theme-surface)]
-
-                        border
-                        border-[var(--theme-border-strong)]
-
-                        rounded-md
-
-                        px-4
-                        py-2.5
-
-                        text-sm
-                        text-[var(--theme-text)]
-
-                        focus:outline-none
-                        focus:ring-2
-                        focus:ring-[var(--theme-primary-soft)]
-                        focus:border-[var(--theme-primary)]
-
-                        transition-colors
-                    "
-                >
-                    <option value="">
-                        Selecciona tu sede
-                    </option>
-
-                    @foreach ($sedes as $sede)
-
-                        <option
-                            value="{{ $sede->id_sede }}"
-                            @selected(old('id_sede') == $sede->id_sede)
-                        >
-                            {{ $sede->nombre }}
-                        </option>
-
-                    @endforeach
-
-                </select>
+                    x-model="sede"
+                    :options="$sedes->map(fn ($sede) => ['value' => (string) $sede->id_sede, 'label' => $sede->nombre])->values()->all()"
+                    placeholder="Selecciona tu sede"
+                    :show-clear="false"
+                    :empty-as-null="false"
+                />
 
                 @error('id_sede')
                     <p class="mt-1 text-xs text-[var(--theme-danger)]">
@@ -501,59 +601,20 @@
             </div>
 
 
-            {{-- Área --}}
+            {{-- Hotel (unidad organizativa) --}}
             <div>
 
-                <select
-                    id="registerArea"
-                    name="id_area"
-                    class="
-                        w-full
+                <x-searchable-select
+                    name="id_unidad"
+                    x-model="unidad"
+                    x-options="unidadesDeSede"
+                    x-disabled="! sede"
+                    :placeholder="'Selecciona tu '.$unidadSingular"
+                    :show-clear="false"
+                    :empty-as-null="false"
+                />
 
-                        bg-[var(--theme-surface)]
-
-                        border
-                        border-[var(--theme-border-strong)]
-
-                        rounded-md
-
-                        px-4
-                        py-2.5
-
-                        text-sm
-                        text-[var(--theme-text)]
-
-                        focus:outline-none
-                        focus:ring-2
-                        focus:ring-[var(--theme-primary-soft)]
-                        focus:border-[var(--theme-primary)]
-
-                        disabled:opacity-50
-                        disabled:cursor-not-allowed
-                        disabled:bg-[var(--theme-surface-soft)]
-
-                        transition-colors
-                    "
-                >
-                    <option value="">
-                        Selecciona tu área
-                    </option>
-
-                    @foreach ($areas as $area)
-
-                        <option
-                            value="{{ $area->id_area }}"
-                            data-sede="{{ $area->id_sede }}"
-                            @selected(old('id_area') == $area->id_area)
-                        >
-                            {{ $area->nombre }}
-                        </option>
-
-                    @endforeach
-
-                </select>
-
-                @error('id_area')
+                @error('id_unidad')
                     <p class="mt-1 text-xs text-[var(--theme-danger)]">
                         {{ $message }}
                     </p>
@@ -572,54 +633,15 @@
             {{-- Departamento --}}
             <div>
 
-                <select
-                    id="registerDepartamento"
+                <x-searchable-select
                     name="id_departamento"
-                    class="
-                        w-full
-
-                        bg-[var(--theme-surface)]
-
-                        border
-                        border-[var(--theme-border-strong)]
-
-                        rounded-md
-
-                        px-4
-                        py-2.5
-
-                        text-sm
-                        text-[var(--theme-text)]
-
-                        focus:outline-none
-                        focus:ring-2
-                        focus:ring-[var(--theme-primary-soft)]
-                        focus:border-[var(--theme-primary)]
-
-                        disabled:opacity-50
-                        disabled:cursor-not-allowed
-                        disabled:bg-[var(--theme-surface-soft)]
-
-                        transition-colors
-                    "
-                >
-                    <option value="">
-                        Selecciona tu departamento
-                    </option>
-
-                    @foreach ($departamentos as $departamento)
-
-                        <option
-                            value="{{ $departamento->id_departamento }}"
-                            data-area="{{ $departamento->id_area }}"
-                            @selected(old('id_departamento') == $departamento->id_departamento)
-                        >
-                            {{ $departamento->nombre }}
-                        </option>
-
-                    @endforeach
-
-                </select>
+                    x-model="departamento"
+                    x-options="departamentosDeUnidad"
+                    x-disabled="! unidad"
+                    placeholder="Selecciona tu departamento"
+                    :show-clear="false"
+                    :empty-as-null="false"
+                />
 
                 @error('id_departamento')
                     <p class="mt-1 text-xs text-[var(--theme-danger)]">
@@ -630,51 +652,19 @@
             </div>
 
 
+            @if ($visible('id_rol'))
             {{-- Rol --}}
             <div>
 
-                <select
+                <x-searchable-select
                     name="id_rol"
-                    class="
-                        w-full
-
-                        bg-[var(--theme-surface)]
-
-                        border
-                        border-[var(--theme-border-strong)]
-
-                        rounded-md
-
-                        px-4
-                        py-2.5
-
-                        text-sm
-                        text-[var(--theme-text)]
-
-                        focus:outline-none
-                        focus:ring-2
-                        focus:ring-[var(--theme-primary-soft)]
-                        focus:border-[var(--theme-primary)]
-
-                        transition-colors
-                    "
-                >
-                    <option value="">
-                        Selecciona tu rol
-                    </option>
-
-                    @foreach ($roles as $rol)
-
-                        <option
-                            value="{{ $rol->id_rol }}"
-                            @selected(old('id_rol') == $rol->id_rol)
-                        >
-                            {{ $rol->nombre }}
-                        </option>
-
-                    @endforeach
-
-                </select>
+                    x-model="rol"
+                    :options="$roles->map(fn ($rol) => ['value' => (string) $rol->id_rol, 'label' => $rol->nombre])->values()->all()"
+                    :placeholder="'Selecciona tu rol'.$sufijo('id_rol')"
+                    :show-clear="! $obligatorio('id_rol')"
+                    clear-label="Sin rol"
+                    :empty-as-null="false"
+                />
 
                 @error('id_rol')
                     <p class="mt-1 text-xs text-[var(--theme-danger)]">
@@ -683,6 +673,7 @@
                 @enderror
 
             </div>
+            @endif
 
         </div>
 
@@ -1071,171 +1062,6 @@
                 : 'password';
 
     }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Sede -> Área -> Departamento
-    |--------------------------------------------------------------------------
-    */
-
-    document.addEventListener('DOMContentLoaded', function () {
-
-        const sede =
-            document.getElementById('registerSede');
-
-        const area =
-            document.getElementById('registerArea');
-
-        const departamento =
-            document.getElementById('registerDepartamento');
-
-
-        if (!sede || !area || !departamento) {
-            return;
-        }
-
-
-        function actualizarAreas() {
-
-            const sedeSeleccionada =
-                sede.value;
-
-            const areaSeleccionada =
-                area.value;
-
-
-            Array.from(area.options).forEach(function (option, index) {
-
-                if (index === 0) {
-                    return;
-                }
-
-                const corresponde =
-                    option.dataset.sede === sedeSeleccionada;
-
-                option.hidden =
-                    !corresponde;
-
-                option.disabled =
-                    !corresponde;
-
-            });
-
-
-            const opcionActual =
-                area.options[area.selectedIndex];
-
-
-            if (
-                opcionActual &&
-                opcionActual.value !== '' &&
-                opcionActual.disabled
-            ) {
-                area.value = '';
-            }
-
-
-            area.disabled =
-                sedeSeleccionada === '';
-
-
-            if (
-                areaSeleccionada &&
-                Array.from(area.options).some(
-                    option =>
-                        option.value === areaSeleccionada &&
-                        !option.disabled
-                )
-            ) {
-                area.value =
-                    areaSeleccionada;
-            }
-
-
-            actualizarDepartamentos();
-
-        }
-
-
-        function actualizarDepartamentos() {
-
-            const areaSeleccionada =
-                area.value;
-
-            const departamentoSeleccionado =
-                departamento.value;
-
-
-            Array.from(departamento.options).forEach(
-                function (option, index) {
-
-                    if (index === 0) {
-                        return;
-                    }
-
-                    const corresponde =
-                        option.dataset.area === areaSeleccionada;
-
-                    option.hidden =
-                        !corresponde;
-
-                    option.disabled =
-                        !corresponde;
-
-                }
-            );
-
-
-            const opcionActual =
-                departamento.options[
-                    departamento.selectedIndex
-                ];
-
-
-            if (
-                opcionActual &&
-                opcionActual.value !== '' &&
-                opcionActual.disabled
-            ) {
-                departamento.value = '';
-            }
-
-
-            departamento.disabled =
-                areaSeleccionada === '';
-
-
-            if (
-                departamentoSeleccionado &&
-                Array.from(departamento.options).some(
-                    option =>
-                        option.value === departamentoSeleccionado &&
-                        !option.disabled
-                )
-            ) {
-                departamento.value =
-                    departamentoSeleccionado;
-            }
-
-        }
-
-
-        sede.addEventListener(
-            'change',
-            actualizarAreas
-        );
-
-
-        area.addEventListener(
-            'change',
-            actualizarDepartamentos
-        );
-
-
-        actualizarAreas();
-
-    });
 
 
     /*

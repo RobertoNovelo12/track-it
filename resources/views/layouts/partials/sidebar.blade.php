@@ -149,15 +149,24 @@
                     min-w-0
                 "
             >
+                @php
+                    $organizacion = app(\App\Services\OrganizacionService::class);
+                @endphp
+
                 <img
                     id="sidebarLogo"
 
-                    src="{{ asset('images/logo-grand-palladium.png') }}"
+                    src="{{ $organizacion->logoUrl() }}"
 
-                    alt="Grand Palladium Hotels & Resorts"
+                    alt="{{ $organizacion->nombre() }}"
+
+                    data-dark-mode="{{ $organizacion->logoModoOscuro() }}"
+
+                    style="--org-logo-w: {{ $organizacion->logoAncho(135) }}px;"
 
                     class="
-                        w-[135px]
+                        org-logo
+
                         h-auto
 
                         object-contain

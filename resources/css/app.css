@@ -209,11 +209,10 @@ html.dark {
 }
 
 
-/* Modo oscuro */
-html.dark #guestLogo {
-    filter: brightness(0) invert(1);
-    opacity: 0.92;
-}
+/*
+ * Modo oscuro: se configura en Administración › Organización
+ * (layouts/partials/organizacion-logo-styles.blade.php).
+ */
 
 /* ============================================================
    SELECTS NATIVOS

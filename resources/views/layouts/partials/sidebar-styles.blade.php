@@ -65,7 +65,7 @@
     */
 
     #sidebarLogoWrap {
-        max-width: 150px;
+        max-width: 175px;
 
         opacity: 1;
 
@@ -86,6 +86,11 @@
     #sidebarLogo {
         display: block;
 
+        /* Escala configurada en Administración › Organización. */
+        width: min(var(--org-logo-w, 135px), 170px);
+
+        max-height: 4.5rem;
+
         transition:
             opacity 100ms ease-out;
     }
@@ -96,18 +101,13 @@
     | LOGO EN MODO OSCURO
     |--------------------------------------------------------------------------
     |
-    | No animamos "filter".
+    | La apariencia se configura en Administración › Organización
+    | (layouts/partials/organizacion-logo-styles.blade.php).
     |
-    | El cambio debe ocurrir inmediatamente para evitar el destello
-    | negro/blanco que se percibía al cambiar de tema.
+    | No animamos "filter": el cambio debe ser inmediato para evitar
+    | el destello que se percibía al cambiar de tema.
     |
     */
-
-    html.dark #sidebarLogo {
-        filter: brightness(0) invert(1);
-
-        opacity: 0.92;
-    }
 
 
     /*
@@ -815,7 +815,7 @@
 
 
         #sidebarLogo {
-            width: 128px;
+            width: min(calc(var(--org-logo-w, 135px) * 0.95), 170px);
 
             height: auto;
         }

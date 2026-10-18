@@ -3,6 +3,7 @@
 use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EquipoController;
+use App\Http\Controllers\OrganizacionLogoController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -16,6 +17,23 @@ Route::get('/', function () {
         ? redirect()->route('dashboard')
         : redirect()->route('login');
 });
+
+
+/*
+|--------------------------------------------------------------------------
+| Logotipo de la organización
+|--------------------------------------------------------------------------
+|
+| Público: también se muestra en inicio de sesión y registro.
+|
+*/
+
+Route::get(
+    '/organizacion/logo/{version}',
+    OrganizacionLogoController::class
+)
+    ->where('version', '[A-Za-z0-9]{8,40}')
+    ->name('organizacion.logo');
 
 
 /*
@@ -287,6 +305,22 @@ Route::middleware([
 )
     ->whereNumber('hotel')
     ->name('catalogos.hoteles.edit');
+
+    Route::get(
+        '/catalogos/sedes/crear',
+        fn () => view('catalogos.sedes.create')
+    )->name('catalogos.sedes.create');
+
+    Route::get(
+        '/catalogos/sedes/{sede}/editar',
+        function (int $sede) {
+            return view('catalogos.sedes.edit', [
+                'sedeId' => $sede,
+            ]);
+        }
+    )
+        ->whereNumber('sede')
+        ->name('catalogos.sedes.edit');
 
 
     /*

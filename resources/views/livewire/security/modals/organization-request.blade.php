@@ -214,32 +214,24 @@
                     <span class="text-[var(--theme-danger)]">*</span>
                 </label>
 
-                <select
+                {{-- Lista con buscador (x-searchable-select). El valor se envía a
+                     organizationRequestCatalogId con syncOrganizationRequestCatalog(). --}}
+                <div
                     id="organization-request-role-select"
-                    onchange="window.syncOrganizationRequestCatalog(this.value)"
-                    class="
-                        w-full h-10 px-3 rounded-md
-                        bg-[var(--theme-surface)]
-                        border border-[var(--theme-border-strong)]
-                        text-sm text-[var(--theme-text)]
-                        focus:ring-1 focus:ring-[var(--theme-primary)]
-                        focus:border-[var(--theme-primary)]
-                    "
+                    data-options="{{ json_encode(collect($roles)->map(fn ($rol) => ['value' => (string) $rol->id_rol, 'label' => $rol->nombre])->values()->all()) }}"
+                    x-data="{ valor: '' }"
+                    x-init="$watch('valor', v => window.syncOrganizationRequestCatalog(v ?? ''))"
+                    @org-request-catalog.window="if ($event.detail.id === $el.id) valor = $event.detail.value"
                 >
-                    <option value="">Selecciona un rol</option>
-
-                    @foreach ($roles as $rol)
-                        <option
-                            value="{{ $rol->id_rol }}"
-                            @selected(
-                                $organizationRequestField === 'rol'
-                                && (int) $organizationRequestCatalogId === (int) $rol->id_rol
-                            )
-                        >
-                            {{ $rol->nombre }}
-                        </option>
-                    @endforeach
-                </select>
+                    <x-searchable-select
+                        x-model="valor"
+                        :options="collect($roles)->map(fn ($rol) => ['value' => (string) $rol->id_rol, 'label' => $rol->nombre])->values()->all()"
+                        placeholder="Selecciona un rol"
+                        :show-clear="true"
+                        clear-label="Selecciona un rol"
+                        :empty-as-null="false"
+                    />
+                </div>
             </div>
 
             <div
@@ -254,32 +246,24 @@
                     <span class="text-[var(--theme-danger)]">*</span>
                 </label>
 
-                <select
+                {{-- Lista con buscador (x-searchable-select). El valor se envía a
+                     organizationRequestCatalogId con syncOrganizationRequestCatalog(). --}}
+                <div
                     id="organization-request-area-select"
-                    onchange="window.syncOrganizationRequestCatalog(this.value)"
-                    class="
-                        w-full h-10 px-3 rounded-md
-                        bg-[var(--theme-surface)]
-                        border border-[var(--theme-border-strong)]
-                        text-sm text-[var(--theme-text)]
-                        focus:ring-1 focus:ring-[var(--theme-primary)]
-                        focus:border-[var(--theme-primary)]
-                    "
+                    data-options="{{ json_encode(collect($areas)->map(fn ($area) => ['value' => (string) $area->id_area, 'label' => $area->nombre])->values()->all()) }}"
+                    x-data="{ valor: '' }"
+                    x-init="$watch('valor', v => window.syncOrganizationRequestCatalog(v ?? ''))"
+                    @org-request-catalog.window="if ($event.detail.id === $el.id) valor = $event.detail.value"
                 >
-                    <option value="">Selecciona un área</option>
-
-                    @foreach ($areas as $area)
-                        <option
-                            value="{{ $area->id_area }}"
-                            @selected(
-                                $organizationRequestField === 'area'
-                                && (int) $organizationRequestCatalogId === (int) $area->id_area
-                            )
-                        >
-                            {{ $area->nombre }}
-                        </option>
-                    @endforeach
-                </select>
+                    <x-searchable-select
+                        x-model="valor"
+                        :options="collect($areas)->map(fn ($area) => ['value' => (string) $area->id_area, 'label' => $area->nombre])->values()->all()"
+                        placeholder="Selecciona un área"
+                        :show-clear="true"
+                        clear-label="Selecciona un área"
+                        :empty-as-null="false"
+                    />
+                </div>
             </div>
 
             <div
@@ -294,32 +278,24 @@
                     <span class="text-[var(--theme-danger)]">*</span>
                 </label>
 
-                <select
+                {{-- Lista con buscador (x-searchable-select). El valor se envía a
+                     organizationRequestCatalogId con syncOrganizationRequestCatalog(). --}}
+                <div
                     id="organization-request-department-select"
-                    onchange="window.syncOrganizationRequestCatalog(this.value)"
-                    class="
-                        w-full h-10 px-3 rounded-md
-                        bg-[var(--theme-surface)]
-                        border border-[var(--theme-border-strong)]
-                        text-sm text-[var(--theme-text)]
-                        focus:ring-1 focus:ring-[var(--theme-primary)]
-                        focus:border-[var(--theme-primary)]
-                    "
+                    data-options="{{ json_encode(collect($departamentos)->map(fn ($departamento) => ['value' => (string) $departamento->id_departamento, 'label' => $departamento->nombre])->values()->all()) }}"
+                    x-data="{ valor: '' }"
+                    x-init="$watch('valor', v => window.syncOrganizationRequestCatalog(v ?? ''))"
+                    @org-request-catalog.window="if ($event.detail.id === $el.id) valor = $event.detail.value"
                 >
-                    <option value="">Selecciona un departamento</option>
-
-                    @foreach ($departamentos as $departamento)
-                        <option
-                            value="{{ $departamento->id_departamento }}"
-                            @selected(
-                                $organizationRequestField === 'departamento'
-                                && (int) $organizationRequestCatalogId === (int) $departamento->id_departamento
-                            )
-                        >
-                            {{ $departamento->nombre }}
-                        </option>
-                    @endforeach
-                </select>
+                    <x-searchable-select
+                        x-model="valor"
+                        :options="collect($departamentos)->map(fn ($departamento) => ['value' => (string) $departamento->id_departamento, 'label' => $departamento->nombre])->values()->all()"
+                        placeholder="Selecciona un departamento"
+                        :show-clear="true"
+                        clear-label="Selecciona un departamento"
+                        :empty-as-null="false"
+                    />
+                </div>
             </div>
 
             <div>
@@ -554,21 +530,33 @@
     };
 
     const selectRequestedCatalogValue = (selectId, requestedValue) => {
-        const select = document.getElementById(selectId);
-        if (!select) return '';
+        const wrapper = document.getElementById(selectId);
+        if (!wrapper) return '';
 
-        select.value = '';
+        let options = [];
+
+        try {
+            options = JSON.parse(wrapper.dataset.options ?? '[]');
+        } catch (error) {
+            options = [];
+        }
+
         const requested = normalizeText(requestedValue);
-        if (requested === '') return '';
 
-        const match = Array.from(select.options).find((option) =>
-            option.value !== '' && normalizeText(option.textContent) === requested
-        );
+        const match = requested === ''
+            ? null
+            : options.find((option) =>
+                String(option.value) !== '' && normalizeText(option.label) === requested
+            );
 
-        if (!match) return '';
+        const value = match ? String(match.value) : '';
 
-        select.value = match.value;
-        return match.value;
+        // Actualiza el valor mostrado en la lista con buscador.
+        window.dispatchEvent(new CustomEvent('org-request-catalog', {
+            detail: { id: selectId, value },
+        }));
+
+        return value;
     };
 
     window.syncOrganizationRequestCatalog = (value) => {

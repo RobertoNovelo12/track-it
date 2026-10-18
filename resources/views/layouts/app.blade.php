@@ -194,6 +194,8 @@ document.addEventListener(
 
         @include('layouts.partials.sidebar-styles')
 
+        @include('layouts.partials.organizacion-logo-styles')
+
     <script>
         /*
         |--------------------------------------------------------------------------

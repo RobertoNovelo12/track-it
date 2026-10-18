@@ -259,54 +259,20 @@
                     </label>
 
 
-                    <select
-                        id="organizationChangeField"
-                        wire:model.live="organizationChangeField"
-                        class="
-                            w-full
-                            h-10
-
-                            px-3
-
-                            rounded-md
-
-                            bg-[var(--theme-surface)]
-
-                            border
-                            border-[var(--theme-border-strong)]
-
-                            text-sm
-                            text-[var(--theme-text)]
-
-                            focus:ring-1
-                            focus:ring-[var(--theme-primary)]
-                            focus:border-[var(--theme-primary)]
-                        "
-                    >
-                        <option value="">
-                            Selecciona una opción
-                        </option>
-
-                        <option value="numero_colaborador">
-                            Número de colaborador
-                        </option>
-
-                        <option value="puesto">
-                            Puesto
-                        </option>
-
-                        <option value="rol">
-                            Rol
-                        </option>
-
-                        <option value="area">
-                            Área
-                        </option>
-
-                        <option value="departamento">
-                            Departamento
-                        </option>
-                    </select>
+                    <x-searchable-select
+                        wire-model="organizationChangeField"
+                        :empty-as-null="false"
+                        placeholder="Selecciona una opción"
+                        :show-clear="true"
+                        clear-label="Selecciona una opción"
+                        :options="[
+                            ['value' => 'numero_colaborador', 'label' => 'Número de colaborador'],
+                            ['value' => 'puesto', 'label' => 'Puesto'],
+                            ['value' => 'rol', 'label' => 'Rol'],
+                            ['value' => 'area', 'label' => 'Área'],
+                            ['value' => 'departamento', 'label' => 'Departamento'],
+                        ]"
+                    />
 
 
                     @error('organizationChangeField')

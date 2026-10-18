@@ -17,7 +17,7 @@ class Usuario extends Authenticatable
         'id_rol', 'id_estado_usuario', 'nombres', 'apellido_paterno',
         'apellido_materno', 'username', 'correo', 'password_hash',
         'telefono', 'numero_colaborador', 'puesto', 'id_area',
-        'id_departamento',
+        'id_unidad', 'id_departamento',
     ];
 
     protected $hidden = ['password_hash'];

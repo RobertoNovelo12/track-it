@@ -4,6 +4,7 @@ namespace App\Livewire\Catalogos;
 
 use App\Services\SystemCacheService;
 use Illuminate\Contracts\View\View;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Json;
@@ -53,6 +54,44 @@ class MarcasModelos extends Component
     public string $sortMarcas = 'asc';
 
     public string $sortModelos = 'asc';
+
+    /*
+    |--------------------------------------------------------------------------
+    | Ordenamiento por columna (tabla reutilizable)
+    |--------------------------------------------------------------------------
+    |
+    | Las claves coinciden con los casos que aceptan
+    | loadMarcasPage() y loadModelosPage().
+    |
+    */
+
+    private const ORDEN_MARCAS = [
+        'id',
+        'nombre',
+        'activo',
+        'totalModelos',
+        'totalEquipos',
+        'fechaCreacion',
+    ];
+
+    private const ORDEN_MODELOS = [
+        'id',
+        'nombre',
+        'marcaNombre',
+        'tipoEquipoNombre',
+        'activo',
+        'totalEquipos',
+        'fechaCreacion',
+    ];
+
+    public string $sortFieldMarcas = 'nombre';
+
+    public string $sortFieldModelos = 'nombre';
+
+    /*
+     * Mensaje tras activar / desactivar un registro.
+     */
+    public string $mensaje = '';
 
 
     /*
@@ -203,6 +242,60 @@ class MarcasModelos extends Component
         $this->resetPage(
             pageName: 'modelosPage'
         );
+    }
+
+    public function sortMarcasBy(string $campo): void
+    {
+        if (! in_array($campo, self::ORDEN_MARCAS, true)) {
+            return;
+        }
+
+        if ($this->sortFieldMarcas === $campo) {
+            $this->sortMarcas = $this->sortMarcas === 'asc' ? 'desc' : 'asc';
+        } else {
+            $this->sortFieldMarcas = $campo;
+            $this->sortMarcas = 'asc';
+        }
+
+        $this->resetPage(pageName: 'marcasPage');
+    }
+
+    public function sortModelosBy(string $campo): void
+    {
+        if (! in_array($campo, self::ORDEN_MODELOS, true)) {
+            return;
+        }
+
+        if ($this->sortFieldModelos === $campo) {
+            $this->sortModelos = $this->sortModelos === 'asc' ? 'desc' : 'asc';
+        } else {
+            $this->sortFieldModelos = $campo;
+            $this->sortModelos = 'asc';
+        }
+
+        $this->resetPage(pageName: 'modelosPage');
+    }
+
+    /*
+     * Activar / desactivar desde el menú de la tabla.
+     */
+    public function cambiarEstadoMarca(int $marcaId): void
+    {
+        $this->mensaje = $this->toggleMarcaStatus($marcaId)['message'] ?? '';
+    }
+
+    public function cambiarEstadoModelo(int $modeloId): void
+    {
+        $this->mensaje = $this->toggleModeloStatus($modeloId)['message'] ?? '';
+    }
+
+    public function limpiarFiltros(): void
+    {
+        $this->search = '';
+        $this->estado = 'todos';
+        $this->tipo = 'todos';
+
+        $this->resetCatalogPagination();
     }
 
     private function resetCatalogPagination(): void
@@ -2109,8 +2202,9 @@ class MarcasModelos extends Component
 
     public function placeholder(): View
     {
+        // Mismo esqueleto que el resto de pestañas de Administración.
         return view(
-            'livewire.placeholders.catalogos-marcas-modelos'
+            'livewire.placeholders.administracion-seccion'
         );
     }
 
@@ -2122,8 +2216,70 @@ class MarcasModelos extends Component
 
     public function render(): View
     {
+        $this->perPageMarcas = $this->normalizePerPage($this->perPageMarcas);
+        $this->perPageModelos = $this->normalizePerPage($this->perPageModelos);
+
+        $filtros = [
+            'search' => $this->search,
+            'estado' => in_array($this->estado, ['todos', 'activos', 'inactivos'], true)
+                ? $this->estado
+                : 'todos',
+        ];
+
+        $marcas = $this->vista !== 'modelos'
+            ? $this->paginar(
+                $this->loadMarcasPage($filtros + [
+                    'page' => $this->getPage('marcasPage'),
+                    'perPage' => $this->perPageMarcas,
+                    'sortField' => $this->sortFieldMarcas,
+                    'sortDirection' => $this->sortMarcas,
+                ]),
+                'marcasPage'
+            )
+            : null;
+
+        $modelos = $this->vista !== 'marcas'
+            ? $this->paginar(
+                $this->loadModelosPage($filtros + [
+                    'page' => $this->getPage('modelosPage'),
+                    'perPage' => $this->perPageModelos,
+                    'tipo' => $this->tipo !== '' ? $this->tipo : 'todos',
+                    'sortField' => $this->sortFieldModelos,
+                    'sortDirection' => $this->sortModelos,
+                ]),
+                'modelosPage'
+            )
+            : null;
+
         return view(
-            'livewire.catalogos.marcas-modelos'
+            'livewire.catalogos.marcas-modelos',
+            [
+                'marcas' => $marcas,
+                'modelos' => $modelos,
+                'metricas' => $this->loadCatalogMetrics(),
+                'tiposEquipo' => $this->vista !== 'marcas'
+                    ? $this->loadTiposEquipoOptions()
+                    : [],
+            ]
+        );
+    }
+
+    /*
+     * Convierte la respuesta de loadMarcasPage() / loadModelosPage()
+     * en un paginador para <x-data-table>.
+     */
+    private function paginar(array $pagina, string $pageName): LengthAwarePaginator
+    {
+        return new LengthAwarePaginator(
+            collect($pagina['items'] ?? [])
+                ->map(fn (array $item): object => (object) $item),
+            (int) ($pagina['total'] ?? 0),
+            (int) ($pagina['perPage'] ?? 10),
+            (int) ($pagina['page'] ?? 1),
+            [
+                'path' => request()->url(),
+                'pageName' => $pageName,
+            ]
         );
     }
 }

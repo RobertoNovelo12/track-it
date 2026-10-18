@@ -179,40 +179,19 @@
 
 
                     {{-- Estado --}}
-                    <select
-                        wire:model.live="estado"
-                        class="
-                            h-9
-
-                            px-3
-
-                            rounded-md
-
-                            bg-[var(--theme-surface)]
-
-                            border
-                            border-[var(--theme-border-strong)]
-
-                            text-xs
-                            text-[var(--theme-text)]
-
-                            focus:ring-1
-                            focus:ring-[var(--theme-primary)]
-                            focus:border-[var(--theme-primary)]
-                        "
-                    >
-                        <option value="">
-                            Todos los estados
-                        </option>
-
-                        @foreach ($estados as $estadoOption)
-
-                            <option value="{{ $estadoOption->clave }}">
-                                {{ $estadoOption->nombre }}
-                            </option>
-
-                        @endforeach
-                    </select>
+                    <div class="w-44 shrink-0">
+                        <x-searchable-select
+                            wire-model="estado"
+                            :empty-as-null="false"
+                            placeholder="Todos los estados"
+                            :show-clear="true"
+                            clear-label="Todos los estados"
+                            compact
+                            :options="[
+                                ...collect($estados)->map(fn ($estadoOption) => ['value' => $estadoOption->clave, 'label' => $estadoOption->nombre])->all(),
+                            ]"
+                        />
+                    </div>
 
                 </div>
 

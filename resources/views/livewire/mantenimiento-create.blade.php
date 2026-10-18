@@ -9,21 +9,10 @@
             INFORMACIÓN GENERAL
         ============================================================ --}}
         <section
-            class="
-                rounded-xl
-                border
-                border-[var(--theme-border)]
-                bg-[var(--theme-surface)]
-                p-5
-            "
+            class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 sm:p-6"
         >
             <h2
-                class="
-                    mb-5
-                    text-lg
-                    font-semibold
-                    text-[var(--theme-text-strong)]
-                "
+                class="mb-5 text-sm font-semibold text-[var(--theme-text-strong)]"
             >
                 Información general
             </h2>
@@ -180,21 +169,10 @@
             INFORMACIÓN DEL MANTENIMIENTO
         ============================================================ --}}
         <section
-            class="
-                rounded-xl
-                border
-                border-[var(--theme-border)]
-                bg-[var(--theme-surface)]
-                p-5
-            "
+            class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 sm:p-6"
         >
             <h2
-                class="
-                    mb-5
-                    text-lg
-                    font-semibold
-                    text-[var(--theme-text-strong)]
-                "
+                class="mb-5 text-sm font-semibold text-[var(--theme-text-strong)]"
             >
                 Información del mantenimiento
             </h2>
@@ -341,25 +319,13 @@
 
 
                     <div
-                        class="
-                            grid
-                            grid-cols-1
-                            gap-3
-
-                            sm:grid-cols-2
-                        "
+                        class="grid grid-cols-1 gap-4 sm:grid-cols-2"
                     >
 
                         {{-- Fecha inicio --}}
                         <div>
                             <label
-                                class="
-                                    mb-1.5
-                                    block
-                                    text-xs
-                                    font-medium
-                                    text-[var(--theme-text)]
-                                "
+                                class="mb-1.5 block text-xs text-[var(--theme-text-muted)]"
                             >
                                 Fecha inicio
                             </label>
@@ -368,21 +334,7 @@
                                 type="date"
                                 wire:model="fechaIntervencion"
 
-                                class="
-                                    h-10
-                                    w-full
-                                    rounded-lg
-                                    border
-                                    border-[var(--theme-border-strong)]
-                                    bg-[var(--theme-surface)]
-                                    px-3
-                                    text-sm
-                                    text-[var(--theme-text)]
-
-                                    focus:border-[var(--theme-primary)]
-                                    focus:ring-1
-                                    focus:ring-[var(--theme-primary)]
-                                "
+                                class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)]"
                             >
 
                             @error('fechaIntervencion')
@@ -396,13 +348,7 @@
                         {{-- Hora inicio --}}
                         <div>
                             <label
-                                class="
-                                    mb-1.5
-                                    block
-                                    text-xs
-                                    font-medium
-                                    text-[var(--theme-text)]
-                                "
+                                class="mb-1.5 block text-xs text-[var(--theme-text-muted)]"
                             >
                                 Hora inicio
                             </label>
@@ -411,21 +357,7 @@
                                 type="time"
                                 wire:model="horaInicio"
 
-                                class="
-                                    h-10
-                                    w-full
-                                    rounded-lg
-                                    border
-                                    border-[var(--theme-border-strong)]
-                                    bg-[var(--theme-surface)]
-                                    px-3
-                                    text-sm
-                                    text-[var(--theme-text)]
-
-                                    focus:border-[var(--theme-primary)]
-                                    focus:ring-1
-                                    focus:ring-[var(--theme-primary)]
-                                "
+                                class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)]"
                             >
 
                             @error('horaInicio')
@@ -465,25 +397,13 @@
 
 
                     <div
-                        class="
-                            grid
-                            grid-cols-1
-                            gap-3
-
-                            sm:grid-cols-2
-                        "
+                        class="grid grid-cols-1 gap-4 sm:grid-cols-2"
                     >
 
                         {{-- Fecha fin --}}
                         <div>
                             <label
-                                class="
-                                    mb-1.5
-                                    block
-                                    text-xs
-                                    font-medium
-                                    text-[var(--theme-text)]
-                                "
+                                class="mb-1.5 block text-xs text-[var(--theme-text-muted)]"
                             >
                                 Fecha fin
                             </label>
@@ -492,21 +412,7 @@
                                 type="date"
                                 wire:model="fechaFin"
 
-                                class="
-                                    h-10
-                                    w-full
-                                    rounded-lg
-                                    border
-                                    border-[var(--theme-border-strong)]
-                                    bg-[var(--theme-surface)]
-                                    px-3
-                                    text-sm
-                                    text-[var(--theme-text)]
-
-                                    focus:border-[var(--theme-primary)]
-                                    focus:ring-1
-                                    focus:ring-[var(--theme-primary)]
-                                "
+                                class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)]"
                             >
 
                             @error('fechaFin')
@@ -520,13 +426,7 @@
                         {{-- Hora fin --}}
                         <div>
                             <label
-                                class="
-                                    mb-1.5
-                                    block
-                                    text-xs
-                                    font-medium
-                                    text-[var(--theme-text)]
-                                "
+                                class="mb-1.5 block text-xs text-[var(--theme-text-muted)]"
                             >
                                 Hora fin
                             </label>
@@ -535,21 +435,7 @@
                                 type="time"
                                 wire:model="horaFin"
 
-                                class="
-                                    h-10
-                                    w-full
-                                    rounded-lg
-                                    border
-                                    border-[var(--theme-border-strong)]
-                                    bg-[var(--theme-surface)]
-                                    px-3
-                                    text-sm
-                                    text-[var(--theme-text)]
-
-                                    focus:border-[var(--theme-primary)]
-                                    focus:ring-1
-                                    focus:ring-[var(--theme-primary)]
-                                "
+                                class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)]"
                             >
 
                             @error('horaFin')
@@ -599,22 +485,11 @@
             DESCRIPCIÓN DE LA INTERVENCIÓN
         ============================================================ --}}
         <section
-            class="
-                rounded-xl
-                border
-                border-[var(--theme-border)]
-                bg-[var(--theme-surface)]
-                p-5
-            "
+            class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 sm:p-6"
         >
 
             <h2
-                class="
-                    mb-5
-                    text-lg
-                    font-semibold
-                    text-[var(--theme-text-strong)]
-                "
+                class="mb-5 text-sm font-semibold text-[var(--theme-text-strong)]"
             >
                 Descripción de la intervención
             </h2>
@@ -650,23 +525,7 @@
                         maxlength="500"
                         placeholder="Describe la falla o motivo del mantenimiento..."
 
-                        class="
-                            w-full
-                            resize-none
-                            rounded-lg
-                            border
-                            border-[var(--theme-border-strong)]
-                            bg-[var(--theme-surface)]
-                            px-3
-                            py-2.5
-                            text-sm
-                            text-[var(--theme-text)]
-                            placeholder:text-[var(--theme-text-muted)]
-
-                            focus:border-[var(--theme-primary)]
-                            focus:ring-1
-                            focus:ring-[var(--theme-primary)]
-                        "
+                        class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)] resize-none"
                     ></textarea>
 
                     @error('fallaReportada')
@@ -697,23 +556,7 @@
                         maxlength="500"
                         placeholder="Describe el diagnóstico..."
 
-                        class="
-                            w-full
-                            resize-none
-                            rounded-lg
-                            border
-                            border-[var(--theme-border-strong)]
-                            bg-[var(--theme-surface)]
-                            px-3
-                            py-2.5
-                            text-sm
-                            text-[var(--theme-text)]
-                            placeholder:text-[var(--theme-text-muted)]
-
-                            focus:border-[var(--theme-primary)]
-                            focus:ring-1
-                            focus:ring-[var(--theme-primary)]
-                        "
+                        class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)] resize-none"
                     ></textarea>
 
                     @error('diagnostico')
@@ -744,23 +587,7 @@
                         maxlength="500"
                         placeholder="Describe el trabajo realizado..."
 
-                        class="
-                            w-full
-                            resize-none
-                            rounded-lg
-                            border
-                            border-[var(--theme-border-strong)]
-                            bg-[var(--theme-surface)]
-                            px-3
-                            py-2.5
-                            text-sm
-                            text-[var(--theme-text)]
-                            placeholder:text-[var(--theme-text-muted)]
-
-                            focus:border-[var(--theme-primary)]
-                            focus:ring-1
-                            focus:ring-[var(--theme-primary)]
-                        "
+                        class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)] resize-none"
                     ></textarea>
 
                     @error('intervencionRealizada')
@@ -780,13 +607,7 @@
             REFACCIONES
         ============================================================ --}}
         <section
-            class="
-                rounded-xl
-                border
-                border-[var(--theme-border)]
-                bg-[var(--theme-surface)]
-                p-5
-            "
+            class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 sm:p-6"
         >
 
             <div
@@ -803,11 +624,7 @@
             >
 
                 <h2
-                    class="
-                        text-lg
-                        font-semibold
-                        text-[var(--theme-text-strong)]
-                    "
+                    class="text-sm font-semibold text-[var(--theme-text-strong)]"
                 >
                     Refacciones / partes utilizadas
                 </h2>
@@ -866,26 +683,13 @@
                         <div
                             wire:key="refaccion-{{ $index }}"
 
-                            class="
-                                grid
-                                grid-cols-1
-                                gap-3
-
-                                md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_120px_140px_auto]
-                                md:items-end
-                            "
+                            class="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_120px_140px_auto] md:items-end"
                         >
 
                             {{-- Nombre --}}
                             <div>
                                 <label
-                                    class="
-                                        mb-1.5
-                                        block
-                                        text-xs
-                                        font-medium
-                                        text-[var(--theme-text)]
-                                    "
+                                    class="mb-1.5 block text-xs text-[var(--theme-text-muted)]"
                                 >
                                     Nombre de la refacción
                                 </label>
@@ -895,18 +699,7 @@
                                     wire:model="refacciones.{{ $index }}.nombre_refaccion"
                                     placeholder="Nombre de la refacción..."
 
-                                    class="
-                                        h-10
-                                        w-full
-                                        rounded-lg
-                                        border
-                                        border-[var(--theme-border-strong)]
-                                        bg-[var(--theme-surface)]
-                                        px-3
-                                        text-sm
-                                        text-[var(--theme-text)]
-                                        placeholder:text-[var(--theme-text-muted)]
-                                    "
+                                    class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)]"
                                 >
 
                                 @error("refacciones.$index.nombre_refaccion")
@@ -920,13 +713,7 @@
                             {{-- Código --}}
                             <div>
                                 <label
-                                    class="
-                                        mb-1.5
-                                        block
-                                        text-xs
-                                        font-medium
-                                        text-[var(--theme-text)]
-                                    "
+                                    class="mb-1.5 block text-xs text-[var(--theme-text-muted)]"
                                 >
                                     Código
                                 </label>
@@ -936,18 +723,7 @@
                                     wire:model="refacciones.{{ $index }}.codigo_parte"
                                     placeholder="Código..."
 
-                                    class="
-                                        h-10
-                                        w-full
-                                        rounded-lg
-                                        border
-                                        border-[var(--theme-border-strong)]
-                                        bg-[var(--theme-surface)]
-                                        px-3
-                                        text-sm
-                                        text-[var(--theme-text)]
-                                        placeholder:text-[var(--theme-text-muted)]
-                                    "
+                                    class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)]"
                                 >
                             </div>
 
@@ -955,13 +731,7 @@
                             {{-- Cantidad --}}
                             <div>
                                 <label
-                                    class="
-                                        mb-1.5
-                                        block
-                                        text-xs
-                                        font-medium
-                                        text-[var(--theme-text)]
-                                    "
+                                    class="mb-1.5 block text-xs text-[var(--theme-text-muted)]"
                                 >
                                     Cantidad
                                 </label>
@@ -972,17 +742,7 @@
                                     step="0.01"
                                     wire:model="refacciones.{{ $index }}.cantidad"
 
-                                    class="
-                                        h-10
-                                        w-full
-                                        rounded-lg
-                                        border
-                                        border-[var(--theme-border-strong)]
-                                        bg-[var(--theme-surface)]
-                                        px-3
-                                        text-sm
-                                        text-[var(--theme-text)]
-                                    "
+                                    class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)]"
                                 >
                             </div>
 
@@ -990,13 +750,7 @@
                             {{-- Unidad --}}
                             <div>
                                 <label
-                                    class="
-                                        mb-1.5
-                                        block
-                                        text-xs
-                                        font-medium
-                                        text-[var(--theme-text)]
-                                    "
+                                    class="mb-1.5 block text-xs text-[var(--theme-text-muted)]"
                                 >
                                     Unidad
                                 </label>
@@ -1006,18 +760,7 @@
                                     wire:model="refacciones.{{ $index }}.unidad"
                                     placeholder="Ej. PZA"
 
-                                    class="
-                                        h-10
-                                        w-full
-                                        rounded-lg
-                                        border
-                                        border-[var(--theme-border-strong)]
-                                        bg-[var(--theme-surface)]
-                                        px-3
-                                        text-sm
-                                        text-[var(--theme-text)]
-                                        placeholder:text-[var(--theme-text-muted)]
-                                    "
+                                    class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)]"
                                 >
                             </div>
 
@@ -1062,22 +805,11 @@
             INFORMACIÓN ADICIONAL
         ============================================================ --}}
         <section
-            class="
-                rounded-xl
-                border
-                border-[var(--theme-border)]
-                bg-[var(--theme-surface)]
-                p-5
-            "
+            class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 sm:p-6"
         >
 
             <h2
-                class="
-                    mb-5
-                    text-lg
-                    font-semibold
-                    text-[var(--theme-text-strong)]
-                "
+                class="mb-5 text-sm font-semibold text-[var(--theme-text-strong)]"
             >
                 Información adicional
             </h2>
@@ -1113,23 +845,7 @@
                         maxlength="500"
                         placeholder="Observaciones adicionales..."
 
-                        class="
-                            w-full
-                            resize-none
-                            rounded-lg
-                            border
-                            border-[var(--theme-border-strong)]
-                            bg-[var(--theme-surface)]
-                            px-3
-                            py-2.5
-                            text-sm
-                            text-[var(--theme-text)]
-                            placeholder:text-[var(--theme-text-muted)]
-
-                            focus:border-[var(--theme-primary)]
-                            focus:ring-1
-                            focus:ring-[var(--theme-primary)]
-                        "
+                        class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)] resize-none"
                     ></textarea>
                 </div>
 
@@ -1152,21 +868,7 @@
                         type="date"
                         wire:model="fechaProximoMantenimiento"
 
-                        class="
-                            h-10
-                            w-full
-                            rounded-lg
-                            border
-                            border-[var(--theme-border-strong)]
-                            bg-[var(--theme-surface)]
-                            px-3
-                            text-sm
-                            text-[var(--theme-text)]
-
-                            focus:border-[var(--theme-primary)]
-                            focus:ring-1
-                            focus:ring-[var(--theme-primary)]
-                        "
+                        class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)]"
                     >
 
                     @error('fechaProximoMantenimiento')
@@ -1200,22 +902,7 @@
                 href="{{ route('mantenimientos.index') }}"
                 wire:navigate
 
-                class="
-                    inline-flex
-                    h-10
-                    items-center
-                    justify-center
-                    rounded-lg
-                    border
-                    border-[var(--theme-border-strong)]
-                    bg-[var(--theme-surface)]
-                    px-5
-                    text-sm
-                    font-semibold
-                    text-[var(--theme-text)]
-
-                    hover:bg-[var(--theme-surface-soft)]
-                "
+                class="inline-flex h-11 w-full items-center justify-center rounded-lg border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-5 text-sm font-medium text-[var(--theme-text)] transition-colors hover:bg-[var(--theme-surface-soft)] sm:w-auto"
             >
                 Cancelar
             </a>
@@ -1227,25 +914,7 @@
                 wire:loading.attr="disabled"
                 wire:target="guardar"
 
-                class="
-                    inline-flex
-                    h-10
-                    items-center
-                    justify-center
-                    rounded-lg
-                    border
-                    border-[var(--theme-primary)]
-                    bg-[var(--theme-primary)]
-                    px-5
-                    text-sm
-                    font-semibold
-                    text-white
-
-                    hover:opacity-90
-
-                    disabled:cursor-wait
-                    disabled:opacity-60
-                "
+                class="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[var(--theme-primary)] px-5 text-sm font-medium text-white transition-colors hover:bg-[var(--theme-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
             >
 
                 <span

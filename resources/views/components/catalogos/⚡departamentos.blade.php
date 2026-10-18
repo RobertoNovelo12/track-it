@@ -9,9 +9,66 @@ new class extends Component
 {
     use WithPagination;
 
+    /*
+     * Vista mientras la sección se carga en Administración.
+     */
+    public function placeholder(array $params = [])
+    {
+        return view('livewire.placeholders.administracion-seccion');
+    }
+
     public string $search = '';
     public string $estado = 'todos';
     public string $hotelId = '';
+
+    /*
+     * Tabla: registros por página y ordenamiento.
+     */
+    public int $perPage = 10;
+    public string $sortField = 'nombre';
+    public string $sortDirection = 'asc';
+
+    private const ORDENABLES = [
+        'nombre' => 'departamentos.nombre',
+        'codigo' => 'departamentos.codigo',
+        'responsable' => 'departamentos.responsable',
+        'cobertura' => 'departamentos.atiende_todas_unidades',
+        'activo' => 'departamentos.activo',
+    ];
+
+    public function updatedPerPage(): void
+    {
+        if (! in_array((int) $this->perPage, [10, 25, 50, 100], true)) {
+            $this->perPage = 10;
+        }
+
+        $this->resetPage(pageName: 'departamentosPage');
+    }
+
+    public function updatedSortDirection(): void
+    {
+        if (! in_array($this->sortDirection, ['asc', 'desc'], true)) {
+            $this->sortDirection = 'asc';
+        }
+
+        $this->resetPage(pageName: 'departamentosPage');
+    }
+
+    public function sortBy(string $campo): void
+    {
+        if (! array_key_exists($campo, self::ORDENABLES)) {
+            return;
+        }
+
+        if ($this->sortField === $campo) {
+            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            $this->sortField = $campo;
+            $this->sortDirection = 'asc';
+        }
+
+        $this->resetPage(pageName: 'departamentosPage');
+    }
 
     public function updatedSearch(): void
     {
@@ -75,12 +132,35 @@ new class extends Component
                         });
                 });
             })
-            ->orderBy('departamentos.nombre')
+            ->orderByRaw(
+                (self::ORDENABLES[$this->sortField] ?? self::ORDENABLES['nombre'])
+                .' '.($this->sortDirection === 'desc' ? 'desc' : 'asc')
+                .' NULLS LAST'
+            )
             ->orderBy('departamentos.id_departamento')
             ->paginate(
-                perPage: 15,
+                perPage: $this->perPage,
                 pageName: 'departamentosPage'
             );
+    }
+
+    /*
+     * Totales para las tarjetas de métricas.
+     */
+    public function metricas(): array
+    {
+        $fila = Departamento::query()
+            ->principales()
+            ->selectRaw('COUNT(*) AS total')
+            ->selectRaw('COUNT(*) FILTER (WHERE departamentos.activo) AS activos')
+            ->selectRaw('COUNT(*) FILTER (WHERE departamentos.atiende_todas_unidades) AS globales')
+            ->first();
+
+        return [
+            'total' => (int) ($fila->total ?? 0),
+            'activos' => (int) ($fila->activos ?? 0),
+            'globales' => (int) ($fila->globales ?? 0),
+        ];
     }
 
     public function hoteles()
@@ -96,248 +176,147 @@ new class extends Component
 };
 ?>
 
-<div>
+<div class="min-w-0 space-y-5">
     @php
         $departamentos = $this->departamentos();
         $hoteles = $this->hoteles();
+        $metricas = $this->metricas();
+        $etiquetasPlantilla = app(\App\Services\PlantillaInstalacionService::class)->etiquetas();
     @endphp
 
-    <section class="overflow-hidden rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)]">
-        {{-- ENCABEZADO --}}
-        <div class="border-b border-[var(--theme-border)] px-4 py-4 sm:px-5">
-            <h2 class="text-sm font-semibold text-[var(--theme-text-strong)]">
-                Departamentos
-            </h2>
+    {{-- Buscador y filtros (el título está en Administración) --}}
+    <x-admin.filter-bar>
+        <x-admin.search
+            id="departamentos-search"
+            wire:model.live.debounce.350ms="search"
+            placeholder="Buscar por nombre, código o responsable..."
+            label="Buscar departamento"
+        />
 
-            <p class="mt-1 text-xs text-[var(--theme-text-muted)]">
-                Consulta los departamentos y los hoteles que atiende cada uno.
-            </p>
-        </div>
+        <x-admin.select
+            model="hotelId"
+            :placeholder="$etiquetasPlantilla['unidad_singular']"
+            :clear-label="$etiquetasPlantilla['todas_unidades']"
+            :options="$hoteles->map(fn ($hotel) => [
+                'value' => (string) $hotel->id_unidad,
+                'label' => $hotel->nombre.($hotel->activo ? '' : ' (inactivo)'),
+            ])->values()->all()"
+        />
 
-        {{-- FILTROS --}}
-        <div class="space-y-4 border-b border-[var(--theme-border)] p-4 sm:p-5">
-            <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
-                <div class="min-w-0 xl:col-span-2">
-                    <label
-                        for="departamentos-search"
-                        class="mb-1.5 block text-xs text-[var(--theme-text-muted)]"
-                    >
-                        Buscar departamento
-                    </label>
+        <x-admin.select
+            model="estado"
+            placeholder="Estado"
+            :options="[
+                ['value' => 'todos', 'label' => 'Todos los estados'],
+                ['value' => 'activos', 'label' => 'Activos'],
+                ['value' => 'inactivos', 'label' => 'Inactivos'],
+            ]"
+        />
 
-                    <input
-                        id="departamentos-search"
-                        type="search"
-                        wire:model.live.debounce.350ms="search"
-                        placeholder="Nombre, código o responsable..."
-                        class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)]"
-                    >
-                </div>
+        <x-slot:footer>
+            @if ($search !== '' || $estado !== 'todos' || $hotelId !== '')
+                <button
+                    type="button"
+                    wire:click="limpiarFiltros"
+                    class="text-xs font-medium text-[var(--theme-primary)] hover:underline"
+                >
+                    Limpiar filtros
+                </button>
+            @endif
+        </x-slot:footer>
+    </x-admin.filter-bar>
 
-                <div>
-                    <label
-                        for="departamentos-hotel"
-                        class="mb-1.5 block text-xs text-[var(--theme-text-muted)]"
-                    >
-                        {{ app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['unidad_singular'] }}
-                    </label>
+    {{-- Métricas --}}
+    <x-admin.metrics :items="[
+        ['label' => 'Total de departamentos', 'value' => $metricas['total']],
+        ['label' => 'Departamentos activos', 'value' => $metricas['activos']],
+        ['label' => $etiquetasPlantilla['atiende_todas_unidades'], 'value' => $metricas['globales']],
+    ]" />
 
-                    <select
-                        id="departamentos-hotel"
-                        wire:model.live="hotelId"
-                        class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)]"
-                    >
-                        <option value="">Todos los hoteles</option>
+    {{-- LISTADO: componente reutilizable <x-data-table> --}}
+    <x-data-table
 
-                        @foreach ($hoteles as $hotel)
-                            <option value="{{ $hotel->id_unidad }}">
-                                {{ $hotel->nombre }}{{ $hotel->activo ? '' : ' (inactivo)' }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
+        :rows="$departamentos"
+        row-key="id_departamento"
+        key-prefix="departamento"
 
-                <div>
-                    <label
-                        for="departamentos-estado"
-                        class="mb-1.5 block text-xs text-[var(--theme-text-muted)]"
-                    >
-                        Estado
-                    </label>
+        :sort-field="$sortField"
+        :sort-direction="$sortDirection"
+        sort-action="sortBy"
 
-                    <select
-                        id="departamentos-estado"
-                        wire:model.live="estado"
-                        class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)]"
-                    >
-                        <option value="todos">Todos los estados</option>
-                        <option value="activos">Activos</option>
-                        <option value="inactivos">Inactivos</option>
-                    </select>
-                </div>
-            </div>
+        per-page-model="perPage"
+        sort-model="sortDirection"
+        refresh-action="$refresh"
 
-            <div class="flex flex-wrap items-center justify-between gap-3">
-                <p class="text-xs text-[var(--theme-text-muted)]">
-                    {{ $departamentos->total() }}
-                    {{ $departamentos->total() === 1 ? 'departamento encontrado' : 'departamentos encontrados' }}
-                </p>
+        page-name="departamentosPage"
+        result-singular="departamento encontrado"
+        result-plural="departamentos encontrados"
+        empty-message="No se encontraron departamentos. Prueba con otro nombre o cambia los filtros."
+        min-width="980px"
 
-                @if ($search !== '' || $estado !== 'todos' || $hotelId !== '')
-                    <button
-                        type="button"
-                        wire:click="limpiarFiltros"
-                        class="text-xs font-medium text-[var(--theme-primary)] hover:underline"
-                    >
-                        Limpiar filtros
-                    </button>
-                @endif
-            </div>
-        </div>
+        :columns="[
+            [
+                'key' => 'nombre',
+                'label' => 'Departamento',
+                'width' => '22%',
+                'sort' => 'nombre',
+                'strong' => true,
+            ],
+            [
+                'key' => 'codigo',
+                'label' => 'Código',
+                'width' => '11%',
+                'sort' => 'codigo',
+                'mobile' => 'filled',
+            ],
+            [
+                'key' => 'cobertura',
+                'label' => $etiquetasPlantilla['cobertura'],
+                'width' => '27%',
+                'sort' => 'cobertura',
+                'type' => 'list',
+                'value' => fn ($d) => $d->atiende_todas_unidades
+                    ? [$etiquetasPlantilla['todas_unidades']]
+                    : $d->hoteles->map(fn ($h) => $h->nombre.($h->activo ? '' : ' (inactivo)'))->all(),
+                'default' => $etiquetasPlantilla['sin_unidades'],
+            ],
+            [
+                'key' => 'responsable',
+                'label' => 'Responsable',
+                'width' => '17%',
+                'sort' => 'responsable',
+                'default' => 'Sin responsable',
+            ],
+            [
+                'key' => 'correo',
+                'label' => 'Correo',
+                'desktop' => false,
+                'mobile' => 'filled',
+            ],
+            [
+                'key' => 'extension_telefono',
+                'label' => 'Extensión',
+                'desktop' => false,
+                'mobile' => 'filled',
+            ],
+            [
+                'key' => 'activo',
+                'label' => 'Estado',
+                'width' => '12%',
+                'sort' => 'activo',
+                'type' => 'status',
+                'value' => fn ($d) => $d->activo ? 'Activo' : 'Inactivo',
+            ],
+        ]"
 
-        {{-- TABLA --}}
-        <div
-            class="overflow-x-auto"
-            wire:loading.class="opacity-50"
-            wire:target="search,estado,hotelId,limpiarFiltros,gotoPage,nextPage,previousPage"
-        >
-            <table class="w-full text-left text-sm">
-                <thead class="border-b border-[var(--theme-border)] bg-[var(--theme-surface-soft)] text-xs text-[var(--theme-text-muted)]">
-                    <tr>
-                        <th scope="col" class="px-4 py-3 font-medium sm:px-5">
-                            Departamento
-                        </th>
-
-                        <th scope="col" class="px-4 py-3 font-medium">
-                            {{ app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['cobertura'] }}
-                        </th>
-
-                        <th scope="col" class="px-4 py-3 font-medium">
-                            Responsable
-                        </th>
-
-                        <th scope="col" class="px-4 py-3 font-medium">
-                            Estado
-                        </th>
-
-                        <th scope="col" class="px-4 py-3 text-right font-medium">
-                            Acciones
-                        </th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    @forelse ($departamentos as $departamento)
-                        <tr
-                            wire:key="departamento-{{ $departamento->id_departamento }}"
-                            class="border-b border-[var(--theme-border)] last:border-b-0"
-                        >
-                            <td class="px-4 py-4 align-top sm:px-5">
-                                <p class="font-semibold text-[var(--theme-text-strong)]">
-                                    {{ $departamento->nombre }}
-                                </p>
-
-                                @if ($departamento->codigo)
-                                    <p class="mt-1 text-xs text-[var(--theme-text-muted)]">
-                                        {{ $departamento->codigo }}
-                                    </p>
-                                @endif
-
-                                @if ($departamento->descripcion)
-                                    <p class="mt-1 max-w-sm text-xs text-[var(--theme-text-muted)]">
-                                        {{ $departamento->descripcion }}
-                                    </p>
-                                @endif
-                            </td>
-
-                            <td class="px-4 py-4 align-top">
-                                @if ($departamento->atiende_todas_unidades)
-                                    <span class="inline-flex rounded-md bg-[var(--theme-primary-soft)] px-2 py-1 text-xs font-medium text-[var(--theme-primary)]">
-                                        {{ app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['todas_unidades'] }}
-                                    </span>
-
-                                    <p class="mt-1 text-xs text-[var(--theme-text-muted)]">
-                                        {{ app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['incluye_futuras'] }}
-                                    </p>
-                                @elseif ($departamento->hoteles->isNotEmpty())
-                                    <div class="flex max-w-md flex-wrap gap-1.5">
-                                        @foreach ($departamento->hoteles as $hotel)
-                                            <span class="inline-flex rounded-md border border-[var(--theme-border)] px-2 py-1 text-xs text-[var(--theme-text)]">
-                                                {{ $hotel->nombre }}
-
-                                                @unless ($hotel->activo)
-                                                    (inactivo)
-                                                @endunless
-                                            </span>
-                                        @endforeach
-                                    </div>
-                                @else
-                                    <span class="text-xs text-[var(--theme-text-muted)]">
-                                        {{ app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['sin_unidades'] }}
-                                    </span>
-                                @endif
-                            </td>
-
-                            <td class="px-4 py-4 align-top">
-                                <p class="text-[var(--theme-text)]">
-                                    {{ $departamento->responsable ?: 'Sin responsable' }}
-                                </p>
-
-                                @if ($departamento->correo)
-                                    <p class="mt-1 break-all text-xs text-[var(--theme-text-muted)]">
-                                        {{ $departamento->correo }}
-                                    </p>
-                                @endif
-
-                                @if ($departamento->extension_telefono)
-                                    <p class="mt-1 text-xs text-[var(--theme-text-muted)]">
-                                        Ext. {{ $departamento->extension_telefono }}
-                                    </p>
-                                @endif
-                            </td>
-
-                            <td class="px-4 py-4 align-top">
-                                <span @class([
-                                    'inline-flex rounded-full px-2.5 py-1 text-xs font-medium',
-                                    'bg-emerald-500/10 text-emerald-500' => $departamento->activo,
-                                    'bg-[var(--theme-surface-soft)] text-[var(--theme-text-muted)]' => !$departamento->activo,
-                                ])>
-                                    {{ $departamento->activo ? 'Activo' : 'Inactivo' }}
-                                </span>
-                            </td>
-
-                            <td class="px-4 py-4 text-right align-top">
-                                <a
-                                    href="{{ route('catalogos.departamentos.edit', [
-                                        'departamento' => $departamento->id_departamento,
-                                    ]) }}"
-                                    class="inline-flex rounded-md border border-[var(--theme-border-strong)] px-3 py-2 text-xs font-medium text-[var(--theme-primary)] hover:bg-[var(--theme-primary-soft)]"
-                                >
-                                    Editar
-                                </a>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="5" class="px-5 py-12 text-center">
-                                <p class="text-sm font-medium text-[var(--theme-text-strong)]">
-                                    No se encontraron departamentos.
-                                </p>
-
-                                <p class="mt-1 text-xs text-[var(--theme-text-muted)]">
-                                    Prueba con otro nombre o cambia los filtros.
-                                </p>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-
-        @if ($departamentos->hasPages())
-            <div class="border-t border-[var(--theme-border)] px-4 py-4 sm:px-5">
-                {{ $departamentos->links() }}
-            </div>
-        @endif
-    </section>
+        :actions="fn ($d) => [
+            'edit' => route('catalogos.departamentos.edit', ['departamento' => $d->id_departamento]),
+            'menu' => [
+                [
+                    'label' => 'Editar',
+                    'href' => route('catalogos.departamentos.edit', ['departamento' => $d->id_departamento]),
+                ],
+            ],
+        ]"
+    />
 </div>

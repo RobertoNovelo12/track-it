@@ -158,281 +158,16 @@
 
 
     {{-- ============================================================
-        CABECERA
+        CABECERA (mismo diseño que Nueva Alta de equipo)
     ============================================================ --}}
-    <div
-        class="
-            flex
-            flex-col
-
-            lg:flex-row
-            lg:items-start
-            lg:justify-between
-
-            gap-4
-
-            mb-5
-        "
-    >
-        <div>
-
-            {{-- BREADCRUMB --}}
-            <div
-                class="
-                    flex
-                    flex-wrap
-                    items-center
-                    gap-2
-
-                    text-xs
-                    text-[var(--theme-text-muted)]
-
-                    mb-1
-                "
-            >
-                <span>
-                    Catálogos base
-                </span>
-
-                <span>
-                    ›
-                </span>
-
-                <span>
-                    Marcas y modelos
-                </span>
-
-                <span>
-                    ›
-                </span>
-
-                <span class="text-[var(--theme-text)]">
-                    Editar
-                </span>
-            </div>
-
-
-            {{-- TÍTULO --}}
-            <h1
-                class="
-                    text-xl
-                    font-semibold
-                    text-[var(--theme-text-strong)]
-                "
-            >
-                Editar {{ $tipo === 'marca' ? 'marca' : 'modelo' }}
-            </h1>
-
-        </div>
-
-
-        {{-- ========================================================
-            ACCIONES SUPERIORES
-        ======================================================== --}}
-        <div
-            class="
-                flex
-                flex-col
-
-                sm:flex-row
-                sm:items-center
-
-                gap-2
-            "
-        >
-            {{-- VOLVER --}}
-            <a
-                href="{{ route('catalogos.index') }}"
-
-                class="
-                    w-full
-                    sm:w-auto
-
-                    h-10
-
-                    flex
-                    items-center
-                    justify-center
-                    gap-2
-
-                    border
-                    border-[var(--theme-border-strong)]
-
-                    rounded-lg
-
-                    bg-[var(--theme-surface)]
-
-                    px-4
-
-                    text-sm
-                    font-medium
-                    text-[var(--theme-text-muted)]
-
-                    hover:bg-[var(--theme-surface-soft)]
-                    hover:text-[var(--theme-text)]
-
-                    transition-colors
-                "
-            >
-                <svg
-                    class="w-4 h-4"
-
-                    viewBox="0 0 24 24"
-
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.7"
-                >
-                    <path d="M15 6l-6 6 6 6"/>
-                </svg>
-
-                Volver
-            </a>
-
-
-            {{-- ACTIVAR / DESACTIVAR --}}
-            <button
-                type="button"
-
-                wire:click="toggleStatus"
-
-                @if ($activo)
-                    wire:confirm="¿Desactivar este registro? Los equipos existentes conservarán su relación, pero dejará de estar disponible para nuevos usos."
-                @endif
-
-                wire:loading.attr="disabled"
-                wire:target="toggleStatus"
-
-                class="
-                    w-full
-                    sm:w-auto
-
-                    h-10
-
-                    flex
-                    items-center
-                    justify-center
-                    gap-2
-
-                    border
-
-                    rounded-lg
-
-                    px-4
-
-                    text-sm
-                    font-medium
-
-                    disabled:opacity-60
-                    disabled:cursor-not-allowed
-
-                    transition-colors
-
-                    {{ $activo
-                        ? 'border-[var(--theme-danger)] bg-[var(--theme-danger-soft)] text-[var(--theme-danger)]'
-                        : 'border-[var(--theme-success)] bg-[var(--theme-success-soft)] text-[var(--theme-success)]'
-                    }}
-                "
-            >
-                @if ($activo)
-
-                    <svg
-                        wire:loading.remove
-                        wire:target="toggleStatus"
-
-                        class="w-4 h-4"
-
-                        viewBox="0 0 24 24"
-
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.7"
-                    >
-                        <rect
-                            x="5"
-                            y="5"
-                            width="14"
-                            height="14"
-                            rx="1.5"
-                        />
-
-                        <path d="M9 9l6 6"/>
-                        <path d="M15 9l-6 6"/>
-                    </svg>
-
-                @else
-
-                    <svg
-                        wire:loading.remove
-                        wire:target="toggleStatus"
-
-                        class="w-4 h-4"
-
-                        viewBox="0 0 24 24"
-
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.7"
-                    >
-                        <path d="M5 12l4 4L19 6"/>
-                    </svg>
-
-                @endif
-
-
-                <svg
-                    wire:loading
-                    wire:target="toggleStatus"
-
-                    class="
-                        w-4
-                        h-4
-
-                        animate-spin
-                    "
-
-                    viewBox="0 0 24 24"
-                    fill="none"
-                >
-                    <circle
-                        cx="12"
-                        cy="12"
-                        r="9"
-
-                        stroke="currentColor"
-                        stroke-width="2"
-
-                        opacity="0.25"
-                    />
-
-                    <path
-                        d="M21 12a9 9 0 0 0-9-9"
-
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                    />
-                </svg>
-
-
-                <span
-                    wire:loading.remove
-                    wire:target="toggleStatus"
-                >
-                    {{ $activo ? 'Desactivar' : 'Activar' }}
-                </span>
-
-                <span
-                    wire:loading
-                    wire:target="toggleStatus"
-                >
-                    Actualizando...
-                </span>
-            </button>
-
-        </div>
-
-    </div>
+    <x-form.page-header
+        :title="$tipo === 'marca' ? 'Editar marca' : 'Editar modelo'"
+        :crumbs="[
+            ['label' => 'Administración', 'href' => route('catalogos.index')],
+            ['label' => $tipo === 'marca' ? 'Marcas' : 'Modelos', 'href' => route('catalogos.index', ['section' => $tipo === 'marca' ? 'marcas' : 'modelos'])],
+            ['label' => 'Editar'],
+        ]"
+    />
 
 
     {{-- ============================================================
@@ -460,17 +195,7 @@
                 INFORMACIÓN GENERAL
             ==================================================== --}}
             <section
-                class="
-                    bg-[var(--theme-surface)]
-
-                    border
-                    border-[var(--theme-border)]
-
-                    rounded-xl
-
-                    p-4
-                    sm:p-6
-                "
+                class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 sm:p-6"
             >
                 <div
                     class="
@@ -549,14 +274,7 @@
                     <div class="min-w-0">
 
                         <label
-                            class="
-                                block
-
-                                text-xs
-                                text-[var(--theme-text-muted)]
-
-                                mb-1.5
-                            "
+                            class="mb-1.5 block text-xs text-[var(--theme-text-muted)]"
                         >
                             Tipo de registro
                         </label>
@@ -568,25 +286,7 @@
 
                             readonly
 
-                            class="
-                                w-full
-                                min-w-0
-
-                                text-sm
-                                text-[var(--theme-text-muted)]
-
-                                border
-                                border-[var(--theme-border)]
-
-                                rounded-md
-
-                                px-3
-                                py-2.5
-
-                                bg-[var(--theme-surface-soft)]
-
-                                cursor-not-allowed
-                            "
+                            class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)] cursor-not-allowed"
                         >
 
                     </div>
@@ -596,14 +296,7 @@
                     <div class="min-w-0">
 
                         <label
-                            class="
-                                block
-
-                                text-xs
-                                text-[var(--theme-text-muted)]
-
-                                mb-1.5
-                            "
+                            class="mb-1.5 block text-xs text-[var(--theme-text-muted)]"
                         >
                             Número de inventario (ID interno)
                         </label>
@@ -615,25 +308,7 @@
 
                             readonly
 
-                            class="
-                                w-full
-                                min-w-0
-
-                                text-sm
-                                text-[var(--theme-text-muted)]
-
-                                border
-                                border-[var(--theme-border)]
-
-                                rounded-md
-
-                                px-3
-                                py-2.5
-
-                                bg-[var(--theme-surface-soft)]
-
-                                cursor-not-allowed
-                            "
+                            class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)] cursor-not-allowed"
                         >
 
                     </div>
@@ -645,14 +320,7 @@
                         <label
                             for="catalog-name"
 
-                            class="
-                                block
-
-                                text-xs
-                                text-[var(--theme-text-muted)]
-
-                                mb-1.5
-                            "
+                            class="mb-1.5 block text-xs text-[var(--theme-text-muted)]"
                         >
                             {{ $tipo === 'marca'
                                 ? 'Nombre de la marca'
@@ -671,33 +339,7 @@
                                 : 'Ej. Latitude 5440'
                             }}"
 
-                            class="
-                                w-full
-                                min-w-0
-
-                                text-sm
-                                text-[var(--theme-text)]
-
-                                bg-[var(--theme-surface)]
-
-                                border
-                                border-[var(--theme-border-strong)]
-
-                                rounded-md
-
-                                px-3
-                                py-2.5
-
-                                placeholder:text-[var(--theme-text-muted)]
-
-                                focus:ring-1
-                                focus:ring-[var(--theme-primary)]
-                                focus:border-[var(--theme-primary)]
-
-                                outline-none
-
-                                transition-colors
-                            "
+                            class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)]"
                         >
 
                         @error('nombre')
@@ -817,14 +459,7 @@
                         <label
                             for="catalog-web"
 
-                            class="
-                                block
-
-                                text-xs
-                                text-[var(--theme-text-muted)]
-
-                                mb-1.5
-                            "
+                            class="mb-1.5 block text-xs text-[var(--theme-text-muted)]"
                         >
                             Enlace a sitio web
                         </label>
@@ -837,31 +472,7 @@
 
                             placeholder="https://..."
 
-                            class="
-                                w-full
-                                min-w-0
-
-                                text-sm
-                                text-[var(--theme-text)]
-
-                                bg-[var(--theme-surface)]
-
-                                border
-                                border-[var(--theme-border-strong)]
-
-                                rounded-md
-
-                                px-3
-                                py-2.5
-
-                                placeholder:text-[var(--theme-text-muted)]
-
-                                focus:ring-1
-                                focus:ring-[var(--theme-primary)]
-                                focus:border-[var(--theme-primary)]
-
-                                outline-none
-                            "
+                            class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)]"
                         >
 
                         @error('sitioWeb')
@@ -891,14 +502,7 @@
                         <label
                             for="catalog-description"
 
-                            class="
-                                block
-
-                                text-xs
-                                text-[var(--theme-text-muted)]
-
-                                mb-1.5
-                            "
+                            class="mb-1.5 block text-xs text-[var(--theme-text-muted)]"
                         >
                             Descripción
                         </label>
@@ -912,33 +516,7 @@
 
                             placeholder="Descripción de esta marca o modelo"
 
-                            class="
-                                w-full
-                                min-w-0
-
-                                text-sm
-                                text-[var(--theme-text)]
-
-                                bg-[var(--theme-surface)]
-
-                                border
-                                border-[var(--theme-border-strong)]
-
-                                rounded-md
-
-                                px-3
-                                py-2.5
-
-                                placeholder:text-[var(--theme-text-muted)]
-
-                                resize-y
-
-                                focus:ring-1
-                                focus:ring-[var(--theme-primary)]
-                                focus:border-[var(--theme-primary)]
-
-                                outline-none
-                            "
+                            class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)] resize-y"
                         ></textarea>
 
                         @error('descripcion')
@@ -964,26 +542,10 @@
                 INFORMACIÓN ADICIONAL
             ==================================================== --}}
             <section
-                class="
-                    bg-[var(--theme-surface)]
-
-                    border
-                    border-[var(--theme-border)]
-
-                    rounded-xl
-
-                    p-4
-                    sm:p-6
-                "
+                class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 sm:p-6"
             >
                 <h2
-                    class="
-                        text-sm
-                        font-semibold
-                        text-[var(--theme-text-strong)]
-
-                        mb-5
-                    "
+                    class="mb-5 text-sm font-semibold text-[var(--theme-text-strong)]"
                 >
                     Información adicional
                 </h2>
@@ -1036,14 +598,7 @@
                         <label
                             for="catalog-warranty"
 
-                            class="
-                                block
-
-                                text-xs
-                                text-[var(--theme-text-muted)]
-
-                                mb-1.5
-                            "
+                            class="mb-1.5 block text-xs text-[var(--theme-text-muted)]"
                         >
                             Garantía estándar
                         </label>
@@ -1061,29 +616,7 @@
 
                                 placeholder="Ej. 36"
 
-                                class="
-                                    w-full
-
-                                    text-sm
-                                    text-[var(--theme-text)]
-
-                                    bg-[var(--theme-surface)]
-
-                                    border
-                                    border-[var(--theme-border-strong)]
-
-                                    rounded-md
-
-                                    px-3
-                                    py-2.5
-                                    pr-16
-
-                                    focus:ring-1
-                                    focus:ring-[var(--theme-primary)]
-                                    focus:border-[var(--theme-primary)]
-
-                                    outline-none
-                                "
+                                class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)] pr-16"
                             >
 
                             <span
@@ -1164,14 +697,7 @@
                         <label
                             for="catalog-comments"
 
-                            class="
-                                block
-
-                                text-xs
-                                text-[var(--theme-text-muted)]
-
-                                mb-1.5
-                            "
+                            class="mb-1.5 block text-xs text-[var(--theme-text-muted)]"
                         >
                             Comentarios
                         </label>
@@ -1185,30 +711,7 @@
 
                             placeholder="Escribe algún comentario adicional..."
 
-                            class="
-                                w-full
-
-                                text-sm
-                                text-[var(--theme-text)]
-
-                                bg-[var(--theme-surface)]
-
-                                border
-                                border-[var(--theme-border-strong)]
-
-                                rounded-md
-
-                                px-3
-                                py-2.5
-
-                                resize-y
-
-                                focus:ring-1
-                                focus:ring-[var(--theme-primary)]
-                                focus:border-[var(--theme-primary)]
-
-                                outline-none
-                            "
+                            class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)] resize-y"
                         ></textarea>
 
                         @error('comentarios')
@@ -1251,34 +754,7 @@
                 <a
                     href="{{ route('catalogos.index') }}"
 
-                    class="
-                        w-full
-                        sm:w-auto
-
-                        h-11
-
-                        flex
-                        items-center
-                        justify-center
-
-                        border
-                        border-[var(--theme-border-strong)]
-
-                        rounded-lg
-
-                        px-5
-
-                        bg-[var(--theme-surface)]
-
-                        text-sm
-                        font-medium
-                        text-[var(--theme-text-muted)]
-
-                        hover:bg-[var(--theme-surface-soft)]
-                        hover:text-[var(--theme-text)]
-
-                        transition-colors
-                    "
+                    class="inline-flex h-11 w-full items-center justify-center rounded-lg border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-5 text-sm font-medium text-[var(--theme-text)] transition-colors hover:bg-[var(--theme-surface-soft)] sm:w-auto"
                 >
                     Cancelar
                 </a>
@@ -1290,35 +766,7 @@
                     wire:loading.attr="disabled"
                     wire:target="save"
 
-                    class="
-                        relative
-
-                        w-full
-                        sm:w-auto
-
-                        min-w-[165px]
-                        h-11
-
-                        flex
-                        items-center
-                        justify-center
-
-                        bg-[var(--theme-primary)]
-                        hover:bg-[var(--theme-primary-hover)]
-
-                        disabled:opacity-60
-                        disabled:cursor-not-allowed
-
-                        rounded-lg
-
-                        px-5
-
-                        text-sm
-                        font-medium
-                        text-white
-
-                        transition-colors
-                    "
+                    class="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[var(--theme-primary)] px-5 text-sm font-medium text-white transition-colors hover:bg-[var(--theme-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                 >
                     {{-- ESTADO NORMAL --}}
                     <span

@@ -66,18 +66,15 @@
                 <div>
 
                     <p
-                        x-text="
-                            formatNumber(
-                                totalMarcas
-                            )
-                        "
 
                         class="
                             text-2xl
                             font-semibold
                             text-[var(--theme-primary)]
                         "
-                    ></p>
+                    >
+                        {{ number_format((int) ($metricas['totalMarcas'] ?? 0)) }}
+                    </p>
 
                     <p
                         class="
@@ -152,18 +149,15 @@
                 <div>
 
                     <p
-                        x-text="
-                            formatNumber(
-                                marcasInactivas
-                            )
-                        "
 
                         class="
                             text-2xl
                             font-semibold
                             text-[var(--theme-text-strong)]
                         "
-                    ></p>
+                    >
+                        {{ number_format((int) ($metricas['marcasInactivas'] ?? 0)) }}
+                    </p>
 
                     <p
                         class="
@@ -245,18 +239,15 @@
                 <div>
 
                     <p
-                        x-text="
-                            formatNumber(
-                                totalModelos
-                            )
-                        "
 
                         class="
                             text-2xl
                             font-semibold
                             text-[var(--theme-primary)]
                         "
-                    ></p>
+                    >
+                        {{ number_format((int) ($metricas['totalModelos'] ?? 0)) }}
+                    </p>
 
                     <p
                         class="
@@ -341,18 +332,15 @@
                 <div>
 
                     <p
-                        x-text="
-                            formatNumber(
-                                modelosEnUso
-                            )
-                        "
 
                         class="
                             text-2xl
                             font-semibold
                             text-[var(--theme-text-strong)]
                         "
-                    ></p>
+                    >
+                        {{ number_format((int) ($metricas['modelosEnUso'] ?? 0)) }}
+                    </p>
 
                     <p
                         class="

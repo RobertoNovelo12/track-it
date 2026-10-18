@@ -1616,21 +1616,20 @@
 
                     <span>Mostrar</span>
 
-                    <select
-
-                        wire:model.live="perPage"
-
-                        class="h-8 rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-2 text-xs text-[var(--theme-text)]"
-
-                    >
-
-                        <option value="10">10</option>
-
-                        <option value="25">25</option>
-
-                        <option value="50">50</option>
-
-                    </select>
+                    <div class="w-20 shrink-0">
+                        <x-searchable-select
+                            wire-model="perPage"
+                            :empty-as-null="false"
+                            placeholder="Selecciona..."
+                            :show-clear="false"
+                            compact
+                            :options="[
+                                ['value' => '10', 'label' => '10'],
+                                ['value' => '25', 'label' => '25'],
+                                ['value' => '50', 'label' => '50'],
+                            ]"
+                        />
+                    </div>
 
                 </label>
 
