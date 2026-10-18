@@ -25,7 +25,7 @@ class Departamento extends Model
         'extension_telefono',
         'descripcion',
         'activo',
-        'atiende_todos_hoteles',
+        'atiende_todas_unidades',
     ];
 
     protected function casts(): array
@@ -35,7 +35,7 @@ class Departamento extends Model
             'id_departamento_principal' => 'integer',
             'id_area' => 'integer',
             'activo' => 'boolean',
-            'atiende_todos_hoteles' => 'boolean',
+            'atiende_todas_unidades' => 'boolean',
         ];
     }
 
@@ -80,11 +80,11 @@ class Departamento extends Model
     {
         return $this->belongsToMany(
             Hotel::class,
-            'departamento_hotel',
+            'departamento_unidad',
             'id_departamento',
-            'id_hotel',
+            'id_unidad',
             'id_departamento',
-            'id_hotel'
+            'id_unidad'
         );
     }
 
@@ -121,18 +121,27 @@ class Departamento extends Model
             ->where(function (Builder $query) use ($hotelId) {
                 $query
                     ->where(
-                        'departamentos.atiende_todos_hoteles',
+                        'departamentos.atiende_todas_unidades',
                         true
                     )
                     ->orWhereHas(
                         'hoteles',
                         function (Builder $hoteles) use ($hotelId) {
                             $hoteles->where(
-                                'hoteles.id_hotel',
+                                'unidades_organizativas.id_unidad',
                                 $hotelId
                             );
                         }
                     );
             });
+    }
+    public function unidades(): BelongsToMany
+    {
+        return $this->belongsToMany(UnidadOrganizativa::class, 'departamento_unidad', 'id_departamento', 'id_unidad', 'id_departamento', 'id_unidad');
+    }
+
+    public function scopeDisponiblesParaUnidad(Builder $query, int $unidadId): Builder
+    {
+        return $this->scopeDisponiblesParaHotel($query, $unidadId);
     }
 }

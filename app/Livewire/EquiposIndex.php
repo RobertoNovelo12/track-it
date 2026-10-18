@@ -447,6 +447,8 @@ class EquiposIndex extends Component
                     )
                 ),
 
+            'ubicacion_schema' => 'unidades-v1',
+
             'sort_field' =>
                 array_key_exists(
                     $this->sortField,
@@ -513,6 +515,7 @@ class EquiposIndex extends Component
 
             'id_condicion_activo',
 
+            'id_unidad',
             'id_area',
             'id_departamento',
 
@@ -632,6 +635,8 @@ class EquiposIndex extends Component
                     'id_condicion_activo' =>
                         $row['id_condicion_activo'],
 
+                    'id_unidad' => $row['id_unidad'],
+
                     'id_area' =>
                         $row['id_area'],
 
@@ -701,19 +706,7 @@ class EquiposIndex extends Component
                 'e.id_departamento'
             )
 
-            ->leftJoin(
-                'areas as a_dep',
-                'a_dep.id_area',
-                '=',
-                'dep.id_area'
-            )
-
-            ->leftJoin(
-                'areas as a_dir',
-                'a_dir.id_area',
-                '=',
-                'e.id_area'
-            )
+            ->leftJoin('unidades_organizativas as u', 'u.id_unidad', '=', 'e.id_unidad')
 
             ->select([
                 /*
@@ -764,6 +757,7 @@ class EquiposIndex extends Component
 
                 'e.id_condicion_activo',
 
+                'e.id_unidad',
                 'e.id_area',
                 'e.id_departamento',
 
@@ -793,11 +787,11 @@ class EquiposIndex extends Component
                     CASE
                         WHEN dep.id_departamento IS NOT NULL
                             THEN CASE
-                                WHEN a_dep.nombre IS NOT NULL
-                                    THEN a_dep.nombre || ' / ' || dep.nombre
+                                WHEN u.nombre IS NOT NULL
+                                    THEN u.nombre || ' / ' || dep.nombre
                                 ELSE dep.nombre
                             END
-                        ELSE a_dir.nombre
+                        ELSE u.nombre
                     END,
                     '—'
                 ) as ubicacion_organizacional
@@ -1213,12 +1207,7 @@ class EquiposIndex extends Component
                     ): void {
                         $sub
                             ->where(
-                                'a_dir.id_area',
-                                $areaId
-                            )
-
-                            ->orWhere(
-                                'dep.id_area',
+                                'e.id_unidad',
                                 $areaId
                             );
                     }
@@ -1268,11 +1257,11 @@ class EquiposIndex extends Component
                     CASE
                         WHEN dep.id_departamento IS NOT NULL
                             THEN CASE
-                                WHEN a_dep.nombre IS NOT NULL
-                                    THEN a_dep.nombre || ' / ' || dep.nombre
+                                WHEN u.nombre IS NOT NULL
+                                    THEN u.nombre || ' / ' || dep.nombre
                                 ELSE dep.nombre
                             END
-                        ELSE a_dir.nombre
+                        ELSE u.nombre
                     END,
                     '—'
                 ) {$direction}
@@ -1392,12 +1381,12 @@ class EquiposIndex extends Component
     {
         return $this->systemCache()->rememberSimple(
             self::CATALOG_CACHE_MODULE,
-            'filtros.areas.arrays.v3',
-            fn (): array => Area::where('activo', true)
+            'filtros.unidades.arrays.v1',
+            fn (): array => DB::table('unidades_organizativas')->where('activo', true)
                     ->orderBy('nombre')
-                    ->get(['id_area', 'nombre'])
+                    ->get(['id_unidad', 'nombre'])
                     ->map(fn ($row): array => [
-                        'id_area' => (int) $row->id_area,
+                        'id_area' => (int) $row->id_unidad,
                         'nombre' => (string) $row->nombre,
                     ])
                     ->all(),

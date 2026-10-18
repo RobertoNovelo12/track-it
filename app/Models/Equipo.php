@@ -13,6 +13,7 @@ class Equipo extends Model
     public $timestamps = false;
 
     protected $fillable = [
+        'id_unidad',
         'codigo_inventario',
         'nombre_equipo',
         'id_tipo_equipo',
@@ -146,5 +147,9 @@ class Equipo extends Model
         }
 
         return $this->area?->nombre ?? '—';
+    }
+    public function unidad(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(UnidadOrganizativa::class, 'id_unidad', 'id_unidad');
     }
 }

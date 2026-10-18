@@ -316,1006 +316,147 @@
         >
             <fieldset class="space-y-4 sm:space-y-6">
 
-                {{-- ====================================================
-                    INFORMACIÓN GENERAL
-                ==================================================== --}}
-                <section
-                    class="
-                        bg-[var(--theme-surface)]
-                        border
-                        border-[var(--theme-border)]
-                        rounded-xl
-                        p-4
-                        sm:p-6
-                    "
-                >
-                    <div
-                        class="
-                            flex
-                            flex-col
-                            gap-2
-                            sm:flex-row
-                            sm:items-center
-                            sm:justify-between
-                            mb-5
-                        "
-                    >
-                        <h2
-                            class="
-                                text-sm
-                                font-semibold
-                                text-[var(--theme-text-strong)]
-                            "
-                        >
-                            Información general
-                        </h2>
-
-                        <div
-                            class="
-                                flex
-                                items-center
-                                gap-2
-                                text-xs
-                                text-[var(--theme-text-muted)]
-                            "
-                        >
-                            <span>
-                                Código de inventario:
-                            </span>
-
-                            <span
-                                class="
-                                    inline-flex
-                                    items-center
-                                    rounded-md
-                                    bg-[var(--theme-primary-soft)]
-                                    px-2.5
-                                    py-1
-                                    font-semibold
-                                    text-[var(--theme-primary)]
-                                "
-                                x-text="codigoInventario"
-                            ></span>
-                        </div>
-                    </div>
-
-                    <div
-                        class="
-                            grid
-                            grid-cols-1
-                            md:grid-cols-2
-                            xl:grid-cols-3
-                            gap-4
-                        "
-                    >
-
-                        {{-- NOMBRE --}}
-                        <div class="min-w-0">
-                            <label
-                                for="edit-equipment-name"
-                                class="
-                                    block
-                                    text-xs
-                                    text-[var(--theme-text-muted)]
-                                    mb-1.5
-                                "
-                            >
-                                Nombre del equipo *
-                            </label>
-
-                            <input
-                                id="edit-equipment-name"
-                                type="text"
-                                x-model="nombreEquipo"
-                                @input="
-                                    clearValidationError(
-                                        'nombreEquipo'
-                                    )
-                                "
-                                placeholder="Ej. Laptop del área de RRHH"
-                                class="
-                                    w-full
-                                    min-w-0
-                                    text-sm
-                                    text-[var(--theme-text)]
-                                    bg-[var(--theme-surface)]
-                                    border
-                                    border-[var(--theme-border-strong)]
-                                    rounded-md
-                                    px-3
-                                    py-2.5
-                                    placeholder:text-[var(--theme-text-muted)]
-                                    focus:ring-1
-                                    focus:ring-[var(--theme-primary)]
-                                    focus:border-[var(--theme-primary)]
-                                    outline-none
-                                    transition-colors
-                                "
-                            >
-
-                            <p
-                                x-show="fieldError('nombreEquipo')"
-                                x-cloak
-                                x-text="fieldError('nombreEquipo')"
-                                class="
-                                    mt-1
-                                    text-xs
-                                    text-[var(--theme-danger)]
-                                "
-                            ></p>
-                        </div>
-
-                        {{-- HOST --}}
-                        <div class="min-w-0">
-                            <label
-                                for="edit-equipment-host"
-                                class="
-                                    block
-                                    text-xs
-                                    text-[var(--theme-text-muted)]
-                                    mb-1.5
-                                "
-                            >
-                                Host
-                            </label>
-
-                            <input
-                                id="edit-equipment-host"
-                                type="text"
-                                x-model="host"
-                                placeholder="Ej. 030-123-456"
-                                class="
-                                    w-full
-                                    min-w-0
-                                    text-sm
-                                    text-[var(--theme-text)]
-                                    bg-[var(--theme-surface)]
-                                    border
-                                    border-[var(--theme-border-strong)]
-                                    rounded-md
-                                    px-3
-                                    py-2.5
-                                    placeholder:text-[var(--theme-text-muted)]
-                                    focus:ring-1
-                                    focus:ring-[var(--theme-primary)]
-                                    focus:border-[var(--theme-primary)]
-                                    outline-none
-                                    transition-colors
-                                "
-                            >
-                        </div>
-
-                        {{-- ESTADO --}}
-                        <div class="min-w-0">
-                            <x-searchable-select
-                                x-model="idEstadoActivo"
-                                x-options="data.estados"
-                                label="Estado *"
-                                placeholder="Buscar estado..."
-                            />
-
-                            <p
-                                x-show="fieldError('idEstadoActivo')"
-                                x-cloak
-                                x-text="fieldError('idEstadoActivo')"
-                                class="
-                                    mt-1
-                                    text-xs
-                                    text-[var(--theme-danger)]
-                                "
-                            ></p>
-                        </div>
-
-                        {{-- TIPO --}}
-                        <div class="min-w-0">
-                            <x-searchable-select
-                                x-model="idTipoEquipo"
-                                x-options="data.tiposEquipo"
-                                label="Tipo de equipo *"
-                                placeholder="Buscar tipo de equipo..."
-                            />
-
-                            <p
-                                x-show="fieldError('idTipoEquipo')"
-                                x-cloak
-                                x-text="fieldError('idTipoEquipo')"
-                                class="
-                                    mt-1
-                                    text-xs
-                                    text-[var(--theme-danger)]
-                                "
-                            ></p>
-                        </div>
-
-                        {{-- MARCA --}}
-                        <div class="min-w-0">
-                            <x-searchable-select
-                                x-model="idMarca"
-                                x-options="data.marcas"
-                                label="Marca *"
-                                placeholder="Buscar marca..."
-                            />
-
-                            <p
-                                x-show="fieldError('idMarca')"
-                                x-cloak
-                                x-text="fieldError('idMarca')"
-                                class="
-                                    mt-1
-                                    text-xs
-                                    text-[var(--theme-danger)]
-                                "
-                            ></p>
-                        </div>
-
-                        {{-- MODELO --}}
-                        <div class="min-w-0">
-                            <x-searchable-select
-                                x-model="idModelo"
-                                x-options="modelosDisponibles"
-                                label="Modelo"
-                                placeholder="Elige marca y tipo primero"
-                                x-placeholder="
-                                    idMarca === ''
-                                    || idTipoEquipo === ''
-                                        ? 'Elige marca y tipo primero'
-                                        : 'Buscar modelo...'
-                                "
-                                x-disabled="
-                                    idMarca === ''
-                                    || idTipoEquipo === ''
-                                "
-                            />
-                        </div>
-
-                        {{-- CÓDIGO INVENTARIO --}}
-                        <div class="min-w-0">
-                            <label
-                                class="
-                                    block
-                                    text-xs
-                                    text-[var(--theme-text-muted)]
-                                    mb-1.5
-                                "
-                            >
-                                Código de inventario
-                            </label>
-
-                            <div class="relative">
-                                <input
-                                    type="text"
-                                    :value="codigoInventario"
-                                    disabled
-                                    class="
-                                        w-full
-                                        min-w-0
-                                        text-sm
-                                        text-[var(--theme-text-muted)]
-                                        border
-                                        border-[var(--theme-border)]
-                                        rounded-md
-                                        px-3
-                                        py-2.5
-                                        pr-9
-                                        bg-[var(--theme-surface-soft)]
-                                        cursor-not-allowed
-                                    "
-                                >
-
-                                <svg
-                                    class="
-                                        absolute
-                                        right-3
-                                        top-1/2
-                                        -translate-y-1/2
-                                        w-4
-                                        h-4
-                                        text-[var(--theme-text-muted)]
-                                    "
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="1.6"
-                                >
-                                    <rect
-                                        x="6"
-                                        y="10"
-                                        width="12"
-                                        height="9"
-                                        rx="1.5"
-                                    />
-                                    <path d="M8 10V7a4 4 0 018 0v3"/>
-                                </svg>
-                            </div>
-                        </div>
-
-                        {{-- FECHA COMPRA --}}
-                        <div class="min-w-0">
-                            <label
-                                for="edit-equipment-purchase-date"
-                                class="
-                                    block
-                                    text-xs
-                                    text-[var(--theme-text-muted)]
-                                    mb-1.5
-                                "
-                            >
-                                Fecha de compra
-                            </label>
-
-                            <input
-                                id="edit-equipment-purchase-date"
-                                type="date"
-                                x-model="fechaCompra"
-                                class="
-                                    w-full
-                                    min-w-0
-                                    text-sm
-                                    text-[var(--theme-text)]
-                                    bg-[var(--theme-surface)]
-                                    border
-                                    border-[var(--theme-border-strong)]
-                                    rounded-md
-                                    px-3
-                                    py-2.5
-                                    focus:ring-1
-                                    focus:ring-[var(--theme-primary)]
-                                    focus:border-[var(--theme-primary)]
-                                    outline-none
-                                    transition-colors
-                                "
-                            >
-                        </div>
-
-                        {{-- FACTURA --}}
-                        <div class="min-w-0">
-                            <label
-                                for="edit-equipment-invoice"
-                                class="
-                                    block
-                                    text-xs
-                                    text-[var(--theme-text-muted)]
-                                    mb-1.5
-                                "
-                            >
-                                Número de factura *
-                            </label>
-
-                            <input
-                                id="edit-equipment-invoice"
-                                type="text"
-                                x-model="numeroFactura"
-                                @input="
-                                    clearValidationError(
-                                        'numeroFactura'
-                                    )
-                                "
-                                placeholder="Ingresar número de factura"
-                                class="
-                                    w-full
-                                    min-w-0
-                                    text-sm
-                                    text-[var(--theme-text)]
-                                    bg-[var(--theme-surface)]
-                                    border
-                                    border-[var(--theme-border-strong)]
-                                    rounded-md
-                                    px-3
-                                    py-2.5
-                                    placeholder:text-[var(--theme-text-muted)]
-                                    focus:ring-1
-                                    focus:ring-[var(--theme-primary)]
-                                    focus:border-[var(--theme-primary)]
-                                    outline-none
-                                    transition-colors
-                                "
-                            >
-
-                            <p
-                                x-show="fieldError('numeroFactura')"
-                                x-cloak
-                                x-text="fieldError('numeroFactura')"
-                                class="
-                                    mt-1
-                                    text-xs
-                                    text-[var(--theme-danger)]
-                                "
-                            ></p>
-                        </div>
-
-                        {{-- NÚMERO DE SERIE --}}
-                        <div class="min-w-0">
-                            <label
-                                for="edit-equipment-serial"
-                                class="
-                                    block
-                                    text-xs
-                                    text-[var(--theme-text-muted)]
-                                    mb-1.5
-                                "
-                            >
-                                Número de serie *
-                            </label>
-
-                            <input
-                                id="edit-equipment-serial"
-                                type="text"
-                                x-model="numeroSerie"
-                                @input="
-                                    clearValidationError(
-                                        'numeroSerie'
-                                    )
-                                "
-                                placeholder="Ingresar número de serie"
-                                class="
-                                    w-full
-                                    min-w-0
-                                    text-sm
-                                    text-[var(--theme-text)]
-                                    bg-[var(--theme-surface)]
-                                    border
-                                    border-[var(--theme-border-strong)]
-                                    rounded-md
-                                    px-3
-                                    py-2.5
-                                    placeholder:text-[var(--theme-text-muted)]
-                                    focus:ring-1
-                                    focus:ring-[var(--theme-primary)]
-                                    focus:border-[var(--theme-primary)]
-                                    outline-none
-                                    transition-colors
-                                "
-                            >
-
-                            <p
-                                x-show="fieldError('numeroSerie')"
-                                x-cloak
-                                x-text="fieldError('numeroSerie')"
-                                class="
-                                    mt-1
-                                    text-xs
-                                    text-[var(--theme-danger)]
-                                "
-                            ></p>
-                        </div>
-
-                        {{-- ESTATUS / CONDICIÓN --}}
-                        <div class="min-w-0">
-                            <x-searchable-select
-                                x-model="idCondicionActivo"
-                                x-options="data.condiciones"
-                                label="Estatus"
-                                placeholder="Nuevo / Usado / Reparado..."
-                            />
-                        </div>
-
-                        {{-- PROVEEDOR --}}
-                        <div class="min-w-0">
-                            <x-searchable-select
-                                x-model="idProveedor"
-                                x-options="data.proveedores"
-                                label="Proveedor"
-                                placeholder="Buscar proveedor..."
-                            />
-                        </div>
-
-                        {{-- MAC --}}
-                        <div class="min-w-0">
-                            <label
-                                for="edit-equipment-mac"
-                                class="
-                                    block
-                                    text-xs
-                                    text-[var(--theme-text-muted)]
-                                    mb-1.5
-                                "
-                            >
-                                Dirección MAC
-                            </label>
-
-                            <input
-                                id="edit-equipment-mac"
-                                type="text"
-                                x-model="direccionMac"
-                                placeholder="Ej. 4C:CC:6A:18:28:7D"
-                                class="
-                                    w-full
-                                    min-w-0
-                                    text-sm
-                                    text-[var(--theme-text)]
-                                    bg-[var(--theme-surface)]
-                                    border
-                                    border-[var(--theme-border-strong)]
-                                    rounded-md
-                                    px-3
-                                    py-2.5
-                                    placeholder:text-[var(--theme-text-muted)]
-                                    focus:ring-1
-                                    focus:ring-[var(--theme-primary)]
-                                    focus:border-[var(--theme-primary)]
-                                    outline-none
-                                    transition-colors
-                                "
-                            >
-                        </div>
-
-                    </div>
-                </section>
-
-                {{-- ====================================================
-                    CAMPOS DINÁMICOS
-                ==================================================== --}}
-                <section
-                    id="edit-equipment-child-fields"
-                    x-show="hasChildFields"
-                    x-cloak
-                    class="
-                        bg-[var(--theme-surface)]
-                        border
-                        border-[var(--theme-border)]
-                        rounded-xl
-                        p-4
-                        sm:p-6
-                    "
-                >
-                    <h2
-                        class="
-                            text-sm
-                            font-semibold
-                            text-[var(--theme-text-strong)]
-                            mb-5
-                        "
-                    >
-                        Detalles de
-                        <span x-text="selectedTypeLabel"></span>
+            {{-- SELECCIÓN DEL TIPO --}}
+            <section class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 sm:p-6">
+                <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+                    <h2 class="text-sm font-semibold text-[var(--theme-text-strong)]">
+                        Tipo de equipo
                     </h2>
 
-                    <div
-                        class="
-                            grid
-                            grid-cols-1
-                            md:grid-cols-2
-                            xl:grid-cols-3
-                            gap-4
-                        "
-                    >
+                    <p class="text-xs text-[var(--theme-text-muted)]">
+                        Código de inventario:
+
+                        <span
+                            x-text="codigoInventario"
+                            class="font-semibold text-[var(--theme-primary)]"
+                        ></span>
+                    </p>
+                </div>
+
+                <div class="max-w-lg">
+                    <x-searchable-select
+                        x-model="idTipoEquipo"
+                        x-options="data.tiposEquipo"
+                        label="Tipo de equipo *"
+                        placeholder="Buscar tipo de equipo..."
+                    />
+
+                    <p
+                        x-show="fieldError('idTipoEquipo')"
+                        x-text="fieldError('idTipoEquipo')"
+                        class="mt-1 text-xs text-[var(--theme-danger)]"
+                    ></p>
+                </div>
+
+                <p
+                    x-show="!typeId"
+                    class="mt-3 text-xs text-[var(--theme-text-muted)]"
+                >
+                    Selecciona un tipo para mostrar sus campos configurados.
+                </p>
+            </section>
+
+            {{-- SECCIONES Y CAMPOS CONFIGURADOS --}}
+            <template
+                x-for="section in displaySections"
+                :key="typeId + '-' + section.id_seccion"
+            >
+                <section class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 sm:p-6">
+                    <h2
+                        x-text="section.nombre"
+                        class="mb-5 text-sm font-semibold text-[var(--theme-text-strong)]"
+                    ></h2>
+
+                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                         <template
-                            x-for="entry in childFieldEntries"
-                            :key="entry.field"
+                            x-for="field in section.fields"
+                            :key="field.key"
                         >
                             <div
                                 class="min-w-0"
-                                :class="
-                                    entry.type === 'boolean'
-                                        ? 'flex items-center gap-2 md:pt-6'
-                                        : ''
-                                "
+                                :class="field.type === 'textarea'
+                                    ? 'md:col-span-2 xl:col-span-3'
+                                    : ''"
                             >
+                                <label
+                                    :for="'equipment-' + field.key"
+                                    x-text="field.label + (field.required ? ' *' : '')"
+                                    class="mb-1.5 block text-xs text-[var(--theme-text-muted)]"
+                                ></label>
 
-                                {{-- BOOLEAN --}}
-                                <template
-                                    x-if="entry.type === 'boolean'"
-                                >
-                                    <div
-                                        class="
-                                            flex
-                                            items-center
-                                            gap-2
-                                        "
-                                    >
-                                        <input
-                                            type="checkbox"
-                                            :id="'edit_cf_' + entry.field"
-                                            x-model="
-                                                childData[
-                                                    entry.field
-                                                ]
-                                            "
-                                            class="
-                                                rounded
-                                                border-[var(--theme-border-strong)]
-                                                bg-[var(--theme-surface)]
-                                                text-[var(--theme-primary)]
-                                                focus:ring-[var(--theme-primary)]
-                                            "
-                                        >
-
-                                        <label
-                                            :for="'edit_cf_' + entry.field"
-                                            class="
-                                                text-sm
-                                                text-[var(--theme-text)]
-                                            "
-                                            x-text="
-                                                fieldLabel(
-                                                    entry.field
-                                                )
-                                            "
-                                        ></label>
-                                    </div>
-                                </template>
-
-                                {{-- CATÁLOGO --}}
-                                <template
-                                    x-if="
-                                        isCatalogField(
-                                            entry.type
-                                        )
-                                    "
-                                >
+                                {{-- LISTAS --}}
+                                <template x-if="field.type === 'select'">
                                     <div>
-                                        <label
-                                            class="
-                                                block
-                                                text-xs
-                                                text-[var(--theme-text-muted)]
-                                                mb-1.5
-                                            "
-                                            x-text="
-                                                fieldLabel(
-                                                    entry.field
-                                                )
-                                            "
-                                        ></label>
-
                                         <x-searchable-select
-                                            x-model="childData[entry.field]"
-                                            x-options="
-                                                dynamicCatalogOptions(
-                                                    entry.type
-                                                )
-                                            "
+                                            x-model="fieldValues(field)[field.model]"
+                                        x-bind:readonly="!field.child && field.model === 'propietario'"
+                                            x-options="optionsFor(field)"
+                                            x-disabled="disabledField(field)"
                                             placeholder="Buscar..."
                                         />
                                     </div>
                                 </template>
 
-                                {{-- FECHA --}}
-                                <template
-                                    x-if="entry.type === 'date'"
-                                >
-                                    <div>
-                                        <label
-                                            class="
-                                                block
-                                                text-xs
-                                                text-[var(--theme-text-muted)]
-                                                mb-1.5
-                                            "
-                                            x-text="
-                                                fieldLabel(
-                                                    entry.field
-                                                )
-                                            "
-                                        ></label>
-
+                                {{-- SÍ / NO --}}
+                                <template x-if="field.type === 'boolean'">
+                                    <label class="inline-flex items-center gap-2 text-sm text-[var(--theme-text)]">
                                         <input
-                                            type="date"
-                                            x-model="
-                                                childData[
-                                                    entry.field
-                                                ]
-                                            "
-                                            class="
-                                                w-full
-                                                min-w-0
-                                                text-sm
-                                                text-[var(--theme-text)]
-                                                bg-[var(--theme-surface)]
-                                                border
-                                                border-[var(--theme-border-strong)]
-                                                rounded-md
-                                                px-3
-                                                py-2.5
-                                                focus:ring-1
-                                                focus:ring-[var(--theme-primary)]
-                                                focus:border-[var(--theme-primary)]
-                                                outline-none
-                                                transition-colors
-                                            "
+                                            type="checkbox"
+                                            :id="'equipment-' + field.key"
+                                            x-model="fieldValues(field)[field.model]"
+                                        x-bind:readonly="!field.child && field.model === 'propietario'"
+                                            @change="clearValidationError(errorKey(field))"
+                                            class="rounded border-[var(--theme-border-strong)] text-[var(--theme-primary)]"
                                         >
-                                    </div>
+
+                                        <span
+                                            x-text="fieldValues(field)[field.model] ? 'Sí' : 'No'"
+                                        ></span>
+                                    </label>
                                 </template>
 
-                                {{-- NÚMERO --}}
-                                <template
-                                    x-if="entry.type === 'number'"
-                                >
-                                    <div>
-                                        <label
-                                            class="
-                                                block
-                                                text-xs
-                                                text-[var(--theme-text-muted)]
-                                                mb-1.5
-                                            "
-                                            x-text="
-                                                fieldLabel(
-                                                    entry.field
-                                                )
-                                            "
-                                        ></label>
-
-                                        <input
-                                            type="number"
-                                            x-model="
-                                                childData[
-                                                    entry.field
-                                                ]
-                                            "
-                                            class="
-                                                w-full
-                                                min-w-0
-                                                text-sm
-                                                text-[var(--theme-text)]
-                                                bg-[var(--theme-surface)]
-                                                border
-                                                border-[var(--theme-border-strong)]
-                                                rounded-md
-                                                px-3
-                                                py-2.5
-                                                focus:ring-1
-                                                focus:ring-[var(--theme-primary)]
-                                                focus:border-[var(--theme-primary)]
-                                                outline-none
-                                                transition-colors
-                                            "
-                                        >
-                                    </div>
+                                {{-- TEXTO LARGO --}}
+                                <template x-if="field.type === 'textarea'">
+                                    <textarea
+                                        :id="'equipment-' + field.key"
+                                        rows="4"
+                                        x-model="fieldValues(field)[field.model]"
+                                        x-bind:readonly="!field.child && field.model === 'propietario'"
+                                        :placeholder="field.placeholder || ''"
+                                        @input="clearValidationError(errorKey(field))"
+                                        class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)]"
+                                    ></textarea>
                                 </template>
 
-                                {{-- TEXTO --}}
+                                {{-- TEXTO, NÚMERO Y FECHA --}}
                                 <template
-                                    x-if="entry.type === 'text'"
+                                    x-if="!['select', 'boolean', 'textarea'].includes(field.type)"
                                 >
-                                    <div>
-                                        <label
-                                            class="
-                                                block
-                                                text-xs
-                                                text-[var(--theme-text-muted)]
-                                                mb-1.5
-                                            "
-                                            x-text="
-                                                fieldLabel(
-                                                    entry.field
-                                                )
-                                            "
-                                        ></label>
-
-                                        <input
-                                            type="text"
-                                            x-model="
-                                                childData[
-                                                    entry.field
-                                                ]
-                                            "
-                                            class="
-                                                w-full
-                                                min-w-0
-                                                text-sm
-                                                text-[var(--theme-text)]
-                                                bg-[var(--theme-surface)]
-                                                border
-                                                border-[var(--theme-border-strong)]
-                                                rounded-md
-                                                px-3
-                                                py-2.5
-                                                focus:ring-1
-                                                focus:ring-[var(--theme-primary)]
-                                                focus:border-[var(--theme-primary)]
-                                                outline-none
-                                                transition-colors
-                                            "
-                                        >
-                                    </div>
+                                    <input
+                                        :id="'equipment-' + field.key"
+                                        :type="['date', 'number'].includes(field.type)
+                                            ? field.type
+                                            : 'text'"
+                                        :step="field.type === 'number' ? 'any' : null"
+                                        x-model="fieldValues(field)[field.model]"
+                                        x-bind:readonly="!field.child && field.model === 'propietario'"
+                                        :placeholder="field.placeholder || ''"
+                                        @input="clearValidationError(errorKey(field))"
+                                        class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)]"
+                                    >
                                 </template>
 
+                                <p
+                                    x-show="fieldError(errorKey(field))"
+                                    x-text="fieldError(errorKey(field))"
+                                    class="mt-1 text-xs text-[var(--theme-danger)]"
+                                ></p>
                             </div>
                         </template>
                     </div>
                 </section>
+            </template>
 
-                {{-- ====================================================
-                    INFORMACIÓN ADICIONAL
-                ==================================================== --}}
-                <section
-                    class="
-                        bg-[var(--theme-surface)]
-                        border
-                        border-[var(--theme-border)]
-                        rounded-xl
-                        p-4
-                        sm:p-6
-                    "
-                >
-                    <h2
-                        class="
-                            text-sm
-                            font-semibold
-                            text-[var(--theme-text-strong)]
-                            mb-5
-                        "
-                    >
-                        Información adicional
-                    </h2>
-
-                    <div
-                        class="
-                            grid
-                            grid-cols-1
-                            md:grid-cols-2
-                            xl:grid-cols-3
-                            gap-4
-                            mb-5
-                        "
-                    >
-
-                        {{-- RESPONSABLE --}}
-                        <div class="min-w-0">
-                            <label
-                                class="
-                                    block
-                                    text-xs
-                                    text-[var(--theme-text-muted)]
-                                    mb-1.5
-                                "
-                            >
-                                Propietario / Responsable
-                            </label>
-
-                            <input
-                                type="text"
-                                :value="propietario"
-                                readonly
-                                placeholder="Sin responsable"
-                                class="
-                                    w-full
-                                    min-w-0
-                                    text-sm
-                                    text-[var(--theme-text-muted)]
-                                    border
-                                    border-[var(--theme-border)]
-                                    rounded-md
-                                    px-3
-                                    py-2.5
-                                    bg-[var(--theme-surface-soft)]
-                                    placeholder:text-[var(--theme-text-muted)]
-                                    cursor-not-allowed
-                                "
-                            >
-
-                            <p
-                                class="
-                                    mt-1.5
-                                    text-[11px]
-                                    leading-relaxed
-                                    text-[var(--theme-text-muted)]
-                                "
-                            >
-                                El responsable se modifica desde Asignación / Movimientos.
-                            </p>
-                        </div>
-
-                        {{-- HOTEL --}}
-                        <div class="min-w-0">
-                            <x-searchable-select
-                                x-model="idHotel"
-                                x-options="data.hoteles"
-                                label="Hotel *"
-                                placeholder="Buscar hotel..."
-                            />
-
-                            <p
-                                x-show="fieldError('idHotel')"
-                                x-cloak
-                                x-text="fieldError('idHotel')"
-                                class="
-                                    mt-1
-                                    text-xs
-                                    text-[var(--theme-danger)]
-                                "
-                            ></p>
-                        </div>
-
-                        {{-- DEPARTAMENTO --}}
-                        <div class="min-w-0">
-                            <x-searchable-select
-                                x-model="idDepartamento"
-                                x-options="departamentosDisponibles"
-                                label="Departamento"
-                                placeholder="Elige un hotel primero"
-                                x-placeholder="
-                                    idHotel === ''
-                                        ? 'Elige un hotel primero'
-                                        : 'Buscar departamento...'
-                                "
-                                x-disabled="idHotel === ''"
-                            />
-                        </div>
-
-                        {{-- GARANTÍA --}}
-                        <div class="min-w-0">
-                            <label
-                                for="edit-equipment-warranty"
-                                class="
-                                    block
-                                    text-xs
-                                    text-[var(--theme-text-muted)]
-                                    mb-1.5
-                                "
-                            >
-                                Vigencia de garantía
-                            </label>
-
-                            <input
-                                id="edit-equipment-warranty"
-                                type="date"
-                                x-model="fechaFinGarantia"
-                                class="
-                                    w-full
-                                    min-w-0
-                                    text-sm
-                                    text-[var(--theme-text)]
-                                    bg-[var(--theme-surface)]
-                                    border
-                                    border-[var(--theme-border-strong)]
-                                    rounded-md
-                                    px-3
-                                    py-2.5
-                                    focus:ring-1
-                                    focus:ring-[var(--theme-primary)]
-                                    focus:border-[var(--theme-primary)]
-                                    outline-none
-                                    transition-colors
-                                "
-                            >
-                        </div>
-
-                    </div>
-
-                    {{-- COMENTARIOS --}}
-                    <div>
-                        <label
-                            for="edit-equipment-comments"
-                            class="
-                                block
-                                text-xs
-                                text-[var(--theme-text-muted)]
-                                mb-1.5
-                            "
-                        >
-                            Comentarios
-                        </label>
-
-                        <textarea
-                            id="edit-equipment-comments"
-                            x-model="comentarios"
-                            rows="4"
-                            placeholder="Escribe algún comentario adicional..."
-                            class="
-                                w-full
-                                min-w-0
-                                text-sm
-                                text-[var(--theme-text)]
-                                bg-[var(--theme-surface)]
-                                border
-                                border-[var(--theme-border-strong)]
-                                rounded-md
-                                px-3
-                                py-2.5
-                                placeholder:text-[var(--theme-text-muted)]
-                                resize-y
-                                focus:ring-1
-                                focus:ring-[var(--theme-primary)]
-                                focus:border-[var(--theme-primary)]
-                                outline-none
-                                transition-colors
-                            "
-                        ></textarea>
-                    </div>
-
-                </section>
 
                 {{-- ====================================================
                     ACCIONES
@@ -1622,6 +763,337 @@
                                 ?? {}
                             )
                         ),
+
+            base: {
+                nombre_equipo: {
+                    model: 'nombreEquipo',
+                    label: 'Nombre del equipo',
+                    type: 'text',
+                    required: true,
+                },
+
+                id_estado_activo: {
+                    model: 'idEstadoActivo',
+                    label: 'Estado',
+                    type: 'select',
+                    options: 'estados',
+                    required: true,
+                },
+
+                id_marca: {
+                    model: 'idMarca',
+                    label: 'Marca',
+                    type: 'select',
+                    options: 'marcas',
+                    required: true,
+                },
+
+                numero_serie: {
+                    model: 'numeroSerie',
+                    label: 'Número de serie',
+                    type: 'text',
+                    required: true,
+                },
+
+                numero_factura: {
+                    model: 'numeroFactura',
+                    label: 'Número de factura',
+                    type: 'text',
+                    required: true,
+                },
+
+                id_unidad: {
+                    model: 'idHotel',
+                    label: @js(app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['unidad_singular']),
+                    type: 'select',
+                    options: 'hoteles',
+                    required: true,
+                    sectionKey: 'adicional',
+                },
+
+                host: {
+                    model: 'host',
+                    label: 'Host',
+                    type: 'text',
+                },
+
+                id_modelo: {
+                    model: 'idModelo',
+                    label: 'Modelo',
+                    type: 'select',
+                    options: 'modelos',
+                },
+
+                direccion_mac: {
+                    model: 'direccionMac',
+                    label: 'Dirección MAC',
+                    type: 'text',
+                },
+
+                fecha_compra: {
+                    model: 'fechaCompra',
+                    label: 'Fecha de compra',
+                    type: 'date',
+                },
+
+                id_proveedor: {
+                    model: 'idProveedor',
+                    label: 'Proveedor',
+                    type: 'select',
+                    options: 'proveedores',
+                },
+
+                propietario: {
+                    model: 'propietario',
+                    label: 'Propietario / Responsable',
+                    type: 'text',
+                    sectionKey: 'adicional',
+                },
+
+                id_condicion_activo: {
+                    model: 'idCondicionActivo',
+                    label: 'Condición',
+                    type: 'select',
+                    options: 'condiciones',
+                    sectionKey: 'adicional',
+                },
+
+                id_departamento: {
+                    alwaysVisible: true,
+                    model: 'idDepartamento',
+                    label: 'Departamento',
+                    type: 'select',
+                    options: 'departamentos',
+                    sectionKey: 'adicional',
+                },
+
+                fecha_fin_garantia: {
+                    model: 'fechaFinGarantia',
+                    label: 'Vigencia de garantía',
+                    type: 'date',
+                    sectionKey: 'adicional',
+                },
+
+                comentarios: {
+                    model: 'comentarios',
+                    label: 'Comentarios',
+                    type: 'textarea',
+                    sectionKey: 'adicional',
+                },
+            },
+
+            get typeId() {
+                return String(this.idTipoEquipo ?? '');
+            },
+
+            get displayFields() {
+                const configured = this.typeId
+                    ? (this.data.baseFieldsByType?.[this.typeId] ?? {})
+                    : {};
+
+                const fields = [];
+
+                /*
+                 * Campos del sistema.
+                 */
+                Object.entries(this.base).forEach(
+                    ([key, base], index) => {
+                        const meta = configured[key];
+
+                        if (!base.required && !base.alwaysVisible && !meta) {
+                            return;
+                        }
+
+                        fields.push({
+                            ...base,
+                            key,
+                            child: false,
+
+                            required: !!(
+                                base.required || meta?.obligatorio
+                            ),
+
+                            label: meta?.etiqueta || base.label,
+                            sectionId: meta?.id_seccion,
+                            sectionKey: base.sectionKey || 'general',
+                            order: Number(
+                                meta?.orden ?? (index + 1) * 10
+                            ),
+                        });
+                    }
+                );
+
+                /*
+                 * Campos personalizados y específicos del tipo.
+                 */
+                const children = this.typeId
+                    ? (this.data.childFieldsByType?.[this.typeId] ?? {})
+                    : {};
+
+                Object.entries(children).forEach(
+                    ([key, type], index) => {
+                        const meta =
+                            this.data.childFieldMetaByType
+                                ?.[this.typeId]?.[key] ?? {};
+
+                        const catalog =
+                            typeof type === 'string'
+                            && type.startsWith('catalog:');
+
+                        fields.push({
+                            key,
+                            model: key,
+                            child: true,
+
+                            type: catalog
+                                ? 'select'
+                                : (meta.tipo_control || type),
+
+                            catalog: catalog
+                                ? type.substring(8)
+                                : key,
+
+                            label: meta.etiqueta
+                                || this.data.fieldLabels?.[key]
+                                || key,
+
+                            required: !!meta.obligatorio,
+                            placeholder: meta.placeholder || '',
+
+                            sectionId: meta.id_seccion,
+                            sectionKey: 'informacion_tipo',
+
+                            order: Number(
+                                meta.orden ?? 1000 + index
+                            ),
+                        });
+                    }
+                );
+
+                return fields;
+            },
+
+            get displaySections() {
+                const configured = this.typeId
+                    ? (this.data.sectionsByType?.[this.typeId] ?? [])
+                    : [];
+
+                const sections = configured.map(section => ({
+                    ...section,
+                    fields: [],
+                }));
+
+                const names = {
+                    general: 'Información general',
+                    informacion_tipo: 'Información del equipo',
+                    adicional: 'Información adicional',
+                };
+
+                this.displayFields.forEach(field => {
+                    let section = sections.find(
+                        item =>
+                            field.sectionId != null
+                            && String(item.id_seccion)
+                                === String(field.sectionId)
+                    );
+
+                    section ??= sections.find(
+                        item => item.clave === field.sectionKey
+                    );
+
+                    if (!section) {
+                        section = {
+                            id_seccion: 'default-' + field.sectionKey,
+                            clave: field.sectionKey,
+                            nombre: names[field.sectionKey],
+
+                            orden: field.sectionKey === 'general'
+                                ? 10
+                                : field.sectionKey === 'adicional'
+                                    ? 30
+                                    : 20,
+
+                            fields: [],
+                        };
+
+                        sections.push(section);
+                    }
+
+                    section.fields.push(field);
+                });
+
+                return sections
+                    .filter(section => section.fields.length > 0)
+                    .sort((a, b) => a.orden - b.orden)
+                    .map(section => ({
+                        ...section,
+
+                        fields: section.fields.sort(
+                            (a, b) => a.order - b.order
+                        ),
+                    }));
+            },
+
+            optionsFor(field) {
+                if (field.child) {
+                    return this.data.dynamicCatalogs?.[field.catalog]
+                        ?? [];
+                }
+
+                if (field.options === 'modelos') {
+                    return (this.data.modelos ?? []).filter(
+                        modelo =>
+                            String(modelo.idMarca)
+                                === String(this.idMarca)
+                            && String(modelo.idTipoEquipo)
+                                === this.typeId
+                    );
+                }
+
+                if (field.options === 'departamentos') {
+                    const hotel = String(
+                        this.idHotel ?? ''
+                    );
+
+                    if (!hotel) {
+                        return [];
+                    }
+
+                    return (this.data.departamentos ?? []).filter(
+                        departamento =>
+                            departamento.atiendeTodosHoteles === true
+                            || (departamento.idHoteles ?? []).some(
+                                id => String(id) === hotel
+                            )
+                    );
+                }
+
+                return this.data[field.options] ?? [];
+            },
+
+            disabledField(field) {
+                if (field.child) {
+                    return false;
+                }
+
+                return (
+                    field.options === 'modelos'
+                    && (!this.idMarca || !this.typeId)
+                ) || (
+                    field.options === 'departamentos'
+                    && !this.idHotel
+                );
+            },
+
+            errorKey(field) {
+                return field.child
+                    ? 'childData.' + field.model
+                    : field.model;
+            },
+
+            fieldValues(field) {
+                return field.child ? this.childData : this;
+            },
 
                     init() {
                         this.$watch(
@@ -2273,6 +1745,14 @@
                                 'Selecciona un hotel.'
                             ];
                         }
+
+                        this.displayFields.forEach(field => {
+                            if (!field.required) return;
+                            const value = field.child ? payload.childData[field.model] : payload[field.model];
+                            if (value == null || String(value).trim() === '') {
+                                errors[this.errorKey(field)] = ['Completa ' + field.label + '.'];
+                            }
+                        });
 
                         this.validationErrors =
                             errors;

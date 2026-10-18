@@ -81,7 +81,7 @@
 
         $activeFilters[] = [
             'property' => 'area',
-            'label' => $item['nombre'] ?? 'Área',
+            'label' => $item['nombre'] ?? app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['unidad_singular'],
         ];
     }
 @endphp

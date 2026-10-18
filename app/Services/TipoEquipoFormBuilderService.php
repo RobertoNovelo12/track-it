@@ -13,7 +13,7 @@ class TipoEquipoFormBuilderService
         'id_marca',
         'numero_serie',
         'numero_factura',
-        'id_hotel',
+        'id_unidad',
     ];
 
 
@@ -1629,10 +1629,10 @@ class TipoEquipoFormBuilderService
                     'general',
                 ],
 
-                'id_hotel' => [
-                    'Hotel',
+                'id_unidad' => [
+                    app(PlantillaInstalacionService::class)->etiquetas()['unidad_singular'],
                     'select',
-                    'hoteles',
+                    'unidades_organizativas',
                     'adicional',
                 ],
             ];

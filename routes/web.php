@@ -296,6 +296,17 @@ Route::middleware([
     */
 
     Route::get(
+        '/catalogos/departamentos/{departamento}/editar',
+        function (int $departamento) {
+            return view('catalogos.departamentos.edit', [
+                'departamentoId' => $departamento,
+            ]);
+        }
+    )
+        ->whereNumber('departamento')
+        ->name('catalogos.departamentos.edit');
+
+    Route::get(
         '/catalogos/{tipo}/{registro}/editar',
         function (
             string $tipo,

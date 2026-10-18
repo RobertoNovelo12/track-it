@@ -1004,7 +1004,7 @@
                             mb-1.5
                         "
                     >
-                        Área / Departamento
+                        {{ app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['unidad_singular'] }} / Departamento
                     </label>
 
                     <div
@@ -1027,7 +1027,7 @@
                         <input
                             type="text"
                             disabled
-                            placeholder="Buscar área..."
+                            placeholder="{{ app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['buscar_unidad'] }}"
                             class="
                                 w-full
                                 min-w-0

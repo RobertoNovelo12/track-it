@@ -240,6 +240,13 @@ new class extends Component
             ],
 
 
+            'unidades_organizativas' => [
+                'table' => 'unidades_organizativas',
+                'id' => 'id_unidad',
+                'label' => app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['unidad_plural'],
+                'order' => 'nombre',
+            ],
+
             'areas' => [
                 'table' =>
                     'areas',

@@ -60,25 +60,25 @@ class EquipoCreate extends Component
                 'idDepartamento' => ['nullable', 'integer', 'min:1'],
             ],
             [
-                'idHotel.required' => 'Selecciona un hotel.',
-                'idHotel.integer' => 'Selecciona un hotel válido.',
+                'idHotel.required' => 'Selecciona una unidad.',
+                'idHotel.integer' => 'Selecciona una unidad válida.',
                 'idDepartamento.integer' =>
                     'Selecciona un departamento válido.',
             ]
         )->validate();
 
-        $hotel = DB::table('hoteles')
-            ->where('id_hotel', (int) $datos['idHotel'])
+        $hotel = DB::table('unidades_organizativas')
+            ->where('id_unidad', (int) $datos['idHotel'])
             ->where('activo', true)
             ->first([
-                'id_hotel',
+                'id_unidad',
                 'id_area_origen',
             ]);
 
         if (! $hotel) {
             throw \Illuminate\Validation\ValidationException::withMessages([
                 'idHotel' =>
-                    'El hotel seleccionado no existe o está inactivo.',
+                    'La unidad seleccionada no existe o está inactiva.',
             ]);
         }
 
@@ -93,18 +93,18 @@ class EquipoCreate extends Component
                 ->where('d.activo', true)
                 ->where(function ($query) use ($hotel) {
                     $query
-                        ->where('d.atiende_todos_hoteles', true)
+                        ->where('d.atiende_todas_unidades', true)
                         ->orWhereExists(function ($subquery) use ($hotel) {
                             $subquery
                                 ->selectRaw('1')
-                                ->from('departamento_hotel as dh')
+                                ->from('departamento_unidad as dh')
                                 ->whereColumn(
                                     'dh.id_departamento',
                                     'd.id_departamento'
                                 )
                                 ->where(
-                                    'dh.id_hotel',
-                                    $hotel->id_hotel
+                                    'dh.id_unidad',
+                                    $hotel->id_unidad
                                 );
                         });
                 })
@@ -113,13 +113,13 @@ class EquipoCreate extends Component
             if (! $permitido) {
                 throw \Illuminate\Validation\ValidationException::withMessages([
                     'idDepartamento' =>
-                        'El departamento no está disponible para este hotel.',
+                        'El departamento no está disponible para esta unidad.',
                 ]);
             }
         }
 
         return [
-            'id_hotel' => (int) $hotel->id_hotel,
+            'id_unidad' => (int) $hotel->id_unidad,
             'id_departamento' => $departamentoId,
 
             // Compatibilidad temporal con módulos que aún usan áreas.
@@ -582,9 +582,9 @@ class EquipoCreate extends Component
                     'proveedores',
                     'id_proveedor',
                 ],
-                'hoteles' => [
-                    'hoteles',
-                    'id_hotel',
+                'unidades_organizativas' => [
+ 'unidades_organizativas',
+                    'id_unidad',
                 ],
                 'departamentos' => [
                     'departamentos',
@@ -795,10 +795,10 @@ class EquipoCreate extends Component
     public function getHotelesProperty(): array
     {
         return $this->toPlainArray(
-            DB::table('hoteles')
+            DB::table('unidades_organizativas')
                 ->where('activo', true)
                 ->orderBy('nombre')
-                ->get(['id_hotel', 'nombre'])
+                ->get(['id_unidad', 'nombre'])
         );
     }
 
@@ -811,29 +811,29 @@ class EquipoCreate extends Component
             ->get([
                 'id_departamento',
                 'nombre',
-                'atiende_todos_hoteles',
+                'atiende_todas_unidades',
             ]);
 
-        $vinculos = DB::table('departamento_hotel')
+        $vinculos = DB::table('departamento_unidad')
             ->whereIn(
                 'id_departamento',
                 $departamentos->pluck('id_departamento')
             )
             ->get([
                 'id_departamento',
-                'id_hotel',
+                'id_unidad',
             ])
             ->groupBy('id_departamento');
 
         return $departamentos->map(fn ($item): array => [
             'id_departamento' => (int) $item->id_departamento,
             'nombre' => (string) $item->nombre,
-            'atiende_todos_hoteles' => (bool) $item->atiende_todos_hoteles,
+            'atiende_todas_unidades' => (bool) $item->atiende_todas_unidades,
 
             'id_hoteles' => $vinculos
                 ->get($item->id_departamento, collect())
                 ->map(
-                    fn ($vinculo): string => (string) $vinculo->id_hotel
+                    fn ($vinculo): string => (string) $vinculo->id_unidad
                 )
                 ->values()
                 ->all(),
@@ -849,7 +849,7 @@ class EquipoCreate extends Component
         return array_values(array_filter(
             $this->getAllDepartamentos(),
             fn (array $item): bool =>
-                $item['atiende_todos_hoteles']
+                $item['atiende_todas_unidades']
                 || in_array(
                     $this->idHotel,
                     $item['id_hoteles'],
@@ -1047,14 +1047,14 @@ class EquipoCreate extends Component
 
             'hoteles' => $this->toFrontendOptions(
                 $this->hoteles,
-                'id_hotel'
+                'id_unidad'
             ),
 
             'departamentos' => array_map(
                 fn (array $item): array => [
                     'value' => (string) $item['id_departamento'],
                     'label' => (string) $item['nombre'],
-                    'atiendeTodosHoteles' => $item['atiende_todos_hoteles'],
+                    'atiendeTodosHoteles' => $item['atiende_todas_unidades'],
                     'idHoteles' => $item['id_hoteles'],
                 ],
                 $this->getAllDepartamentos()
@@ -1323,7 +1323,7 @@ class EquipoCreate extends Component
                             'id_condicion_activo' => $this->nullableInt(
                                 $payload['idCondicionActivo']
                             ),
-                            'id_hotel' => $organizacion['id_hotel'],
+                            'id_unidad' => $organizacion['id_unidad'],
                             'id_area' => $organizacion['id_area'],
                             'id_departamento' => $organizacion['id_departamento'],
                             'fecha_fin_garantia' => $this->nullableString(
@@ -1456,7 +1456,7 @@ class EquipoCreate extends Component
                             'nombre_colaborador' =>
                                 $propietario,
 
-                            'id_hotel' => $organizacion['id_hotel'],
+                            'id_unidad' => $organizacion['id_unidad'],
 
                             'id_area' => $organizacion['id_area'],
 

@@ -380,7 +380,7 @@
                 <p class="text-xs text-[var(--theme-text-muted)]">
 
                     <span class="text-[var(--theme-text-muted)]">
-                        Área:
+                        {{ app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['unidad_singular'] }} / Departamento:
                     </span>
 
                     {{

@@ -244,9 +244,9 @@
                     required: true,
                 },
 
-                id_hotel: {
+                id_unidad: {
                     model: 'idHotel',
-                    label: 'Hotel',
+                    label: @js(app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['unidad_singular']),
                     type: 'select',
                     options: 'hoteles',
                     required: true,

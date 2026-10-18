@@ -100,9 +100,9 @@ class EquipoEdit extends Component
 
             [
 
-                'idHotel.required' => 'Selecciona un hotel.',
+                'idHotel.required' => 'Selecciona una unidad.',
 
-                'idHotel.integer' => 'Selecciona un hotel válido.',
+                'idHotel.integer' => 'Selecciona una unidad válida.',
 
                 'idDepartamento.integer' =>
 
@@ -112,15 +112,15 @@ class EquipoEdit extends Component
 
         )->validate();
 
-        $hotel = DB::table('hoteles')
+        $hotel = DB::table('unidades_organizativas')
 
-            ->where('id_hotel', (int) $datos['idHotel'])
+            ->where('id_unidad', (int) $datos['idHotel'])
 
             ->where('activo', true)
 
             ->first([
 
-                'id_hotel',
+                'id_unidad',
 
                 'id_area_origen',
 
@@ -132,7 +132,7 @@ class EquipoEdit extends Component
 
                 'idHotel' =>
 
-                    'El hotel seleccionado no existe o está inactivo.',
+                    'La unidad seleccionada no existe o está inactiva.',
 
             ]);
 
@@ -158,7 +158,7 @@ class EquipoEdit extends Component
 
                     $query
 
-                        ->where('d.atiende_todos_hoteles', true)
+                        ->where('d.atiende_todas_unidades', true)
 
                         ->orWhereExists(function ($subquery) use ($hotel) {
 
@@ -166,7 +166,7 @@ class EquipoEdit extends Component
 
                                 ->selectRaw('1')
 
-                                ->from('departamento_hotel as dh')
+                                ->from('departamento_unidad as dh')
 
                                 ->whereColumn(
 
@@ -178,9 +178,9 @@ class EquipoEdit extends Component
 
                                 ->where(
 
-                                    'dh.id_hotel',
+                                    'dh.id_unidad',
 
-                                    $hotel->id_hotel
+                                    $hotel->id_unidad
 
                                 );
 
@@ -196,7 +196,7 @@ class EquipoEdit extends Component
 
                     'idDepartamento' =>
 
-                        'El departamento no está disponible para este hotel.',
+                        'El departamento no está disponible para esta unidad.',
 
                 ]);
 
@@ -206,7 +206,7 @@ class EquipoEdit extends Component
 
         return [
 
-            'id_hotel' => (int) $hotel->id_hotel,
+            'id_unidad' => (int) $hotel->id_unidad,
 
             'id_departamento' => $departamentoId,
 
@@ -286,57 +286,13 @@ class EquipoEdit extends Component
 
     {
 
-        $data = Cache::remember(
-
-            $this->editBaseCacheKey(),
-
-            now()->addMinutes(
-
-                self::EDIT_BASE_CACHE_TTL_MINUTES
-
-            ),
-
-            function (): ?array {
-
-                $row = DB::table('equipos as e')
-
-                    ->leftJoin(
-
-                        'departamentos as dep',
-
-                        'dep.id_departamento',
-
-                        '=',
-
-                        'e.id_departamento'
-
-                    )
-
-                    ->where(
-
-                        'e.id_equipo',
-
-                        $this->equipoId
-
-                    )
-
-                    ->first([
-
-                        'e.*',
-
-                        'dep.id_area as departamento_area_id',
-
-                    ]);
-
-                return $row
-
-                    ? (array) $row
-
-                    : null;
-
-            }
-
-        );
+        // Consultar la ubicación actual; la precarga antigua del listado puede estar incompleta.
+        $row = DB::table('equipos as e')
+            ->leftJoin('departamentos as dep', 'dep.id_departamento', '=', 'e.id_departamento')
+            ->where('e.id_equipo', $this->equipoId)
+            ->first(['e.*', 'dep.id_area as departamento_area_id',
+                'dep.id_departamento_principal as departamento_principal_id']);
+        $data = $row ? (array) $row : null;
 
         abort_unless($data, 404);
 
@@ -394,11 +350,11 @@ class EquipoEdit extends Component
 
         }
 
-        $this->idHotel = (string) ($data['id_hotel'] ?? '');
+        $this->idHotel = (string) ($data['id_unidad'] ?? '');
 
         $this->idDepartamento = (string) (
 
-            $data['id_departamento'] ?? ''
+            $data['departamento_principal_id'] ?? $data['id_departamento'] ?? ''
 
         );
 
@@ -1320,6 +1276,7 @@ class EquipoEdit extends Component
 
                 ],
 
+                'unidades_organizativas' => ['unidades_organizativas', 'id_unidad'],
                 'areas' => [
 
                     'areas',
@@ -1712,13 +1669,13 @@ class EquipoEdit extends Component
 
         return $this->toPlainArray(
 
-            DB::table('hoteles')
+            DB::table('unidades_organizativas')
 
                 ->where('activo', true)
 
                 ->orderBy('nombre')
 
-                ->get(['id_hotel', 'nombre'])
+                ->get(['id_unidad', 'nombre'])
 
         );
 
@@ -1742,11 +1699,11 @@ class EquipoEdit extends Component
 
                 'nombre',
 
-                'atiende_todos_hoteles',
+                'atiende_todas_unidades',
 
             ]);
 
-        $vinculos = DB::table('departamento_hotel')
+        $vinculos = DB::table('departamento_unidad')
 
             ->whereIn(
 
@@ -1760,7 +1717,7 @@ class EquipoEdit extends Component
 
                 'id_departamento',
 
-                'id_hotel',
+                'id_unidad',
 
             ])
 
@@ -1772,7 +1729,7 @@ class EquipoEdit extends Component
 
             'nombre' => (string) $item->nombre,
 
-            'atiende_todos_hoteles' => (bool) $item->atiende_todos_hoteles,
+            'atiende_todas_unidades' => (bool) $item->atiende_todas_unidades,
 
             'id_hoteles' => $vinculos
 
@@ -1780,7 +1737,7 @@ class EquipoEdit extends Component
 
                 ->map(
 
-                    fn ($vinculo): string => (string) $vinculo->id_hotel
+                    fn ($vinculo): string => (string) $vinculo->id_unidad
 
                 )
 
@@ -1808,7 +1765,7 @@ class EquipoEdit extends Component
 
             fn (array $item): bool =>
 
-                $item['atiende_todos_hoteles']
+                $item['atiende_todas_unidades']
 
                 || in_array(
 
@@ -1916,6 +1873,8 @@ class EquipoEdit extends Component
 
     {
 
+        $baseFieldsByType = [];
+
         $childFieldsByType = [];
 
         $childFieldMetaByType = [];
@@ -1949,6 +1908,19 @@ class EquipoEdit extends Component
         ) {
 
             $form = $this->configuredForm($tipoId);
+            $baseFieldsByType[$tipoId] = [];
+            foreach ($form['fields'] as $field) {
+                if (! $field['visible'] || ! in_array($field['origen_dato'], ['equipos', 'asignacion'], true)) {
+                    continue;
+                }
+                $baseFieldsByType[$tipoId][$field['clave']] = [
+                    'etiqueta' => $field['etiqueta'],
+                    'id_seccion' => $field['id_seccion'],
+                    'obligatorio' => (bool) $field['obligatorio'],
+                    'orden' => (int) $field['orden'],
+                ];
+            }
+
 
             $childFieldsByType[$tipoId] = [];
 
@@ -1989,6 +1961,8 @@ class EquipoEdit extends Component
                 $labels[$key] = $field['etiqueta'];
 
                 $childFieldMetaByType[$tipoId][$key] = [
+
+                    'orden' => (int) $field['orden'],
 
                     'id_campo' => $field['id_campo'],
 
@@ -2136,7 +2110,7 @@ class EquipoEdit extends Component
 
             ),
 
-            'hoteles' => $this->toFrontendOptions($this->hoteles, 'id_hotel'),
+            'hoteles' => $this->toFrontendOptions($this->hoteles, 'id_unidad'),
 
             'areas' => $this->toFrontendOptions(
 
@@ -2154,7 +2128,7 @@ class EquipoEdit extends Component
 
                     'label' => (string) $item['nombre'],
 
-                    'atiendeTodosHoteles' => $item['atiende_todos_hoteles'],
+                    'atiendeTodosHoteles' => $item['atiende_todas_unidades'],
                     'idHoteles' => $item['id_hoteles'],
 
                 ],
@@ -2164,6 +2138,8 @@ class EquipoEdit extends Component
             ),
 
             'childFieldsByType' => $childFieldsByType,
+
+            'baseFieldsByType' => $baseFieldsByType,
 
             'childFieldMetaByType' => $childFieldMetaByType,
 
@@ -2601,7 +2577,7 @@ class EquipoEdit extends Component
 
                         ),
 
-                        'id_hotel' => $organizacion['id_hotel'],
+                        'id_unidad' => $organizacion['id_unidad'],
 
                         'id_area' => $organizacion['id_area'],
 

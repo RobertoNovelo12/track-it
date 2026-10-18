@@ -38,7 +38,7 @@
         ],
         [
             'key' => 'hoteles',
-            'label' => 'Hoteles',
+            'label' => app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['unidad_plural'],
         ],
         [
             'key' => 'departamentos',
@@ -638,77 +638,12 @@
             DEPARTAMENTOS
         ======================================================== --}}
         <div
-            x-show="
-                section === 'departamentos'
-            "
+            x-show="section === 'departamentos'"
             x-cloak
         >
-            <section
-                class="
-                    bg-[var(--theme-surface)]
-
-                    border
-                    border-[var(--theme-border)]
-
-                    rounded-xl
-
-                    overflow-hidden
-                "
-            >
-                <div
-                    class="
-                        px-4
-                        sm:px-5
-
-                        py-4
-
-                        border-b
-                        border-[var(--theme-border)]
-                    "
-                >
-                    <h2
-                        class="
-                            text-sm
-                            font-semibold
-                            text-[var(--theme-text-strong)]
-                        "
-                        x-text="
-                            sectionLabel(
-                                'departamentos'
-                            )
-                        "
-                    ></h2>
-
-                    <p
-                        class="
-                            mt-1
-
-                            text-xs
-                            text-[var(--theme-text-muted)]
-                        "
-                    >
-                        Administra los departamentos asociados a cada área.
-                    </p>
-                </div>
-
-                <div
-                    class="
-                        px-4
-                        sm:px-5
-
-                        py-8
-                    "
-                >
-                    <p
-                        class="
-                            text-sm
-                            text-[var(--theme-text-muted)]
-                        "
-                    >
-                        La administración de departamentos se construirá aquí.
-                    </p>
-                </div>
-            </section>
+            <livewire:catalogos.departamentos
+                :key="'administracion-departamentos'"
+            />
         </div>
 
 
@@ -721,69 +656,7 @@
             "
             x-cloak
         >
-            <section
-                class="
-                    bg-[var(--theme-surface)]
-
-                    border
-                    border-[var(--theme-border)]
-
-                    rounded-xl
-
-                    overflow-hidden
-                "
-            >
-                <div
-                    class="
-                        px-4
-                        sm:px-5
-
-                        py-4
-
-                        border-b
-                        border-[var(--theme-border)]
-                    "
-                >
-                    <h2
-                        class="
-                            text-sm
-                            font-semibold
-                            text-[var(--theme-text-strong)]
-                        "
-                    >
-                        Plantillas
-                    </h2>
-
-                    <p
-                        class="
-                            mt-1
-
-                            text-xs
-                            text-[var(--theme-text-muted)]
-                        "
-                    >
-                        Configura la estructura y comportamiento de los registros.
-                    </p>
-                </div>
-
-                <div
-                    class="
-                        px-4
-                        sm:px-5
-
-                        py-8
-                    "
-                >
-                    <p
-                        class="
-                            text-sm
-                            text-[var(--theme-text-muted)]
-                        "
-                    >
-                        Desde aquí se configurarán los nombres y campos utilizados por cada plantilla.
-                    </p>
-                </div>
-            </section>
+            @include('catalogos.plantillas.panel')
         </div>
 
 

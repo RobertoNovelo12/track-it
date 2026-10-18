@@ -466,7 +466,7 @@ class EquipoShow extends Component
 
             )
 
-            ->leftJoin('hoteles as h', 'h.id_hotel', '=', 'e.id_hotel')
+            ->leftJoin('unidades_organizativas as h', 'h.id_unidad', '=', 'e.id_unidad')
 
             ->leftJoin(
 
@@ -544,7 +544,7 @@ class EquipoShow extends Component
 
                 'e.id_departamento',
 
-                'e.id_hotel',
+                'e.id_unidad',
 
                 'te.nombre as tipo_equipo',
 

@@ -281,7 +281,7 @@
                 {{-- Estado --}}
                 <col class="w-[125px]">
 
-                {{-- Área / Departamento --}}
+                {{-- {{ app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['unidad_singular'] }} / Departamento --}}
                 <col class="w-[225px]">
 
                 {{-- Acciones --}}
@@ -881,7 +881,7 @@
                         >
 
                             <span class="truncate">
-                                Área / Departamento
+                                {{ app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['unidad_singular'] }} / Departamento
                             </span>
 
                             <span
@@ -1388,7 +1388,7 @@
                         >
 
                             <div
-                                data-popover-label="Área / Departamento"
+                                data-popover-label="{{ app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['unidad_singular'] }} / Departamento"
                                 data-popover-value="{{
                                     $equipo->ubicacion_organizacional
                                     ?? '—'

@@ -1,6 +1,8 @@
 <?php
 
 use App\Models\Hotel;
+use App\Models\Departamento;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -29,6 +31,7 @@ new class extends Component
     public string $extension_telefono = '';
     public string $descripcion = '';
     public bool $activo = true;
+    public array $idDepartamentos = [];
 
     public function mount(?int $hotelId = null): void
     {
@@ -60,7 +63,7 @@ new class extends Component
 
         $this->resetForm();
 
-        $this->editingId = (int) $hotel->id_hotel;
+        $this->editingId = (int) $hotel->id_unidad;
         $this->idSede = (string) $hotel->id_sede;
 
         foreach ([
@@ -75,6 +78,9 @@ new class extends Component
         }
 
         $this->activo = (bool) $hotel->activo;
+        $this->idDepartamentos = $hotel->departamentos()->principales()
+            ->where('atiende_todas_unidades', false)
+            ->pluck('departamentos.id_departamento')->map(fn ($id) => (string) $id)->all();
         $this->formOpen = true;
     }
 
@@ -98,6 +104,7 @@ new class extends Component
 
         $this->reset([
             'editingId',
+            'idDepartamentos',
             'idSede',
             'codigo',
             'nombre',
@@ -117,6 +124,7 @@ new class extends Component
         abort_unless(auth()->check(), 403);
 
         $this->message = '';
+        $unidad = mb_strtolower(app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['unidad_singular']);
 
         foreach ([
             'codigo',
@@ -130,6 +138,9 @@ new class extends Component
         }
 
         $validated = $this->validate([
+            'idDepartamentos' => ['array'],
+            'idDepartamentos.*' => ['integer', 'distinct',
+                Rule::exists('departamentos', 'id_departamento')->whereNull('id_departamento_principal')],
             'idSede' => [
                 'required',
                 'integer',
@@ -139,9 +150,9 @@ new class extends Component
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('hoteles', 'nombre')
+                Rule::unique('unidades_organizativas', 'nombre')
                     ->where('id_sede', $this->idSede)
-                    ->ignore($this->editingId, 'id_hotel'),
+                    ->ignore($this->editingId, 'id_unidad'),
             ],
             'codigo' => [
                 'nullable',
@@ -172,17 +183,15 @@ new class extends Component
                 'boolean',
             ],
         ], [
+            'idDepartamentos.*.exists' => 'Un departamento ya no está disponible. Recarga la página.',
+            'idDepartamentos.*.distinct' => 'No repitas departamentos.',
             'idSede.required' => 'Selecciona una sede.',
             'idSede.exists' => 'La sede seleccionada ya no existe.',
-            'nombre.required' => 'Escribe el nombre del hotel.',
-            'nombre.unique' => 'Ya existe un hotel con ese nombre en esta sede.',
+            'nombre.required' => 'Escribe el nombre del '.$unidad.'.',
+            'nombre.unique' => 'Ya existe un '.$unidad.' con ese nombre en esta sede.',
             'nombre.max' => 'El nombre no puede superar los 255 caracteres.',
             'correo.email' => 'Escribe un correo válido.',
         ]);
-
-        $hotel = $this->editingId
-            ? Hotel::findOrFail($this->editingId)
-            : new Hotel;
 
         $data = [
             'id_sede' => (int) $validated['idSede'],
@@ -202,11 +211,22 @@ new class extends Component
                 : null;
         }
 
-        $hotel->fill($data)->save();
+        DB::transaction(function () use ($data, $validated) {
+            $departamentos = Departamento::principales()->orderBy('id_departamento')->lockForUpdate()->get();
+            $hotel = $this->editingId ? Hotel::lockForUpdate()->findOrFail($this->editingId) : new Hotel;
+            $hotel->fill($data)->save();
+            // La cobertura global no necesita asociaciones individuales.
+            $seleccionados = $departamentos->where('atiende_todas_unidades', false)
+                ->whereIn('id_departamento', $validated['idDepartamentos'])->pluck('id_departamento')->all();
+            $quitar = $departamentos->pluck('id_departamento')->diff($seleccionados)->all();
+            $hotel->departamentos()->detach($quitar);
+            $hotel->departamentos()->syncWithoutDetaching($seleccionados);
+        });
+        app(\App\Services\SystemCacheService::class)->refreshModule('catalogos');
 
         if ($this->paginaEdicion) {
             $this->resetValidation();
-            $this->message = 'Hotel actualizado correctamente.';
+            $this->message = ucfirst($unidad).' actualizado correctamente.';
 
             return;
         }
@@ -218,7 +238,7 @@ new class extends Component
 
         $this->resetPage(pageName: 'hotelesPage');
 
-        $this->message = 'Hotel guardado correctamente.';
+        $this->message = ucfirst($unidad).' guardado correctamente.';
     }
 
     public function hoteles()
@@ -250,7 +270,7 @@ new class extends Component
                 )
             )
             ->orderBy('nombre')
-            ->orderBy('id_hotel')
+            ->orderBy('id_unidad')
             ->paginate(15, ['*'], 'hotelesPage');
     }
 };
@@ -259,6 +279,9 @@ new class extends Component
 <div class="min-w-0 space-y-5 rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 sm:p-5">
     @php
         $hoteles = $paginaEdicion ? null : $this->hoteles();
+        $etiquetasUnidad = app(\App\Services\PlantillaInstalacionService::class)->etiquetas();
+        $unidad = mb_strtolower($etiquetasUnidad['unidad_singular']);
+        $unidades = mb_strtolower($etiquetasUnidad['unidad_plural']);
     @endphp
 
     {{-- Encabezado del listado --}}
@@ -266,11 +289,11 @@ new class extends Component
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
                 <h2 class="text-lg font-semibold text-[var(--theme-text-strong)]">
-                    Hoteles
+                    {{ app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['unidad_plural'] }}
                 </h2>
 
                 <p class="mt-1 text-xs text-[var(--theme-text-muted)]">
-                    Administra los hoteles y sus datos de contacto.
+                    Administra los {{ $unidades }} y sus datos de contacto.
                 </p>
             </div>
 
@@ -280,7 +303,7 @@ new class extends Component
                 wire:loading.attr="disabled"
                 class="rounded-lg bg-[var(--theme-primary)] px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-50"
             >
-                + Añadir hotel
+                + Añadir {{ $unidad }}
             </button>
         </div>
     @endif
@@ -304,7 +327,7 @@ new class extends Component
         >
             <div>
                 <h3 class="font-semibold text-[var(--theme-text-strong)]">
-                    {{ $paginaEdicion ? 'Datos del hotel' : 'Nuevo hotel' }}
+                    {{ $paginaEdicion ? 'Datos del '.$unidad : 'Nuevo '.$unidad }}
                 </h3>
 
                 <p class="mt-1 text-xs text-[var(--theme-text-muted)]">
@@ -406,12 +429,48 @@ new class extends Component
                     class="h-4 w-4 accent-[var(--theme-primary)]"
                 >
 
-                Hotel activo
+                {{ $etiquetasUnidad['unidad_singular'] }} activo
             </label>
 
             @error('activo')
                 <p class="text-xs text-red-500">{{ $message }}</p>
             @enderror
+
+            <fieldset class="space-y-3 border-t border-[var(--theme-border)] pt-5">
+                <legend class="px-1 text-sm font-semibold text-[var(--theme-text-strong)]">Departamentos</legend>
+                <p class="text-xs text-[var(--theme-text-muted)]">
+                    Selecciona los departamentos que atienden esta unidad. Los de cobertura global se incluyen automáticamente, también en las nuevas unidades.
+                    Los inactivos conservan su asignación, pero no estarán disponibles al registrar equipos.
+                </p>
+                <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+                    @forelse (\App\Models\Departamento::principales()->orderBy('nombre')->get() as $departamento)
+                        <label wire:key="hotel-departamento-{{ $departamento->id_departamento }}" class="flex items-start gap-3 rounded-lg border border-[var(--theme-border)] p-3 text-sm text-[var(--theme-text)]">
+                            @if ($departamento->atiende_todas_unidades)
+                                <input type="checkbox" checked disabled class="mt-1 h-4 w-4 accent-[var(--theme-primary)]">
+                            @else
+                                <input type="checkbox" wire:model="idDepartamentos" value="{{ $departamento->id_departamento }}" class="mt-1 h-4 w-4 accent-[var(--theme-primary)]">
+                            @endif
+                            <span>
+                                {{ $departamento->nombre }}
+                                @if (! $departamento->activo)
+                                    <span class="text-xs text-[var(--theme-text-muted)]">(Inactivo)</span>
+                                @endif
+                                @if ($departamento->atiende_todas_unidades)
+                                    <span class="mt-1 block text-xs text-[var(--theme-text-muted)]">{{ app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['atiende_todas_unidades'] }} · Automático</span>
+                                @endif
+                            </span>
+                        </label>
+                    @empty
+                        <p class="text-sm text-[var(--theme-text-muted)]">No hay departamentos registrados.</p>
+                    @endforelse
+                </div>
+                @error('idDepartamentos')
+                    <p class="text-xs text-red-500">{{ $message }}</p>
+                @enderror
+                @error('idDepartamentos.*')
+                    <p class="text-xs text-red-500">{{ $message }}</p>
+                @enderror
+            </fieldset>
 
             <div class="flex flex-wrap justify-end gap-3 border-t border-[var(--theme-border)] pt-4">
                 <button
@@ -420,7 +479,7 @@ new class extends Component
                     wire:loading.attr="disabled"
                     class="rounded-lg border border-[var(--theme-border)] px-4 py-2.5 text-xs text-[var(--theme-text)] disabled:opacity-50"
                 >
-                    {{ $paginaEdicion ? 'Volver a hoteles' : 'Cancelar' }}
+                    {{ $paginaEdicion ? 'Volver a '.$unidades : 'Cancelar' }}
                 </button>
 
                 <button
@@ -429,7 +488,7 @@ new class extends Component
                     class="rounded-lg bg-[var(--theme-primary)] px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-50"
                 >
                     <span wire:loading.remove wire:target="saveHotel">
-                        {{ $paginaEdicion ? 'Guardar cambios' : 'Guardar hotel' }}
+                        {{ $paginaEdicion ? 'Guardar cambios' : 'Guardar '.$unidad }}
                     </span>
 
                     <span wire:loading wire:target="saveHotel">
@@ -445,21 +504,21 @@ new class extends Component
         <div class="flex flex-col gap-3 sm:flex-row">
             <div class="flex-1">
                 <label for="hoteles-search" class="sr-only">
-                    Buscar hoteles
+                    Buscar {{ $unidades }}
                 </label>
 
                 <input
                     id="hoteles-search"
                     type="search"
                     wire:model.live.debounce.350ms="search"
-                    placeholder="Buscar por hotel, código o sede..."
+                    placeholder="Buscar por nombre, código o sede..."
                     class="w-full rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)]"
                 >
             </div>
 
             <div>
                 <label for="hoteles-estado" class="sr-only">
-                    Estado del hotel
+                    Estado del {{ $unidad }}
                 </label>
 
                 <select
@@ -477,7 +536,7 @@ new class extends Component
         <div class="overflow-hidden rounded-xl border border-[var(--theme-border)]">
             <div class="border-b border-[var(--theme-border)] px-4 py-4 sm:px-5">
                 <h3 class="text-sm font-semibold text-[var(--theme-text-strong)]">
-                    Hoteles registrados
+                    {{ $etiquetasUnidad['unidad_plural'] }} registrados
                 </h3>
 
                 <p class="mt-1 text-xs text-[var(--theme-text-muted)]">
@@ -490,7 +549,7 @@ new class extends Component
                     <thead class="bg-[var(--theme-surface-soft)] text-xs text-[var(--theme-text-muted)]">
                         <tr>
                             <th scope="col" class="px-4 py-3 sm:px-5">
-                                Hotel
+                                {{ app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['unidad_singular'] }}
                             </th>
 
                             <th scope="col" class="px-4 py-3">
@@ -513,7 +572,7 @@ new class extends Component
 
                     <tbody class="divide-y divide-[var(--theme-border)]">
                         @forelse ($hoteles as $hotel)
-                            <tr wire:key="hotel-row-{{ $hotel->id_hotel }}">
+                            <tr wire:key="hotel-row-{{ $hotel->id_unidad }}">
                                 <td class="px-4 py-4 font-medium text-[var(--theme-text-strong)] sm:px-5">
                                     {{ $hotel->nombre }}
                                 </td>
@@ -538,7 +597,7 @@ new class extends Component
 
                                 <td class="px-4 py-4 text-right sm:px-5">
                                     <a
-                                        href="{{ route('catalogos.hoteles.edit', ['hotel' => $hotel->id_hotel]) }}"
+                                        href="{{ route('catalogos.hoteles.edit', ['hotel' => $hotel->id_unidad]) }}"
                                         aria-label="Editar {{ $hotel->nombre }}"
                                         class="inline-flex items-center justify-center rounded-lg border border-[var(--theme-border)] px-3 py-2 text-xs text-[var(--theme-text)] hover:bg-[var(--theme-surface-soft)]"
                                     >
@@ -552,7 +611,7 @@ new class extends Component
                                     colspan="5"
                                     class="px-5 py-10 text-center text-sm text-[var(--theme-text-muted)]"
                                 >
-                                    No se encontraron hoteles con estos filtros.
+                                    No se encontraron {{ $unidades }} con estos filtros.
                                 </td>
                             </tr>
                         @endforelse

@@ -11,6 +11,7 @@ class Asignacion extends Model
     public $timestamps = false;
 
     protected $fillable = [
+        'id_unidad',
         'id_equipo', 'nombre_colaborador', 'numero_colaborador',
         'id_area', 'id_departamento', 'id_ubicacion', 'id_tipo_asignacion',
         'fecha_asignacion', 'fecha_fin', 'observaciones', 'asignado_por',
@@ -49,5 +50,9 @@ class Asignacion extends Model
     public function asignadoPor()
     {
         return $this->belongsTo(Usuario::class, 'asignado_por', 'id_usuario');
+    }
+    public function unidad(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(UnidadOrganizativa::class, 'id_unidad', 'id_unidad');
     }
 }

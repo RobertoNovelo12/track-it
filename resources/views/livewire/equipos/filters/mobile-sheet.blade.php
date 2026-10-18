@@ -461,7 +461,7 @@
                         ÁREA / DEPARTAMENTO
                     ========================================= --}}
                     <x-searchable-select
-                        label="Área / Departamento"
+                        :label="app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['unidad_singular']"
 
                         wire-model="area"
 
@@ -474,7 +474,7 @@
                             )
                         "
 
-                        placeholder="Seleccionar área..."
+                        :placeholder="app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['buscar_unidad']"
                     />
 
                 </div>
