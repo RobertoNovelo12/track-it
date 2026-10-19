@@ -861,6 +861,20 @@ class ReasignacionCreate extends Component
                 }
             );
 
+        $notificaciones = app(\App\Services\NotificacionService::class);
+
+        $notificaciones->notificar(
+            'asignaciones',
+            'Equipo reasignado',
+            $notificaciones->nombreActor()
+                . ' reasignó el equipo '
+                . $notificaciones->etiquetaEquipo((int) $resultado['equipoId'])
+                . ' a un nuevo responsable.',
+            route('equipos.show', (int) $resultado['equipoId'], false)
+        );
+
+        $this->dispatch('notificaciones-actualizadas');
+
         return [
             'ok' => true,
 

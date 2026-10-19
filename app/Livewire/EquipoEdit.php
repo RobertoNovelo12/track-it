@@ -2423,6 +2423,10 @@ class EquipoEdit extends Component
 
         );
 
+        $estadoAnterior = (int) DB::table('equipos')
+            ->where('id_equipo', $this->equipoId)
+            ->value('id_estado_activo');
+
         $record = DB::transaction(
 
             function () use (
@@ -2782,6 +2786,30 @@ class EquipoEdit extends Component
         );
 
         $this->invalidateEquipoCaches();
+
+        $notificaciones = app(\App\Services\NotificacionService::class);
+
+        $estadoNuevo = (int) DB::table('equipos')
+            ->where('id_equipo', $this->equipoId)
+            ->value('id_estado_activo');
+
+        $notificaciones->notificar(
+            'equipos',
+            $estadoAnterior !== $estadoNuevo
+                ? 'Cambio de estado de equipo'
+                : 'Equipo modificado',
+            $notificaciones->nombreActor()
+                . ($estadoAnterior !== $estadoNuevo
+                    ? ' cambió el estado de '
+                        . $notificaciones->etiquetaEquipo($this->equipoId)
+                        . ' a «' . ($notificaciones->estadoDeEquipo($this->equipoId) ?? 'otro estado') . '».'
+                    : ' modificó la información de '
+                        . $notificaciones->etiquetaEquipo($this->equipoId)
+                        . '.'),
+            route('equipos.show', $this->equipoId, false)
+        );
+
+        $this->dispatch('notificaciones-actualizadas');
 
         $this->tipoEquipoOriginal = $tipoNuevo;
 

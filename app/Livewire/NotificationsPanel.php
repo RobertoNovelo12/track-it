@@ -106,6 +106,39 @@ class NotificationsPanel extends Component
 
     /*
     |--------------------------------------------------------------------------
+    | Revisar notificaciones nuevas
+    |--------------------------------------------------------------------------
+    |
+    | Se ejecuta cada minuto (wire:poll en la vista) y cuando otra
+    | parte de la interfaz avisa que creó notificaciones. Solo hace
+    | un COUNT(); el listado se vuelve a consultar únicamente si el
+    | panel ya se abrió y el número de pendientes cambió.
+    |
+    */
+
+    #[On('notificaciones-actualizadas')]
+    public function checkForNewNotifications(): void
+    {
+        $anterior = $this->unreadCount;
+
+        $this->refreshUnreadCount();
+
+        if ($this->unreadCount === $anterior) {
+            return;
+        }
+
+        if ($this->notificationsLoaded) {
+            $this->refreshNotifications();
+
+            return;
+        }
+
+        $this->dispatchUnreadCount();
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
     | Actualizar listado
     |--------------------------------------------------------------------------
     */

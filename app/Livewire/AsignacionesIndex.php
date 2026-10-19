@@ -559,6 +559,20 @@ class AsignacionesIndex extends Component
         |--------------------------------------------------------------------------
         */
 
+        $notificaciones = app(\App\Services\NotificacionService::class);
+
+        $notificaciones->notificar(
+            'asignaciones',
+            'Equipo asignado',
+            $notificaciones->nombreActor()
+                . ' asignó el equipo '
+                . $notificaciones->etiquetaEquipo((int) $this->idEquipoAsignar)
+                . '.',
+            route('equipos.show', (int) $this->idEquipoAsignar, false)
+        );
+
+        $this->dispatch('notificaciones-actualizadas');
+
         $this->showAsignarModal = false;
 
         $this->resetAsignacionForm();

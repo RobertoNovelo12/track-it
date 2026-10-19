@@ -30,6 +30,19 @@ class EquiposIndex extends Component
     |--------------------------------------------------------------------------
     */
 
+    /*
+     * Situaciones operativas que se pueden filtrar
+     * (enlaces de los indicadores de la Vista general).
+     */
+    public const SITUACIONES = [
+        'vigentes' => 'Equipos vigentes',
+        'asignados' => 'Asignados',
+        'en_mantenimiento' => 'En mantenimiento',
+        'mantenimiento_vencido' => 'Mantenimiento vencido',
+        'garantia_vencida' => 'Garantía vencida',
+        'garantia_por_vencer' => 'Garantía por vencer (30 días)',
+    ];
+
     private const PER_PAGE_OPTIONS = [
         10,
         25,
@@ -136,6 +149,14 @@ class EquiposIndex extends Component
     #[Url]
     public ?string $area = null;
 
+    /*
+     * Situación operativa (accesos de la Vista general):
+     * vigentes, asignados, en_mantenimiento, mantenimiento_vencido,
+     * garantia_vencida, garantia_por_vencer.
+     */
+    #[Url]
+    public ?string $situacion = null;
+
 
     /*
     |--------------------------------------------------------------------------
@@ -183,6 +204,7 @@ class EquiposIndex extends Component
                     'direccionIp',
                     'estado',
                     'area',
+                    'situacion',
                 ],
                 true
             )
@@ -317,6 +339,7 @@ class EquiposIndex extends Component
         $this->direccionIp = null;
         $this->estado = null;
         $this->area = null;
+        $this->situacion = null;
 
         $this->resetPage();
     }
@@ -446,6 +469,20 @@ class EquiposIndex extends Component
                         ?? ''
                     )
                 ),
+
+            'situacion' =>
+                array_key_exists((string) $this->situacion, self::SITUACIONES)
+                    ? (string) $this->situacion
+                    : '',
+
+            /*
+             * Vencimientos dependen del día: la caché de un filtro
+             * de situación no se reutiliza al día siguiente.
+             */
+            'situacion_fecha' =>
+                filled($this->situacion)
+                    ? now()->toDateString()
+                    : '',
 
             'ubicacion_schema' => 'unidades-v1',
 
@@ -956,6 +993,8 @@ class EquiposIndex extends Component
     private function applyFilters(
         Builder $query
     ): void {
+        $this->applySituacion($query);
+
         /*
          * Tanto null como '' significan:
          * "sin filtro".
@@ -1214,6 +1253,85 @@ class EquiposIndex extends Component
                 );
             }
         );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | SITUACIÓN OPERATIVA
+    |--------------------------------------------------------------------------
+    |
+    | Mismos criterios que los indicadores de la Vista general
+    | (⚡dashboard-overview::buildDashboardData), para que el número
+    | de la tarjeta coincida con los resultados del listado.
+    |
+    */
+
+    private function applySituacion(
+        Builder $query
+    ): void {
+        $situacion = (string) $this->situacion;
+
+        if (! array_key_exists($situacion, self::SITUACIONES)) {
+            return;
+        }
+
+        $hoy = now()->toDateString();
+
+        /*
+         * Todas las situaciones se calculan sobre el inventario
+         * vigente: sin baja histórica ni estado BAJA.
+         */
+        $query
+            ->where(function (Builder $q): void {
+                $q->whereNull('ee.clave')
+                    ->orWhere('ee.clave', '<>', 'BAJA');
+            })
+            ->whereNotExists(function (Builder $q): void {
+                $q->selectRaw('1')
+                    ->from('bajas as b_situacion')
+                    ->whereColumn('b_situacion.id_equipo', 'e.id_equipo');
+            });
+
+        match ($situacion) {
+            'asignados' => $query->whereExists(function (Builder $q): void {
+                $q->selectRaw('1')
+                    ->from('asignaciones as a_situacion')
+                    ->whereColumn('a_situacion.id_equipo', 'e.id_equipo')
+                    ->whereNull('a_situacion.fecha_fin');
+            }),
+
+            'en_mantenimiento' => $query->whereExists(function (Builder $q): void {
+                $q->selectRaw('1')
+                    ->from('mantenimientos as m_situacion')
+                    ->join('catalogo_valores as cv_situacion', 'cv_situacion.id_valor', '=', 'm_situacion.id_estado_mantenimiento')
+                    ->whereColumn('m_situacion.id_equipo', 'e.id_equipo')
+                    ->where('cv_situacion.clave', 'EN_PROCESO');
+            }),
+
+            'mantenimiento_vencido' => $query->whereExists(function (Builder $q) use ($hoy): void {
+                $q->selectRaw('1')
+                    ->from('mantenimientos as m_situacion')
+                    ->join('catalogo_valores as cv_situacion', 'cv_situacion.id_valor', '=', 'm_situacion.id_estado_mantenimiento')
+                    ->whereColumn('m_situacion.id_equipo', 'e.id_equipo')
+                    ->whereNotIn('cv_situacion.clave', ['COMPLETADO', 'CANCELADO'])
+                    ->whereNotNull('m_situacion.fecha_proximo_mantenimiento')
+                    ->whereDate('m_situacion.fecha_proximo_mantenimiento', '<', $hoy);
+            }),
+
+            'garantia_vencida' => $query
+                ->whereNotNull('e.fecha_fin_garantia')
+                ->whereDate('e.fecha_fin_garantia', '<', $hoy),
+
+            'garantia_por_vencer' => $query
+                ->whereNotNull('e.fecha_fin_garantia')
+                ->whereBetween('e.fecha_fin_garantia', [
+                    $hoy,
+                    now()->addDays(30)->toDateString(),
+                ]),
+
+            default => null,
+        };
     }
 
 
@@ -1620,6 +1738,15 @@ class EquiposIndex extends Component
 
                 'areas' =>
                     $this->getAreas(),
+
+                'situaciones' =>
+                    collect(self::SITUACIONES)
+                        ->map(fn (string $label, string $value): array => [
+                            'value' => $value,
+                            'label' => $label,
+                        ])
+                        ->values()
+                        ->all(),
             ]
         );
     }

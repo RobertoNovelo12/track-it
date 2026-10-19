@@ -245,6 +245,17 @@ class SeguridadIndex extends Component
             return;
         }
 
+        app(\App\Services\NotificacionService::class)->notificar(
+            'usuarios',
+            'Tu cuenta fue aprobada',
+            'Tu acceso a Track-IT fue aprobado. Ya puedes usar el sistema con tu rol asignado.',
+            route('ajustes.index', [], false),
+            [(int) $this->approvalUserId],
+            incluirActor: true
+        );
+
+        $this->dispatch('notificaciones-actualizadas');
+
         $this->resetPage('usuariosPage');
         $this->closeApprovalModal();
 
@@ -573,6 +584,19 @@ class SeguridadIndex extends Component
             return;
         }
 
+        app(\App\Services\NotificacionService::class)->notificar(
+            'usuarios',
+            'Solicitud aprobada',
+            'Tu solicitud de cambio organizacional fue aprobada y tu información ya se actualizó.',
+            route('ajustes.index', [], false),
+            [(int) DB::table('solicitudes_cambio_organizacion')
+                ->where('id_solicitud', $this->organizationRequestId)
+                ->value('id_usuario')],
+            incluirActor: true
+        );
+
+        $this->dispatch('notificaciones-actualizadas');
+
         $this->closeOrganizationRequestModal();
 
         $this->dispatch(
@@ -644,6 +668,20 @@ class SeguridadIndex extends Component
 
             return;
         }
+
+        app(\App\Services\NotificacionService::class)->notificar(
+            'usuarios',
+            'Solicitud rechazada',
+            'Tu solicitud de cambio organizacional fue rechazada. Motivo: '
+                . trim($this->organizationRequestReviewComment),
+            route('ajustes.index', [], false),
+            [(int) DB::table('solicitudes_cambio_organizacion')
+                ->where('id_solicitud', $this->organizationRequestId)
+                ->value('id_usuario')],
+            incluirActor: true
+        );
+
+        $this->dispatch('notificaciones-actualizadas');
 
         $this->closeOrganizationRequestModal();
 

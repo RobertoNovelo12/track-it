@@ -458,6 +458,20 @@
 
 
                     {{-- =========================================
+                        SITUACIÓN
+                    ========================================= --}}
+                    <x-searchable-select
+                        label="Situación"
+
+                        wire-model="situacion"
+
+                        :options="$situaciones"
+
+                        placeholder="Seleccionar situación..."
+                    />
+
+
+                    {{-- =========================================
                         ÁREA / DEPARTAMENTO
                     ========================================= --}}
                     <x-searchable-select

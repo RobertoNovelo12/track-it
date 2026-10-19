@@ -112,6 +112,10 @@ new class extends Component
             );
 
         $this->loadDashboard();
+
+        // El botón "Actualizar" (dashboard.blade.php) espera este
+        // evento para desbloquearse y detener el giro del icono.
+        $this->dispatch('dashboard-refreshed');
     }
 
 
@@ -1334,7 +1338,11 @@ new class extends Component
             TOTAL DE EQUIPOS
         ======================================================== --}}
 
-        <div
+        <a
+            href="{{ route('equipos.index', ['situacion' => 'vigentes']) }}"
+            wire:navigate
+            title="Ver todos los equipos vigentes"
+            aria-label="Ver todos los equipos vigentes"
             class="
                 min-h-[104px]
 
@@ -1353,6 +1361,12 @@ new class extends Component
                 gap-4
 
                 shadow-sm
+
+                transition-colors
+                hover:bg-[var(--theme-surface-soft)]
+                focus-visible:outline-none
+                focus-visible:ring-2
+                focus-visible:ring-[var(--theme-primary)]
             "
         >
 
@@ -1458,7 +1472,7 @@ new class extends Component
 
             </div>
 
-        </div>
+        </a>
 
 
 
@@ -1466,7 +1480,11 @@ new class extends Component
             EQUIPOS ASIGNADOS
         ======================================================== --}}
 
-        <div
+        <a
+            href="{{ route('equipos.index', ['situacion' => 'asignados']) }}"
+            wire:navigate
+            title="Ver equipos asignados"
+            aria-label="Ver equipos asignados"
             class="
                 min-h-[104px]
 
@@ -1485,6 +1503,12 @@ new class extends Component
                 gap-4
 
                 shadow-sm
+
+                transition-colors
+                hover:bg-[var(--theme-surface-soft)]
+                focus-visible:outline-none
+                focus-visible:ring-2
+                focus-visible:ring-[var(--theme-primary)]
             "
         >
 
@@ -1588,7 +1612,7 @@ new class extends Component
 
             </div>
 
-        </div>
+        </a>
 
 
 
@@ -1596,7 +1620,11 @@ new class extends Component
             EN MANTENIMIENTO
         ======================================================== --}}
 
-        <div
+        <a
+            href="{{ route('equipos.index', ['situacion' => 'en_mantenimiento']) }}"
+            wire:navigate
+            title="Ver equipos en mantenimiento"
+            aria-label="Ver equipos en mantenimiento"
             class="
                 min-h-[104px]
 
@@ -1615,6 +1643,12 @@ new class extends Component
                 gap-4
 
                 shadow-sm
+
+                transition-colors
+                hover:bg-[var(--theme-surface-soft)]
+                focus-visible:outline-none
+                focus-visible:ring-2
+                focus-visible:ring-[var(--theme-primary)]
             "
         >
 
@@ -1716,7 +1750,7 @@ new class extends Component
 
             </div>
 
-        </div>
+        </a>
 
 
 
@@ -1724,7 +1758,11 @@ new class extends Component
             MANTENIMIENTOS VENCIDOS
         ======================================================== --}}
 
-        <div
+        <a
+            href="{{ route('equipos.index', ['situacion' => 'mantenimiento_vencido']) }}"
+            wire:navigate
+            title="Ver equipos con mantenimiento vencido"
+            aria-label="Ver equipos con mantenimiento vencido"
             class="
                 min-h-[104px]
 
@@ -1743,6 +1781,12 @@ new class extends Component
                 gap-4
 
                 shadow-sm
+
+                transition-colors
+                hover:bg-[var(--theme-surface-soft)]
+                focus-visible:outline-none
+                focus-visible:ring-2
+                focus-visible:ring-[var(--theme-primary)]
             "
         >
 
@@ -1846,7 +1890,7 @@ new class extends Component
 
             </div>
 
-        </div>
+        </a>
 
 
 
@@ -1854,7 +1898,11 @@ new class extends Component
             GARANTÍAS VENCIDAS
         ======================================================== --}}
 
-        <div
+        <a
+            href="{{ route('equipos.index', ['situacion' => 'garantia_vencida']) }}"
+            wire:navigate
+            title="Ver equipos con garantía vencida"
+            aria-label="Ver equipos con garantía vencida"
             class="
                 min-h-[104px]
 
@@ -1873,6 +1921,12 @@ new class extends Component
                 gap-4
 
                 shadow-sm
+
+                transition-colors
+                hover:bg-[var(--theme-surface-soft)]
+                focus-visible:outline-none
+                focus-visible:ring-2
+                focus-visible:ring-[var(--theme-primary)]
             "
         >
 
@@ -1988,7 +2042,7 @@ new class extends Component
 
             </div>
 
-        </div>
+        </a>
 
     </div>
 

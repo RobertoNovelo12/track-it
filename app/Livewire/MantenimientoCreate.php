@@ -180,7 +180,7 @@ class MantenimientoCreate extends Component
             'La cantidad debe ser mayor a cero.',
         ]);
 
-        DB::transaction(function () use ($validated) {
+        $mantenimientoId = DB::transaction(function () use ($validated) {
             $mantenimientoId = DB::table('mantenimientos')
                 ->insertGetId([
                     'folio'                       => $this->generarFolio(),
@@ -275,7 +275,36 @@ class MantenimientoCreate extends Component
                             : null,
                     ]);
             }
+
+            return (int) $mantenimientoId;
         });
+
+        $notificaciones = app(\App\Services\NotificacionService::class);
+
+        $folio = DB::table('mantenimientos')
+            ->where('id_mantenimiento', $mantenimientoId)
+            ->value('folio');
+
+        $estado = $notificaciones->nombreCatalogo(
+            (int) $validated['estadoMantenimiento']
+        );
+
+        $notificaciones->notificar(
+            'mantenimientos',
+            'Nuevo mantenimiento ' . ($folio ?: '#' . $mantenimientoId),
+            $notificaciones->nombreActor()
+                . ' registró un mantenimiento para '
+                . $notificaciones->etiquetaEquipo((int) $validated['equipoId'])
+                . ($estado ? ' (' . $estado . ')' : '')
+                . (filled($validated['fechaProximoMantenimiento'] ?? null)
+                    ? '. Próximo mantenimiento: '
+                        . \Illuminate\Support\Carbon::parse($validated['fechaProximoMantenimiento'])->format('d/m/Y')
+                    : '')
+                . '.',
+            route('mantenimientos.edit', $mantenimientoId, false)
+        );
+
+        $this->dispatch('notificaciones-actualizadas');
 
         session()->flash(
             'mantenimientoCreado',

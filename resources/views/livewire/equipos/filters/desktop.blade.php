@@ -68,6 +68,7 @@
                 direccionIp,
                 estado,
                 area,
+                situacion,
                 resetFilters
             "
 
@@ -510,9 +511,25 @@
 
 
         {{-- ====================================================
+            SITUACIÓN
+            Se llena también desde los indicadores de la
+            Vista general (Total, Asignados, Vencidos...).
+        ==================================================== --}}
+        <x-searchable-select
+            label="Situación"
+
+            wire-model="situacion"
+
+            :options="$situaciones"
+
+            placeholder="Buscar situación..."
+        />
+
+
+        {{-- ====================================================
             BOTONES
 
-            En escritorio ocupan las tres columnas restantes,
+            En escritorio ocupan las dos columnas restantes,
             así Service Tag no deja la tarjeta desequilibrada.
         ==================================================== --}}
         <div
@@ -523,8 +540,8 @@
 
                 gap-3
 
-                sm:col-span-1
-                lg:col-span-3
+                sm:col-span-2
+                lg:col-span-2
             "
         >
 

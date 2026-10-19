@@ -251,16 +251,40 @@
 
             {{-- ACTUALIZAR DASHBOARD --}}
 
+            {{--
+                Se bloquea al presionarlo y el icono gira hasta que el
+                componente de la Vista general responde con
+                "dashboard-refreshed". Si la respuesta no llega (error
+                de red, componente aún cargando), se libera a los 20 s.
+            --}}
             <button
                 type="button"
 
-                onclick="
-                    if (window.Livewire) {
-                        Livewire.dispatch(
-                            'dashboard-refresh-requested'
-                        );
-                    }
-                "
+                x-data="{
+                    actualizando: false,
+                    limite: null,
+
+                    actualizar() {
+                        if (this.actualizando || ! window.Livewire) return;
+
+                        this.actualizando = true;
+                        this.limite = setTimeout(() => this.terminar(), 20000);
+
+                        Livewire.dispatch('dashboard-refresh-requested');
+                    },
+
+                    terminar() {
+                        clearTimeout(this.limite);
+                        this.actualizando = false;
+                    },
+                }"
+
+                x-on:click="actualizar()"
+                x-on:dashboard-refreshed.window="terminar()"
+
+                x-bind:disabled="actualizando"
+                x-bind:aria-busy="actualizando"
+                x-bind:title="actualizando ? 'Actualizando…' : 'Actualizar vista general'"
 
                 class="
                     inline-flex
@@ -284,14 +308,29 @@
                     text-[var(--theme-text)]
 
                     hover:bg-[var(--theme-surface-soft)]
+
+                    disabled:cursor-wait
+                    disabled:opacity-70
+                    disabled:hover:bg-[var(--theme-surface)]
+
+                    transition-colors
                 "
             >
 
+                {{--
+                    Icono centrado en el viewBox (círculo con centro en
+                    12,12) para que al girar no se desplace.
+                --}}
                 <svg
                     class="
+                        block
                         h-4
                         w-4
+                        shrink-0
+                        origin-center
                     "
+
+                    x-bind:class="actualizando && 'animate-spin'"
 
                     viewBox="0 0 24 24"
 
@@ -299,28 +338,15 @@
 
                     stroke="currentColor"
 
-                    stroke-width="1.5"
+                    stroke-width="1.6"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+
+                    aria-hidden="true"
                 >
+                    <path d="M20 12a8 8 0 1 1-2.34-5.66L20 8.5"/>
 
-                    <path
-                        d="
-                            M20 11
-
-                            a8 8
-                            0 1 0
-                            2 5.3
-                        "
-                    />
-
-
-                    <path
-                        d="
-                            M20 4
-                            v7
-                            h-7
-                        "
-                    />
-
+                    <path d="M20 4v4.5h-4.5"/>
                 </svg>
 
 

@@ -1476,6 +1476,20 @@ class EquipoCreate extends Component
             }
         );
 
+        $notificaciones = app(\App\Services\NotificacionService::class);
+
+        $notificaciones->notificar(
+            'equipos',
+            'Nuevo equipo registrado',
+            $notificaciones->nombreActor()
+                . ' dio de alta el equipo '
+                . $notificaciones->etiquetaEquipo((int) $idEquipo)
+                . '.',
+            route('equipos.show', (int) $idEquipo, false)
+        );
+
+        $this->dispatch('notificaciones-actualizadas');
+
         return [
             'ok' => true,
 

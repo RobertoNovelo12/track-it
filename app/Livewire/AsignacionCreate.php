@@ -535,6 +535,20 @@ class AsignacionCreate extends Component
                 }
             );
 
+        $notificaciones = app(\App\Services\NotificacionService::class);
+
+        $notificaciones->notificar(
+            'asignaciones',
+            'Equipo asignado',
+            $notificaciones->nombreActor()
+                . ' asignó el equipo '
+                . $notificaciones->etiquetaEquipo((int) $resultado['equipoId'])
+                . '.',
+            route('equipos.show', (int) $resultado['equipoId'], false)
+        );
+
+        $this->dispatch('notificaciones-actualizadas');
+
         return [
             'ok' => true,
 

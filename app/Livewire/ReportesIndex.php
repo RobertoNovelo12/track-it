@@ -1106,6 +1106,21 @@ class ReportesIndex extends Component
 
         $url = route('reportes.download', $registro, false);
 
+        app(\App\Services\NotificacionService::class)->notificar(
+            'reportes',
+            'Reporte disponible',
+            'Tu reporte '
+                . ($registro->nombre_archivo ?: $registro->tipo_reporte)
+                . ' ('
+                . $registro->formato
+                . ') está listo para descargar.',
+            $url,
+            [(int) $registro->id_usuario],
+            incluirActor: true
+        );
+
+        $this->dispatch('notificaciones-actualizadas');
+
         $this->js(
 
             '(() => {'

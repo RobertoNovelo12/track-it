@@ -345,6 +345,10 @@ class MantenimientoEdit extends Component
         ]);
 
 
+        $estadoAnterior = (int) DB::table('mantenimientos')
+            ->where('id_mantenimiento', $this->mantenimientoId)
+            ->value('id_estado_mantenimiento');
+
         DB::transaction(function () use ($validated) {
 
             /*
@@ -554,6 +558,31 @@ class MantenimientoEdit extends Component
                     ]);
             }
         });
+
+
+        if ($estadoAnterior !== (int) $validated['estadoMantenimiento']) {
+            $notificaciones = app(\App\Services\NotificacionService::class);
+
+            $folio = DB::table('mantenimientos')
+                ->where('id_mantenimiento', $this->mantenimientoId)
+                ->value('folio');
+
+            $estado = $notificaciones->nombreCatalogo(
+                (int) $validated['estadoMantenimiento']
+            ) ?? 'un nuevo estado';
+
+            $notificaciones->notificar(
+                'mantenimientos',
+                'Mantenimiento ' . ($folio ?: '#' . $this->mantenimientoId) . ': ' . $estado,
+                $notificaciones->nombreActor()
+                    . ' cambió el mantenimiento de '
+                    . $notificaciones->etiquetaEquipo((int) $validated['equipoId'])
+                    . ' a «' . $estado . '».',
+                route('mantenimientos.edit', $this->mantenimientoId, false)
+            );
+
+            $this->dispatch('notificaciones-actualizadas');
+        }
 
 
         session()->flash(

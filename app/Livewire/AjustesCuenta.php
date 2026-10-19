@@ -683,6 +683,19 @@ class AjustesCuenta extends Component
         |--------------------------------------------------------------------------
         */
 
+        $notificaciones = app(\App\Services\NotificacionService::class);
+
+        $notificaciones->notificar(
+            'usuarios',
+            'Nueva solicitud de cambio',
+            $notificaciones->nombreActor()
+                . ' solicitó un cambio en su información organizacional.',
+            route('usuarios.index', [], false),
+            $notificaciones->administradoresDeUsuarios()
+        );
+
+        $this->dispatch('notificaciones-actualizadas');
+
         $this->resetOrganizationChangeRequest();
 
 

@@ -1,4 +1,4 @@
-<div>
+<div wire:poll.60s="checkForNewNotifications">
 
     {{-- ============================================================
         ESTADO CLIENTE
@@ -828,51 +828,41 @@
                                             items-center
                                             justify-center
 
-                                            {{ strtoupper($notification['tipo']) === 'SEGURIDAD'
-                                                ? 'bg-[var(--theme-primary-soft)] text-[var(--theme-primary)]'
-                                                : 'bg-[var(--theme-surface-soft)] text-[var(--theme-text-muted)]'
+                                            {{ $notification['leida']
+                                                ? 'bg-[var(--theme-surface-soft)] text-[var(--theme-text-muted)]'
+                                                : 'bg-[var(--theme-primary-soft)] text-[var(--theme-primary)]'
                                             }}
                                         "
                                     >
-                                        @if (strtoupper($notification['tipo']) === 'SEGURIDAD')
+                                        @php
+                                            $iconosNotificacion = [
+                                                'SEGURIDAD' => ['M12 3l7 3v5c0 4.8-2.8 8-7 10-4.2-2-7-5.2-7-10V6l7-3z', 'M9.5 12l1.7 1.7L15 10'],
+                                                'ASIGNACION' => ['M8 7h12', 'M16 3l4 4-4 4', 'M16 17H4', 'M8 13l-4 4 4 4'],
+                                                'MANTENIMIENTO' => ['M14.7 6.3a4 4 0 0 0-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4 2.5-2.5z'],
+                                                'EQUIPO' => ['M4 5h16v11H4z', 'M9 20h6', 'M12 16v4'],
+                                                'USUARIOS' => ['M16 20v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1', 'M9.5 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z', 'M21 20v-1a4 4 0 0 0-3-3.9', 'M15.5 4.1a3.5 3.5 0 0 1 0 6.8'],
+                                                'REPORTE' => ['M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z', 'M14 3v5h5', 'M9 13h6', 'M9 17h4'],
+                                            ];
 
-                                            <svg
-                                                class="w-4.5 h-4.5"
+                                            $trazosIcono = $iconosNotificacion[strtoupper($notification['tipo'])]
+                                                ?? ['M18 8a6 6 0 00-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9', 'M10 21h4'];
+                                        @endphp
 
-                                                viewBox="0 0 24 24"
+                                        <svg
+                                            class="w-4.5 h-4.5"
 
-                                                fill="none"
-                                                stroke="currentColor"
-                                                stroke-width="1.6"
-                                            >
-                                                <path
-                                                    d="M12 3l7 3v5c0 4.8-2.8 8-7 10-4.2-2-7-5.2-7-10V6l7-3z"
-                                                />
+                                            viewBox="0 0 24 24"
 
-                                                <path
-                                                    d="M9.5 12l1.7 1.7L15 10"
-                                                />
-                                            </svg>
-
-                                        @else
-
-                                            <svg
-                                                class="w-4.5 h-4.5"
-
-                                                viewBox="0 0 24 24"
-
-                                                fill="none"
-                                                stroke="currentColor"
-                                                stroke-width="1.6"
-                                            >
-                                                <path
-                                                    d="M18 8a6 6 0 00-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"
-                                                />
-
-                                                <path d="M10 21h4"/>
-                                            </svg>
-
-                                        @endif
+                                            fill="none"
+                                            stroke="currentColor"
+                                            stroke-width="1.6"
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                        >
+                                            @foreach ($trazosIcono as $trazo)
+                                                <path d="{{ $trazo }}"/>
+                                            @endforeach
+                                        </svg>
                                     </div>
 
 
@@ -957,7 +947,18 @@
                                             </span>
 
 
-                                            @if (strtoupper($notification['tipo']) === 'SEGURIDAD')
+                                            @php
+                                                $etiquetaTipo = [
+                                                    'SEGURIDAD' => 'Seguridad',
+                                                    'ASIGNACION' => 'Asignación',
+                                                    'MANTENIMIENTO' => 'Mantenimiento',
+                                                    'EQUIPO' => 'Equipo',
+                                                    'USUARIOS' => 'Usuarios',
+                                                    'REPORTE' => 'Reporte',
+                                                ][strtoupper($notification['tipo'])] ?? null;
+                                            @endphp
+
+                                            @if ($etiquetaTipo)
 
                                                 <span
                                                     class="
@@ -976,7 +977,7 @@
                                                         font-medium
                                                     "
                                                 >
-                                                    Seguridad
+                                                    {{ $etiquetaTipo }}
                                                 </span>
 
                                             @endif

@@ -489,6 +489,20 @@ class EquipoBaja extends Component
             $version + 1
         );
 
+        $notificaciones = app(\App\Services\NotificacionService::class);
+
+        $notificaciones->notificar(
+            'equipos',
+            'Equipo dado de baja',
+            $notificaciones->nombreActor()
+                . ' dio de baja el equipo '
+                . $notificaciones->etiquetaEquipo($this->equipoId)
+                . '.',
+            route('equipos.show', $this->equipoId, false)
+        );
+
+        $this->dispatch('notificaciones-actualizadas');
+
         session()->flash(
             'success',
             'El equipo fue dado de baja correctamente.'

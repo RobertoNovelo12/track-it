@@ -342,6 +342,17 @@ class RegisteredUserController extends Controller
             'id_estado_usuario' => $idEstadoPendiente,
         ]);
 
+        $notificaciones = app(\App\Services\NotificacionService::class);
+
+        $notificaciones->notificar(
+            'usuarios',
+            'Nuevo usuario pendiente',
+            trim($validated['nombres'] . ' ' . $validated['apellido_paterno'])
+                . ' (' . $validated['username'] . ') se registró y espera aprobación.',
+            route('usuarios.index', [], false),
+            $notificaciones->administradoresDeUsuarios()
+        );
+
         return redirect()->route('register.pending');
     }
 }

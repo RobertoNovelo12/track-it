@@ -84,6 +84,15 @@
             'label' => $item['nombre'] ?? app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['unidad_singular'],
         ];
     }
+
+    if ($situacion) {
+        $item = collect($situaciones)->firstWhere('value', $situacion);
+
+        $activeFilters[] = [
+            'property' => 'situacion',
+            'label' => $item['label'] ?? 'Situación',
+        ];
+    }
 @endphp
 
 
