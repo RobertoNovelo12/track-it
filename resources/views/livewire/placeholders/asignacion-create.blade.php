@@ -494,7 +494,7 @@
                 </div>
 
 
-                {{-- SEDE --}}
+                {{-- HOTEL --}}
                 <div class="min-w-0">
 
                     <label
@@ -506,7 +506,7 @@
                             text-[var(--theme-text-muted)]
                         "
                     >
-                        Sede *
+                        {{ app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['unidad_singular'] }} *
                     </label>
 
                     <div
@@ -530,7 +530,7 @@
                             type="text"
                             disabled
 
-                            placeholder="Cargando sedes..."
+                            placeholder="Cargando..."
 
                             class="
                                 w-full
@@ -544,85 +544,6 @@
 
                                 text-sm
                                 text-[var(--theme-text)]
-
-                                placeholder:text-[var(--theme-text-muted)]
-
-                                disabled:opacity-100
-                                disabled:cursor-default
-                            "
-                        >
-
-                        <svg
-                            class="
-                                absolute
-                                right-3
-
-                                w-4
-                                h-4
-
-                                text-[var(--theme-text-muted)]
-                            "
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.5"
-                        >
-                            <path d="M6 9l6 6 6-6"/>
-                        </svg>
-                    </div>
-                </div>
-
-
-                {{-- ÁREA --}}
-                <div class="min-w-0">
-
-                    <label
-                        class="
-                            block
-                            mb-1.5
-
-                            text-xs
-                            text-[var(--theme-text-muted)]
-                        "
-                    >
-                        Área *
-                    </label>
-
-                    <div
-                        class="
-                            relative
-
-                            flex
-                            items-center
-
-                            w-full
-
-                            rounded-md
-
-                            border
-                            border-[var(--theme-border)]
-
-                            bg-[var(--theme-surface)]
-                        "
-                    >
-                        <input
-                            type="text"
-                            disabled
-
-                            placeholder="Selecciona una sede primero"
-
-                            class="
-                                w-full
-
-                                px-3
-                                py-2.5
-                                pr-10
-
-                                border-0
-                                bg-transparent
-
-                                text-sm
-                                text-[var(--theme-text-muted)]
 
                                 placeholder:text-[var(--theme-text-muted)]
 
@@ -688,7 +609,7 @@
                             type="text"
                             disabled
 
-                            placeholder="Selecciona un área primero"
+                            placeholder="Selecciona un hotel primero"
 
                             class="
                                 w-full
@@ -767,7 +688,7 @@
                             type="text"
                             disabled
 
-                            placeholder="Selecciona una sede primero"
+                            placeholder="Selecciona un departamento primero"
 
                             class="
                                 w-full

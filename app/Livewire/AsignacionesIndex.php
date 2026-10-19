@@ -1121,7 +1121,7 @@ class AsignacionesIndex extends Component
 
     /*
     |--------------------------------------------------------------------------
-    | Equipos asignados por área
+    | Equipos asignados por hotel
     |--------------------------------------------------------------------------
     */
 
@@ -1143,7 +1143,7 @@ class AsignacionesIndex extends Component
             $cache->remember(
                 self::CACHE_MODULE,
 
-                'index.equipos_por_area.v2',
+                'index.equipos_por_unidad.v3',
 
                 [
                     'equipos_version' =>
@@ -1159,13 +1159,17 @@ class AsignacionesIndex extends Component
 
                 function (): array {
 
+                    /*
+                     * Agrupado por hotel: el de la asignación y, si no
+                     * lo tiene (registros anteriores), el del equipo.
+                     * La clave 'area' se conserva por compatibilidad
+                     * con la vista.
+                     */
                     $areaExpression = "
                         COALESCE(
-                            area_asig.nombre,
-                            area_dep_asig.nombre,
-                            area_equipo.nombre,
-                            area_dep_equipo.nombre,
-                            'Sin área'
+                            unidad_asig.nombre,
+                            unidad_equipo.nombre,
+                            'Sin hotel'
                         )
                     ";
 
@@ -1182,45 +1186,17 @@ class AsignacionesIndex extends Component
                         )
 
                         ->leftJoin(
-                            'areas as area_asig',
-                            'area_asig.id_area',
+                            'unidades_organizativas as unidad_asig',
+                            'unidad_asig.id_unidad',
                             '=',
-                            'a.id_area'
+                            'a.id_unidad'
                         )
 
                         ->leftJoin(
-                            'departamentos as dep_asig',
-                            'dep_asig.id_departamento',
+                            'unidades_organizativas as unidad_equipo',
+                            'unidad_equipo.id_unidad',
                             '=',
-                            'a.id_departamento'
-                        )
-
-                        ->leftJoin(
-                            'areas as area_dep_asig',
-                            'area_dep_asig.id_area',
-                            '=',
-                            'dep_asig.id_area'
-                        )
-
-                        ->leftJoin(
-                            'areas as area_equipo',
-                            'area_equipo.id_area',
-                            '=',
-                            'e.id_area'
-                        )
-
-                        ->leftJoin(
-                            'departamentos as dep_equipo',
-                            'dep_equipo.id_departamento',
-                            '=',
-                            'e.id_departamento'
-                        )
-
-                        ->leftJoin(
-                            'areas as area_dep_equipo',
-                            'area_dep_equipo.id_area',
-                            '=',
-                            'dep_equipo.id_area'
+                            'e.id_unidad'
                         )
 
                         ->whereNull(
@@ -1253,7 +1229,7 @@ class AsignacionesIndex extends Component
                                     'area' =>
                                         (string) (
                                             $item->area
-                                            ?? 'Sin área'
+                                            ?? 'Sin hotel'
                                         ),
 
                                     'total' =>
@@ -1297,7 +1273,7 @@ class AsignacionesIndex extends Component
                         'area' =>
                             (string) (
                                 $item['area']
-                                ?? 'Sin área'
+                                ?? 'Sin hotel'
                             ),
 
                         'total' =>
@@ -2124,4 +2100,4 @@ class AsignacionesIndex extends Component
             ]
         );
     }
-}
+}

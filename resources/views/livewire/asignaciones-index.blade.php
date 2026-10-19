@@ -19,7 +19,7 @@
 
         /*
         |--------------------------------------------------------------------------
-        | Gráfica por área
+        | Gráfica por hotel
         |--------------------------------------------------------------------------
         */
 
@@ -823,7 +823,7 @@
                                 text-[var(--theme-text-strong)]
                             "
                         >
-                            Equipos asignados por área
+                            Equipos asignados por {{ mb_strtolower(app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['unidad_singular']) }}
                         </h2>
 
                         <p
@@ -833,7 +833,7 @@
                                 text-[var(--theme-text-muted)]
                             "
                         >
-                            Distribución de equipos en uso por área de la organización.
+                            Distribución de equipos en uso por {{ mb_strtolower(app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['unidad_singular']) }}.
                         </p>
 
                     </div>
@@ -866,7 +866,7 @@
                         text-[var(--theme-text-muted)]
                     "
                 >
-                    Todas las áreas
+                    Todos los {{ mb_strtolower(app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['unidad_plural']) }}
 
                     <svg
                         class="w-3.5 h-3.5"
@@ -1907,4 +1907,4 @@
 
     </div>
 
-</div>
+</div>

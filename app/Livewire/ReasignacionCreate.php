@@ -24,12 +24,12 @@ class ReasignacionCreate extends Component
     public string $responsableActual = '';
     public string $numeroColaboradorActual = '';
     public string $hostActual = '';
-    public string $areaDepartamentoActual = '';
-    public string $sedeActual = '';
+    public string $unidadDepartamentoActual = '';
+    public string $ubicacionActual = '';
     public string $fechaAsignacionActual = '';
     public string $tipoAsignacionActual = '';
 
-    public string $idAreaActual = '';
+    public string $idUnidadActual = '';
     public string $idDepartamentoActual = '';
     public string $idUbicacionActual = '';
     public string $idTipoAsignacionActual = '';
@@ -43,8 +43,7 @@ class ReasignacionCreate extends Component
     public string $motivoReasignacion = '';
     public string $nombreNuevoColaborador = '';
 
-    public string $idSedeNueva = '';
-    public string $idAreaNueva = '';
+    public string $idUnidadNueva = '';
     public string $idDepartamentoNuevo = '';
     public string $idUbicacionNueva = '';
 
@@ -86,14 +85,7 @@ class ReasignacionCreate extends Component
         );
     }
 
-    public function updatedIdSedeNueva(): void
-    {
-        $this->idAreaNueva = '';
-        $this->idDepartamentoNuevo = '';
-        $this->idUbicacionNueva = '';
-    }
-
-    public function updatedIdAreaNueva(): void
+    public function updatedIdUnidadNueva(): void
     {
         $this->idDepartamentoNuevo = '';
         $this->idUbicacionNueva = '';
@@ -117,98 +109,15 @@ class ReasignacionCreate extends Component
 
     private function loadCurrentAssignment(int $equipoId): void
     {
-        $actual = DB::table('asignaciones as a')
-            ->join(
-                'equipos as e',
-                'e.id_equipo',
-                '=',
-                'a.id_equipo'
-            )
-            ->leftJoin(
-                'departamentos as d',
-                'd.id_departamento',
-                '=',
-                'a.id_departamento'
-            )
-            ->leftJoin(
-                'areas as area_directa',
-                'area_directa.id_area',
-                '=',
-                'a.id_area'
-            )
-            ->leftJoin(
-                'areas as area_departamento',
-                'area_departamento.id_area',
-                '=',
-                'd.id_area'
-            )
-            ->leftJoin(
-                'ubicaciones as ubicacion',
-                'ubicacion.id_ubicacion',
-                '=',
-                'a.id_ubicacion'
-            )
-            ->leftJoin(
-                'sedes as sede_directa',
-                'sede_directa.id_sede',
-                '=',
-                'area_directa.id_sede'
-            )
-            ->leftJoin(
-                'sedes as sede_departamento',
-                'sede_departamento.id_sede',
-                '=',
-                'area_departamento.id_sede'
-            )
-            ->leftJoin(
-                'sedes as sede_ubicacion',
-                'sede_ubicacion.id_sede',
-                '=',
-                'ubicacion.id_sede'
-            )
-            ->leftJoin(
-                'catalogo_valores as tipo_asignacion',
-                'tipo_asignacion.id_valor',
-                '=',
-                'a.id_tipo_asignacion'
-            )
+        $actual = $this->asignacionesVigentesQuery()
             ->where(
                 'a.id_equipo',
                 $equipoId
             )
-            ->whereNull(
-                'a.fecha_fin'
-            )
             ->orderByDesc(
                 'a.fecha_asignacion'
             )
-            ->first([
-                'a.id_asignacion',
-                'a.id_equipo',
-                'a.nombre_colaborador',
-                'a.numero_colaborador',
-                'a.id_area',
-                'a.id_departamento',
-                'a.id_ubicacion',
-                'a.id_tipo_asignacion',
-                'a.fecha_asignacion',
-
-                'e.host',
-
-                'd.nombre as departamento_nombre',
-
-                'area_directa.id_area as area_directa_id',
-                'area_directa.nombre as area_directa_nombre',
-
-                'area_departamento.id_area as area_departamento_id',
-                'area_departamento.nombre as area_departamento_nombre',
-
-                'sede_directa.nombre as sede_directa_nombre',
-                'sede_departamento.nombre as sede_departamento_nombre',
-                'sede_ubicacion.nombre as sede_ubicacion_nombre',
-
-                'tipo_asignacion.nombre as tipo_asignacion_nombre',
-            ]);
+            ->first();
 
         if (! $actual) {
             $this->idEquipoReasignar = '';
@@ -218,21 +127,6 @@ class ReasignacionCreate extends Component
                     'El equipo seleccionado no tiene una asignación activa.',
             ]);
         }
-
-        $areaId =
-            $actual->area_departamento_id
-            ?? $actual->area_directa_id;
-
-        $areaNombre =
-            $actual->area_departamento_nombre
-            ?? $actual->area_directa_nombre
-            ?? '';
-
-        $sedeNombre =
-            $actual->sede_departamento_nombre
-            ?? $actual->sede_directa_nombre
-            ?? $actual->sede_ubicacion_nombre
-            ?? '';
 
         $this->idAsignacionActual =
             (string) $actual->id_asignacion;
@@ -246,8 +140,8 @@ class ReasignacionCreate extends Component
         $this->hostActual =
             (string) ($actual->host ?? '');
 
-        $this->idAreaActual =
-            (string) ($areaId ?? '');
+        $this->idUnidadActual =
+            (string) ($actual->unidad_id ?? '');
 
         $this->idDepartamentoActual =
             (string) ($actual->id_departamento ?? '');
@@ -258,16 +152,16 @@ class ReasignacionCreate extends Component
         $this->idTipoAsignacionActual =
             (string) $actual->id_tipo_asignacion;
 
-        $this->areaDepartamentoActual =
+        $this->unidadDepartamentoActual =
             $this->buildAreaDepartmentLabel(
-                $areaNombre,
+                $actual->unidad_nombre ?? null,
                 $actual->departamento_nombre ?? null
             );
 
-        $this->sedeActual =
-            $sedeNombre !== ''
-                ? $sedeNombre
-                : 'Sin sede';
+        $this->ubicacionActual =
+            filled($actual->ubicacion_nombre ?? null)
+                ? (string) $actual->ubicacion_nombre
+                : 'Sin ubicación específica';
 
         $this->fechaAsignacionActual =
             $actual->fecha_asignacion
@@ -325,16 +219,9 @@ class ReasignacionCreate extends Component
                         'max:255',
                     ],
 
-                    'idSedeNueva' => [
+                    'idUnidadNueva' => [
                         'required',
                         'integer',
-                        'exists:sedes,id_sede',
-                    ],
-
-                    'idAreaNueva' => [
-                        'required',
-                        'integer',
-                        'exists:areas,id_area',
                     ],
 
                     'idDepartamentoNuevo' => [
@@ -373,11 +260,8 @@ class ReasignacionCreate extends Component
                     'nombreNuevoColaborador.required' =>
                         'Escribe el nombre del nuevo colaborador.',
 
-                    'idSedeNueva.required' =>
-                        'Selecciona la nueva sede.',
-
-                    'idAreaNueva.required' =>
-                        'Selecciona la nueva área.',
+                    'idUnidadNueva.required' =>
+                        'Selecciona el nuevo hotel.',
 
                     'idDepartamentoNuevo.required' =>
                         'Selecciona el nuevo departamento.',
@@ -390,104 +274,22 @@ class ReasignacionCreate extends Component
 
         /*
         |--------------------------------------------------------------------------
-        | Validar Sede -> Área
+        | Validar Hotel -> Departamento -> Ubicación
         |--------------------------------------------------------------------------
         */
 
-        $areaValida =
-            DB::table('areas')
-                ->where(
-                    'id_area',
-                    (int) $validated['idAreaNueva']
-                )
-                ->where(
-                    'id_sede',
-                    (int) $validated['idSedeNueva']
-                )
-                ->where(
-                    'activo',
-                    true
-                )
-                ->exists();
-
-        if (! $areaValida) {
-            throw ValidationException::withMessages([
-                'idAreaNueva' =>
-                    'El área seleccionada no pertenece a la sede indicada.',
-            ]);
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | Validar Área -> Departamento
-        |--------------------------------------------------------------------------
-        */
-
-        $departamentoValido =
-            DB::table('departamentos')
-                ->where(
-                    'id_departamento',
-                    (int) $validated['idDepartamentoNuevo']
-                )
-                ->where(
-                    'id_area',
-                    (int) $validated['idAreaNueva']
-                )
-                ->where(
-                    'activo',
-                    true
-                )
-                ->exists();
-
-        if (! $departamentoValido) {
-            throw ValidationException::withMessages([
-                'idDepartamentoNuevo' =>
-                    'El departamento seleccionado no pertenece al área indicada.',
-            ]);
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | Validar ubicación
-        |--------------------------------------------------------------------------
-        */
-
-        if ($payload['idUbicacionNueva'] !== '') {
-            $ubicacionValida =
-                DB::table('ubicaciones')
-                    ->where(
-                        'id_ubicacion',
-                        (int) $payload['idUbicacionNueva']
-                    )
-                    ->where(
-                        'id_sede',
-                        (int) $validated['idSedeNueva']
-                    )
-                    ->where(
-                        'activo',
-                        true
-                    )
-                    ->where(
-                        function ($query) use ($validated) {
-                            $query
-                                ->whereNull(
-                                    'id_area'
-                                )
-                                ->orWhere(
-                                    'id_area',
-                                    (int) $validated['idAreaNueva']
-                                );
-                        }
-                    )
-                    ->exists();
-
-            if (! $ubicacionValida) {
-                throw ValidationException::withMessages([
-                    'idUbicacionNueva' =>
-                        'La ubicación seleccionada no corresponde a la sede o al área.',
-                ]);
-            }
-        }
+        $organizacion =
+            app(\App\Services\UbicacionOrganizacionalService::class)
+                ->validar(
+                    $validated['idUnidadNueva'],
+                    $validated['idDepartamentoNuevo'],
+                    $payload['idUbicacionNueva'],
+                    [
+                        'unidad' => 'idUnidadNueva',
+                        'departamento' => 'idDepartamentoNuevo',
+                        'ubicacion' => 'idUbicacionNueva',
+                    ]
+                );
 
         /*
         |--------------------------------------------------------------------------
@@ -534,6 +336,7 @@ class ReasignacionCreate extends Component
                 function () use (
                     $payload,
                     $validated,
+                    $organizacion,
                     $idTipoMovimiento,
                     $fechaReasignacion
                 ): array {
@@ -621,30 +424,6 @@ class ReasignacionCreate extends Component
 
                     /*
                     |--------------------------------------------------------------------------
-                    | Determinar área actual
-                    |--------------------------------------------------------------------------
-                    */
-
-                    $areaActualId =
-                        $asignacionActual->id_area;
-
-                    if (
-                        $areaActualId === null
-                        && $asignacionActual->id_departamento !== null
-                    ) {
-                        $areaActualId =
-                            DB::table('departamentos')
-                                ->where(
-                                    'id_departamento',
-                                    $asignacionActual->id_departamento
-                                )
-                                ->value(
-                                    'id_area'
-                                );
-                    }
-
-                    /*
-                    |--------------------------------------------------------------------------
                     | Evitar reasignación idéntica
                     |--------------------------------------------------------------------------
                     */
@@ -662,10 +441,10 @@ class ReasignacionCreate extends Component
                             )
                         );
 
-                    $mismoArea =
-                        (int) ($areaActualId ?? 0)
+                    $mismoHotel =
+                        (int) ($asignacionActual->id_unidad ?? 0)
                         ===
-                        (int) $validated['idAreaNueva'];
+                        $organizacion['id_unidad'];
 
                     $mismoDepartamento =
                         (int) (
@@ -673,7 +452,7 @@ class ReasignacionCreate extends Component
                             ?? 0
                         )
                         ===
-                        (int) $validated['idDepartamentoNuevo'];
+                        $organizacion['id_departamento'];
 
                     $mismaUbicacion =
                         (int) (
@@ -682,15 +461,13 @@ class ReasignacionCreate extends Component
                         )
                         ===
                         (int) (
-                            $this->nullableInt(
-                                $payload['idUbicacionNueva']
-                            )
+                            $organizacion['id_ubicacion']
                             ?? 0
                         );
 
                     if (
                         $mismoColaborador
-                        && $mismoArea
+                        && $mismoHotel
                         && $mismoDepartamento
                         && $mismaUbicacion
                     ) {
@@ -738,20 +515,20 @@ class ReasignacionCreate extends Component
                                         null,
 
                                     /*
-                                     * Igual que en asignación:
-                                     * al guardar departamento dejamos
-                                     * id_area en NULL.
+                                     * Igual que en asignación: la
+                                     * organización es hotel + departamento.
                                      */
                                     'id_area' =>
                                         null,
 
+                                    'id_unidad' =>
+                                        $organizacion['id_unidad'],
+
                                     'id_departamento' =>
-                                        (int) $validated['idDepartamentoNuevo'],
+                                        $organizacion['id_departamento'],
 
                                     'id_ubicacion' =>
-                                        $this->nullableInt(
-                                            $payload['idUbicacionNueva']
-                                        ),
+                                        $organizacion['id_ubicacion'],
 
                                     'id_tipo_asignacion' =>
                                         (int) $asignacionActual->id_tipo_asignacion,
@@ -911,9 +688,8 @@ class ReasignacionCreate extends Component
     | carga inicial. Después Alpine podrá resolver localmente:
     |
     | Equipo -> asignación actual
-    | Sede -> áreas
-    | Área -> departamentos
-    | Sede/Área -> ubicaciones
+    | Hotel -> departamentos
+    | Hotel/Departamento -> ubicaciones
     |
     */
 
@@ -926,121 +702,14 @@ class ReasignacionCreate extends Component
         */
 
         $equipos =
-            DB::table('asignaciones as a')
-                ->join(
-                    'equipos as e',
-                    'e.id_equipo',
-                    '=',
-                    'a.id_equipo'
-                )
-                ->leftJoin(
-                    'tipos_equipo as te',
-                    'te.id_tipo_equipo',
-                    '=',
-                    'e.id_tipo_equipo'
-                )
-                ->leftJoin(
-                    'marcas as ma',
-                    'ma.id_marca',
-                    '=',
-                    'e.id_marca'
-                )
-                ->leftJoin(
-                    'modelos as mo',
-                    'mo.id_modelo',
-                    '=',
-                    'e.id_modelo'
-                )
-                ->leftJoin(
-                    'departamentos as d',
-                    'd.id_departamento',
-                    '=',
-                    'a.id_departamento'
-                )
-                ->leftJoin(
-                    'areas as area_directa',
-                    'area_directa.id_area',
-                    '=',
-                    'a.id_area'
-                )
-                ->leftJoin(
-                    'areas as area_departamento',
-                    'area_departamento.id_area',
-                    '=',
-                    'd.id_area'
-                )
-                ->leftJoin(
-                    'ubicaciones as ubicacion',
-                    'ubicacion.id_ubicacion',
-                    '=',
-                    'a.id_ubicacion'
-                )
-                ->leftJoin(
-                    'sedes as sede_directa',
-                    'sede_directa.id_sede',
-                    '=',
-                    'area_directa.id_sede'
-                )
-                ->leftJoin(
-                    'sedes as sede_departamento',
-                    'sede_departamento.id_sede',
-                    '=',
-                    'area_departamento.id_sede'
-                )
-                ->leftJoin(
-                    'sedes as sede_ubicacion',
-                    'sede_ubicacion.id_sede',
-                    '=',
-                    'ubicacion.id_sede'
-                )
-                ->leftJoin(
-                    'catalogo_valores as tipo_asignacion',
-                    'tipo_asignacion.id_valor',
-                    '=',
-                    'a.id_tipo_asignacion'
-                )
-                ->whereNull(
-                    'a.fecha_fin'
-                )
+            $this->asignacionesVigentesQuery()
                 ->orderBy(
                     'e.codigo_inventario'
                 )
                 ->orderByDesc(
                     'a.fecha_asignacion'
                 )
-                ->get([
-                    'a.id_asignacion',
-                    'a.id_equipo',
-                    'a.nombre_colaborador',
-                    'a.numero_colaborador',
-                    'a.id_area',
-                    'a.id_departamento',
-                    'a.id_ubicacion',
-                    'a.id_tipo_asignacion',
-                    'a.fecha_asignacion',
-
-                    'e.codigo_inventario',
-                    'e.nombre_equipo',
-                    'e.host',
-
-                    'te.nombre as tipo',
-                    'ma.nombre as marca',
-                    'mo.nombre as modelo',
-
-                    'd.nombre as departamento_nombre',
-
-                    'area_directa.id_area as area_directa_id',
-                    'area_directa.nombre as area_directa_nombre',
-
-                    'area_departamento.id_area as area_departamento_id',
-                    'area_departamento.nombre as area_departamento_nombre',
-
-                    'sede_directa.nombre as sede_directa_nombre',
-                    'sede_departamento.nombre as sede_departamento_nombre',
-                    'sede_ubicacion.nombre as sede_ubicacion_nombre',
-
-                    'tipo_asignacion.nombre as tipo_asignacion_nombre',
-                ])
+                ->get()
                 ->unique(
                     'id_equipo'
                 )
@@ -1068,21 +737,6 @@ class ReasignacionCreate extends Component
                             trim(
                                 (string) $equipo->nombre_colaborador
                             );
-
-                        $areaId =
-                            $equipo->area_departamento_id
-                            ?? $equipo->area_directa_id;
-
-                        $areaNombre =
-                            $equipo->area_departamento_nombre
-                            ?? $equipo->area_directa_nombre
-                            ?? '';
-
-                        $sedeNombre =
-                            $equipo->sede_departamento_nombre
-                            ?? $equipo->sede_directa_nombre
-                            ?? $equipo->sede_ubicacion_nombre
-                            ?? '';
 
                         return [
                             /*
@@ -1124,9 +778,9 @@ class ReasignacionCreate extends Component
                                         ?? ''
                                     ),
 
-                                'idArea' =>
+                                'idUnidad' =>
                                     (string) (
-                                        $areaId
+                                        $equipo->unidad_id
                                         ?? ''
                                     ),
 
@@ -1145,17 +799,18 @@ class ReasignacionCreate extends Component
                                 'idTipoAsignacion' =>
                                     (string) $equipo->id_tipo_asignacion,
 
-                                'areaDepartamento' =>
+                                'unidadDepartamento' =>
                                     $this->buildAreaDepartmentLabel(
-                                        $areaNombre,
+                                        $equipo->unidad_nombre
+                                            ?? null,
                                         $equipo->departamento_nombre
                                             ?? null
                                     ),
 
-                                'sede' =>
-                                    $sedeNombre !== ''
-                                        ? $sedeNombre
-                                        : 'Sin sede',
+                                'ubicacion' =>
+                                    filled($equipo->ubicacion_nombre ?? null)
+                                        ? (string) $equipo->ubicacion_nombre
+                                        : 'Sin ubicación específica',
 
                                 'fechaAsignacion' =>
                                     $equipo->fecha_asignacion
@@ -1176,171 +831,22 @@ class ReasignacionCreate extends Component
                 ->values()
                 ->all();
 
-        /*
-        |--------------------------------------------------------------------------
-        | Sedes
-        |--------------------------------------------------------------------------
-        */
-
-        $sedes =
-            DB::table('sedes')
-                ->where(
-                    'activo',
-                    true
-                )
-                ->orderBy(
-                    'nombre'
-                )
-                ->get([
-                    'id_sede',
-                    'nombre',
-                ])
-                ->map(
-                    fn ($sede): array => [
-                        'value' =>
-                            (string) $sede->id_sede,
-
-                        'label' =>
-                            (string) $sede->nombre,
-                    ]
-                )
-                ->values()
-                ->all();
-
-        /*
-        |--------------------------------------------------------------------------
-        | Todas las áreas
-        |--------------------------------------------------------------------------
-        |
-        | Ya no filtramos en PHP según una propiedad Livewire.
-        | Mandamos la relación idSede para que Alpine filtre localmente.
-        |
-        */
-
-        $areas =
-            DB::table('areas')
-                ->where(
-                    'activo',
-                    true
-                )
-                ->orderBy(
-                    'nombre'
-                )
-                ->get([
-                    'id_area',
-                    'id_sede',
-                    'nombre',
-                ])
-                ->map(
-                    fn ($area): array => [
-                        'value' =>
-                            (string) $area->id_area,
-
-                        'label' =>
-                            (string) $area->nombre,
-
-                        'idSede' =>
-                            (string) $area->id_sede,
-                    ]
-                )
-                ->values()
-                ->all();
-
-        /*
-        |--------------------------------------------------------------------------
-        | Todos los departamentos
-        |--------------------------------------------------------------------------
-        */
-
-        $departamentos =
-            DB::table('departamentos')
-                ->where(
-                    'activo',
-                    true
-                )
-                ->orderBy(
-                    'nombre'
-                )
-                ->get([
-                    'id_departamento',
-                    'id_area',
-                    'nombre',
-                ])
-                ->map(
-                    fn ($departamento): array => [
-                        'value' =>
-                            (string) $departamento->id_departamento,
-
-                        'label' =>
-                            (string) $departamento->nombre,
-
-                        'idArea' =>
-                            (string) $departamento->id_area,
-                    ]
-                )
-                ->values()
-                ->all();
-
-        /*
-        |--------------------------------------------------------------------------
-        | Todas las ubicaciones
-        |--------------------------------------------------------------------------
-        */
-
-        $ubicaciones =
-            DB::table('ubicaciones')
-                ->where(
-                    'activo',
-                    true
-                )
-                ->orderBy(
-                    'nombre'
-                )
-                ->get([
-                    'id_ubicacion',
-                    'id_sede',
-                    'id_area',
-                    'nombre',
-                ])
-                ->map(
-                    fn ($ubicacion): array => [
-                        'value' =>
-                            (string) $ubicacion->id_ubicacion,
-
-                        'label' =>
-                            (string) $ubicacion->nombre,
-
-                        'idSede' =>
-                            (string) $ubicacion->id_sede,
-
-                        /*
-                         * Una ubicación puede ser general de la sede,
-                         * por eso id_area puede ser NULL.
-                         */
-                        'idArea' =>
-                            $ubicacion->id_area !== null
-                                ? (string) $ubicacion->id_area
-                                : '',
-                    ]
-                )
-                ->values()
-                ->all();
+        $organizacion =
+            app(\App\Services\UbicacionOrganizacionalService::class)
+                ->datosFormulario();
 
         return [
             'equipos' =>
                 $equipos,
 
-            'sedes' =>
-                $sedes,
-
-            'areas' =>
-                $areas,
+            'unidades' =>
+                $organizacion['unidades'],
 
             'departamentos' =>
-                $departamentos,
+                $organizacion['departamentos'],
 
             'ubicaciones' =>
-                $ubicaciones,
+                $organizacion['ubicaciones'],
 
             'defaults' => [
                 'fechaReasignacion' =>
@@ -1425,6 +931,63 @@ class ReasignacionCreate extends Component
 
     /*
     |--------------------------------------------------------------------------
+    | Asignaciones vigentes con hotel, departamento y ubicación
+    |--------------------------------------------------------------------------
+    |
+    | El hotel sale de asignaciones.id_unidad. Para registros anteriores
+    | que no lo tienen se usa el hotel cuya área de origen coincide con
+    | el área registrada (o la del departamento), igual que la migración
+    | que creó id_unidad.
+    |
+    */
+
+    private function asignacionesVigentesQuery(): \Illuminate\Database\Query\Builder
+    {
+        return DB::table('asignaciones as a')
+            ->join('equipos as e', 'e.id_equipo', '=', 'a.id_equipo')
+            ->leftJoin('tipos_equipo as te', 'te.id_tipo_equipo', '=', 'e.id_tipo_equipo')
+            ->leftJoin('marcas as ma', 'ma.id_marca', '=', 'e.id_marca')
+            ->leftJoin('modelos as mo', 'mo.id_modelo', '=', 'e.id_modelo')
+            ->leftJoin('departamentos as d', 'd.id_departamento', '=', 'a.id_departamento')
+            ->leftJoin('unidades_organizativas as un', 'un.id_unidad', '=', 'a.id_unidad')
+            ->leftJoin('unidades_organizativas as un_origen', function ($join) {
+                $join->whereNull('a.id_unidad')
+                    ->whereColumn(
+                        'un_origen.id_area_origen',
+                        DB::raw('COALESCE(a.id_area, d.id_area)')
+                    );
+            })
+            ->leftJoin('ubicaciones as ubicacion', 'ubicacion.id_ubicacion', '=', 'a.id_ubicacion')
+            ->leftJoin('catalogo_valores as tipo_asignacion', 'tipo_asignacion.id_valor', '=', 'a.id_tipo_asignacion')
+            ->whereNull('a.fecha_fin')
+            ->select([
+                'a.id_asignacion',
+                'a.id_equipo',
+                'a.nombre_colaborador',
+                'a.numero_colaborador',
+                'a.id_departamento',
+                'a.id_ubicacion',
+                'a.id_tipo_asignacion',
+                'a.fecha_asignacion',
+
+                'e.codigo_inventario',
+                'e.nombre_equipo',
+                'e.host',
+
+                'te.nombre as tipo',
+                'ma.nombre as marca',
+                'mo.nombre as modelo',
+
+                'd.nombre as departamento_nombre',
+                'ubicacion.nombre as ubicacion_nombre',
+                'tipo_asignacion.nombre as tipo_asignacion_nombre',
+            ])
+            ->selectRaw('COALESCE(un.id_unidad, un_origen.id_unidad) as unidad_id')
+            ->selectRaw('COALESCE(un.nombre, un_origen.nombre) as unidad_nombre');
+    }
+
+    /*
+    |--------------------------------------------------------------------------
     | Área / departamento
     |--------------------------------------------------------------------------
     */
@@ -1433,6 +996,9 @@ class ReasignacionCreate extends Component
         ?string $area,
         ?string $departamento
     ): string {
+        /*
+         * $area recibe ahora el nombre del hotel.
+         */
         $area =
             trim(
                 (string) $area
@@ -1461,7 +1027,7 @@ class ReasignacionCreate extends Component
             return $area;
         }
 
-        return 'Sin área / departamento';
+        return 'Sin hotel / departamento';
     }
 
     /*
@@ -1477,11 +1043,11 @@ class ReasignacionCreate extends Component
             'responsableActual',
             'numeroColaboradorActual',
             'hostActual',
-            'areaDepartamentoActual',
-            'sedeActual',
+            'unidadDepartamentoActual',
+            'ubicacionActual',
             'fechaAsignacionActual',
             'tipoAsignacionActual',
-            'idAreaActual',
+            'idUnidadActual',
             'idDepartamentoActual',
             'idUbicacionActual',
             'idTipoAsignacionActual',
@@ -1497,8 +1063,7 @@ class ReasignacionCreate extends Component
     private function resetNewDestination(): void
     {
         $this->reset([
-            'idSedeNueva',
-            'idAreaNueva',
+            'idUnidadNueva',
             'idDepartamentoNuevo',
             'idUbicacionNueva',
         ]);
@@ -1518,8 +1083,7 @@ class ReasignacionCreate extends Component
                 'idAsignacionActual' => '',
                 'motivoReasignacion' => '',
                 'nombreNuevoColaborador' => '',
-                'idSedeNueva' => '',
-                'idAreaNueva' => '',
+                'idUnidadNueva' => '',
                 'idDepartamentoNuevo' => '',
                 'idUbicacionNueva' => '',
                 'fechaReasignacion' => '',
@@ -1589,134 +1153,11 @@ class ReasignacionCreate extends Component
 
     public function render(): View
     {
-        /*
-         * Una sola preparación de datos por render.
-         *
-         * En el siguiente paso Alpine conservará todo esto en memoria
-         * y los cambios de selects ya no provocarán nuevos renders.
-         */
-        $reassignmentData =
-            $this->getReassignmentFrontendData();
-
-        /*
-         * Compatibilidad con la vista que tienes actualmente.
-         * Cuando cambiemos el Blade estas variables dejarán de ser
-         * necesarias, pero por ahora evitamos romper la pantalla.
-         */
-        $equiposAsignados =
-            collect(
-                $reassignmentData['equipos']
-            )
-                ->map(
-                    fn (array $equipo): array => [
-                        'value' =>
-                            $equipo['value'],
-
-                        'label' =>
-                            $equipo['label'],
-                    ]
-                )
-                ->values()
-                ->all();
-
-        $sedes =
-            $reassignmentData['sedes'];
-
-        $areas =
-            $this->idSedeNueva === ''
-                ? []
-                : collect(
-                    $reassignmentData['areas']
-                )
-                    ->filter(
-                        fn (array $area): bool =>
-                            (string) $area['idSede']
-                            ===
-                            (string) $this->idSedeNueva
-                    )
-                    ->values()
-                    ->all();
-
-        $departamentos =
-            $this->idAreaNueva === ''
-                ? []
-                : collect(
-                    $reassignmentData['departamentos']
-                )
-                    ->filter(
-                        fn (array $departamento): bool =>
-                            (string) $departamento['idArea']
-                            ===
-                            (string) $this->idAreaNueva
-                    )
-                    ->values()
-                    ->all();
-
-        $ubicaciones =
-            $this->idSedeNueva === ''
-                ? []
-                : collect(
-                    $reassignmentData['ubicaciones']
-                )
-                    ->filter(
-                        function (array $ubicacion): bool {
-                            if (
-                                (string) $ubicacion['idSede']
-                                !==
-                                (string) $this->idSedeNueva
-                            ) {
-                                return false;
-                            }
-
-                            /*
-                             * Si todavía no hay área seleccionada,
-                             * mostramos las ubicaciones de la sede.
-                             */
-                            if ($this->idAreaNueva === '') {
-                                return true;
-                            }
-
-                            /*
-                             * Ubicaciones generales de la sede
-                             * o específicas del área seleccionada.
-                             */
-                            return
-                                $ubicacion['idArea'] === ''
-                                ||
-                                (string) $ubicacion['idArea']
-                                ===
-                                (string) $this->idAreaNueva;
-                        }
-                    )
-                    ->values()
-                    ->all();
-
         return view(
             'livewire.reasignacion-create',
             [
-                /*
-                 * Nuevo JSON para Alpine.
-                 */
                 'reassignmentData' =>
-                    $reassignmentData,
-
-                /*
-                 * Compatibilidad temporal.
-                 */
-                'equiposAsignados' =>
-                    $equiposAsignados,
-
-                'sedes' =>
-                    $sedes,
-
-                'areas' =>
-                    $areas,
-
-                'departamentos' =>
-                    $departamentos,
-
-                'ubicaciones' =>
-                    $ubicaciones,
+                    $this->getReassignmentFrontendData(),
             ]
         );
     }

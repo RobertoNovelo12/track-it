@@ -139,6 +139,25 @@ class AsignacionesHistory extends Component
             )
 
             ->leftJoin(
+                'unidades_organizativas as unidad',
+                'unidad.id_unidad',
+                '=',
+                'a.id_unidad'
+            )
+
+            ->leftJoin(
+                'unidades_organizativas as unidad_origen',
+                function ($join) {
+                    $join->whereNull('a.id_unidad')
+                        ->on(
+                            'unidad_origen.id_area_origen',
+                            '=',
+                            DB::raw('COALESCE(area_directa.id_area, area_departamento.id_area)')
+                        );
+                }
+            )
+
+            ->leftJoin(
                 'sedes as sede_directa',
                 'sede_directa.id_sede',
                 '=',
@@ -264,10 +283,14 @@ class AsignacionesHistory extends Component
                 'a.observaciones as observaciones'
             )
 
+            /*
+             * 'area' contiene ahora el hotel (se conserva el alias
+             * porque ambas consultas se unen con UNION).
+             */
             ->selectRaw("
                 COALESCE(
-                    area_departamento.nombre,
-                    area_directa.nombre,
+                    unidad.nombre,
+                    unidad_origen.nombre,
                     ''
                 ) as area
             ")
@@ -280,14 +303,11 @@ class AsignacionesHistory extends Component
                 'ub.nombre as ubicacion'
             )
 
-            ->selectRaw("
-                COALESCE(
-                    sede_departamento.nombre,
-                    sede_directa.nombre,
-                    sede_ubicacion.nombre,
-                    ''
-                ) as sede
-            ")
+            /*
+             * La organización se muestra como hotel + departamento;
+             * la sede ya no forma parte del texto de ubicación.
+             */
+            ->selectRaw("'' as sede")
 
             ->selectRaw("
                 TRIM(
@@ -409,6 +429,25 @@ class AsignacionesHistory extends Component
                             )'
                         )
                     );
+                }
+            )
+
+            ->leftJoin(
+                'unidades_organizativas as unidad',
+                'unidad.id_unidad',
+                '=',
+                DB::raw('COALESCE(nueva.id_unidad, anterior.id_unidad)')
+            )
+
+            ->leftJoin(
+                'unidades_organizativas as unidad_origen',
+                function ($join) {
+                    $join->whereRaw('COALESCE(nueva.id_unidad, anterior.id_unidad) IS NULL')
+                        ->on(
+                            'unidad_origen.id_area_origen',
+                            '=',
+                            DB::raw('COALESCE(area_directa.id_area, area_departamento.id_area)')
+                        );
                 }
             )
 
@@ -558,10 +597,14 @@ class AsignacionesHistory extends Component
                 'm.observaciones as observaciones'
             )
 
+            /*
+             * 'area' contiene ahora el hotel (se conserva el alias
+             * porque ambas consultas se unen con UNION).
+             */
             ->selectRaw("
                 COALESCE(
-                    area_departamento.nombre,
-                    area_directa.nombre,
+                    unidad.nombre,
+                    unidad_origen.nombre,
                     ''
                 ) as area
             ")
@@ -574,14 +617,11 @@ class AsignacionesHistory extends Component
                 'ub.nombre as ubicacion'
             )
 
-            ->selectRaw("
-                COALESCE(
-                    sede_departamento.nombre,
-                    sede_directa.nombre,
-                    sede_ubicacion.nombre,
-                    ''
-                ) as sede
-            ")
+            /*
+             * La organización se muestra como hotel + departamento;
+             * la sede ya no forma parte del texto de ubicación.
+             */
+            ->selectRaw("'' as sede")
 
             ->selectRaw("
                 TRIM(
@@ -854,4 +894,4 @@ class AsignacionesHistory extends Component
             ]
         );
     }
-}
+}

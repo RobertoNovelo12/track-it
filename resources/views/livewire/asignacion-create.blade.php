@@ -25,8 +25,7 @@
             nombreColaborador: '',
             numeroColaborador: '',
 
-            idSedeAsignar: '',
-            idAreaAsignar: '',
+            idUnidadAsignar: '',
             idDepartamentoAsignar: '',
             idUbicacionAsignar: '',
 
@@ -59,35 +58,7 @@
                 );
 
                 this.$watch(
-                    'idSedeAsignar',
-                    (value, previous) => {
-                        if (
-                            String(value ?? '') ===
-                            String(previous ?? '')
-                        ) {
-                            return;
-                        }
-
-                        this.idAreaAsignar = '';
-                        this.idDepartamentoAsignar = '';
-                        this.idUbicacionAsignar = '';
-
-                        this.clearValidationError(
-                            'idSedeAsignar'
-                        );
-
-                        this.clearValidationError(
-                            'idAreaAsignar'
-                        );
-
-                        this.clearValidationError(
-                            'idDepartamentoAsignar'
-                        );
-                    }
-                );
-
-                this.$watch(
-                    'idAreaAsignar',
+                    'idUnidadAsignar',
                     (value, previous) => {
                         if (
                             String(value ?? '') ===
@@ -100,7 +71,7 @@
                         this.idUbicacionAsignar = '';
 
                         this.clearValidationError(
-                            'idAreaAsignar'
+                            'idUnidadAsignar'
                         );
 
                         this.clearValidationError(
@@ -137,33 +108,17 @@
                 );
             },
 
-            get areasDisponibles() {
-                const sedeId =
-                    String(
-                        this.idSedeAsignar ?? ''
-                    );
-
-                if (sedeId === '') {
-                    return [];
-                }
-
-                return (
-                    this.data?.areas ?? []
-                ).filter(
-                    area =>
-                        String(
-                            area?.idSede ?? ''
-                        ) === sedeId
-                );
-            },
-
+            /*
+             * Departamentos que atienden el hotel elegido:
+             * los que atienden todos o los vinculados a él.
+             */
             get departamentosDisponibles() {
-                const areaId =
+                const unidadId =
                     String(
-                        this.idAreaAsignar ?? ''
+                        this.idUnidadAsignar ?? ''
                     );
 
-                if (areaId === '') {
+                if (unidadId === '') {
                     return [];
                 }
 
@@ -171,24 +126,27 @@
                     this.data?.departamentos ?? []
                 ).filter(
                     departamento =>
-                        String(
-                            departamento?.idArea ?? ''
-                        ) === areaId
+                        departamento?.todas
+                        || (departamento?.unidades ?? []).includes(unidadId)
                 );
             },
 
+            /*
+             * Ubicaciones del hotel (o generales) y, si tienen
+             * departamentos configurados, sólo los de ese departamento.
+             */
             get ubicacionesDisponibles() {
-                const sedeId =
+                const unidadId =
                     String(
-                        this.idSedeAsignar ?? ''
+                        this.idUnidadAsignar ?? ''
                     );
 
-                const areaId =
+                const departamentoId =
                     String(
-                        this.idAreaAsignar ?? ''
+                        this.idDepartamentoAsignar ?? ''
                     );
 
-                if (sedeId === '') {
+                if (unidadId === '' || departamentoId === '') {
                     return [];
                 }
 
@@ -196,27 +154,19 @@
                     this.data?.ubicaciones ?? []
                 ).filter(
                     ubicacion => {
-                        const mismaSede =
-                            String(
-                                ubicacion?.idSede ?? ''
-                            ) === sedeId;
+                        const unidad =
+                            String(ubicacion?.unidad ?? '');
 
-                        if (!mismaSede) {
+                        if (unidad !== '' && unidad !== unidadId) {
                             return false;
                         }
 
-                        if (areaId === '') {
-                            return true;
-                        }
-
-                        const ubicacionArea =
-                            String(
-                                ubicacion?.idArea ?? ''
-                            );
+                        const departamentos =
+                            ubicacion?.departamentos ?? [];
 
                         return (
-                            ubicacionArea === ''
-                            || ubicacionArea === areaId
+                            departamentos.length === 0
+                            || departamentos.includes(departamentoId)
                         );
                     }
                 );
@@ -336,14 +286,9 @@
                             this.numeroColaborador ?? ''
                         ),
 
-                    idSedeAsignar:
+                    idUnidadAsignar:
                         String(
-                            this.idSedeAsignar ?? ''
-                        ),
-
-                    idAreaAsignar:
-                        String(
-                            this.idAreaAsignar ?? ''
+                            this.idUnidadAsignar ?? ''
                         ),
 
                     idDepartamentoAsignar:
@@ -456,23 +401,12 @@
 
                 if (
                     String(
-                        payload.idSedeAsignar
+                        payload.idUnidadAsignar
                         ?? ''
                     ) === ''
                 ) {
-                    errors.idSedeAsignar = [
-                        'Selecciona una sede.'
-                    ];
-                }
-
-                if (
-                    String(
-                        payload.idAreaAsignar
-                        ?? ''
-                    ) === ''
-                ) {
-                    errors.idAreaAsignar = [
-                        'Selecciona un área.'
+                    errors.idUnidadAsignar = [
+                        'Selecciona un hotel.'
                     ];
                 }
 
@@ -1302,61 +1236,24 @@
 
 
                     {{-- =================================================
-                        SEDE
+                        HOTEL
                     ================================================= --}}
                     <div class="min-w-0">
 
                         <x-searchable-select
-                            x-model="idSedeAsignar"
-                            x-options="data.sedes"
+                            x-model="idUnidadAsignar"
+                            x-options="data.unidades"
 
-                            label="Sede *"
-                            placeholder="Buscar sede..."
+                            :label="app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['unidad_singular'] . ' *'"
+                            :placeholder="app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['buscar_unidad']"
 
                             :show-clear="false"
                         />
 
                         <p
-                            x-show="fieldError('idSedeAsignar')"
+                            x-show="fieldError('idUnidadAsignar')"
                             x-cloak
-                            x-text="fieldError('idSedeAsignar')"
-                            class="
-                                mt-1
-                                text-xs
-                                text-[var(--theme-danger)]
-                            "
-                        ></p>
-                    </div>
-
-
-                    {{-- =================================================
-                        ÁREA
-                    ================================================= --}}
-                    <div class="min-w-0">
-
-                        <x-searchable-select
-                            x-model="idAreaAsignar"
-                            x-options="areasDisponibles"
-
-                            label="Área *"
-
-                            placeholder="Selecciona una sede primero"
-
-                            x-placeholder="
-                                idSedeAsignar === ''
-                                    ? 'Selecciona una sede primero'
-                                    : 'Buscar área...'
-                            "
-
-                            x-disabled="idSedeAsignar === ''"
-
-                            :show-clear="false"
-                        />
-
-                        <p
-                            x-show="fieldError('idAreaAsignar')"
-                            x-cloak
-                            x-text="fieldError('idAreaAsignar')"
+                            x-text="fieldError('idUnidadAsignar')"
                             class="
                                 mt-1
                                 text-xs
@@ -1377,15 +1274,15 @@
 
                             label="Departamento *"
 
-                            placeholder="Selecciona un área primero"
+                            placeholder="Selecciona un hotel primero"
 
                             x-placeholder="
-                                idAreaAsignar === ''
-                                    ? 'Selecciona un área primero'
+                                idUnidadAsignar === ''
+                                    ? 'Selecciona un hotel primero'
                                     : 'Buscar departamento...'
                             "
 
-                            x-disabled="idAreaAsignar === ''"
+                            x-disabled="idUnidadAsignar === ''"
 
                             :show-clear="false"
                         />
@@ -1405,6 +1302,7 @@
 
                     {{-- =================================================
                         UBICACIÓN
+                        Depende del hotel y del departamento.
                     ================================================= --}}
                     <div class="min-w-0">
 
@@ -1414,19 +1312,31 @@
 
                             label="Ubicación"
 
-                            placeholder="Selecciona una sede primero"
+                            placeholder="Selecciona un departamento primero"
 
                             x-placeholder="
-                                idSedeAsignar === ''
-                                    ? 'Selecciona una sede primero'
-                                    : 'Buscar ubicación...'
+                                idDepartamentoAsignar === ''
+                                    ? 'Selecciona un departamento primero'
+                                    : (ubicacionesDisponibles.length
+                                        ? 'Buscar ubicación...'
+                                        : 'Sin ubicaciones para este departamento')
                             "
 
-                            x-disabled="idSedeAsignar === ''"
+                            x-disabled="idDepartamentoAsignar === '' || ! ubicacionesDisponibles.length"
 
                             clear-label="Sin ubicación específica"
                         />
 
+                        <p
+                            x-show="fieldError('idUbicacionAsignar')"
+                            x-cloak
+                            x-text="fieldError('idUbicacionAsignar')"
+                            class="
+                                mt-1
+                                text-xs
+                                text-[var(--theme-danger)]
+                            "
+                        ></p>
                     </div>
 
 
@@ -1827,4 +1737,4 @@
 
     </div>
 
-</div>
+</div>

@@ -204,7 +204,7 @@
                         id="history-search"
                         type="search"
                         wire:model="search"
-                        placeholder="Equipo, colaborador, host, sede..."
+                        placeholder="Equipo, colaborador, host, {{ mb_strtolower(app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['unidad_singular']) }}..."
                         autocomplete="off"
                         class="
                             w-full
@@ -1616,4 +1616,4 @@
 
     </section>
 
-</div>
+</div>

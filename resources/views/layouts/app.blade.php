@@ -437,6 +437,33 @@ document.addEventListener(
                 {{-- ====================================================
                     MENÚ DE PERFIL
                 ==================================================== --}}
+                    @php
+                        /*
+                         * Cápsula de perfil: solo el primer nombre y el
+                         * hotel del usuario (en caché 10 min por usuario).
+                         */
+                        $perfilUsuario = auth()->user();
+
+                        $perfilNombreCorto = \Illuminate\Support\Str::of(
+                            (string) ($perfilUsuario->nombres ?? $perfilUsuario->name ?? '')
+                        )->trim()->explode(' ')->first() ?: 'Usuario';
+
+                        $perfilNombreCorto = mb_convert_case(
+                            mb_strtolower($perfilNombreCorto),
+                            MB_CASE_TITLE
+                        );
+
+                        $perfilUnidad = filled($perfilUsuario->id_unidad ?? null)
+                            ? \Illuminate\Support\Facades\Cache::remember(
+                                'layout.usuario.unidad.' . $perfilUsuario->getKey(),
+                                600,
+                                fn () => \Illuminate\Support\Facades\DB::table('unidades_organizativas')
+                                    ->where('id_unidad', $perfilUsuario->id_unidad)
+                                    ->value('nombre')
+                            )
+                            : null;
+                    @endphp
+
                     <div
                         x-data="{
                             open: false,
@@ -515,35 +542,37 @@ document.addEventListener(
 
                             <p
                                 class="
-                                    max-w-36
+                                    max-w-32
                                     truncate
 
-                                    text-[10px]
-                                    md:text-[11px]
+                                    text-xs
 
                                     leading-tight
                                     font-semibold
-                                    uppercase
                                     text-[var(--theme-text-strong)]
                                 "
+                                title="{{ trim(($perfilUsuario->nombres ?? $perfilUsuario->name ?? '') . ' ' . ($perfilUsuario->apellido_paterno ?? '')) }}"
                             >
-                                {{ auth()->user()->nombres ?? auth()->user()->name }}
-                                {{ auth()->user()->apellido_paterno ?? '' }}
+                                {{ $perfilNombreCorto }}
                             </p>
 
-                            <p
-                                class="
-                                    mt-0.5
+                            @if (filled($perfilUnidad))
+                                <p
+                                    class="
+                                        mt-0.5
+                                        max-w-32
+                                        truncate
 
-                                    text-[8px]
-                                    md:text-[9px]
+                                        text-[10px]
 
-                                    leading-tight
-                                    text-[var(--theme-text-muted)]
-                                "
-                            >
-                                {{ auth()->user()->propiedad ?? 'Grand Palladium' }}
-                            </p>
+                                        leading-tight
+                                        text-[var(--theme-text-muted)]
+                                    "
+                                    title="{{ $perfilUnidad }}"
+                                >
+                                    {{ $perfilUnidad }}
+                                </p>
+                            @endif
 
                         </div>
 
@@ -558,27 +587,26 @@ document.addEventListener(
 
                                 rounded-full
 
-                                border
-                                border-[var(--theme-primary-border-strong)]
-
                                 flex
                                 items-center
                                 justify-center
 
-                                bg-[var(--theme-primary-soft-subtle)]
-                                text-[var(--theme-text-strong)]
+                                bg-[var(--theme-surface-soft)]
+                                text-[var(--theme-text-muted)]
 
-                                group-hover:border-[var(--theme-primary)]
+                                group-hover:text-[var(--theme-primary)]
 
                                 transition-colors
                             "
                         >
                             <svg
-                                class="w-6 h-6"
+                                class="w-5 h-5"
                                 viewBox="0 0 24 24"
                                 fill="none"
                                 stroke="currentColor"
-                                stroke-width="1.5"
+                                stroke-width="1.6"
+                                stroke-linecap="round"
+                                aria-hidden="true"
                             >
                                 <circle cx="12" cy="8" r="4"/>
                                 <path d="M4 21c0-5 3-8 8-8s8 3 8 8"/>
@@ -737,7 +765,7 @@ document.addEventListener(
                                             truncate
                                         "
                                     >
-                                        {{ auth()->user()->propiedad ?? 'Grand Palladium' }}
+                                        {{ $perfilUnidad ?: 'Sin hotel asignado' }}
                                     </p>
 
 

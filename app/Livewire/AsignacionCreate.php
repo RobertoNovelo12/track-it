@@ -20,8 +20,7 @@ class AsignacionCreate extends Component
     public string $nombreColaborador = '';
     public string $numeroColaborador = '';
 
-    public string $idSedeAsignar = '';
-    public string $idAreaAsignar = '';
+    public string $idUnidadAsignar = '';
     public string $idDepartamentoAsignar = '';
     public string $idUbicacionAsignar = '';
 
@@ -82,14 +81,7 @@ class AsignacionCreate extends Component
             (string) ($host ?? '');
     }
 
-    public function updatedIdSedeAsignar(): void
-    {
-        $this->idAreaAsignar = '';
-        $this->idDepartamentoAsignar = '';
-        $this->idUbicacionAsignar = '';
-    }
-
-    public function updatedIdAreaAsignar(): void
+    public function updatedIdUnidadAsignar(): void
     {
         $this->idDepartamentoAsignar = '';
         $this->idUbicacionAsignar = '';
@@ -134,16 +126,9 @@ class AsignacionCreate extends Component
                         'max:255',
                     ],
 
-                    'idSedeAsignar' => [
+                    'idUnidadAsignar' => [
                         'required',
                         'integer',
-                        'exists:sedes,id_sede',
-                    ],
-
-                    'idAreaAsignar' => [
-                        'required',
-                        'integer',
-                        'exists:areas,id_area',
                     ],
 
                     'idDepartamentoAsignar' => [
@@ -182,11 +167,8 @@ class AsignacionCreate extends Component
                     'nombreColaborador.required' =>
                         'Escribe el nombre completo del colaborador.',
 
-                    'idSedeAsignar.required' =>
-                        'Selecciona una sede.',
-
-                    'idAreaAsignar.required' =>
-                        'Selecciona un área.',
+                    'idUnidadAsignar.required' =>
+                        'Selecciona un hotel.',
 
                     'idDepartamentoAsignar.required' =>
                         'Selecciona un departamento.',
@@ -202,90 +184,22 @@ class AsignacionCreate extends Component
 
         /*
         |--------------------------------------------------------------------------
-        | Sede -> Área
+        | Hotel -> Departamento -> Ubicación
         |--------------------------------------------------------------------------
         */
 
-        $areaValida =
-            DB::table('areas')
-                ->where(
-                    'id_area',
-                    (int) $validated['idAreaAsignar']
-                )
-                ->where(
-                    'id_sede',
-                    (int) $validated['idSedeAsignar']
-                )
-                ->exists();
-
-        if (! $areaValida) {
-            throw ValidationException::withMessages([
-                'idAreaAsignar' =>
-                    'El área seleccionada no pertenece a la sede indicada.',
-            ]);
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | Área -> Departamento
-        |--------------------------------------------------------------------------
-        */
-
-        $departamentoValido =
-            DB::table('departamentos')
-                ->where(
-                    'id_departamento',
-                    (int) $validated['idDepartamentoAsignar']
-                )
-                ->where(
-                    'id_area',
-                    (int) $validated['idAreaAsignar']
-                )
-                ->exists();
-
-        if (! $departamentoValido) {
-            throw ValidationException::withMessages([
-                'idDepartamentoAsignar' =>
-                    'El departamento no pertenece al área seleccionada.',
-            ]);
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | Ubicación
-        |--------------------------------------------------------------------------
-        */
-
-        if ($payload['idUbicacionAsignar'] !== '') {
-            $ubicacionValida =
-                DB::table('ubicaciones')
-                    ->where(
-                        'id_ubicacion',
-                        (int) $payload['idUbicacionAsignar']
-                    )
-                    ->where(
-                        'id_sede',
-                        (int) $validated['idSedeAsignar']
-                    )
-                    ->where(
-                        function ($query) use ($validated) {
-                            $query
-                                ->whereNull('id_area')
-                                ->orWhere(
-                                    'id_area',
-                                    (int) $validated['idAreaAsignar']
-                                );
-                        }
-                    )
-                    ->exists();
-
-            if (! $ubicacionValida) {
-                throw ValidationException::withMessages([
-                    'idUbicacionAsignar' =>
-                        'La ubicación seleccionada no corresponde a la sede o al área.',
-                ]);
-            }
-        }
+        $organizacion =
+            app(\App\Services\UbicacionOrganizacionalService::class)
+                ->validar(
+                    $validated['idUnidadAsignar'],
+                    $validated['idDepartamentoAsignar'],
+                    $payload['idUbicacionAsignar'],
+                    [
+                        'unidad' => 'idUnidadAsignar',
+                        'departamento' => 'idDepartamentoAsignar',
+                        'ubicacion' => 'idUbicacionAsignar',
+                    ]
+                );
 
         /*
         |--------------------------------------------------------------------------
@@ -346,6 +260,7 @@ class AsignacionCreate extends Component
                 function () use (
                     $payload,
                     $validated,
+                    $organizacion,
                     $fechaAsignacion
                 ): array {
 
@@ -448,19 +363,20 @@ class AsignacionCreate extends Component
                                         ),
 
                                     /*
-                                     * Guardamos departamento.
-                                     * El área puede obtenerse desde departamento.
+                                     * El área ya no se captura: la
+                                     * organización es hotel + departamento.
                                      */
                                     'id_area' =>
                                         null,
 
+                                    'id_unidad' =>
+                                        $organizacion['id_unidad'],
+
                                     'id_departamento' =>
-                                        (int) $validated['idDepartamentoAsignar'],
+                                        $organizacion['id_departamento'],
 
                                     'id_ubicacion' =>
-                                        $this->nullableInt(
-                                            $payload['idUbicacionAsignar']
-                                        ),
+                                        $organizacion['id_ubicacion'],
 
                                     'id_tipo_asignacion' =>
                                         (int) $validated['idTipoAsignacion'],
@@ -584,9 +500,8 @@ class AsignacionCreate extends Component
     | Después:
     |
     | Equipo -> Host
-    | Sede -> Área
-    | Área -> Departamento
-    | Sede/Área -> Ubicación
+    | Hotel -> Departamento
+    | Hotel/Departamento -> Ubicación
     |
     | se resolverá en navegador sin requests Livewire.
     |
@@ -597,101 +512,9 @@ class AsignacionCreate extends Component
         $equipos =
             $this->getEquiposDisponibles();
 
-        $sedes =
-            $this->getSedes();
-
-        $areas =
-            DB::table('areas')
-                ->where(
-                    'activo',
-                    true
-                )
-                ->orderBy(
-                    'nombre'
-                )
-                ->get([
-                    'id_area',
-                    'id_sede',
-                    'nombre',
-                ])
-                ->map(
-                    fn ($area): array => [
-                        'value' =>
-                            (string) $area->id_area,
-
-                        'label' =>
-                            (string) $area->nombre,
-
-                        'idSede' =>
-                            (string) $area->id_sede,
-                    ]
-                )
-                ->values()
-                ->all();
-
-        $departamentos =
-            DB::table('departamentos')
-                ->where(
-                    'activo',
-                    true
-                )
-                ->orderBy(
-                    'nombre'
-                )
-                ->get([
-                    'id_departamento',
-                    'id_area',
-                    'nombre',
-                ])
-                ->map(
-                    fn ($departamento): array => [
-                        'value' =>
-                            (string) $departamento->id_departamento,
-
-                        'label' =>
-                            (string) $departamento->nombre,
-
-                        'idArea' =>
-                            (string) $departamento->id_area,
-                    ]
-                )
-                ->values()
-                ->all();
-
-        $ubicaciones =
-            DB::table('ubicaciones')
-                ->where(
-                    'activo',
-                    true
-                )
-                ->orderBy(
-                    'nombre'
-                )
-                ->get([
-                    'id_ubicacion',
-                    'id_sede',
-                    'id_area',
-                    'nombre',
-                ])
-                ->map(
-                    fn ($ubicacion): array => [
-                        'value' =>
-                            (string) $ubicacion->id_ubicacion,
-
-                        'label' =>
-                            (string) $ubicacion->nombre,
-
-                        'idSede' =>
-                            (string) $ubicacion->id_sede,
-
-                        'idArea' =>
-                            $ubicacion->id_area !== null
-                                ? (string) $ubicacion->id_area
-                                : '',
-                    ]
-                )
-                ->values()
-                ->all();
+        $organizacion =
+            app(\App\Services\UbicacionOrganizacionalService::class)
+                ->datosFormulario();
 
         $tiposAsignacion =
             $this->getTiposAsignacion();
@@ -700,17 +523,14 @@ class AsignacionCreate extends Component
             'equipos' =>
                 $equipos,
 
-            'sedes' =>
-                $sedes,
-
-            'areas' =>
-                $areas,
+            'unidades' =>
+                $organizacion['unidades'],
 
             'departamentos' =>
-                $departamentos,
+                $organizacion['departamentos'],
 
             'ubicaciones' =>
-                $ubicaciones,
+                $organizacion['ubicaciones'],
 
             'tiposAsignacion' =>
                 $tiposAsignacion,
@@ -860,39 +680,6 @@ class AsignacionCreate extends Component
 
     /*
     |--------------------------------------------------------------------------
-    | Sedes
-    |--------------------------------------------------------------------------
-    */
-
-    private function getSedes(): array
-    {
-        return DB::table('sedes')
-            ->where(
-                'activo',
-                true
-            )
-            ->orderBy(
-                'nombre'
-            )
-            ->get([
-                'id_sede',
-                'nombre',
-            ])
-            ->map(
-                fn ($sede): array => [
-                    'value' =>
-                        (string) $sede->id_sede,
-
-                    'label' =>
-                        (string) $sede->nombre,
-                ]
-            )
-            ->values()
-            ->all();
-    }
-
-    /*
-    |--------------------------------------------------------------------------
     | Tipos de asignación
     |--------------------------------------------------------------------------
     */
@@ -1028,10 +815,7 @@ class AsignacionCreate extends Component
                 'numeroColaborador' =>
                     '',
 
-                'idSedeAsignar' =>
-                    '',
-
-                'idAreaAsignar' =>
+                'idUnidadAsignar' =>
                     '',
 
                 'idDepartamentoAsignar' =>
@@ -1105,123 +889,11 @@ class AsignacionCreate extends Component
 
     public function render(): View
     {
-        $assignmentData =
-            $this->getAssignmentFrontendData();
-
-        /*
-         * Compatibilidad temporal con el Blade actual.
-         * En el siguiente paso estos filtros se harán con Alpine.
-         */
-
-        $equiposDisponibles =
-            collect(
-                $assignmentData['equipos']
-            )
-                ->map(
-                    fn (array $equipo): array => [
-                        'value' =>
-                            $equipo['value'],
-
-                        'label' =>
-                            $equipo['label'],
-                    ]
-                )
-                ->values()
-                ->all();
-
-        $areas =
-            $this->idSedeAsignar === ''
-                ? []
-                : collect(
-                    $assignmentData['areas']
-                )
-                    ->filter(
-                        fn (array $area): bool =>
-                            (string) $area['idSede']
-                            ===
-                            (string) $this->idSedeAsignar
-                    )
-                    ->values()
-                    ->all();
-
-        $departamentos =
-            $this->idAreaAsignar === ''
-                ? []
-                : collect(
-                    $assignmentData['departamentos']
-                )
-                    ->filter(
-                        fn (array $departamento): bool =>
-                            (string) $departamento['idArea']
-                            ===
-                            (string) $this->idAreaAsignar
-                    )
-                    ->values()
-                    ->all();
-
-        $ubicaciones =
-            $this->idSedeAsignar === ''
-                ? []
-                : collect(
-                    $assignmentData['ubicaciones']
-                )
-                    ->filter(
-                        function (array $ubicacion): bool {
-                            if (
-                                (string) $ubicacion['idSede']
-                                !==
-                                (string) $this->idSedeAsignar
-                            ) {
-                                return false;
-                            }
-
-                            if ($this->idAreaAsignar === '') {
-                                return true;
-                            }
-
-                            return
-                                $ubicacion['idArea'] === ''
-                                ||
-                                (string) $ubicacion['idArea']
-                                ===
-                                (string) $this->idAreaAsignar;
-                        }
-                    )
-                    ->values()
-                    ->all();
-
         return view(
             'livewire.asignacion-create',
             [
-                /*
-                 * Nuevo paquete JSON.
-                 */
                 'assignmentData' =>
-                    $assignmentData,
-
-                /*
-                 * Compatibilidad temporal con la vista actual.
-                 */
-                'equiposDisponibles' =>
-                    $equiposDisponibles,
-
-                'equiposMeta' =>
-                    $assignmentData['equipos'],
-
-                'sedes' =>
-                    $assignmentData['sedes'],
-
-                'areas' =>
-                    $areas,
-
-                'departamentos' =>
-                    $departamentos,
-
-                'ubicaciones' =>
-                    $ubicaciones,
-
-                'tiposAsignacion' =>
-                    $assignmentData['tiposAsignacion'],
+                    $this->getAssignmentFrontendData(),
             ]
         );
     }
