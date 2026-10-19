@@ -2235,11 +2235,17 @@ class AjustesCuenta extends Component
                 'd.id_area'
             )
             ->leftJoin(
+                'unidades_organizativas as uo',
+                'uo.id_unidad',
+                '=',
+                'u.id_unidad'
+            )
+            ->leftJoin(
                 'sedes as s',
                 's.id_sede',
                 '=',
                 DB::raw(
-                    'COALESCE(a.id_sede, da.id_sede)'
+                    'COALESCE(uo.id_sede, a.id_sede, da.id_sede)'
                 )
             )
             ->where(
@@ -2267,6 +2273,8 @@ class AjustesCuenta extends Component
                 'a.nombre as area_nombre',
 
                 'd.nombre as departamento_nombre',
+
+                'uo.nombre as unidad_nombre',
 
                 's.nombre as sede_nombre',
             ])
