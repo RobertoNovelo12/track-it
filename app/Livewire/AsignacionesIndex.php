@@ -166,6 +166,9 @@ class AsignacionesIndex extends Component
 
     public function guardarAsignacion(): void
     {
+        // Permiso por rol (ver AppServiceProvider).
+        \Illuminate\Support\Facades\Gate::authorize('gestionar');
+
         $this->validate(
             [
                 'idEquipoAsignar' => [

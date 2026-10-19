@@ -33,6 +33,7 @@
                 : '#',
             'active' => request()->routeIs('asignaciones.*'),
             'icon' => 'asignaciones',
+            'permiso' => 'gestionar',
         ],
 
         [
@@ -42,6 +43,7 @@
                 : '#',
             'active' => request()->routeIs('mantenimientos.*'),
             'icon' => 'mantenimientos',
+            'permiso' => 'gestionar',
         ],
 
         [
@@ -51,6 +53,7 @@
                 : '#',
             'active' => request()->routeIs('reportes.*'),
             'icon' => 'reportes',
+            'permiso' => 'gestionar',
         ],
 
         [
@@ -60,6 +63,7 @@
                 : '#',
             'active' => request()->routeIs('usuarios.*'),
             'icon' => 'seguridad',
+            'permiso' => 'administrar',
         ],
 
         [
@@ -69,8 +73,19 @@
                 : '#',
             'active' => request()->routeIs('catalogos.*'),
             'icon' => 'catalogos',
+            'permiso' => 'gestionar',
         ],
     ];
+
+    /*
+     * Solo las opciones que el rol del usuario puede abrir
+     * (permisos definidos en AppServiceProvider).
+     */
+    $sidebarItems = array_values(array_filter(
+        $sidebarItems,
+        fn (array $item): bool => empty($item['permiso'])
+            || \Illuminate\Support\Facades\Gate::allows($item['permiso'])
+    ));
 @endphp
 
 

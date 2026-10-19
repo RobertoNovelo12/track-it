@@ -62,6 +62,21 @@
     ];
 
     /*
+     * Estándar solo administra los catálogos de equipo. Hoteles,
+     * departamentos, plantillas y organización son exclusivos de Admin.
+     */
+    $seccionesOrganizacion = ['hoteles', 'departamentos', 'plantillas', 'organizacion'];
+
+    $puedeAdministrar = \Illuminate\Support\Facades\Gate::allows('administrar');
+
+    if (! $puedeAdministrar) {
+        $administrationSections = array_values(array_filter(
+            $administrationSections,
+            fn (array $seccion): bool => ! in_array($seccion['key'], $seccionesOrganizacion, true)
+        ));
+    }
+
+    /*
     |--------------------------------------------------------------------------
     | Carga por sección
     |--------------------------------------------------------------------------
@@ -619,6 +634,8 @@
         </div>
 
 
+        @if ($puedeAdministrar)
+
         {{-- ========================================================
             HOTELES
         ======================================================== --}}
@@ -672,6 +689,7 @@
             />
         </div>
 
+        @endif
 
     </div>
 

@@ -99,6 +99,9 @@ new class extends Component
 
     public function mount(?int $sedeId = null, bool $nuevaSede = false): void
     {
+        // Solo Admin modifica la organización (ver AppServiceProvider).
+        \Illuminate\Support\Facades\Gate::authorize('administrar');
+
         $tab = (string) request()->query('tab', 'identidad');
 
         $this->tab = in_array($tab, self::PESTANAS, true)

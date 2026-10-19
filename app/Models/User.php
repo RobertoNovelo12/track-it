@@ -102,4 +102,79 @@ class User extends Authenticatable
         return filled($this->two_factor_secret)
             && $this->two_factor_confirmed_at !== null;
     }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Nivel de acceso del rol
+    |--------------------------------------------------------------------------
+    |
+    | admin | estandar | lectura (roles.nivel).
+    |
+    | - Sin rol o rol sin nivel: lectura (mínimo privilegio).
+    | - Mientras no exista la columna roles.nivel (migración pendiente)
+    |   se conserva el comportamiento anterior: acceso completo.
+    |
+    | Se resuelve una sola vez por petición.
+    |
+    */
+
+    public const NIVEL_ADMIN = 'admin';
+    public const NIVEL_ESTANDAR = 'estandar';
+    public const NIVEL_LECTURA = 'lectura';
+
+    private ?string $nivelAccesoResuelto = null;
+
+    public function nivelAcceso(): string
+    {
+        if ($this->nivelAccesoResuelto !== null) {
+            return $this->nivelAccesoResuelto;
+        }
+
+        static $columnaNivel = null;
+
+        $columnaNivel ??= \Illuminate\Support\Facades\Schema::hasColumn('roles', 'nivel');
+
+        if (! $columnaNivel) {
+            return $this->nivelAccesoResuelto = self::NIVEL_ADMIN;
+        }
+
+        $nivel = $this->id_rol
+            ? \Illuminate\Support\Facades\DB::table('roles')
+                ->where('id_rol', $this->id_rol)
+                ->where('activo', true)
+                ->value('nivel')
+            : null;
+
+        return $this->nivelAccesoResuelto = in_array(
+            $nivel,
+            [self::NIVEL_ADMIN, self::NIVEL_ESTANDAR, self::NIVEL_LECTURA],
+            true
+        )
+            ? $nivel
+            : self::NIVEL_LECTURA;
+    }
+
+    public function esAdministrador(): bool
+    {
+        return $this->nivelAcceso() === self::NIVEL_ADMIN;
+    }
+
+    /*
+     * Puede registrar y modificar la operación (equipos, asignaciones,
+     * mantenimientos, reportes y catálogos de equipo).
+     */
+    public function puedeGestionar(): bool
+    {
+        return in_array(
+            $this->nivelAcceso(),
+            [self::NIVEL_ADMIN, self::NIVEL_ESTANDAR],
+            true
+        );
+    }
+
+    public function soloLectura(): bool
+    {
+        return $this->nivelAcceso() === self::NIVEL_LECTURA;
+    }
 }

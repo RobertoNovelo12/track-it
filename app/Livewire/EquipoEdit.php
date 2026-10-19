@@ -2310,6 +2310,9 @@ class EquipoEdit extends Component
     public function save(array $payload): array
 
     {
+        // Permiso por rol (ver AppServiceProvider).
+        \Illuminate\Support\Facades\Gate::authorize('gestionar');
+
 
         abort_if($this->equipoDadoDeBaja(), 403, 'No se puede editar un equipo dado de baja.');
 

@@ -119,20 +119,26 @@
     :actions="function ($equipo) use ($equipoDadoDeBaja) {
         $baja = $equipoDadoDeBaja($equipo);
 
+        /*
+         * Lectura conserva Editar (abre el formulario en solo lectura)
+         * pero no puede dar de baja.
+         */
+        $puedeGestionar = \Illuminate\Support\Facades\Gate::allows('gestionar');
+
         return [
             'detail' => route('equipos.show', $equipo->id_equipo),
             'edit' => $baja ? null : route('equipos.edit', $equipo->id_equipo),
-            'menu' => $baja ? [] : [
+            'menu' => $baja ? [] : array_values(array_filter([
                 [
                     'label' => 'Editar',
                     'href' => route('equipos.edit', $equipo->id_equipo),
                 ],
-                [
+                $puedeGestionar ? [
                     'label' => 'Dar de baja',
                     'href' => route('equipos.baja', ['equipo' => $equipo->id_equipo]),
                     'danger' => true,
-                ],
-            ],
+                ] : null,
+            ])),
         ];
     }"
 />

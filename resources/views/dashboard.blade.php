@@ -157,7 +157,7 @@
 
             {{-- ASIGNAR --}}
 
-            @if (\Illuminate\Support\Facades\Route::has('asignaciones.index'))
+            @if (\Illuminate\Support\Facades\Route::has('asignaciones.index') && \Illuminate\Support\Facades\Gate::allows('gestionar'))
 
                 <a
                     href="{{ route('asignaciones.index') }}"

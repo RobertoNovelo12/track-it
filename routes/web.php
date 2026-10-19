@@ -92,7 +92,7 @@ Route::middleware([
     Route::get(
         '/equipos/crear',
         fn () => view('equipos.create')
-    )->name('equipos.create');
+    )->name('equipos.create')->middleware('can:gestionar');
 
 
     /*
@@ -145,7 +145,7 @@ Route::middleware([
         }
     )
         ->whereNumber('equipo')
-        ->name('equipos.baja');
+        ->name('equipos.baja')->middleware('can:gestionar');
 
 
     /*
@@ -157,12 +157,12 @@ Route::middleware([
     Route::get(
         '/mantenimientos',
         fn () => view('mantenimientos.index')
-    )->name('mantenimientos.index');
+    )->name('mantenimientos.index')->middleware('can:gestionar');
 
     Route::get(
         '/mantenimientos/crear',
         fn () => view('mantenimientos.create')
-    )->name('mantenimientos.create');
+    )->name('mantenimientos.create')->middleware('can:gestionar');
 
     Route::get(
         '/mantenimientos/{mantenimiento}/editar',
@@ -173,7 +173,7 @@ Route::middleware([
         }
     )
         ->whereNumber('mantenimiento')
-        ->name('mantenimientos.edit');
+        ->name('mantenimientos.edit')->middleware('can:gestionar');
 
 
     /*
@@ -185,21 +185,21 @@ Route::middleware([
     Route::get(
         '/reportes',
         fn () => view('reportes.index')
-    )->name('reportes.index');
+    )->name('reportes.index')->middleware('can:gestionar');
 
     Route::get(
         '/reportes/{reporte}',
         [ReporteController::class, 'show']
     )
         ->whereNumber('reporte')
-        ->name('reportes.show');
+        ->name('reportes.show')->middleware('can:gestionar');
 
     Route::get(
         '/reportes/{reporte}/descargar',
         [ReporteController::class, 'download']
     )
         ->whereNumber('reporte')
-        ->name('reportes.download');
+        ->name('reportes.download')->middleware('can:gestionar');
 
 
     /*
@@ -211,7 +211,7 @@ Route::middleware([
     Route::get(
         '/asignaciones',
         fn () => view('asignaciones.index')
-    )->name('asignaciones.index');
+    )->name('asignaciones.index')->middleware('can:gestionar');
 
 
     /*
@@ -223,7 +223,7 @@ Route::middleware([
     Route::get(
         '/asignaciones/asignar',
         fn () => view('asignaciones.create')
-    )->name('asignaciones.create');
+    )->name('asignaciones.create')->middleware('can:gestionar');
 
     /*
     |--------------------------------------------------------------------------
@@ -234,7 +234,7 @@ Route::middleware([
     Route::get(
         '/asignaciones/reasignar',
         fn () => view('asignaciones.reassign')
-    )->name('asignaciones.reassign');
+    )->name('asignaciones.reassign')->middleware('can:gestionar');
 
     /*
     |--------------------------------------------------------------------------
@@ -245,7 +245,7 @@ Route::middleware([
     Route::get(
         '/asignaciones/historial',
         fn () => view('asignaciones.history')
-    )->name('asignaciones.history');
+    )->name('asignaciones.history')->middleware('can:gestionar');
 
 
     /*
@@ -257,7 +257,7 @@ Route::middleware([
     Route::get(
         '/catalogos',
         fn () => view('catalogos.index')
-    )->name('catalogos.index');
+    )->name('catalogos.index')->middleware('can:gestionar');
 
 
     /*
@@ -281,7 +281,7 @@ Route::middleware([
         ->whereNumber(
             'tipoEquipo'
         )
-        ->name('catalogos.tipos-equipo.edit');
+        ->name('catalogos.tipos-equipo.edit')->middleware('can:gestionar');
 
 
     /*
@@ -293,7 +293,7 @@ Route::middleware([
     Route::get(
         '/catalogos/crear',
         fn () => view('catalogos.create')
-    )->name('catalogos.create');
+    )->name('catalogos.create')->middleware('can:gestionar');
 
     Route::get(
     '/catalogos/hoteles/{hotel}/editar',
@@ -304,12 +304,12 @@ Route::middleware([
     }
 )
     ->whereNumber('hotel')
-    ->name('catalogos.hoteles.edit');
+    ->name('catalogos.hoteles.edit')->middleware('can:administrar');
 
     Route::get(
         '/catalogos/sedes/crear',
         fn () => view('catalogos.sedes.create')
-    )->name('catalogos.sedes.create');
+    )->name('catalogos.sedes.create')->middleware('can:administrar');
 
     Route::get(
         '/catalogos/sedes/{sede}/editar',
@@ -320,7 +320,7 @@ Route::middleware([
         }
     )
         ->whereNumber('sede')
-        ->name('catalogos.sedes.edit');
+        ->name('catalogos.sedes.edit')->middleware('can:administrar');
 
 
     /*
@@ -338,7 +338,7 @@ Route::middleware([
         }
     )
         ->whereNumber('departamento')
-        ->name('catalogos.departamentos.edit');
+        ->name('catalogos.departamentos.edit')->middleware('can:administrar');
 
     Route::get(
         '/catalogos/{tipo}/{registro}/editar',
@@ -368,7 +368,7 @@ Route::middleware([
         ->whereNumber(
             'registro'
         )
-        ->name('catalogos.edit');
+        ->name('catalogos.edit')->middleware('can:gestionar');
 
 
     /*
@@ -380,7 +380,12 @@ Route::middleware([
     Route::get(
         '/seguridad',
         fn () => view('seguridad.index')
-    )->name('usuarios.index');
+    )->name('usuarios.index')->middleware('can:administrar');
+
+    Route::get(
+        '/seguridad/usuarios/nuevo',
+        fn () => view('seguridad.usuarios.create')
+    )->name('usuarios.create')->middleware('can:administrar');
 
 
     /*

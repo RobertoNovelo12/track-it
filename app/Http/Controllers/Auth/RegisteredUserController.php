@@ -327,10 +327,13 @@ class RegisteredUserController extends Controller
             'id_unidad' => (int) $unidadSeleccionada->id_unidad,
 
             /*
-             * Compatibilidad: los módulos que todavía leen usuarios.id_area
-             * reciben el área de origen del hotel cuando existe.
+             * usuarios tiene la llave foránea compuesta
+             * (id_departamento, id_area) -> departamentos: id_area debe
+             * ser el área del propio departamento (NULL si no tiene).
              */
-            'id_area' => $unidadSeleccionada->id_area_origen,
+            'id_area' => DB::table('departamentos')
+                ->where('id_departamento', (int) $validated['id_departamento'])
+                ->value('id_area'),
 
             'id_departamento' => (int) $validated['id_departamento'],
             'id_rol' => filled($validated['id_rol'] ?? null)

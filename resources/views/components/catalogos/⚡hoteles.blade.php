@@ -52,6 +52,9 @@ new class extends Component
 
     public function mount(?int $hotelId = null): void
     {
+        // Solo Admin modifica la organización (ver AppServiceProvider).
+        \Illuminate\Support\Facades\Gate::authorize('administrar');
+
         if ($hotelId !== null) {
             $this->editHotel($hotelId);
             $this->paginaEdicion = true;

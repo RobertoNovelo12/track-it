@@ -469,6 +469,9 @@ class ReportesIndex extends Component
     public function generarPdf(ReporteDataService $reportes)
 
     {
+        // Permiso por rol (ver AppServiceProvider).
+        \Illuminate\Support\Facades\Gate::authorize('gestionar');
+
 
         $this->validate(
 
@@ -891,6 +894,9 @@ class ReportesIndex extends Component
         ReporteDataService $reportes
 
     ) {
+        // Permiso por rol (ver AppServiceProvider).
+        \Illuminate\Support\Facades\Gate::authorize('gestionar');
+
 
         $this->successMessage = '';
 
@@ -1148,6 +1154,9 @@ class ReportesIndex extends Component
     public function eliminarReporte(int $reporteId): void
 
     {
+        // Permiso por rol (ver AppServiceProvider).
+        \Illuminate\Support\Facades\Gate::authorize('gestionar');
+
 
         $reporte = ReporteGenerado::findOrFail($reporteId);
 

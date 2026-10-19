@@ -1,3 +1,11 @@
+@php
+    /*
+     * Rol Lectura: el formulario se muestra completo pero bloqueado
+     * (fieldset deshabilitado) y sin acciones de guardar ni baja.
+     */
+    $soloLectura = \Illuminate\Support\Facades\Gate::denies('gestionar');
+@endphp
+
 <div>
 
     <div
@@ -262,6 +270,7 @@
                 Exportar Alta
             </button>
 
+            @unless ($soloLectura)
             {{-- Dar de baja --}}
             <a
                 href="{{ route('equipos.baja', $equipoId) }}"
@@ -305,16 +314,36 @@
 
                 Dar de baja
             </a>
+            @endunless
         </div>
 
         {{-- ============================================================
             FORMULARIO
         ============================================================ --}}
         <form
-            @submit.prevent="saveOptimistically()"
+            @submit.prevent="{{ $soloLectura ? '' : 'saveOptimistically()' }}"
             class="relative"
         >
-            <fieldset class="space-y-4 sm:space-y-6">
+            @if ($soloLectura)
+                <div
+                    role="status"
+                    class="mb-4 flex items-start gap-2 rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface-soft)] px-4 py-3 text-xs text-[var(--theme-text-muted)]"
+                >
+                    <svg class="mt-px h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect x="5" y="11" width="14" height="9" rx="1.5"/>
+                        <path d="M8 11V8a4 4 0 0 1 8 0v3"/>
+                    </svg>
+
+                    <span>
+                        Solo lectura: tu rol permite consultar la información del equipo, pero no modificarla.
+                    </span>
+                </div>
+            @endif
+
+            <fieldset
+                class="space-y-4 sm:space-y-6"
+                @disabled($soloLectura)
+            >
 
             {{-- SELECCIÓN DEL TIPO --}}
             <section class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 sm:p-6">
@@ -477,9 +506,10 @@
                         href="{{ route('equipos.index') }}"
                         class="inline-flex h-11 w-full items-center justify-center rounded-lg border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-5 text-sm font-medium text-[var(--theme-text)] transition-colors hover:bg-[var(--theme-surface-soft)] sm:w-auto"
                     >
-                        Cancelar
+                        {{ $soloLectura ? 'Volver' : 'Cancelar' }}
                     </a>
 
+                    @unless ($soloLectura)
                     <button
                         type="submit"
                         :disabled="savingVisual"
@@ -539,6 +569,7 @@
                             "
                         ></span>
                     </button>
+                    @endunless
                 </div>
 
             </fieldset>

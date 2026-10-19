@@ -59,6 +59,9 @@ class MantenimientoCreate extends Component
 
     public function guardar(): void
     {
+        // Permiso por rol (ver AppServiceProvider).
+        \Illuminate\Support\Facades\Gate::authorize('gestionar');
+
         $validated = $this->validate([
             'equipoId'                       => [
                 'required',

@@ -226,7 +226,7 @@
                             </th>
 
                             <th class="px-4 py-3 font-medium">
-                                Área / Departamento
+                                {{ app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['unidad_singular'] }} / Departamento
                             </th>
 
                             <th class="px-4 py-3 font-medium">
@@ -376,13 +376,15 @@
                                         text-[var(--theme-text)]
                                     "
                                 >
-                                    @if ($usuario->departamento_nombre)
+                                    @if ($usuario->unidad_nombre || $usuario->departamento_nombre)
 
-                                        {{ $usuario->departamento_nombre }}
+                                        <span class="block">
+                                            {{ $usuario->unidad_nombre ?? 'Sin asignar' }}
+                                        </span>
 
-                                    @elseif ($usuario->area_nombre)
-
-                                        {{ $usuario->area_nombre }}
+                                        <span class="mt-0.5 block text-[var(--theme-text-muted)]">
+                                            {{ $usuario->departamento_nombre ?? 'Sin departamento' }}
+                                        </span>
 
                                     @else
 
@@ -757,7 +759,7 @@
                                     <div>
 
                                         <p class="text-[var(--theme-text-muted)]">
-                                            Área
+                                            {{ app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['unidad_singular'] }} / Departamento
                                         </p>
 
                                         <p
@@ -766,10 +768,7 @@
                                                 text-[var(--theme-text)]
                                             "
                                         >
-                                            {{ $usuario->departamento_nombre
-                                                ?? $usuario->area_nombre
-                                                ?? 'Sin asignar'
-                                            }}
+                                            {{ collect([$usuario->unidad_nombre, $usuario->departamento_nombre])->filter()->implode(' · ') ?: 'Sin asignar' }}
                                         </p>
 
                                     </div>

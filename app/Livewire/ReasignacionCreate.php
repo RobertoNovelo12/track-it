@@ -186,6 +186,9 @@ class ReasignacionCreate extends Component
     #[Json]
     public function save(array $payload): array
     {
+        // Permiso por rol (ver AppServiceProvider).
+        \Illuminate\Support\Facades\Gate::authorize('gestionar');
+
         $payload =
             $this->normalizePayload(
                 $payload

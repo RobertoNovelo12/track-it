@@ -36,11 +36,13 @@ class NotificacionService
     public const CATEGORIAS = [
         'asignaciones' => [
             'columna' => 'notificar_asignaciones_movimientos',
+            'soloGestion' => true,
             'tipo' => 'ASIGNACION',
             'defecto' => true,
         ],
         'mantenimientos' => [
             'columna' => 'notificar_mantenimientos',
+            'soloGestion' => true,
             'tipo' => 'MANTENIMIENTO',
             'defecto' => true,
         ],
@@ -199,6 +201,19 @@ class NotificacionService
             ->leftJoin('preferencias_notificaciones as pn', 'pn.id_usuario', '=', 'u.id_usuario')
             ->where('eu.clave', 'ACTIVO')
             ->whereRaw("COALESCE(pn.{$columna}, {$defecto}) = TRUE");
+
+        /*
+         * Asignaciones y mantenimientos solo se notifican a quien puede
+         * abrir esos módulos (roles Admin y Estándar).
+         */
+        if (
+            ($definicion['soloGestion'] ?? false)
+            && \Illuminate\Support\Facades\Schema::hasColumn('roles', 'nivel')
+        ) {
+            $query->join('roles as rol_notificacion', 'rol_notificacion.id_rol', '=', 'u.id_rol')
+                ->where('rol_notificacion.activo', true)
+                ->whereIn('rol_notificacion.nivel', ['admin', 'estandar']);
+        }
 
         if ($destinatarios !== null) {
             $destinatarios = array_values(array_unique(array_filter(

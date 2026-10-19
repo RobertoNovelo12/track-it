@@ -90,6 +90,9 @@ class SeguridadIndex extends Component
 
     public function openApprovalModal(int $userId): void
     {
+        // Permiso por rol (ver AppServiceProvider).
+        \Illuminate\Support\Facades\Gate::authorize('administrar');
+
         $this->resetValidation();
 
         $usuario = DB::table('usuarios as u')
@@ -140,6 +143,9 @@ class SeguridadIndex extends Component
 
     public function approveUser(): void
     {
+        // Permiso por rol (ver AppServiceProvider).
+        \Illuminate\Support\Facades\Gate::authorize('administrar');
+
         $this->validate([
             'approvalUserId' => [
                 'required',
@@ -273,6 +279,9 @@ class SeguridadIndex extends Component
 
     public function openOrganizationRequestModal(int $requestId): void
     {
+        // Permiso por rol (ver AppServiceProvider).
+        \Illuminate\Support\Facades\Gate::authorize('administrar');
+
         $this->resetValidation();
 
         $solicitud = DB::table('solicitudes_cambio_organizacion as s')
@@ -344,6 +353,9 @@ class SeguridadIndex extends Component
 
     public function approveOrganizationRequest(): void
     {
+        // Permiso por rol (ver AppServiceProvider).
+        \Illuminate\Support\Facades\Gate::authorize('administrar');
+
         $this->validate([
             'organizationRequestId' => [
                 'required',
@@ -608,6 +620,9 @@ class SeguridadIndex extends Component
 
     public function rejectOrganizationRequest(): void
     {
+        // Permiso por rol (ver AppServiceProvider).
+        \Illuminate\Support\Facades\Gate::authorize('administrar');
+
         $this->validate([
             'organizationRequestId' => [
                 'required',
@@ -928,6 +943,12 @@ class SeguridadIndex extends Component
                 '=',
                 'u.id_departamento'
             )
+            ->leftJoin(
+                'unidades_organizativas as uo',
+                'uo.id_unidad',
+                '=',
+                'u.id_unidad'
+            )
             ->select([
                 'u.id_usuario',
                 'u.nombres',
@@ -945,6 +966,7 @@ class SeguridadIndex extends Component
                 'eu.nombre as estado_nombre',
                 'a.nombre as area_nombre',
                 'd.nombre as departamento_nombre',
+                'uo.nombre as unidad_nombre',
             ]);
 
         $search = trim($this->search);

@@ -32,6 +32,9 @@ new class extends Component
 
     public function mount(int $departamentoId): void
     {
+        // Solo Admin modifica la organización (ver AppServiceProvider).
+        \Illuminate\Support\Facades\Gate::authorize('administrar');
+
         $departamento = Departamento::query()
             ->principales()
             ->with('hoteles')

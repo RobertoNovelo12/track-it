@@ -188,6 +188,9 @@ class EquipoBaja extends Component
 
     public function confirmar()
     {
+        // Permiso por rol (ver AppServiceProvider).
+        \Illuminate\Support\Facades\Gate::authorize('gestionar');
+
         $validated = $this->validate([
             'motivoBaja' => [
                 'required',

@@ -7,6 +7,12 @@ use Livewire\WithPagination;
 
 new class extends Component
 {
+    public function mount(): void
+    {
+        // Solo Admin modifica la organización (ver AppServiceProvider).
+        \Illuminate\Support\Facades\Gate::authorize('administrar');
+    }
+
     use WithPagination;
 
     /*
