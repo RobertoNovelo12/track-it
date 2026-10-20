@@ -338,8 +338,8 @@
         <form
             id="sidebarQuickSearch"
 
-            action="{{ route('equipos.search') }}"
-
+            {{-- Busca dentro de Equipos tecnológicos (misma tabla, sin pantalla aparte) --}}
+            action="{{ route('equipos.index') }}"
             method="GET"
 
             x-data="{
@@ -349,8 +349,8 @@
                 init() {
 
                     const serverQuery = @js(
-                        request()->routeIs('equipos.search')
-                            ? (string) request('q', '')
+                        request()->routeIs('equipos.index')
+                            ? (string) request('buscar', '')
                             : null
                     );
 
@@ -419,7 +419,20 @@
                 },
             }"
 
-            @submit="persist()"
+            @submit.prevent="
+                persist();
+
+                const destino = new URL($el.action, window.location.origin);
+                const texto = String(query ?? '').trim();
+
+                if (texto !== '') {
+                    destino.searchParams.set('buscar', texto);
+                }
+
+                window.Livewire?.navigate
+                    ? window.Livewire.navigate(destino.toString())
+                    : (window.location.href = destino.toString());
+            "
 
             @keydown.window.ctrl.k.prevent="
                 $refs.quickSearch?.focus()
@@ -505,7 +518,7 @@
 
                     type="search"
 
-                    name="q"
+                    name="buscar"
 
                     x-model="query"
 

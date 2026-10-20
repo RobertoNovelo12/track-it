@@ -1205,27 +1205,74 @@ class ReportesIndex extends Component
 
             : 'desc';
 
-        $historial = ReporteGenerado::query()
+        $cache = app(\App\Services\SystemCacheService::class);
 
-            ->with('usuario')
+        /*
+         * Historial en caché (módulo «reportes», se renueva desde el modelo
+         * al generar o eliminar un reporte). La caché solo admite arreglos
+         * (config/cache.php: serializable_classes = false), así que se guardan
+         * los atributos y aquí se reconstruyen los modelos: conservan sus
+         * fechas (casts) y sirven para route('reportes.show', …).
+         * paginate (no simplePaginate): la tabla común necesita el total.
+         */
+        $pagina = max(1, (int) $this->getPage('historialPage'));
 
-            ->orderBy('fecha_generacion', $sort)
+        $datosHistorial = $cache->remember(
+            'reportes',
+            'index.historial.v2',
+            [
+                'sort' => $sort,
+                'per_page' => $perPage,
+                'page' => $pagina,
+            ],
+            function () use ($sort, $perPage, $pagina): array {
+                $paginador = ReporteGenerado::query()
+                    ->with('usuario')
+                    ->orderBy('fecha_generacion', $sort)
+                    ->paginate($perPage, ['*'], 'historialPage', $pagina);
 
-            // paginate (no simplePaginate): la tabla común necesita el total
-            // para mostrar la paginación numerada.
-            ->paginate(
+                return [
+                    'items' => $paginador->getCollection()
+                        ->map(fn (ReporteGenerado $reporte): array => [
+                            'atributos' => $reporte->getAttributes(),
+                            'usuario' => $reporte->usuario?->getAttributes(),
+                        ])
+                        ->all(),
+                    'total' => $paginador->total(),
+                ];
+            },
+            12
+        );
 
-                $perPage,
+        $filasHistorial = collect($datosHistorial['items'])
+            ->map(function (array $fila): ReporteGenerado {
+                $reporte = (new ReporteGenerado())->newFromBuilder($fila['atributos']);
 
-                pageName: 'historialPage'
+                $reporte->setRelation(
+                    'usuario',
+                    $fila['usuario'] !== null
+                        ? $reporte->usuario()->getRelated()->newFromBuilder($fila['usuario'])
+                        : null
+                );
 
-            );
+                return $reporte;
+            });
 
-        $tiposEquipo = Cache::remember(
+        $historial = new \Illuminate\Pagination\LengthAwarePaginator(
+            $filasHistorial,
+            $datosHistorial['total'],
+            $perPage,
+            $pagina,
+            [
+                'path' => request()->url(),
+                'pageName' => 'historialPage',
+            ]
+        );
 
-            'reportes:v4:tipos-equipo',
-
-            120,
+        // Catálogos: módulo «catalogos» (antes caducaban a los 120 segundos).
+        $tiposEquipo = $cache->rememberSimple(
+            'catalogos',
+            'reportes.tipos_equipo.v5',
 
             fn () => TipoEquipo::query()
 
@@ -1234,16 +1281,13 @@ class ReportesIndex extends Component
                 ->orderBy('nombre')
 
                 ->get(['id_tipo_equipo', 'nombre'])
-
-                ->toArray()
-
+                ->toArray(),
+            24
         );
 
-        $marcas = Cache::remember(
-
-            'reportes:v4:marcas',
-
-            120,
+        $marcas = $cache->rememberSimple(
+            'catalogos',
+            'reportes.marcas.v5',
 
             fn () => Marca::query()
 
@@ -1252,9 +1296,8 @@ class ReportesIndex extends Component
                 ->orderBy('nombre')
 
                 ->get(['id_marca', 'nombre'])
-
-                ->toArray()
-
+                ->toArray(),
+            24
         );
 
         $claveModelos = sprintf(
@@ -1267,11 +1310,10 @@ class ReportesIndex extends Component
 
         );
 
-        $modelos = Cache::remember(
-
-            $claveModelos,
-
-            120,
+        $modelos = $cache->remember(
+            'catalogos',
+            'reportes.modelos.v5',
+            ['clave' => $claveModelos],
 
             fn () => Modelo::query()
 
@@ -1308,9 +1350,8 @@ class ReportesIndex extends Component
                 ->orderBy('nombre')
 
                 ->get(['id_modelo', 'nombre'])
-
-                ->toArray()
-
+                ->toArray(),
+            24
         );
 
         // Lee solo datos ya cacheados: nunca consulta PostgreSQL durante render.
@@ -1441,11 +1482,21 @@ class ReportesIndex extends Component
 
         };
 
-        return Cache::remember(
+        /*
+         * Antes caducaba a los 60 segundos. Ahora depende de las versiones
+         * de equipos (altas y bajas), mantenimientos y catálogos.
+         */
+        $cache = app(\App\Services\SystemCacheService::class);
 
-            'reportes:v4:estados:' . $this->tipoReporte,
-
-            60,
+        return $cache->remember(
+            'reportes',
+            'filtros.estados.v5',
+            [
+                'tipo' => $this->tipoReporte,
+                'equipos_version' => $cache->moduleVersion('equipos'),
+                'mantenimientos_version' => $cache->moduleVersion('mantenimientos'),
+                'catalogos_version' => $cache->moduleVersion('catalogos'),
+            ],
 
             fn () => CatalogoValor::query()
 
@@ -1467,8 +1518,8 @@ class ReportesIndex extends Component
 
                 ->get(['id_valor', 'nombre'])
 
-                ->toArray()
-
+                ->toArray(),
+            12
         );
 
     }

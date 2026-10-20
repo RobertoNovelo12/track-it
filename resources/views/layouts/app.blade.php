@@ -261,6 +261,31 @@ document.addEventListener(
         })();
     </script>
 
+    {{--
+        Filtros de Equipos plegados: se lee antes de pintar (como el tema)
+        para que el esqueleto de carga ya aparezca plegado y no "salte".
+        La clase la mantiene al día livewire/equipos/filters/desktop.
+    --}}
+    <script>
+        try {
+            if (localStorage.getItem('trackit_filtros_equipos') === 'plegado') {
+                document.documentElement.classList.add('filtros-equipos-plegados');
+            }
+        } catch (error) {
+            //
+        }
+    </script>
+
+    <style>
+        html.filtros-equipos-plegados [data-filtros-equipos-cuerpo] {
+            display: none;
+        }
+
+        html.filtros-equipos-plegados [data-filtros-equipos-flecha] {
+            transform: rotate(180deg);
+        }
+    </style>
+
         @vite(['resources/css/app.css', 'resources/js/app.js'])
 
         @stack('styles')

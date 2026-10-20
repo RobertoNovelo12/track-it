@@ -1,8 +1,42 @@
 {{-- ============================================================
     FILTROS DE ESCRITORIO
 ============================================================ --}}
+@php
+    /*
+     * Filtros activos (se muestran junto al título cuando el panel
+     * está plegado, para recordar que la tabla está filtrada).
+     */
+    $filtrosActivosEscritorio = collect([
+        $tipoActivo, $nombreEquipo, $marca, $modelo, $numeroSerie,
+        $numeroFactura, $estado, $area, $situacion, $serviceTag, $direccionIp,
+    ])->filter(fn ($valor) => filled($valor))->count()
+        + collect($camposTipo ?? [])->filter(fn ($valor) => filled($valor) && ! is_array($valor))->count();
+@endphp
+
 <form
     wire:submit.prevent="$refresh"
+
+    {{-- Plegable: el estado se recuerda en el navegador --}}
+    x-data="{
+        abierto: true,
+
+        init() {
+            // Misma fuente que el esqueleto (script del <head> en layouts/app).
+            this.abierto = ! document.documentElement.classList.contains('filtros-equipos-plegados');
+        },
+
+        alternar() {
+            this.abierto = ! this.abierto;
+
+            document.documentElement.classList.toggle('filtros-equipos-plegados', ! this.abierto);
+
+            try {
+                localStorage.setItem('trackit_filtros_equipos', this.abierto ? 'abierto' : 'plegado');
+            } catch (error) {
+                //
+            }
+        },
+    }"
 
     class="
         hidden
@@ -15,7 +49,8 @@
 
         rounded-lg
 
-        p-6
+        px-6
+        py-3
         mb-6
     "
 >
@@ -23,7 +58,11 @@
     {{-- ========================================================
         ENCABEZADO
     ======================================================== --}}
-    <div class="flex items-center gap-2 mb-5">
+    {{-- Todo el encabezado pliega / despliega (no solo la flecha) --}}
+    <div
+        class="-mx-2 flex cursor-pointer select-none items-center gap-2 rounded-md px-2 py-0.5"
+        x-on:click="alternar()"
+    >
 
         <svg
             class="w-4 h-4 text-[var(--theme-text-muted)]"
@@ -64,6 +103,8 @@
                 marca,
                 modelo,
                 numeroSerie,
+                numeroFactura,
+                camposTipo,
                 serviceTag,
                 direccionIp,
                 estado,
@@ -108,93 +149,77 @@
             />
         </svg>
 
+        {{-- Filtros activos (solo con el panel plegado) --}}
+        @if ($filtrosActivosEscritorio > 0)
+            <span
+                x-show="! abierto"
+                x-transition.opacity
+                x-cloak
+                class="rounded-full bg-[var(--theme-primary-soft)] px-2 py-0.5 text-[11px] font-medium text-[var(--theme-primary)]"
+            >
+                {{ $filtrosActivosEscritorio }} {{ $filtrosActivosEscritorio === 1 ? 'activo' : 'activos' }}
+            </span>
+        @endif
+
+        {{-- Plegar / desplegar --}}
+        <button
+            type="button"
+            x-on:click.stop="alternar()"
+            x-bind:aria-expanded="abierto ? 'true' : 'false'"
+            x-bind:title="abierto ? 'Ocultar filtros' : 'Mostrar filtros'"
+            x-bind:aria-label="abierto ? 'Ocultar filtros' : 'Mostrar filtros'"
+            aria-controls="filtros-equipos-contenido"
+            class="ml-auto inline-flex h-8 w-8 items-center justify-center rounded-md text-[var(--theme-text-muted)] transition-colors duration-[var(--motion-fast)] hover:bg-[var(--theme-surface-soft)] hover:text-[var(--theme-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--theme-primary)]"
+        >
+            <svg
+                class="h-4 w-4 transition-transform duration-[var(--motion-base)]"
+                x-bind:class="abierto ? '' : '-rotate-180'"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+            >
+                <path d="M6 15l6-6 6 6"/>
+            </svg>
+        </button>
+
     </div>
 
+    {{--
+        Contenido plegable. x-collapse anima la altura, así la tabla de
+        abajo sube y baja junto con el panel. wire:ignore.self evita que
+        Livewire restablezca la altura/visibilidad que maneja Alpine.
+    --}}
+    <div
+        id="filtros-equipos-contenido"
+        x-show="abierto"
+        x-collapse.duration.250ms
+        wire:ignore.self
+    >
+    <div class="pt-4 pb-3">
+
+
+    @php
+        $claseInputFiltro = 'w-full px-3 py-2 text-sm text-[var(--theme-text)] bg-[var(--theme-surface)] border border-[var(--theme-border-strong)] rounded-md placeholder:text-[var(--theme-text-muted)] focus:ring-1 focus:ring-[var(--theme-primary)] focus:border-[var(--theme-primary)] outline-none transition-colors';
+
+        $tipoNombre = data_get(
+            collect($tiposActivo)->first(fn ($t) => (string) data_get($t, 'id_tipo_equipo') === (string) $tipoActivo),
+            'nombre'
+        );
+    @endphp
 
     {{-- ========================================================
-        PRIMERA FILA
+        PRIMERA FILA: tipo, nombre, marca y modelo
     ======================================================== --}}
-    <div
-        class="
-            grid
-            grid-cols-1
+    <div class="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
 
-            sm:grid-cols-2
-            lg:grid-cols-4
-
-            gap-4
-
-            mb-4
-        "
-    >
-
-        {{-- ====================================================
-            NOMBRE DE EQUIPO
-        ==================================================== --}}
-        <div>
-
-            <label
-                class="
-                    block
-
-                    mb-1.5
-
-                    text-xs
-                    text-[var(--theme-text-muted)]
-                "
-            >
-                Nombre de equipo
-            </label>
-
-
-            <input
-                type="text"
-
-                wire:model="nombreEquipo"
-
-                placeholder="Buscar nombre..."
-
-                autocomplete="off"
-
-                class="
-                    w-full
-
-                    px-3
-                    py-2
-
-                    text-sm
-                    text-[var(--theme-text)]
-
-                    bg-[var(--theme-surface)]
-
-                    border
-                    border-[var(--theme-border-strong)]
-
-                    rounded-md
-
-                    placeholder:text-[var(--theme-text-muted)]
-
-                    focus:ring-1
-                    focus:ring-[var(--theme-primary)]
-                    focus:border-[var(--theme-primary)]
-
-                    outline-none
-
-                    transition-colors
-                "
-            >
-
-        </div>
-
-
-        {{-- ====================================================
-            TIPO DE ACTIVO
-        ==================================================== --}}
+        {{-- TIPO DE EQUIPO (al elegirlo aparecen sus filtros específicos) --}}
         <x-searchable-select
-            label="Tipo de activo"
-
+            label="Tipo de equipo"
             wire-model="tipoActivo"
-
             :options="
                 collect($tiposActivo)->map(
                     fn ($t) => [
@@ -203,19 +228,28 @@
                     ]
                 )
             "
-
             placeholder="Buscar tipo..."
         />
 
+        {{-- NOMBRE --}}
+        <div>
+            <label class="mb-1.5 block text-xs text-[var(--theme-text-muted)]">
+                Nombre de equipo
+            </label>
 
-        {{-- ====================================================
-            MARCA
-        ==================================================== --}}
+            <input
+                type="text"
+                wire:model="nombreEquipo"
+                placeholder="Buscar nombre..."
+                autocomplete="off"
+                class="{{ $claseInputFiltro }}"
+            >
+        </div>
+
+        {{-- MARCA --}}
         <x-searchable-select
             label="Marca"
-
             wire-model="marca"
-
             :options="
                 collect($marcas)->map(
                     fn ($m) => [
@@ -224,19 +258,13 @@
                     ]
                 )
             "
-
             placeholder="Buscar marca..."
         />
 
-
-        {{-- ====================================================
-            MODELO
-        ==================================================== --}}
+        {{-- MODELO --}}
         <x-searchable-select
             label="Modelo"
-
             wire-model="modelo"
-
             :options="
                 collect($modelos)->map(
                     fn ($m) => [
@@ -245,156 +273,50 @@
                     ]
                 )
             "
-
             placeholder="Buscar modelo..."
         />
-
     </div>
 
 
     {{-- ========================================================
-        SEGUNDA FILA
+        SEGUNDA FILA: serie, factura, estado y hotel
     ======================================================== --}}
-    <div
-        class="
-            grid
-            grid-cols-1
+    <div class="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
 
-            sm:grid-cols-2
-            lg:grid-cols-4
-
-            gap-4
-
-            mb-4
-        "
-    >
-
-        {{-- ====================================================
-            NÚMERO DE SERIE
-        ==================================================== --}}
+        {{-- NÚMERO DE SERIE --}}
         <div>
-
-            <label
-                class="
-                    block
-
-                    mb-1.5
-
-                    text-xs
-                    text-[var(--theme-text-muted)]
-                "
-            >
+            <label class="mb-1.5 block text-xs text-[var(--theme-text-muted)]">
                 Número de serie
             </label>
 
-
             <input
                 type="text"
-
                 wire:model="numeroSerie"
-
                 placeholder="Buscar..."
-
                 autocomplete="off"
-
-                class="
-                    w-full
-
-                    px-3
-                    py-2
-
-                    text-sm
-                    text-[var(--theme-text)]
-
-                    bg-[var(--theme-surface)]
-
-                    border
-                    border-[var(--theme-border-strong)]
-
-                    rounded-md
-
-                    placeholder:text-[var(--theme-text-muted)]
-
-                    focus:ring-1
-                    focus:ring-[var(--theme-primary)]
-                    focus:border-[var(--theme-primary)]
-
-                    outline-none
-
-                    transition-colors
-                "
+                class="{{ $claseInputFiltro }}"
             >
-
         </div>
 
-
-        {{-- ====================================================
-            DIRECCIÓN IP
-        ==================================================== --}}
+        {{-- NÚMERO DE FACTURA --}}
         <div>
-
-            <label
-                class="
-                    block
-
-                    mb-1.5
-
-                    text-xs
-                    text-[var(--theme-text-muted)]
-                "
-            >
-                Dirección IP
+            <label class="mb-1.5 block text-xs text-[var(--theme-text-muted)]">
+                Número de factura
             </label>
 
-
             <input
                 type="text"
-
-                wire:model="direccionIp"
-
+                wire:model="numeroFactura"
                 placeholder="Buscar..."
-
                 autocomplete="off"
-
-                class="
-                    w-full
-
-                    px-3
-                    py-2
-
-                    text-sm
-                    text-[var(--theme-text)]
-
-                    bg-[var(--theme-surface)]
-
-                    border
-                    border-[var(--theme-border-strong)]
-
-                    rounded-md
-
-                    placeholder:text-[var(--theme-text-muted)]
-
-                    focus:ring-1
-                    focus:ring-[var(--theme-primary)]
-                    focus:border-[var(--theme-primary)]
-
-                    outline-none
-
-                    transition-colors
-                "
+                class="{{ $claseInputFiltro }}"
             >
-
         </div>
 
-
-        {{-- ====================================================
-            ESTADO
-        ==================================================== --}}
+        {{-- ESTADO --}}
         <x-searchable-select
             label="Estado"
-
             wire-model="estado"
-
             :options="
                 collect($estados)->map(
                     fn ($e) => [
@@ -403,19 +325,13 @@
                     ]
                 )
             "
-
             placeholder="Buscar estado..."
         />
 
-
-        {{-- ====================================================
-            ÁREA / DEPARTAMENTO
-        ==================================================== --}}
+        {{-- HOTEL (unidad organizativa) --}}
         <x-searchable-select
             :label="app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['unidad_singular']"
-
             wire-model="area"
-
             :options="
                 collect($areas)->map(
                     fn ($a) => [
@@ -424,104 +340,27 @@
                     ]
                 )
             "
-
             :placeholder="app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['buscar_unidad']"
         />
-
     </div>
 
 
     {{-- ========================================================
-        TERCERA FILA
-
-        Service Tag queda disponible como filtro,
-        pero ya no ocupa una columna de la tabla.
+        FILTROS ESPECÍFICOS DEL TIPO SELECCIONADO
     ======================================================== --}}
-    <div
-        class="
-            grid
-            grid-cols-1
-
-            sm:grid-cols-2
-            lg:grid-cols-4
-
-            gap-4
-
-            items-end
-        "
-    >
-
-        {{-- ====================================================
-            SERVICE TAG
-        ==================================================== --}}
-        <div>
-
-            <label
-                class="
-                    block
-
-                    mb-1.5
-
-                    text-xs
-                    text-[var(--theme-text-muted)]
-                "
-            >
-                Service Tag
-            </label>
+    @include('livewire.equipos.filters.campos-tipo', ['variante' => 'escritorio'])
 
 
-            <input
-                type="text"
+    {{-- ========================================================
+        ÚLTIMA FILA: situación y botones
+    ======================================================== --}}
+    <div class="grid grid-cols-1 items-end gap-4 sm:grid-cols-2 lg:grid-cols-4">
 
-                wire:model="serviceTag"
-
-                placeholder="Buscar..."
-
-                autocomplete="off"
-
-                class="
-                    w-full
-
-                    px-3
-                    py-2
-
-                    text-sm
-                    text-[var(--theme-text)]
-
-                    bg-[var(--theme-surface)]
-
-                    border
-                    border-[var(--theme-border-strong)]
-
-                    rounded-md
-
-                    placeholder:text-[var(--theme-text-muted)]
-
-                    focus:ring-1
-                    focus:ring-[var(--theme-primary)]
-                    focus:border-[var(--theme-primary)]
-
-                    outline-none
-
-                    transition-colors
-                "
-            >
-
-        </div>
-
-
-        {{-- ====================================================
-            SITUACIÓN
-            Se llena también desde los indicadores de la
-            Vista general (Total, Asignados, Vencidos...).
-        ==================================================== --}}
+        {{-- SITUACIÓN: también se llena desde los indicadores de la Vista general --}}
         <x-searchable-select
             label="Situación"
-
             wire-model="situacion"
-
             :options="$situaciones"
-
             placeholder="Buscar situación..."
         />
 
@@ -529,8 +368,8 @@
         {{-- ====================================================
             BOTONES
 
-            En escritorio ocupan las dos columnas restantes,
-            así Service Tag no deja la tarjeta desequilibrada.
+            En escritorio ocupan las tres columnas que deja
+            Situación, alineados a la derecha.
         ==================================================== --}}
         <div
             class="
@@ -540,8 +379,8 @@
 
                 gap-3
 
-                sm:col-span-2
-                lg:col-span-2
+                sm:col-span-1
+                lg:col-span-3
             "
         >
 
@@ -639,6 +478,9 @@
 
         </div>
 
+    </div>
+
+    </div>
     </div>
 
 </form>

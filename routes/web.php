@@ -54,9 +54,16 @@ Route::middleware([
     |--------------------------------------------------------------------------
     */
 
+    /*
+     * La búsqueda ahora se muestra en la tabla de Equipos tecnológicos.
+     * Se conserva la ruta para enlaces anteriores (/buscar-equipos?q=...).
+     */
     Route::get(
         '/buscar-equipos',
-        fn () => view('equipos.search')
+        fn () => redirect()->route(
+            'equipos.index',
+            array_filter(['buscar' => trim((string) request('q', ''))])
+        )
     )->name('equipos.search');
 
 

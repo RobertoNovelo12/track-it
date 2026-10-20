@@ -670,16 +670,24 @@ new class extends Component
 
     @unless ($paginaEdicion)
     {{-- Pestañas internas (el título está en Administración) --}}
+    {{-- El subrayado cambia al instante (Alpine); el contenido llega del
+         servidor y mientras tanto se muestra un esqueleto (abajo). --}}
     <div
         role="tablist"
         aria-label="Configuración de organización"
         class="flex gap-2 overflow-x-auto border-b border-[var(--theme-border)] pb-px"
+        x-data="{ pestana: @js($tab) }"
     >
         @foreach ($pestanas as $clave => $etiqueta)
             <button
                 type="button"
                 role="tab"
                 aria-selected="{{ $tab === $clave ? 'true' : 'false' }}"
+                x-on:click="pestana = @js($clave)"
+                x-bind:class="{
+                    'border-[var(--theme-primary)] text-[var(--theme-primary)]': pestana === @js($clave),
+                    'border-transparent text-[var(--theme-text-muted)] hover:text-[var(--theme-text)]': pestana !== @js($clave),
+                }"
                 wire:click="setTab('{{ $clave }}')"
                 @class([
                     'shrink-0 border-b-2 px-3 py-2.5 text-xs font-medium transition-colors',
@@ -693,6 +701,29 @@ new class extends Component
     </div>
 
     @endunless
+
+    {{-- Cargando otra pestaña --}}
+    <div
+        wire:loading.block
+        wire:target="setTab"
+        class="space-y-5 py-1"
+        aria-busy="true"
+    >
+        <span class="sr-only">Cargando…</span>
+
+        @foreach ([['w-40', 'w-full sm:w-96'], ['w-32', 'w-full sm:w-80'], ['w-48', 'w-full']] as [$anchoEtiqueta, $anchoCampo])
+            <div class="space-y-2">
+                <x-ui.skeleton class="h-3 {{ $anchoEtiqueta }}" />
+                <x-ui.skeleton class="h-10 {{ $anchoCampo }}" />
+            </div>
+        @endforeach
+
+        <div class="flex justify-end border-t border-[var(--theme-border)] pt-4">
+            <x-ui.skeleton class="h-11 w-56" />
+        </div>
+    </div>
+
+    <div wire:loading.remove wire:target="setTab" class="space-y-5">
 
     {{-- Confirmación --}}
     @if ($message)
@@ -931,7 +962,7 @@ new class extends Component
             <label class="flex items-start gap-3 rounded-lg border border-[var(--theme-border)] p-4 text-sm text-[var(--theme-text)]">
                 <input
                     type="checkbox"
-                    wire:model.live="restringirDominio"
+                    wire:model="restringirDominio"
                     class="mt-1 h-4 w-4 accent-[var(--theme-primary)]"
                 >
 
@@ -944,7 +975,50 @@ new class extends Component
                 </span>
             </label>
 
-            <div class="max-w-xl space-y-3">
+            {{--
+                Dominios: agregar y quitar ocurre en el navegador (instantáneo).
+                La lista viaja al servidor al guardar (entangle sin .live), donde
+                se vuelve a validar y normalizar (guardarCorreo).
+                La validación replica OrganizacionService::normalizarDominio.
+            --}}
+            <div
+                class="max-w-xl space-y-3"
+                x-data="{
+                    dominios: $wire.entangle('dominios'),
+                    restringir: $wire.entangle('restringirDominio'),
+                    nuevo: '',
+                    error: '',
+
+                    agregar() {
+                        const dominio = this.nuevo.trim().toLowerCase().replace(/^@+/, '');
+                        const valido = dominio.length <= 253
+                            && /^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/.test(dominio);
+
+                        if (! valido) {
+                            this.error = 'Escribe un dominio válido, por ejemplo empresa.com.';
+                            return;
+                        }
+
+                        if ((this.dominios || []).includes(dominio)) {
+                            this.error = 'Ese dominio ya está en la lista.';
+                            return;
+                        }
+
+                        if ((this.dominios || []).length >= 20) {
+                            this.error = 'Puedes registrar hasta 20 dominios.';
+                            return;
+                        }
+
+                        this.dominios = [...(this.dominios || []), dominio];
+                        this.nuevo = '';
+                        this.error = '';
+                    },
+
+                    quitar(indice) {
+                        this.dominios = this.dominios.filter((_, i) => i !== indice);
+                    },
+                }"
+            >
                 <label for="org-dominio" class="mb-1.5 block text-xs text-[var(--theme-text-muted)]">
                     Dominios permitidos
                 </label>
@@ -956,8 +1030,9 @@ new class extends Component
                         <input
                             id="org-dominio"
                             type="text"
-                            wire:model="nuevoDominio"
-                            wire:keydown.enter.prevent="agregarDominio"
+                            x-model="nuevo"
+                            x-on:input="error = ''"
+                            x-on:keydown.enter.prevent="agregar()"
                             placeholder="empresa.com"
                             maxlength="253"
                             autocomplete="off"
@@ -967,47 +1042,50 @@ new class extends Component
 
                     <button
                         type="button"
-                        wire:click="agregarDominio"
+                        x-on:click="agregar()"
                         class="shrink-0 rounded-lg border border-[var(--theme-border)] px-4 py-2.5 text-xs text-[var(--theme-text)] hover:bg-[var(--theme-surface-soft)]"
                     >
                         Agregar
                     </button>
                 </div>
 
-                @error('nuevoDominio')
-                    <p class="mt-3 text-xs text-[var(--theme-danger)]">{{ $message }}</p>
-                @enderror
+                <p x-show="error" x-text="error" x-cloak class="mt-3 text-xs text-[var(--theme-danger)]"></p>
 
-                @if ($dominios === [])
-                    <p class="text-sm text-[var(--theme-text-muted)]">No hay dominios registrados.</p>
-                @else
-                    <ul class="divide-y divide-[var(--theme-border)] rounded-lg border border-[var(--theme-border)]">
-                        @foreach ($dominios as $indice => $dominio)
-                            <li wire:key="org-dominio-{{ $dominio }}" class="flex items-center justify-between gap-3 px-4 py-2.5 text-sm">
-                                <span class="text-[var(--theme-text-strong)]">@<span>{{ $dominio }}</span></span>
+                {{-- La lista la dibuja Alpine; Livewire no debe tocarla al actualizar --}}
+                <div wire:ignore>
+                    <p x-show="(dominios || []).length === 0" class="text-sm text-[var(--theme-text-muted)]">
+                        No hay dominios registrados.
+                    </p>
+
+                    <ul
+                        x-show="(dominios || []).length > 0"
+                        x-cloak
+                        class="divide-y divide-[var(--theme-border)] rounded-lg border border-[var(--theme-border)]"
+                    >
+                        <template x-for="(dominio, indice) in (dominios || [])" x-bind:key="dominio">
+                            <li class="flex items-center justify-between gap-3 px-4 py-2.5 text-sm">
+                                <span class="text-[var(--theme-text-strong)]">&#64;<span x-text="dominio"></span></span>
 
                                 <button
                                     type="button"
-                                    wire:click="quitarDominio({{ $indice }})"
-                                    aria-label="Quitar {{ $dominio }}"
+                                    x-on:click="quitar(indice)"
+                                    x-bind:aria-label="'Quitar ' + dominio"
                                     class="text-xs text-[var(--theme-text-muted)] hover:text-[var(--theme-danger)]"
                                 >
                                     Quitar
                                 </button>
                             </li>
-                        @endforeach
+                        </template>
                     </ul>
-                @endif
+
+                    <p x-show="restringir && (dominios || []).length > 0" x-cloak class="mt-3 text-xs text-[var(--theme-text-muted)]">
+                        Ejemplo aceptado: <span x-text="'usuario&#64;' + dominios[0]"></span>
+                    </p>
+                </div>
 
                 @error('dominios')
                     <p class="mt-3 text-xs text-[var(--theme-danger)]">{{ $message }}</p>
                 @enderror
-
-                @if ($restringirDominio && $dominios !== [])
-                    <p class="text-xs text-[var(--theme-text-muted)]">
-                        Ejemplo aceptado: usuario@{{ $dominios[0] }}
-                    </p>
-                @endif
             </div>
 
             <div class="flex justify-end border-t border-[var(--theme-border)] pt-4">
@@ -1293,4 +1371,6 @@ new class extends Component
         </div>
         @endunless
     @endif
+
+    </div>
 </div>

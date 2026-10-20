@@ -562,6 +562,9 @@ class MantenimientoEdit extends Component
             }
         });
 
+        // Listado de Mantenimientos en caché: mostrar el cambio de inmediato.
+        app(\App\Services\SystemCacheService::class)->refreshModule('mantenimientos');
+
 
         if ($estadoAnterior !== (int) $validated['estadoMantenimiento']) {
             $notificaciones = app(\App\Services\NotificacionService::class);

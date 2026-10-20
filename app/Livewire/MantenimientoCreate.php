@@ -282,6 +282,9 @@ class MantenimientoCreate extends Component
             return (int) $mantenimientoId;
         });
 
+        // Listado de Mantenimientos en caché: mostrar el cambio de inmediato.
+        app(\App\Services\SystemCacheService::class)->refreshModule('mantenimientos');
+
         $notificaciones = app(\App\Services\NotificacionService::class);
 
         $folio = DB::table('mantenimientos')

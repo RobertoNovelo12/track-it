@@ -18,9 +18,21 @@
     /*
      * Opciones tipo tarjeta (tema, densidad, formato de hora).
      */
-    $tarjeta = fn (bool $activa) => $activa
-        ? 'border-[var(--theme-primary)] bg-[var(--theme-primary-soft-subtle)] text-[var(--theme-primary)]'
-        : 'border-[var(--theme-border-strong)] bg-[var(--theme-surface)] text-[var(--theme-text)] hover:border-[var(--theme-primary-border)]';
+    $claseTarjetaActiva = 'border-[var(--theme-primary)] bg-[var(--theme-primary-soft-subtle)] text-[var(--theme-primary)]';
+    $claseTarjetaInactiva = 'border-[var(--theme-border-strong)] bg-[var(--theme-surface)] text-[var(--theme-text)] hover:border-[var(--theme-primary-border)]';
+
+    $tarjeta = fn (bool $activa) => $activa ? $claseTarjetaActiva : $claseTarjetaInactiva;
+
+    /*
+     * Tema y densidad cambian en el navegador al instante (Alpine);
+     * el valor viaja al servidor al pulsar «Guardar preferencias»
+     * (entangle sin .live). Antes cada clic esperaba al servidor.
+     * Las clases del servidor evitan parpadeo; Alpine las alterna.
+     */
+    $tarjetaAlpine = fn (string $modelo, string $valor) => '{ ['
+        . \Illuminate\Support\Js::from($claseTarjetaActiva) . ']: ' . $modelo . ' === ' . \Illuminate\Support\Js::from($valor)
+        . ', [' . \Illuminate\Support\Js::from($claseTarjetaInactiva) . ']: ' . $modelo . ' !== ' . \Illuminate\Support\Js::from($valor)
+        . ' }';
 
     $unidadSingular = mb_strtolower($etiquetas['unidad_singular']);
 @endphp
@@ -30,7 +42,13 @@
     {{-- ====================================================
         APARIENCIA
     ==================================================== --}}
-    <section class="{{ $seccion }}">
+    <section
+        class="{{ $seccion }}"
+        x-data="{
+            tema: $wire.entangle('tema'),
+            densidad: $wire.entangle('densidad'),
+        }"
+    >
         <div class="{{ $cabecera }}">
             <h2 class="text-sm font-semibold text-[var(--theme-text-strong)]">Apariencia</h2>
             <p class="mt-1 text-xs text-[var(--theme-text-muted)]">Cómo se ve el sistema en tus dispositivos.</p>
@@ -49,8 +67,12 @@
 
                 <div class="grid w-full shrink-0 grid-cols-3 gap-2 md:w-auto">
                     @foreach (\App\Services\PreferenciasUsuarioService::TEMAS as $valor => $nombre)
-                        <label wire:key="pref-tema-{{ $valor }}" class="flex cursor-pointer items-center justify-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-colors {{ $tarjeta($tema === $valor) }}">
-                            <input type="radio" wire:model.live="tema" value="{{ $valor }}" class="sr-only">
+                        <label
+                            wire:key="pref-tema-{{ $valor }}"
+                            class="flex cursor-pointer items-center justify-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-colors {{ $tarjeta($tema === $valor) }}"
+                            x-bind:class="{{ $tarjetaAlpine('tema', $valor) }}"
+                        >
+                            <input type="radio" x-model="tema" value="{{ $valor }}" class="sr-only">
 
                             <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                 @if ($valor === 'light')
@@ -81,8 +103,12 @@
 
                 <div class="grid w-full shrink-0 grid-cols-2 gap-2 md:w-auto">
                     @foreach (\App\Services\PreferenciasUsuarioService::DENSIDADES as $valor => $nombre)
-                        <label wire:key="pref-densidad-{{ $valor }}" class="flex cursor-pointer items-center justify-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-colors {{ $tarjeta($densidad === $valor) }}">
-                            <input type="radio" wire:model.live="densidad" value="{{ $valor }}" class="sr-only">
+                        <label
+                            wire:key="pref-densidad-{{ $valor }}"
+                            class="flex cursor-pointer items-center justify-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-colors {{ $tarjeta($densidad === $valor) }}"
+                            x-bind:class="{{ $tarjetaAlpine('densidad', $valor) }}"
+                        >
+                            <input type="radio" x-model="densidad" value="{{ $valor }}" class="sr-only">
 
                             <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
                                 @if ($valor === 'compacta')
@@ -110,7 +136,7 @@
                         <thead class="bg-[var(--theme-surface-soft)] text-left text-xs text-[var(--theme-text-muted)]">
                             <tr>
                                 @foreach (['Código', 'Equipo', 'Estado'] as $columna)
-                                    <th @class(['px-4 font-medium', 'py-1.5' => $densidad === 'compacta', 'py-3' => $densidad !== 'compacta'])>{{ $columna }}</th>
+                                    <th @class(['px-4 font-medium', 'py-1.5' => $densidad === 'compacta', 'py-3' => $densidad !== 'compacta']) x-bind:class="{ 'py-1.5': densidad === 'compacta', 'py-3': densidad !== 'compacta' }">{{ $columna }}</th>
                                 @endforeach
                             </tr>
                         </thead>
@@ -119,7 +145,7 @@
                             @foreach ([['ACT-000101', 'Laptop Dell Latitude', 'Asignado'], ['ACT-000102', 'Impresora HP LaserJet', 'Disponible'], ['ACT-000103', 'Switch Cisco 24 puertos', 'En mantenimiento']] as $filaEjemplo)
                                 <tr>
                                     @foreach ($filaEjemplo as $dato)
-                                        <td @class(['px-4', 'py-1 text-xs' => $densidad === 'compacta', 'py-2.5 text-sm' => $densidad !== 'compacta'])>{{ $dato }}</td>
+                                        <td @class(['px-4', 'py-1 text-xs' => $densidad === 'compacta', 'py-2.5 text-sm' => $densidad !== 'compacta']) x-bind:class="{ 'py-1 text-xs': densidad === 'compacta', 'py-2.5 text-sm': densidad !== 'compacta' }">{{ $dato }}</td>
                                     @endforeach
                                 </tr>
                             @endforeach

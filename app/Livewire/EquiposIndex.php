@@ -140,6 +140,18 @@ class EquiposIndex extends Component
     #[Url(as: 'numero_serie')]
     public ?string $numeroSerie = null;
 
+    #[Url(as: 'numero_factura')]
+    public ?string $numeroFactura = null;
+
+    /*
+     * Filtros específicos del tipo de equipo seleccionado.
+     * [id_tipo_campo => valor]. Los campos salen de la configuración
+     * del formulario del tipo (Administración › Tipos de equipo), así
+     * que un campo nuevo en «Información de {Tipo}» aparece solo.
+     */
+    #[Url(as: 'campos')]
+    public array $camposTipo = [];
+
     #[Url(as: 'service_tag')]
     public ?string $serviceTag = null;
 
@@ -203,17 +215,34 @@ class EquiposIndex extends Component
                     'modelo',
                     'nombreEquipo',
                     'numeroSerie',
+                    'numeroFactura',
                     'serviceTag',
                     'direccionIp',
                     'estado',
                     'area',
                     'situacion',
+                    'camposTipo',
                 ],
                 true
             )
+            || str_starts_with($property, 'camposTipo.')
         ) {
             $this->resetPage();
         }
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | CAMBIO DE TIPO DE EQUIPO
+    |--------------------------------------------------------------------------
+    |
+    | Los filtros específicos pertenecen a un tipo: al cambiarlo se limpian.
+    |
+    */
+
+    public function updatedTipoActivo(): void
+    {
+        $this->camposTipo = [];
     }
 
 
@@ -338,6 +367,8 @@ class EquiposIndex extends Component
         $this->nombreEquipo = null;
 
         $this->numeroSerie = null;
+        $this->numeroFactura = null;
+        $this->camposTipo = [];
         $this->serviceTag = null;
         $this->direccionIp = null;
         $this->estado = null;
@@ -486,6 +517,17 @@ class EquiposIndex extends Component
                 filled($this->situacion)
                     ? now()->toDateString()
                     : '',
+
+            'numero_factura' =>
+                trim(
+                    (string) (
+                        $this->numeroFactura
+                        ?? ''
+                    )
+                ),
+
+            'campos_tipo' =>
+                $this->camposTipoActivos(),
 
             'ubicacion_schema' => 'unidades-v1',
 
@@ -1256,6 +1298,345 @@ class EquiposIndex extends Component
                 );
             }
         );
+
+        /*
+        |--------------------------------------------------------------------------
+        | NÚMERO DE FACTURA
+        |--------------------------------------------------------------------------
+        */
+
+        $numeroFactura = trim((string) ($this->numeroFactura ?? ''));
+
+        $query->when(
+            $numeroFactura !== '',
+            fn (Builder $q) => $q->where(
+                'e.numero_factura',
+                'ilike',
+                '%' . $numeroFactura . '%'
+            )
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | FILTROS ESPECÍFICOS DEL TIPO
+        |--------------------------------------------------------------------------
+        */
+
+        if ($tipoActivo !== '') {
+            $this->applyCamposTipo(
+                $query,
+                (int) $tipoActivo
+            );
+        }
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | FILTROS ESPECÍFICOS DEL TIPO (DINÁMICOS)
+    |--------------------------------------------------------------------------
+    |
+    | Columnas base que ya tienen su propio filtro: no se repiten.
+    |
+    */
+
+    private const COLUMNAS_FILTRO_BASE = [
+        'codigo_inventario',
+        'id_tipo_equipo',
+        'nombre_equipo',
+        'id_estado_activo',
+        'id_marca',
+        'id_modelo',
+        'numero_serie',
+        'numero_factura',
+        'id_unidad',
+    ];
+
+    /*
+     * Secciones del formulario que NO son específicas del tipo:
+     * «Información general» y «Información adicional» (ubicación,
+     * compra, comentarios). Todo lo demás —«Información de {Tipo}» y
+     * cualquier sección personalizada— genera filtros.
+     */
+    private const SECCIONES_NO_ESPECIFICAS = [
+        'general',
+        'adicional',
+    ];
+
+    /*
+     * Valores activos y válidos de los filtros específicos, ordenados
+     * (también se usan como parte de la clave de caché del listado).
+     */
+    private function camposTipoActivos(): array
+    {
+        if (trim((string) ($this->tipoActivo ?? '')) === '') {
+            return [];
+        }
+
+        $activos = [];
+
+        foreach ($this->camposTipo as $id => $valor) {
+            if (! is_numeric($id) || is_array($valor) || $valor === null) {
+                continue;
+            }
+
+            $valor = trim((string) $valor);
+
+            if ($valor === '') {
+                continue;
+            }
+
+            $activos[(string) (int) $id] = $valor;
+        }
+
+        ksort($activos);
+
+        return $activos;
+    }
+
+    /*
+     * Campos filtrables del tipo. Se guarda junto con los catálogos:
+     * al guardar el formulario del tipo se renueva la caché de
+     * catálogos y el campo nuevo aparece sin más cambios.
+     */
+    private function getCamposFiltrables(int $tipoId): array
+    {
+        if ($tipoId <= 0) {
+            return [];
+        }
+
+        return $this->systemCache()->rememberSimple(
+            self::CATALOG_CACHE_MODULE,
+            'filtros.campos_tipo.' . $tipoId . '.v1',
+            fn (): array => $this->leerCamposFiltrables($tipoId),
+            self::CATALOG_CACHE_TTL_HOURS
+        );
+    }
+
+    private function leerCamposFiltrables(int $tipoId): array
+    {
+        $filas = DB::table('tipo_equipo_campos as tec')
+            ->join('campos_equipo as ce', 'ce.id_campo', '=', 'tec.id_campo')
+            ->join('tipo_equipo_secciones as tes', 'tes.id_seccion', '=', 'tec.id_seccion')
+            ->where('tec.id_tipo_equipo', $tipoId)
+            ->where('ce.activo', true)
+            ->where('tec.visible', true)
+            ->whereIn('tec.origen_dato', ['equipos', 'tabla_tipo', 'atributo'])
+            ->whereNotIn('tes.clave', self::SECCIONES_NO_ESPECIFICAS)
+            ->orderBy('tes.orden')
+            ->orderBy('tec.orden')
+            ->orderBy('tec.id_tipo_campo')
+            ->get([
+                'tec.id_tipo_campo',
+                'tec.id_campo',
+                'tec.origen_dato',
+                'tec.tabla_destino',
+                'tec.columna_destino',
+                'tec.etiqueta',
+                'tec.fuente_opciones',
+                'tec.id_catalogo',
+                'ce.nombre as nombre_base',
+                'ce.tipo_control',
+            ]);
+
+        $identificador = '/^[a-z_][a-z0-9_]*$/';
+        $campos = [];
+
+        foreach ($filas as $fila) {
+            $origen = (string) $fila->origen_dato;
+            $tabla = (string) ($fila->tabla_destino ?? '');
+            $columna = (string) ($fila->columna_destino ?? '');
+            $control = (string) $fila->tipo_control;
+
+            if (! in_array($control, ['text', 'textarea', 'number', 'date', 'boolean', 'select'], true)) {
+                continue;
+            }
+
+            /*
+             * Los nombres de tabla/columna vienen de la configuración y se
+             * usan como identificadores SQL: solo se aceptan nombres simples.
+             */
+            if ($origen === 'equipos') {
+                if (
+                    ! preg_match($identificador, $columna)
+                    || ($tabla !== '' && $tabla !== 'equipos')
+                    || in_array($columna, self::COLUMNAS_FILTRO_BASE, true)
+                ) {
+                    continue;
+                }
+            } elseif ($origen === 'tabla_tipo') {
+                if (! preg_match($identificador, $tabla) || ! preg_match($identificador, $columna)) {
+                    continue;
+                }
+            }
+
+            $etiqueta = trim((string) ($fila->etiqueta ?? ''));
+
+            $campos[] = [
+                'id' => (string) $fila->id_tipo_campo,
+                'id_campo' => (int) $fila->id_campo,
+                'etiqueta' => $etiqueta !== '' ? $etiqueta : (string) $fila->nombre_base,
+                'control' => $control === 'textarea' ? 'text' : $control,
+                'origen' => $origen,
+                'tabla' => $tabla,
+                'columna' => $columna,
+                'opciones' => match ($control) {
+                    'boolean' => [
+                        ['value' => '1', 'label' => 'Sí'],
+                        ['value' => '0', 'label' => 'No'],
+                    ],
+                    'select' => $this->opcionesCampo($fila),
+                    default => [],
+                },
+            ];
+        }
+
+        return $campos;
+    }
+
+    /*
+     * Opciones de una lista: personalizadas del campo, catálogo general
+     * o catálogos del sistema (mismas fuentes que el formulario).
+     */
+    private function opcionesCampo(object $fila): array
+    {
+        $fuente = (string) ($fila->fuente_opciones ?? '');
+
+        if ($fuente === 'personalizado') {
+            $items = DB::table('tipo_equipo_campo_opciones')
+                ->where('id_tipo_campo', $fila->id_tipo_campo)
+                ->where('activo', true)
+                ->orderBy('orden')
+                ->orderBy('id_opcion')
+                ->get(['id_opcion as value', 'nombre as label']);
+        } elseif ($fuente === 'catalogo') {
+            $items = DB::table('catalogo_valores')
+                ->where('id_catalogo', $fila->id_catalogo)
+                ->where('activo', true)
+                ->orderBy('orden')
+                ->orderBy('nombre')
+                ->get(['id_valor as value', 'nombre as label']);
+        } else {
+            $fuentes = [
+                'estados_equipo' => 'id_estado_equipo',
+                'marcas' => 'id_marca',
+                'modelos' => 'id_modelo',
+                'proveedores' => 'id_proveedor',
+                'unidades_organizativas' => 'id_unidad',
+                'areas' => 'id_area',
+                'departamentos' => 'id_departamento',
+            ];
+
+            if (! array_key_exists($fuente, $fuentes)) {
+                return [];
+            }
+
+            $items = DB::table($fuente)
+                ->where('activo', true)
+                ->orderBy('nombre')
+                ->get([$fuentes[$fuente] . ' as value', 'nombre as label']);
+        }
+
+        return $items
+            ->map(fn ($item): array => [
+                'value' => (string) $item->value,
+                'label' => (string) $item->label,
+            ])
+            ->values()
+            ->all();
+    }
+
+    private function applyCamposTipo(Builder $query, int $tipoId): void
+    {
+        $activos = $this->camposTipoActivos();
+
+        if ($activos === []) {
+            return;
+        }
+
+        $definiciones = collect($this->getCamposFiltrables($tipoId))->keyBy('id');
+
+        foreach ($activos as $id => $valor) {
+            $campo = $definiciones->get((string) $id);
+
+            if (! $campo) {
+                continue;
+            }
+
+            if ($campo['origen'] === 'equipos') {
+                $this->condicionCampo($query, '"e"."' . $campo['columna'] . '"', $campo['control'], $valor);
+
+                continue;
+            }
+
+            if ($campo['origen'] === 'tabla_tipo') {
+                $query->whereExists(function (Builder $sub) use ($campo, $valor): void {
+                    $sub->selectRaw('1')
+                        ->from($campo['tabla'] . ' as ft')
+                        ->whereColumn('ft.id_equipo', 'e.id_equipo');
+
+                    $this->condicionCampo($sub, '"ft"."' . $campo['columna'] . '"', $campo['control'], $valor);
+                });
+
+                continue;
+            }
+
+            // atributo: atributos_equipo (campos agregados desde el constructor)
+            $query->whereExists(function (Builder $sub) use ($campo, $valor): void {
+                $sub->selectRaw('1')
+                    ->from('atributos_equipo as fa')
+                    ->whereColumn('fa.id_equipo', 'e.id_equipo')
+                    ->where('fa.id_campo', $campo['id_campo']);
+
+                $this->condicionCampo($sub, '"fa"."valor"', $campo['control'], $valor);
+            });
+        }
+    }
+
+    /*
+     * Condición según el tipo de control. Se compara como texto para
+     * servir igual a columnas físicas y a atributos (guardados como texto).
+     */
+    private function condicionCampo(Builder $query, string $columna, string $control, string $valor): void
+    {
+        $texto = 'CAST(' . $columna . ' AS TEXT)';
+
+        switch ($control) {
+            case 'select':
+                $query->whereRaw($texto . ' = ?', [$valor]);
+                break;
+
+            case 'boolean':
+                $query->whereRaw(
+                    $texto . ' IN (?, ?)',
+                    $valor === '1' ? ['1', 'true'] : ['0', 'false']
+                );
+                break;
+
+            case 'number':
+                if (! is_numeric($valor)) {
+                    $query->whereRaw('1 = 0');
+                    break;
+                }
+
+                // CASE evita convertir valores no numéricos (atributos libres).
+                $query->whereRaw(
+                    '(CASE WHEN ' . $texto . " ~ '^-{0,1}[0-9]+([.][0-9]+){0,1}$' THEN CAST(" . $texto . ' AS NUMERIC) END) = CAST(? AS NUMERIC)',
+                    [$valor]
+                );
+                break;
+
+            case 'date':
+                if (! preg_match('/^\d{4}-\d{2}-\d{2}$/', $valor)) {
+                    $query->whereRaw('1 = 0');
+                    break;
+                }
+
+                $query->whereRaw('LEFT(' . $texto . ', 10) = ?', [$valor]);
+                break;
+
+            default:
+                $query->whereRaw($texto . ' ILIKE ?', ['%' . addcslashes($valor, '%_\\') . '%']);
+        }
     }
 
 
@@ -1760,6 +2141,10 @@ class EquiposIndex extends Component
                 'areas' =>
                     $this->getAreas(),
 
+                'camposTipoFiltros' =>
+                    trim((string) ($this->tipoActivo ?? '')) !== ''
+                        ? $this->getCamposFiltrables((int) $this->tipoActivo)
+                        : [],
                 'situaciones' =>
                     collect(self::SITUACIONES)
                         ->map(fn (string $label, string $value): array => [

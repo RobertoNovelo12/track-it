@@ -25,6 +25,20 @@ class ReporteGenerado extends Model
         'ruta_archivo',
     ];
 
+    /*
+     * El historial de Reportes se guarda en caché (módulo «reportes»):
+     * cualquier alta, cambio o baja de un reporte la renueva.
+     */
+    protected static function booted(): void
+    {
+        $renovar = fn () => app(\App\Services\SystemCacheService::class)
+            ->refreshModule('reportes');
+
+        static::created($renovar);
+        static::updated($renovar);
+        static::deleted($renovar);
+    }
+
     protected function casts(): array
     {
         return [

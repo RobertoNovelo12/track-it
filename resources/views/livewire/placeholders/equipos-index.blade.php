@@ -190,14 +190,14 @@
                 border-[var(--theme-border)]
 
                 rounded-lg
-
-                p-6
+                px-6
+                py-3
                 mb-6
             "
         >
 
-            {{-- Encabezado --}}
-            <div class="flex items-center gap-2 mb-5">
+            {{-- Encabezado (mismo alto que el real) --}}
+            <div class="-mx-2 flex items-center gap-2 rounded-md px-2 py-0.5">
                 <svg
                     class="
                         w-4
@@ -226,567 +226,53 @@
                 >
                     Filtros de búsqueda
                 </span>
+
+                {{-- Flecha de plegar (gira si los filtros están plegados) --}}
+                <span class="ml-auto inline-flex h-8 w-8 items-center justify-center text-[var(--theme-text-muted)]" aria-hidden="true">
+                    <svg data-filtros-equipos-flecha class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M6 15l6-6 6 6"/>
+                    </svg>
+                </span>
             </div>
 
+            {{-- Cuerpo: se oculta si el usuario dejó los filtros plegados --}}
+            <div data-filtros-equipos-cuerpo class="pt-4 pb-3">
 
-            {{-- ====================================================
-                PRIMERA FILA
-            ==================================================== --}}
-            <div
-                class="
-                    grid
-                    grid-cols-1
+            {{-- Campos base (mismo orden que los filtros reales) --}}
+            @php
+                $unidadFiltro = app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['unidad_singular'];
 
-                    sm:grid-cols-2
-                    lg:grid-cols-4
+                $camposFiltroSkeleton = [
+                    ['Tipo de equipo', 'Buscar tipo...', true],
+                    ['Nombre de equipo', 'Buscar nombre...', false],
+                    ['Marca', 'Buscar marca...', true],
+                    ['Modelo', 'Buscar modelo...', true],
+                    ['Número de serie', 'Buscar...', false],
+                    ['Número de factura', 'Buscar...', false],
+                    ['Estado', 'Buscar estado...', true],
+                    [$unidadFiltro, 'Buscar...', true],
+                    ['Situación', 'Buscar situación...', true],
+                ];
+            @endphp
 
-                    gap-4
-                    mb-4
-                "
-            >
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                @foreach ($camposFiltroSkeleton as [$etiqueta, $marcador, $esLista])
+                    <div>
+                        <label class="mb-1.5 block text-xs text-[var(--theme-text-muted)]">
+                            {{ $etiqueta }}
+                        </label>
 
-                {{-- Tipo de activo --}}
-                <div>
-                    <label
-                        class="
-                            block
-                            text-xs
-                            text-[var(--theme-text-muted)]
-                            mb-1.5
-                        "
-                    >
-                        Tipo de activo
-                    </label>
+                        <div class="flex h-[38px] w-full items-center justify-between rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 text-sm text-[var(--theme-text-muted)]">
+                            <span class="truncate">{{ $marcador }}</span>
 
-                    <div
-                        class="
-                            relative
-
-                            flex
-                            items-center
-
-                            w-full
-
-                            border
-                            border-[var(--theme-border-strong)]
-
-                            rounded-md
-
-                            bg-[var(--theme-surface)]
-                        "
-                    >
-                        <input
-                            type="text"
-                            disabled
-                            placeholder="Buscar tipo..."
-                            class="
-                                w-full
-                                min-w-0
-
-                                border-0
-                                bg-transparent
-
-                                pl-3
-                                pr-10
-                                py-2
-
-                                text-sm
-                                text-[var(--theme-text)]
-
-                                placeholder:text-[var(--theme-text-muted)]
-
-                                focus:ring-0
-
-                                disabled:cursor-default
-                                disabled:opacity-100
-                            "
-                        >
-
-                        <svg
-                            class="
-                                absolute
-                                right-2.5
-
-                                w-4
-                                h-4
-
-                                text-[var(--theme-text-muted)]
-
-                                pointer-events-none
-                            "
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.5"
-                        >
-                            <path d="M6 9l6 6 6-6"/>
-                        </svg>
+                            @if ($esLista)
+                                <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                                    <path d="M6 9l6 6 6-6"/>
+                                </svg>
+                            @endif
+                        </div>
                     </div>
-                </div>
-
-
-                {{-- Marca --}}
-                <div>
-                    <label
-                        class="
-                            block
-                            text-xs
-                            text-[var(--theme-text-muted)]
-                            mb-1.5
-                        "
-                    >
-                        Marca
-                    </label>
-
-                    <div
-                        class="
-                            relative
-
-                            flex
-                            items-center
-
-                            w-full
-
-                            border
-                            border-[var(--theme-border-strong)]
-
-                            rounded-md
-
-                            bg-[var(--theme-surface)]
-                        "
-                    >
-                        <input
-                            type="text"
-                            disabled
-                            placeholder="Buscar marca..."
-                            class="
-                                w-full
-                                min-w-0
-
-                                border-0
-                                bg-transparent
-
-                                pl-3
-                                pr-10
-                                py-2
-
-                                text-sm
-                                text-[var(--theme-text)]
-
-                                placeholder:text-[var(--theme-text-muted)]
-
-                                focus:ring-0
-
-                                disabled:cursor-default
-                                disabled:opacity-100
-                            "
-                        >
-
-                        <svg
-                            class="
-                                absolute
-                                right-2.5
-
-                                w-4
-                                h-4
-
-                                text-[var(--theme-text-muted)]
-
-                                pointer-events-none
-                            "
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.5"
-                        >
-                            <path d="M6 9l6 6 6-6"/>
-                        </svg>
-                    </div>
-                </div>
-
-
-                {{-- Modelo --}}
-                <div>
-                    <label
-                        class="
-                            block
-                            text-xs
-                            text-[var(--theme-text-muted)]
-                            mb-1.5
-                        "
-                    >
-                        Modelo
-                    </label>
-
-                    <div
-                        class="
-                            relative
-
-                            flex
-                            items-center
-
-                            w-full
-
-                            border
-                            border-[var(--theme-border-strong)]
-
-                            rounded-md
-
-                            bg-[var(--theme-surface)]
-                        "
-                    >
-                        <input
-                            type="text"
-                            disabled
-                            placeholder="Buscar modelo..."
-                            class="
-                                w-full
-                                min-w-0
-
-                                border-0
-                                bg-transparent
-
-                                pl-3
-                                pr-10
-                                py-2
-
-                                text-sm
-                                text-[var(--theme-text)]
-
-                                placeholder:text-[var(--theme-text-muted)]
-
-                                focus:ring-0
-
-                                disabled:cursor-default
-                                disabled:opacity-100
-                            "
-                        >
-
-                        <svg
-                            class="
-                                absolute
-                                right-2.5
-
-                                w-4
-                                h-4
-
-                                text-[var(--theme-text-muted)]
-
-                                pointer-events-none
-                            "
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.5"
-                        >
-                            <path d="M6 9l6 6 6-6"/>
-                        </svg>
-                    </div>
-                </div>
-
-
-                {{-- Número de serie --}}
-                <div>
-                    <label
-                        class="
-                            block
-                            text-xs
-                            text-[var(--theme-text-muted)]
-                            mb-1.5
-                        "
-                    >
-                        Número de serie
-                    </label>
-
-                    <input
-                        type="text"
-                        disabled
-                        placeholder="Buscar..."
-                        class="
-                            w-full
-
-                            text-sm
-                            text-[var(--theme-text)]
-
-                            border
-                            border-[var(--theme-border-strong)]
-
-                            rounded-md
-
-                            px-3
-                            py-2
-
-                            bg-[var(--theme-surface)]
-
-                            placeholder:text-[var(--theme-text-muted)]
-
-                            disabled:cursor-default
-                            disabled:opacity-100
-                        "
-                    >
-                </div>
-
-            </div>
-
-
-            {{-- ====================================================
-                SEGUNDA FILA
-            ==================================================== --}}
-            <div
-                class="
-                    grid
-                    grid-cols-1
-
-                    sm:grid-cols-2
-                    lg:grid-cols-4
-
-                    gap-4
-                "
-            >
-
-                {{-- Service Tag --}}
-                <div>
-                    <label
-                        class="
-                            block
-                            text-xs
-                            text-[var(--theme-text-muted)]
-                            mb-1.5
-                        "
-                    >
-                        Service Tag
-                    </label>
-
-                    <input
-                        type="text"
-                        disabled
-                        placeholder="Buscar..."
-                        class="
-                            w-full
-
-                            text-sm
-                            text-[var(--theme-text)]
-
-                            border
-                            border-[var(--theme-border-strong)]
-
-                            rounded-md
-
-                            px-3
-                            py-2
-
-                            bg-[var(--theme-surface)]
-
-                            placeholder:text-[var(--theme-text-muted)]
-
-                            disabled:cursor-default
-                            disabled:opacity-100
-                        "
-                    >
-                </div>
-
-
-                {{-- Dirección IP --}}
-                <div>
-                    <label
-                        class="
-                            block
-                            text-xs
-                            text-[var(--theme-text-muted)]
-                            mb-1.5
-                        "
-                    >
-                        Dirección IP
-                    </label>
-
-                    <input
-                        type="text"
-                        disabled
-                        placeholder="Buscar..."
-                        class="
-                            w-full
-
-                            text-sm
-                            text-[var(--theme-text)]
-
-                            border
-                            border-[var(--theme-border-strong)]
-
-                            rounded-md
-
-                            px-3
-                            py-2
-
-                            bg-[var(--theme-surface)]
-
-                            placeholder:text-[var(--theme-text-muted)]
-
-                            disabled:cursor-default
-                            disabled:opacity-100
-                        "
-                    >
-                </div>
-
-
-                {{-- Estado --}}
-                <div>
-                    <label
-                        class="
-                            block
-                            text-xs
-                            text-[var(--theme-text-muted)]
-                            mb-1.5
-                        "
-                    >
-                        Estado
-                    </label>
-
-                    <div
-                        class="
-                            relative
-
-                            flex
-                            items-center
-
-                            w-full
-
-                            border
-                            border-[var(--theme-border-strong)]
-
-                            rounded-md
-
-                            bg-[var(--theme-surface)]
-                        "
-                    >
-                        <input
-                            type="text"
-                            disabled
-                            placeholder="Buscar estado..."
-                            class="
-                                w-full
-                                min-w-0
-
-                                border-0
-                                bg-transparent
-
-                                pl-3
-                                pr-10
-                                py-2
-
-                                text-sm
-                                text-[var(--theme-text)]
-
-                                placeholder:text-[var(--theme-text-muted)]
-
-                                focus:ring-0
-
-                                disabled:cursor-default
-                                disabled:opacity-100
-                            "
-                        >
-
-                        <svg
-                            class="
-                                absolute
-                                right-2.5
-
-                                w-4
-                                h-4
-
-                                text-[var(--theme-text-muted)]
-
-                                pointer-events-none
-                            "
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.5"
-                        >
-                            <path d="M6 9l6 6 6-6"/>
-                        </svg>
-                    </div>
-                </div>
-
-
-                {{-- Área --}}
-                <div>
-                    <label
-                        class="
-                            block
-                            text-xs
-                            text-[var(--theme-text-muted)]
-                            mb-1.5
-                        "
-                    >
-                        {{ app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['unidad_singular'] }} / Departamento
-                    </label>
-
-                    <div
-                        class="
-                            relative
-
-                            flex
-                            items-center
-
-                            w-full
-
-                            border
-                            border-[var(--theme-border-strong)]
-
-                            rounded-md
-
-                            bg-[var(--theme-surface)]
-                        "
-                    >
-                        <input
-                            type="text"
-                            disabled
-                            placeholder="{{ app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['buscar_unidad'] }}"
-                            class="
-                                w-full
-                                min-w-0
-
-                                border-0
-                                bg-transparent
-
-                                pl-3
-                                pr-10
-                                py-2
-
-                                text-sm
-                                text-[var(--theme-text)]
-
-                                placeholder:text-[var(--theme-text-muted)]
-
-                                focus:ring-0
-
-                                disabled:cursor-default
-                                disabled:opacity-100
-                            "
-                        >
-
-                        <svg
-                            class="
-                                absolute
-                                right-2.5
-
-                                w-4
-                                h-4
-
-                                text-[var(--theme-text-muted)]
-
-                                pointer-events-none
-                            "
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.5"
-                        >
-                            <path d="M6 9l6 6 6-6"/>
-                        </svg>
-                    </div>
-                </div>
-
+                @endforeach
             </div>
 
 
@@ -857,6 +343,8 @@
 
                     Aplicar filtros
                 </button>
+
+            </div>
 
             </div>
 

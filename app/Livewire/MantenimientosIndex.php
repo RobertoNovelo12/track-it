@@ -393,13 +393,63 @@ class MantenimientosIndex extends Component
 
         $direccion = $this->sort === 'asc' ? 'asc' : 'desc';
 
-        $mantenimientos = $query
-            ->orderByRaw($columnaOrden.' '.$direccion.' NULLS LAST')
-            ->orderBy(
-                'm.id_mantenimiento',
-                $direccion
-            )
-            ->paginate($this->perPage);
+        /*
+         * Listado en caché (módulo «mantenimientos»): se renueva al crear o
+         * editar un mantenimiento, y también si cambian equipos o catálogos
+         * (nombres que muestra la tabla). Antes: 2 consultas por carga.
+         */
+        $perPage = max(1, (int) $this->perPage);
+        $page = max(1, (int) $this->getPage());
+        $cache = app(\App\Services\SystemCacheService::class);
+
+        $datos = $cache->remember(
+            'mantenimientos',
+            'index.listado.v1',
+            [
+                'tipo' => $this->filtroTipo,
+                'estado' => $this->filtroEstado,
+                'tecnico' => $this->filtroTecnico,
+                'equipo' => $this->filtroEquipo,
+                'serie' => $this->filtroNumeroSerie,
+                'desde' => $this->filtroFechaDesde,
+                'hasta' => $this->filtroFechaHasta,
+                'area_departamento' => $this->filtroAreaDepartamento,
+                'orden' => $columnaOrden,
+                'direccion' => $direccion,
+                'per_page' => $perPage,
+                'page' => $page,
+                'equipos_version' => $cache->moduleVersion('equipos'),
+                'catalogos_version' => $cache->moduleVersion('catalogos'),
+            ],
+            function () use ($query, $columnaOrden, $direccion, $perPage, $page): array {
+                $total = (clone $query)->count();
+
+                $items = $query
+                    ->orderByRaw($columnaOrden.' '.$direccion.' NULLS LAST')
+                    ->orderBy('m.id_mantenimiento', $direccion)
+                    ->forPage($page, $perPage)
+                    ->get()
+                    ->map(fn ($fila): array => (array) $fila)
+                    ->all();
+
+                return [
+                    'items' => $items,
+                    'total' => (int) $total,
+                ];
+            },
+            12
+        );
+
+        $mantenimientos = new \Illuminate\Pagination\LengthAwarePaginator(
+            array_map(fn (array $fila): object => (object) $fila, $datos['items']),
+            $datos['total'],
+            $perPage,
+            $page,
+            [
+                'path' => request()->url(),
+                'pageName' => 'page',
+            ]
+        );
 
         /*
         |--------------------------------------------------------------------------
@@ -407,50 +457,72 @@ class MantenimientosIndex extends Component
         |--------------------------------------------------------------------------
         */
 
-        $tiposMantenimiento = CatalogoValor::deCatalogo(
-            'tipo_mantenimiento'
-        )->get([
-            'id_valor',
-            'nombre',
-        ]);
+        /*
+         * Opciones de los filtros en caché. Catálogos, áreas y departamentos
+         * se renuevan al editarlos en Administración (módulo «catalogos»).
+         * Los técnicos (usuarios) se guardan 10 minutos.
+         */
+        $aObjetos = fn (array $filas) => collect($filas)->map(fn (array $fila): object => (object) $fila);
 
-        $estadosMantenimiento = CatalogoValor::deCatalogo(
-            'estado_mantenimiento'
-        )->get([
-            'id_valor',
-            'nombre',
-        ]);
+        $tiposMantenimiento = $aObjetos($cache->rememberSimple(
+            'catalogos',
+            'mantenimientos.filtros.tipos.v1',
+            fn (): array => CatalogoValor::deCatalogo('tipo_mantenimiento')
+                ->get(['id_valor', 'nombre'])
+                ->map(fn ($item): array => ['id_valor' => (int) $item->id_valor, 'nombre' => (string) $item->nombre])
+                ->all(),
+            24
+        ));
+
+        $estadosMantenimiento = $aObjetos($cache->rememberSimple(
+            'catalogos',
+            'mantenimientos.filtros.estados.v1',
+            fn (): array => CatalogoValor::deCatalogo('estado_mantenimiento')
+                ->get(['id_valor', 'nombre'])
+                ->map(fn ($item): array => ['id_valor' => (int) $item->id_valor, 'nombre' => (string) $item->nombre])
+                ->all(),
+            24
+        ));
 
         /*
          * La BD relaciona id_tecnico directamente con usuarios.
          * Por ahora no asumimos un rol "Técnico" específico.
          */
-        $tecnicos = DB::table('usuarios')
-            ->select([
-                'id_usuario',
-                'nombres',
-                'apellido_paterno',
-                'apellido_materno',
-            ])
-            ->orderBy('nombres')
-            ->orderBy('apellido_paterno')
-            ->get();
+        $tecnicos = $aObjetos(\Illuminate\Support\Facades\Cache::remember(
+            'trackit.mantenimientos.filtros.tecnicos.v1',
+            now()->addMinutes(10),
+            fn (): array => DB::table('usuarios')
+                ->select(['id_usuario', 'nombres', 'apellido_paterno', 'apellido_materno'])
+                ->orderBy('nombres')
+                ->orderBy('apellido_paterno')
+                ->get()
+                ->map(fn ($fila): array => (array) $fila)
+                ->all()
+        ));
 
-        $areas = DB::table('areas')
-            ->where('activo', true)
-            ->orderBy('nombre')
-            ->get([
-                'id_area',
-                'nombre',
-            ]);
+        $areas = $aObjetos($cache->rememberSimple(
+            'catalogos',
+            'mantenimientos.filtros.areas.v1',
+            fn (): array => DB::table('areas')
+                ->where('activo', true)
+                ->orderBy('nombre')
+                ->get(['id_area', 'nombre'])
+                ->map(fn ($fila): array => (array) $fila)
+                ->all(),
+            24
+        ));
 
-        $departamentos = DB::table('departamentos')
-            ->where('activo', true)
-            ->orderBy('nombre')
-            ->get([
-                'id_departamento',
-                'nombre',
-            ]);
+        $departamentos = $aObjetos($cache->rememberSimple(
+            'catalogos',
+            'mantenimientos.filtros.departamentos.v1',
+            fn (): array => DB::table('departamentos')
+                ->where('activo', true)
+                ->orderBy('nombre')
+                ->get(['id_departamento', 'nombre'])
+                ->map(fn ($fila): array => (array) $fila)
+                ->all(),
+            24
+        ));
 
         return view('livewire.mantenimientos-index', [
             'mantenimientos' => $mantenimientos,

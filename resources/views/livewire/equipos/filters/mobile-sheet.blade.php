@@ -217,233 +217,49 @@
 
                 <div class="space-y-5">
 
-                    {{-- =========================================
-                        TIPO DE ACTIVO
-                    ========================================= --}}
+                    @php
+                        $claseInputMovil = 'w-full px-3 py-2 text-sm text-[var(--theme-text)] bg-[var(--theme-surface)] border border-[var(--theme-border-strong)] rounded-md placeholder:text-[var(--theme-text-muted)] focus:ring-1 focus:ring-[var(--theme-primary)] focus:border-[var(--theme-primary)] outline-none';
+
+                        $tipoNombre = data_get(
+                            collect($tiposActivo)->first(fn ($t) => (string) data_get($t, 'id_tipo_equipo') === (string) $tipoActivo),
+                            'nombre'
+                        );
+                    @endphp
+
+                    {{-- TIPO DE EQUIPO (al elegirlo aparecen sus filtros específicos) --}}
                     <x-searchable-select
-                        label="Tipo de activo"
-
+                        label="Tipo de equipo"
                         wire-model="tipoActivo"
-
                         :options="
                             collect($tiposActivo)->map(
                                 fn ($t) => [
-                                    'value' => data_get ($t,'id_tipo_equipo'),
-                                    'label' => data_get($t,'nombre'),
+                                    'value' => data_get($t, 'id_tipo_equipo'),
+                                    'label' => data_get($t, 'nombre'),
                                 ]
                             )
                         "
-
                         placeholder="Seleccionar tipo..."
                     />
 
-
-                    {{-- =========================================
-                        MARCA
-                    ========================================= --}}
-                    <x-searchable-select
-                        label="Marca"
-
-                        wire-model="marca"
-
-                        :options="
-                            collect($marcas)->map(
-                                fn ($m) => [
-                                    'value' => $m['id_marca'],
-                                    'label' => $m['nombre'],
-                                ]
-                            )
-                        "
-
-                        placeholder="Seleccionar marca..."
-                    />
-
-
-                    {{-- =========================================
-                        MODELO
-                    ========================================= --}}
-                    <x-searchable-select
-                        label="Modelo"
-
-                        wire-model="modelo"
-
-                        :options="
-                            collect($modelos)->map(
-                                fn ($m) => [
-                                    'value' => $m['id_modelo'],
-                                    'label' => $m['nombre'],
-                                ]
-                            )
-                        "
-
-                        placeholder="Seleccionar modelo..."
-                    />
-
-
-                    {{-- =========================================
-                        NÚMERO DE SERIE
-                    ========================================= --}}
+                    {{-- NOMBRE --}}
                     <div>
-
-                        <label
-                            class="
-                                block
-
-                                mb-1.5
-
-                                text-xs
-                                text-[var(--theme-text-muted)]
-                            "
-                        >
-                            Número de serie
+                        <label class="mb-1.5 block text-xs text-[var(--theme-text-muted)]">
+                            Nombre de equipo
                         </label>
-
 
                         <input
                             type="text"
-
-                            wire:model="numeroSerie"
-
-                            placeholder="Buscar número de serie..."
-
+                            wire:model="nombreEquipo"
+                            placeholder="Buscar nombre..."
                             autocomplete="off"
-
-                            class="
-                                w-full
-
-                                px-3
-                                py-2
-
-                                text-sm
-
-                                border
-                                border-[var(--theme-border-strong)]
-
-                                rounded-md
-
-                                placeholder:text-[var(--theme-text-muted)]
-
-                                focus:ring-1
-                                focus:ring-[var(--theme-primary)]
-                                focus:border-[var(--theme-primary)]
-                            "
+                            class="{{ $claseInputMovil }}"
                         >
-
                     </div>
 
-
-                    {{-- =========================================
-                        SERVICE TAG
-                    ========================================= --}}
-                    <div>
-
-                        <label
-                            class="
-                                block
-
-                                mb-1.5
-
-                                text-xs
-                                text-[var(--theme-text-muted)]
-                            "
-                        >
-                            Service Tag
-                        </label>
-
-
-                        <input
-                            type="text"
-
-                            wire:model="serviceTag"
-
-                            placeholder="Buscar Service Tag..."
-
-                            autocomplete="off"
-
-                            class="
-                                w-full
-
-                                px-3
-                                py-2
-
-                                text-sm
-
-                                border
-                                border-[var(--theme-border-strong)]
-
-                                rounded-md
-
-                                placeholder:text-[var(--theme-text-muted)]
-
-                                focus:ring-1
-                                focus:ring-[var(--theme-primary)]
-                                focus:border-[var(--theme-primary)]
-                            "
-                        >
-
-                    </div>
-
-
-                    {{-- =========================================
-                        DIRECCIÓN IP
-                    ========================================= --}}
-                    <div>
-
-                        <label
-                            class="
-                                block
-
-                                mb-1.5
-
-                                text-xs
-                                text-[var(--theme-text-muted)]
-                            "
-                        >
-                            Dirección IP
-                        </label>
-
-
-                        <input
-                            type="text"
-
-                            wire:model="direccionIp"
-
-                            placeholder="Buscar dirección IP..."
-
-                            autocomplete="off"
-
-                            class="
-                                w-full
-
-                                px-3
-                                py-2
-
-                                text-sm
-
-                                border
-                                border-[var(--theme-border-strong)]
-
-                                rounded-md
-
-                                placeholder:text-[var(--theme-text-muted)]
-
-                                focus:ring-1
-                                focus:ring-[var(--theme-primary)]
-                                focus:border-[var(--theme-primary)]
-                            "
-                        >
-
-                    </div>
-
-
-                    {{-- =========================================
-                        ESTADO
-                    ========================================= --}}
+                    {{-- ESTADO --}}
                     <x-searchable-select
                         label="Estado"
-
                         wire-model="estado"
-
                         :options="
                             collect($estados)->map(
                                 fn ($e) => [
@@ -452,33 +268,73 @@
                                 ]
                             )
                         "
-
                         placeholder="Seleccionar estado..."
                     />
 
-
-                    {{-- =========================================
-                        SITUACIÓN
-                    ========================================= --}}
+                    {{-- MARCA --}}
                     <x-searchable-select
-                        label="Situación"
-
-                        wire-model="situacion"
-
-                        :options="$situaciones"
-
-                        placeholder="Seleccionar situación..."
+                        label="Marca"
+                        wire-model="marca"
+                        :options="
+                            collect($marcas)->map(
+                                fn ($m) => [
+                                    'value' => $m['id_marca'],
+                                    'label' => $m['nombre'],
+                                ]
+                            )
+                        "
+                        placeholder="Seleccionar marca..."
                     />
 
+                    {{-- MODELO --}}
+                    <x-searchable-select
+                        label="Modelo"
+                        wire-model="modelo"
+                        :options="
+                            collect($modelos)->map(
+                                fn ($m) => [
+                                    'value' => $m['id_modelo'],
+                                    'label' => $m['nombre'],
+                                ]
+                            )
+                        "
+                        placeholder="Seleccionar modelo..."
+                    />
 
-                    {{-- =========================================
-                        ÁREA / DEPARTAMENTO
-                    ========================================= --}}
+                    {{-- NÚMERO DE SERIE --}}
+                    <div>
+                        <label class="mb-1.5 block text-xs text-[var(--theme-text-muted)]">
+                            Número de serie
+                        </label>
+
+                        <input
+                            type="text"
+                            wire:model="numeroSerie"
+                            placeholder="Buscar número de serie..."
+                            autocomplete="off"
+                            class="{{ $claseInputMovil }}"
+                        >
+                    </div>
+
+                    {{-- NÚMERO DE FACTURA --}}
+                    <div>
+                        <label class="mb-1.5 block text-xs text-[var(--theme-text-muted)]">
+                            Número de factura
+                        </label>
+
+                        <input
+                            type="text"
+                            wire:model="numeroFactura"
+                            placeholder="Buscar número de factura..."
+                            autocomplete="off"
+                            class="{{ $claseInputMovil }}"
+                        >
+                    </div>
+
+                    {{-- HOTEL (unidad organizativa) --}}
                     <x-searchable-select
                         :label="app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['unidad_singular']"
-
                         wire-model="area"
-
                         :options="
                             collect($areas)->map(
                                 fn ($a) => [
@@ -487,9 +343,19 @@
                                 ]
                             )
                         "
-
                         :placeholder="app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['buscar_unidad']"
                     />
+
+                    {{-- SITUACIÓN: también se llena desde la Vista general --}}
+                    <x-searchable-select
+                        label="Situación"
+                        wire-model="situacion"
+                        :options="$situaciones"
+                        placeholder="Seleccionar situación..."
+                    />
+
+                    {{-- FILTROS ESPECÍFICOS DEL TIPO SELECCIONADO --}}
+                    @include('livewire.equipos.filters.campos-tipo', ['variante' => 'movil'])
 
                 </div>
 

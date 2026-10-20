@@ -61,6 +61,38 @@
         ];
     }
 
+    if ($nombreEquipo) {
+        $activeFilters[] = [
+            'property' => 'nombreEquipo',
+            'label' => 'Nombre: ' . $nombreEquipo,
+        ];
+    }
+
+    if ($numeroFactura) {
+        $activeFilters[] = [
+            'property' => 'numeroFactura',
+            'label' => 'Factura: ' . $numeroFactura,
+        ];
+    }
+
+    /*
+     * Filtros específicos del tipo (se quitan uno por uno).
+     */
+    foreach ($camposTipoFiltros ?? [] as $campoTipo) {
+        $valorCampo = trim((string) data_get($camposTipo, $campoTipo['id'], ''));
+
+        if ($valorCampo === '') {
+            continue;
+        }
+
+        $textoValor = collect($campoTipo['opciones'])->firstWhere('value', $valorCampo)['label'] ?? $valorCampo;
+
+        $activeFilters[] = [
+            'property' => 'camposTipo.' . $campoTipo['id'],
+            'label' => $campoTipo['etiqueta'] . ': ' . $textoValor,
+        ];
+    }
+
     if ($estado) {
         $item = collect($estados)->first(
             fn ($item) =>

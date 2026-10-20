@@ -78,9 +78,17 @@
             'default' => 'NA',
             'mobileLabel' => 'SN',
         ],
+        /*
+         * Solo en tarjetas móviles: marca y modelo debajo del nombre
+         * (el título de la tarjeta es el nombre del equipo).
+         */
         [
-            'key' => 'service_tag',
-            'label' => 'Service Tag',
+            'key' => 'marca_modelo',
+            'label' => 'Marca / modelo',
+            'value' => fn ($equipo) => trim(implode(' ', array_filter([
+                $equipo->marca_nombre,
+                $equipo->modelo_nombre,
+            ]))),
             'default' => 'NA',
             'desktop' => false,
         ],
@@ -109,11 +117,13 @@
         ],
     ]"
 
-    :mobile-title="fn ($equipo) => trim(implode(' ', array_filter([
-        $equipo->tipo_equipo_nombre ?? 'Equipo',
-        $equipo->marca_nombre,
-        $equipo->modelo_nombre,
-    ])))"
+    :mobile-title="fn ($equipo) => trim((string) ($equipo->nombre_equipo ?? '')) !== ''
+        ? trim((string) $equipo->nombre_equipo)
+        : trim(implode(' ', array_filter([
+            $equipo->tipo_equipo_nombre ?? 'Equipo',
+            $equipo->marca_nombre,
+            $equipo->modelo_nombre,
+        ])))"
     :mobile-subtitle="fn ($equipo) => $equipo->codigo_inventario"
 
     :actions="function ($equipo) use ($equipoDadoDeBaja) {

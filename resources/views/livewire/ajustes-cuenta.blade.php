@@ -26,7 +26,7 @@
         wire:target="setSection('cuenta')"
         class="w-full"
     >
-        @include('livewire.placeholders.ajustes-cuenta')
+        @include('livewire.placeholders.ajustes-cuenta', ['sinNavegacion' => true])
     </div>
 
 
@@ -38,7 +38,7 @@
         wire:target="setSection('seguridad')"
         class="w-full"
     >
-        @include('livewire.placeholders.ajustes-seguridad')
+        @include('livewire.placeholders.ajustes-seguridad', ['sinNavegacion' => true])
     </div>
 
 
@@ -50,7 +50,7 @@
         wire:target="setSection('notificaciones')"
         class="w-full"
     >
-        @include('livewire.placeholders.ajustes-notificaciones')
+        @include('livewire.placeholders.ajustes-notificaciones', ['sinNavegacion' => true])
     </div>
 
 
@@ -62,7 +62,7 @@
         wire:target="setSection('preferencias')"
         class="w-full"
     >
-        @include('livewire.placeholders.ajustes-preferencias')
+        @include('livewire.placeholders.ajustes-preferencias', ['sinNavegacion' => true])
     </div>
 
 

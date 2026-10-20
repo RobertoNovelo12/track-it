@@ -475,20 +475,74 @@ new class extends Component
         }
 
 
-        return $query
-            ->orderByRaw(
-                (self::ORDENABLES[$this->sortField] ?? 'nombre')
-                .' '.($this->sortDirection === 'desc' ? 'desc' : 'asc')
-                .' NULLS LAST'
-            )
-            ->orderBy('id_tipo_equipo')
-            ->paginate(
-                perPage:
-                    $this->perPage,
+        /*
+         * Página en caché (módulo «catalogos»): refreshCatalogCache() la
+         * renueva al crear, editar o activar/desactivar un tipo. Antes cada
+         * carga hacía 3 consultas (~160 ms cada una contra Supabase).
+         */
+        $perPage = max(1, (int) $this->perPage);
+        $page = max(1, (int) $this->getPage('tiposPage'));
+        $sortColumn = self::ORDENABLES[$this->sortField] ?? 'nombre';
+        $sortDirection = $this->sortDirection === 'desc' ? 'desc' : 'asc';
 
-                pageName:
-                    'tiposPage'
-            );
+        $datos = app(SystemCacheService::class)->remember(
+            'catalogos',
+            'administracion.tipos_equipo.pagina.v1',
+            [
+                'search' => $search,
+                'estado' => $this->estado,
+                'sort' => $sortColumn,
+                'direction' => $sortDirection,
+                'per_page' => $perPage,
+                'page' => $page,
+            ],
+            function () use ($query, $search, $perPage, $page, $sortColumn, $sortDirection): array {
+                /*
+                 * Sin búsqueda, el total ya lo calculan las métricas:
+                 * se evita el COUNT(*) extra de la paginación.
+                 */
+                if ($search === '') {
+                    $metricas = $this->metricas();
+
+                    $total = match ($this->estado) {
+                        'activos' => $metricas['activos'],
+                        'inactivos' => $metricas['inactivos'],
+                        default => $metricas['total'],
+                    };
+                } else {
+                    $total = (clone $query)->count();
+                }
+
+                $items = $query
+                    ->orderByRaw($sortColumn . ' ' . $sortDirection . ' NULLS LAST')
+                    ->orderBy('id_tipo_equipo')
+                    ->forPage($page, $perPage)
+                    ->get()
+                    ->map(fn ($tipo): array => [
+                        'id_tipo_equipo' => (int) $tipo->id_tipo_equipo,
+                        'nombre' => (string) $tipo->nombre,
+                        'descripcion' => $tipo->descripcion,
+                        'activo' => (bool) $tipo->activo,
+                    ])
+                    ->all();
+
+                return [
+                    'items' => $items,
+                    'total' => (int) $total,
+                ];
+            }
+        );
+
+        return new \Illuminate\Pagination\LengthAwarePaginator(
+            array_map(fn (array $item): object => (object) $item, $datos['items']),
+            $datos['total'],
+            $perPage,
+            $page,
+            [
+                'path' => request()->url(),
+                'pageName' => 'tiposPage',
+            ]
+        );
     }
 
 
@@ -499,6 +553,15 @@ new class extends Component
     */
 
     public function metricas(): array
+    {
+        return app(SystemCacheService::class)->rememberSimple(
+            'catalogos',
+            'administracion.tipos_equipo.metricas.v1',
+            fn (): array => $this->leerMetricas()
+        );
+    }
+
+    private function leerMetricas(): array
     {
         $row =
             TipoEquipo::query()

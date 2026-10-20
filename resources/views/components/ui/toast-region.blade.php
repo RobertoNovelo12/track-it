@@ -23,6 +23,20 @@
 
         agregar(detalle) {
             const datos = Array.isArray(detalle) ? (detalle[0] ?? {}) : (detalle ?? {});
+
+            /*
+             * Un aviso sin título ni mensaje no informa nada: se ignora
+             * (antes salía solo «Aviso»). La advertencia en consola
+             * incluye la pila de llamadas para ubicar quién lo envió.
+             */
+            const texto = (valor) => typeof valor === 'string' ? valor.trim() : '';
+
+            if (texto(datos.message) === '' && texto(datos.title) === '') {
+                console.warn('[Track-IT] Aviso vacío ignorado', detalle, new Error().stack);
+
+                return;
+            }
+
             const tipo = ['success', 'error', 'warning', 'info'].includes(datos.type) ? datos.type : 'info';
 
             const titulos = {

@@ -2,11 +2,24 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use LogicException;
 
 class PlantillaInstalacionService
 {
+    /*
+     * configuracion_instalacion es inmutable (un trigger impide
+     * modificarla), así que se lee una sola vez y se guarda en caché
+     * sin vencimiento. Antes se consultaba en cada etiqueta que pedía
+     * una vista (p. ej. 3 consultas de ~165 ms por carga de Asignaciones).
+     * `php artisan optimize:clear` / `cache:clear` la vuelve a leer.
+     */
+    private const CACHE_KEY = 'trackit.configuracion_instalacion.v1';
+
+    // Memoria de la petición: evita incluso leer la caché varias veces.
+    private static ?array $memoria = null;
+
     private const DEFINICIONES = [
         'hoteles' => [
             'nombre' => 'Hotelería',
@@ -83,9 +96,32 @@ class PlantillaInstalacionService
 
     public function actual(): array
     {
-        $config = DB::table('configuracion_instalacion')
-            ->where('id', 1)
-            ->first();
+        if (self::$memoria !== null) {
+            return self::$memoria;
+        }
+
+        $fila = Cache::get(self::CACHE_KEY);
+
+        if (! is_array($fila)) {
+            $registro = DB::table('configuracion_instalacion')
+                ->where('id', 1)
+                ->first();
+
+            $fila = $registro
+                ? [
+                    'plantilla' => (string) $registro->plantilla,
+                    'version_plantilla' => (int) $registro->version_plantilla,
+                    'configurada_en' => $registro->configurada_en,
+                ]
+                : null;
+
+            // Solo se guarda una configuración válida (si falta, se reintenta).
+            if ($fila !== null) {
+                Cache::forever(self::CACHE_KEY, $fila);
+            }
+        }
+
+        $config = $fila !== null ? (object) $fila : null;
 
         if (!$config) {
             throw new LogicException(
@@ -106,7 +142,7 @@ class PlantillaInstalacionService
             );
         }
 
-        return [
+        return self::$memoria = [
             'clave' => $config->plantilla,
             'nombre' => $definition['nombre'],
             'version' => $definition['version'],

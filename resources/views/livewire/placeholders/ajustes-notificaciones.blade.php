@@ -1,5 +1,8 @@
 <div class="animate-pulse">
 
+    {{-- Las pestañas falsas solo hacen falta en la primera carga (lazy).
+         Dentro de Ajustes ya se ven las reales: allí se pasa sinNavegacion. --}}
+    @unless ($sinNavegacion ?? false)
     {{-- ============================================================
         NAVEGACIÓN - ESCRITORIO
     ============================================================ --}}
@@ -30,6 +33,7 @@
 
         @endfor
     </div>
+    @endunless
 
 
     {{-- ============================================================
