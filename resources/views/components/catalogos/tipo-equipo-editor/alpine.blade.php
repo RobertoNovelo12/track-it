@@ -1387,7 +1387,7 @@
 
                 this.toastType = type;
 
-                this.toastVisible = true;
+                window.trackitToast?.(this.toastType === 'error' ? 'error' : 'success', this.toastMessage); /* aviso global */
 
                 if (this.toastTimer) {
                     clearTimeout(this.toastTimer);

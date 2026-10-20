@@ -129,13 +129,15 @@
         ======================================================== --}}
         <div class="space-y-5">
 
+            <div class="space-y-3">
+
             {{-- ====================================================
                 GESTIÓN DE USUARIOS
             ==================================================== --}}
             <section class="bg-[var(--theme-surface)] border border-[var(--theme-border)] rounded-lg overflow-hidden">
 
                 {{-- Cabecera --}}
-                <div class="px-4 sm:px-5 py-4 border-b border-[var(--theme-border)] flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+                <div class="px-4 sm:px-5 py-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
                     <div>
                         <h2 class="text-base font-semibold text-[var(--theme-text-strong)]">
                             Gestión de usuarios
@@ -186,125 +188,22 @@
 
                     </div>
                 </div>
-
-
-                {{-- =================================================
-                    TABLA USUARIOS - ESCRITORIO
-                ================================================= --}}
-                <div class="hidden lg:block overflow-x-auto">
-                    <table class="w-full text-xs">
-
-                        <thead class="bg-[var(--theme-surface-soft)]">
-                            <tr class="text-left text-[var(--theme-text-muted)]">
-                                <th class="px-4 py-3 font-medium">
-                                    Usuario
-                                </th>
-
-                                <th class="px-4 py-3 font-medium">
-                                    Correo
-                                </th>
-
-                                <th class="px-4 py-3 font-medium">
-                                    Área / Departamento
-                                </th>
-
-                                <th class="px-4 py-3 font-medium">
-                                    Rol
-                                </th>
-
-                                <th class="px-4 py-3 font-medium">
-                                    Estado
-                                </th>
-
-                                <th class="px-4 py-3 font-medium">
-                                    Registro
-                                </th>
-
-                                <th class="px-4 py-3 font-medium text-right">
-                                    Acciones
-                                </th>
-                            </tr>
-                        </thead>
-
-
-                        <tbody class="animate-pulse">
-                            @for ($fila = 0; $fila < 6; $fila++)
-                                <tr class="border-t border-[var(--theme-border)]">
-
-                                    <td class="px-4 py-3">
-                                        <div class="flex items-center gap-3">
-                                            <div class="w-8 h-8 shrink-0 rounded-full bg-[var(--theme-surface-soft)]"></div>
-
-                                            <div>
-                                                <div class="h-3 w-24 rounded bg-[var(--theme-surface-soft)]"></div>
-                                                <div class="mt-1.5 h-2 w-16 rounded bg-[var(--theme-surface-soft)]"></div>
-                                            </div>
-                                        </div>
-                                    </td>
-
-                                    <td class="px-4 py-3">
-                                        <div class="h-3 w-28 rounded bg-[var(--theme-surface-soft)]"></div>
-                                    </td>
-
-                                    <td class="px-4 py-3">
-                                        <div class="h-3 w-28 rounded bg-[var(--theme-surface-soft)]"></div>
-                                    </td>
-
-                                    <td class="px-4 py-3">
-                                        <div class="h-3 w-20 rounded bg-[var(--theme-surface-soft)]"></div>
-                                    </td>
-
-                                    <td class="px-4 py-3">
-                                        <div class="h-5 w-16 rounded-full bg-[var(--theme-surface-soft)]"></div>
-                                    </td>
-
-                                    <td class="px-4 py-3">
-                                        <div class="h-3 w-16 rounded bg-[var(--theme-surface-soft)]"></div>
-                                    </td>
-
-                                    <td class="px-4 py-3">
-                                        <div class="flex items-center justify-end gap-2">
-                                            <div class="h-7 w-14 rounded-md bg-[var(--theme-surface-soft)]"></div>
-                                            <div class="w-7 h-7 rounded-md bg-[var(--theme-surface-soft)]"></div>
-                                        </div>
-                                    </td>
-
-                                </tr>
-                            @endfor
-                        </tbody>
-
-                    </table>
-                </div>
-
-
-                {{-- =================================================
-                    USUARIOS - MÓVIL
-                ================================================= --}}
-                <div class="lg:hidden divide-y divide-[var(--theme-border)] animate-pulse">
-
-                    @for ($i = 0; $i < 4; $i++)
-                        <div class="p-4">
-                            <div class="flex items-start gap-3">
-                                <div class="w-9 h-9 shrink-0 rounded-full bg-[var(--theme-surface-soft)]"></div>
-
-                                <div class="min-w-0 flex-1">
-                                    <div class="h-3.5 w-32 max-w-full rounded bg-[var(--theme-surface-soft)]"></div>
-                                    <div class="mt-2 h-2.5 w-40 max-w-full rounded bg-[var(--theme-surface-soft)]"></div>
-
-                                    <div class="mt-3 flex items-center gap-2">
-                                        <div class="h-5 w-16 rounded-full bg-[var(--theme-surface-soft)]"></div>
-                                        <div class="h-2.5 w-20 rounded bg-[var(--theme-surface-soft)]"></div>
-                                    </div>
-                                </div>
-
-                                <div class="w-7 h-7 shrink-0 rounded-md bg-[var(--theme-surface-soft)]"></div>
-                            </div>
-                        </div>
-                    @endfor
-
-                </div>
-
             </section>
+
+            {{-- Misma forma que la tabla común de usuarios --}}
+            <x-ui.skeleton-table
+                :columns="[
+                    ['label' => 'Usuario', 'width' => '190px'],
+                    ['label' => 'Nombre de usuario', 'width' => '150px'],
+                    ['label' => 'Correo', 'width' => '220px'],
+                    ['label' => 'Hotel / departamento', 'width' => '220px'],
+                    ['label' => 'Rol', 'width' => '150px'],
+                    ['label' => 'Estado', 'width' => '120px', 'type' => 'status'],
+                    ['label' => 'Registro', 'width' => '110px'],
+                ]"
+                :rows="6"
+            />
+            </div>
 
 
             {{-- ====================================================

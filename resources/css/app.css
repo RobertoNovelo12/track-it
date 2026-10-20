@@ -254,3 +254,5 @@ select:not([multiple]) {
 #nprogress .spinner {
     display: none !important;
 }
+
+/* Densidad compacta: layouts/partials/densidad-styles.blade.php */

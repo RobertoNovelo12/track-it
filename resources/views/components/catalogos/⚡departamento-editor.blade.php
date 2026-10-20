@@ -273,8 +273,8 @@ new class extends Component
         $this->hotelIds = array_map('strval', $hotelIds);
         $this->ubicacionIds = array_map('strval', $ubicacionIds);
 
-        $this->message =
-            'Departamento, hoteles y ubicaciones actualizados correctamente.';
+        // Confirmación con el aviso global (components/ui/toast-region).
+        $this->dispatch('toast', type: 'success', message: 'Departamento, hoteles y ubicaciones actualizados correctamente.');
     }
 };
 ?>
@@ -543,20 +543,15 @@ new class extends Component
                 Cancelar
             </a>
 
-            <button
+            <x-ui.button
                 type="submit"
-                wire:loading.attr="disabled"
-                wire:target="save"
-                class="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[var(--theme-primary)] px-5 text-sm font-medium text-white transition-colors hover:bg-[var(--theme-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                target="save"
+                size="lg"
+                loading-text="Guardando…"
+                class="w-full sm:w-auto"
             >
-                <span wire:loading.remove wire:target="save">
-                    Guardar cambios
-                </span>
-
-                <span wire:loading wire:target="save">
-                    Guardando...
-                </span>
-            </button>
+                Guardar cambios
+            </x-ui.button>
         </div>
     </form>
 </div>

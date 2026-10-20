@@ -68,6 +68,18 @@ class EquipoEdit extends Component
 
     public array $childData = [];
 
+    // Fechas que se muestran junto a los botones del formulario.
+    #[\Livewire\Attributes\Locked]
+    public ?string $fechaRegistro = null;
+
+    #[\Livewire\Attributes\Locked]
+    public ?string $fechaActualizacion = null;
+
+    // false si aún no se corrió la migración de fecha_actualizacion:
+    // así guardar sigue funcionando sin la columna.
+    #[\Livewire\Attributes\Locked]
+    public bool $registraModificacion = false;
+
     public int $formKey = 0;
 
     // Cachés locales de esta petición.*
@@ -301,6 +313,12 @@ class EquipoEdit extends Component
             $data['codigo_inventario'] ?? ''
 
         );
+
+        $this->fechaRegistro = $data['fecha_registro'] ?? null;
+
+        $this->registraModificacion = array_key_exists('fecha_actualizacion', $data);
+
+        $this->fechaActualizacion = $data['fecha_actualizacion'] ?? null;
 
         $this->tipoEquipoOriginal = (int) (
 
@@ -2430,9 +2448,14 @@ class EquipoEdit extends Component
             ->where('id_equipo', $this->equipoId)
             ->value('id_estado_activo');
 
+        // Misma marca de tiempo para la base de datos y para la pantalla.
+        $momentoGuardado = now();
+
         $record = DB::transaction(
 
             function () use (
+
+                $momentoGuardado,
 
                 $payload,
 
@@ -2601,6 +2624,11 @@ class EquipoEdit extends Component
                             $payload['comentarios']
 
                         ),
+
+
+                        ...($this->registraModificacion
+                            ? ['fecha_actualizacion' => $momentoGuardado]
+                            : []),
 
                     ]);
 
@@ -2815,6 +2843,17 @@ class EquipoEdit extends Component
         $this->dispatch('notificaciones-actualizadas');
 
         $this->tipoEquipoOriginal = $tipoNuevo;
+
+        if ($this->registraModificacion) {
+            $this->fechaActualizacion = $momentoGuardado->toDateTimeString();
+
+            // save() es #[Json] (no vuelve a renderizar): la vista
+            // actualiza la fecha mostrada con este evento.
+            $this->dispatch(
+                'equipo-fecha-actualizada',
+                fecha: \App\Support\Fecha::conHora($this->fechaActualizacion),
+            );
+        }
 
         return [
 

@@ -47,6 +47,9 @@ use Throwable;
 class ReportesIndex extends Component
 
 {
+    // Registros por página de Ajustes › Preferencias.
+    use \App\Livewire\Concerns\UsaRegistrosPorPagina;
+
 
     use WithPagination;
 
@@ -1208,7 +1211,9 @@ class ReportesIndex extends Component
 
             ->orderBy('fecha_generacion', $sort)
 
-            ->simplePaginate(
+            // paginate (no simplePaginate): la tabla común necesita el total
+            // para mostrar la paginación numerada.
+            ->paginate(
 
                 $perPage,
 

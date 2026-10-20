@@ -28,10 +28,10 @@
                     'department' => $usuario->departamento_nombre ?: 'Sin asignar',
                     'status' => $usuario->estado_nombre ?: 'Sin estado',
                     'registered' => $usuario->fecha_registro
-                        ? \Illuminate\Support\Carbon::parse($usuario->fecha_registro)->format('d/m/Y H:i')
+                        ? \App\Support\Fecha::conHora($usuario->fecha_registro)
                         : 'Sin registro',
                     'lastAccess' => $usuario->ultimo_acceso
-                        ? \Illuminate\Support\Carbon::parse($usuario->ultimo_acceso)->format('d/m/Y H:i')
+                        ? \App\Support\Fecha::conHora($usuario->ultimo_acceso)
                         : 'Sin registro',
                 ],
             ];

@@ -194,6 +194,8 @@
         rel="stylesheet"
     >
 
+    {{-- Spinner y animaciones comunes (components/ui) --}}
+    @include('layouts.partials.ui-styles')
 </head>
 
 

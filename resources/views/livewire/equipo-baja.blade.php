@@ -6,7 +6,7 @@
         successTimer: null,
         showSuccess(message) {
             this.successMessage = message;
-            this.successVisible = true;
+            window.trackitToast?.('success', this.successMessage); /* aviso global */
 
             if (this.successTimer) {
                 clearTimeout(this.successTimer);
@@ -321,53 +321,14 @@
                 Cancelar
             </a>
 
-            <button
-                type="button"
+            <x-ui.button
                 wire:click="confirmar"
-                wire:loading.attr="disabled"
-                wire:target="confirmar"
-                class="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-[var(--theme-danger)] bg-[var(--theme-danger)] px-5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                target="confirmar"
+                variant="danger"
+                loading-text="Dando de baja…"
             >
-                <svg
-                    wire:loading.remove
-                    wire:target="confirmar"
-                    class="h-4 w-4"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.8"
-                >
-                    <rect x="5" y="5" width="14" height="14" rx="1.5"/>
-                    <path d="M9 9l6 6M15 9l-6 6"/>
-                </svg>
-
-                <svg
-                    wire:loading
-                    wire:target="confirmar"
-                    class="h-4 w-4 animate-spin"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                >
-                    <circle
-                        class="opacity-25"
-                        cx="12" cy="12" r="9"
-                        stroke="currentColor"
-                        stroke-width="3"
-                    />
-                    <path
-                        class="opacity-75"
-                        fill="currentColor"
-                        d="M21 12a9 9 0 00-9-9v3a6 6 0 016 6h3z"
-                    />
-                </svg>
-
-                <span wire:loading.remove wire:target="confirmar">
-                    Confirmar
-                </span>
-                <span wire:loading wire:target="confirmar">
-                    Validando...
-                </span>
-            </button>
+                Confirmar baja
+            </x-ui.button>
         </div>
     </div>
 
@@ -519,6 +480,8 @@
                                     <button
                                         type="button"
                                         wire:click="eliminarFoto('{{ $fotografia['tipo'] }}')"
+                                        wire:loading.attr="disabled"
+                                        wire:target="eliminarFoto('{{ $fotografia['tipo'] }}')"
                                         class="text-xs text-[var(--theme-danger)] hover:underline"
                                     >
                                         Quitar

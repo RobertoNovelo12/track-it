@@ -1032,55 +1032,16 @@
             </div>
 
 
-            <button
-                type="button"
-
+            <x-ui.button
                 wire:click="logoutOtherSessions"
-
                 wire:confirm="Se cerrarán todas tus demás sesiones. ¿Deseas continuar?"
-
-                wire:loading.attr="disabled"
-                wire:target="logoutOtherSessions"
-
-                class="
-                    relative
-                    shrink-0
-
-                    h-9
-                    px-4
-
-                    rounded-md
-
-                    border
-                    border-[var(--theme-border-strong)]
-
-                    bg-[var(--theme-surface)]
-
-                    text-xs
-                    font-medium
-                    text-[var(--theme-text)]
-
-                    hover:bg-[var(--theme-surface-soft)]
-                    hover:border-[var(--theme-primary-border)]
-
-                    disabled:opacity-60
-                    disabled:cursor-not-allowed
-
-                    transition-colors
-                "
+                target="logoutOtherSessions"
+                variant="secondary"
+                size="compact"
+                loading-text="Cerrando…"
+                class="shrink-0"
             >
-                {{-- Estado normal --}}
-                <span
-                    wire:loading.class="invisible"
-                    wire:target="logoutOtherSessions"
-
-                    class="
-                        inline-flex
-                        items-center
-                        justify-center
-                        gap-2
-                    "
-                >
+                <x-slot:icon>
                     <svg
                         class="w-4 h-4"
 
@@ -1094,58 +1055,10 @@
                         <path d="M15 12H3"/>
                         <path d="M14 4h5a2 2 0 012 2v12a2 2 0 01-2 2h-5"/>
                     </svg>
+                </x-slot:icon>
 
-                    Cerrar en otros
-                </span>
-
-
-                {{-- Estado cargando --}}
-                <span
-                    wire:loading.flex
-                    wire:target="logoutOtherSessions"
-
-                    class="
-                        absolute
-                        inset-0
-
-                        items-center
-                        justify-center
-                    "
-                >
-                    <svg
-                        class="w-5 h-5 animate-spin"
-
-                        viewBox="0 0 24 24"
-
-                        fill="none"
-
-                        aria-hidden="true"
-                    >
-                        <circle
-                            cx="12"
-                            cy="12"
-                            r="9"
-
-                            stroke="currentColor"
-                            stroke-width="2"
-
-                            opacity="0.25"
-                        />
-
-                        <path
-                            d="M21 12a9 9 0 0 0-9-9"
-
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                        />
-                    </svg>
-
-                    <span class="sr-only">
-                        Cerrando sesiones...
-                    </span>
-                </span>
-            </button>
+                Cerrar en otros
+            </x-ui.button>
 
         </div>
 
@@ -1478,99 +1391,14 @@
                 bg-[var(--theme-surface-soft)]
             "
         >
-            <button
-                type="button"
-
+            <x-ui.button
                 wire:click="saveSecurityPreferences"
-
-                wire:loading.attr="disabled"
-                wire:target="saveSecurityPreferences"
-
-                class="
-                    relative
-
-                    h-9
-                    px-4
-
-                    rounded-md
-
-                    bg-[var(--theme-primary)]
-                    text-white
-
-                    text-xs
-                    font-medium
-
-                    hover:bg-[var(--theme-primary-hover)]
-
-                    disabled:opacity-60
-                    disabled:cursor-not-allowed
-
-                    transition-colors
-                "
+                target="saveSecurityPreferences"
+                size="compact"
+                loading-text="Guardando…"
             >
-                {{-- Estado normal --}}
-                <span
-                    wire:loading.class="invisible"
-                    wire:target="saveSecurityPreferences"
-
-                    class="
-                        inline-flex
-                        items-center
-                        justify-center
-                        gap-2
-                    "
-                >
-                    Guardar cambios
-                </span>
-
-
-                {{-- Estado cargando --}}
-                <span
-                    wire:loading.flex
-                    wire:target="saveSecurityPreferences"
-
-                    class="
-                        absolute
-                        inset-0
-
-                        items-center
-                        justify-center
-                    "
-                >
-                    <svg
-                        class="w-5 h-5 animate-spin"
-
-                        viewBox="0 0 24 24"
-
-                        fill="none"
-
-                        aria-hidden="true"
-                    >
-                        <circle
-                            cx="12"
-                            cy="12"
-                            r="9"
-
-                            stroke="currentColor"
-                            stroke-width="2"
-
-                            opacity="0.25"
-                        />
-
-                        <path
-                            d="M21 12a9 9 0 0 0-9-9"
-
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                        />
-                    </svg>
-
-                    <span class="sr-only">
-                        Guardando preferencias...
-                    </span>
-                </span>
-            </button>
+                Guardar cambios
+            </x-ui.button>
         </div>
 
     </section>

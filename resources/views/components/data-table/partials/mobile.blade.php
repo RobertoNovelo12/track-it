@@ -17,7 +17,10 @@
         : $columnasMovil->slice(1)->values();
 @endphp
 
-<div class="lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-3">
+<div
+    class="lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-3 transition-opacity duration-[var(--motion-base)]"
+    wire:loading.delay.class="opacity-60"
+>
 
     @forelse ($registros as $row)
 
@@ -299,49 +302,12 @@
         {{-- =====================================================
             SIN RESULTADOS
         ===================================================== --}}
-        <div
-            class="
-                sm:col-span-2
-
-                bg-[var(--theme-surface)]
-
-                border
-                border-[var(--theme-border)]
-
-                rounded-xl
-
-                px-5
-                py-12
-
-                text-center
-            "
-        >
-            <svg
-                class="
-                    w-9
-                    h-9
-
-                    mx-auto
-                    mb-3
-
-                    text-[var(--theme-text-muted)]
-                "
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.5"
-                aria-hidden="true"
-            >
-                <path d="M3 6h12"/>
-                <path d="M3 11h9"/>
-                <path d="M3 16h6"/>
-                <circle cx="17" cy="16" r="3"/>
-                <path d="M19.5 18.5L22 21"/>
-            </svg>
-
-            <p class="text-sm text-[var(--theme-text-muted)]">
-                {{ $emptyMessage }}
-            </p>
+        <div class="sm:col-span-2 rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)]">
+            <x-ui.empty-state
+                :variant="$emptyVariant"
+                :title="$emptyTitle"
+                :description="$emptyMessage"
+            />
         </div>
 
     @endforelse

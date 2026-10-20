@@ -9,7 +9,8 @@ class Equipo extends Model
     protected $table = 'equipos';
     protected $primaryKey = 'id_equipo';
 
-    // La tabla solo tiene fecha_registro, no created_at/updated_at
+    // La tabla no usa created_at/updated_at: tiene fecha_registro (creación)
+    // y fecha_actualizacion (último guardado desde «Editar equipo»).
     public $timestamps = false;
 
     protected $fillable = [
@@ -41,6 +42,7 @@ class Equipo extends Model
         'fecha_compra' => 'date',
         'fecha_fin_garantia' => 'date',
         'fecha_registro' => 'datetime',
+        'fecha_actualizacion' => 'datetime',
     ];
 
     // ------------------------------------------------------------

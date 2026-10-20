@@ -607,142 +607,38 @@
                     TODAVÍA NO SE HAN CARGADO
                 ================================================= --}}
                 @if (! $notificationsLoaded)
+                    {{-- Skeleton con la forma de las notificaciones --}}
+                    <div class="divide-y divide-[var(--theme-border)]" aria-busy="true">
+                        <span class="sr-only">Cargando notificaciones…</span>
 
-                    <div
-                        class="
-                            min-h-48
+                        @for ($i = 0; $i < 4; $i++)
+                            <div class="flex items-start gap-3 px-4 py-3.5">
+                                <x-ui.skeleton class="h-9 w-9 shrink-0 rounded-lg" />
 
-                            px-5
-                            py-10
-
-                            flex
-                            items-center
-                            justify-center
-                        "
-                    >
-                        <svg
-                            class="
-                                w-6
-                                h-6
-
-                                animate-spin
-
-                                text-[var(--theme-primary)]
-                            "
-
-                            viewBox="0 0 24 24"
-
-                            fill="none"
-
-                            aria-hidden="true"
-                        >
-                            <circle
-                                cx="12"
-                                cy="12"
-                                r="9"
-
-                                stroke="currentColor"
-                                stroke-width="2"
-
-                                opacity="0.25"
-                            />
-
-                            <path
-                                d="M21 12a9 9 0 0 0-9-9"
-
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                            />
-                        </svg>
-
-                        <span class="sr-only">
-                            Cargando notificaciones...
-                        </span>
+                                <div class="flex-1 space-y-2">
+                                    <x-ui.skeleton class="h-3.5 w-2/3" />
+                                    <x-ui.skeleton class="h-3 w-full" />
+                                    <x-ui.skeleton class="h-2.5 w-20" />
+                                </div>
+                            </div>
+                        @endfor
                     </div>
-
 
                 {{-- =================================================
                     SIN NOTIFICACIONES
                 ================================================= --}}
                 @elseif (count($notifications) === 0)
-
-                    <div
-                        class="
-                            min-h-52
-
-                            px-6
-                            py-10
-
-                            flex
-                            flex-col
-                            items-center
-                            justify-center
-
-                            text-center
-                        "
+                    <x-ui.empty-state
+                        title="No hay nada nuevo"
+                        description="Cuando tengas una nueva notificación aparecerá aquí."
                     >
-                        <div
-                            class="
-                                w-11
-                                h-11
-
-                                rounded-full
-
-                                flex
-                                items-center
-                                justify-center
-
-                                bg-[var(--theme-surface-soft)]
-                                text-[var(--theme-text-muted)]
-                            "
-                        >
-                            <svg
-                                class="w-5 h-5"
-
-                                viewBox="0 0 24 24"
-
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="1.6"
-                            >
-                                <path
-                                    d="M18 8a6 6 0 00-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"
-                                />
-
+                        <x-slot:icon>
+                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M18 8a6 6 0 00-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/>
                                 <path d="M10 21h4"/>
                             </svg>
-                        </div>
-
-
-                        <p
-                            class="
-                                mt-3
-
-                                text-sm
-                                font-medium
-                                text-[var(--theme-text-strong)]
-                            "
-                        >
-                            No hay nada nuevo
-                        </p>
-
-
-                        <p
-                            class="
-                                mt-1
-
-                                max-w-64
-
-                                text-xs
-                                leading-relaxed
-                                text-[var(--theme-text-muted)]
-                            "
-                        >
-                            Cuando tengas una nueva notificación aparecerá aquí.
-                        </p>
-                    </div>
-
+                        </x-slot:icon>
+                    </x-ui.empty-state>
 
                 {{-- =================================================
                     LISTADO

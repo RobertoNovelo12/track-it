@@ -10,6 +10,9 @@ use Livewire\WithPagination;
 
 new class extends Component
 {
+    // Registros por página de Ajustes › Preferencias.
+    use \App\Livewire\Concerns\UsaRegistrosPorPagina;
+
     use WithPagination;
 
     /*
@@ -17,7 +20,15 @@ new class extends Component
      */
     public function placeholder(array $params = [])
     {
-        return view('livewire.placeholders.administracion-seccion');
+        return view('livewire.placeholders.administracion-seccion', [
+            'columnas' => [
+                ['label' => app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['unidad_singular'], 'width' => '32%'],
+                ['label' => 'Sede', 'width' => '24%'],
+                ['label' => 'Código', 'width' => '16%'],
+                ['label' => 'Estado', 'width' => '16%', 'type' => 'status'],
+            ],
+            'anchoMinimo' => '760px',
+        ]);
     }
 
     #[Locked]
@@ -280,7 +291,8 @@ new class extends Component
 
         if ($this->paginaEdicion) {
             $this->resetValidation();
-            $this->message = ucfirst($unidad).' actualizado correctamente.';
+            // Confirmación con el aviso global (components/ui/toast-region).
+        $this->dispatch('toast', type: 'success', message: ucfirst($unidad).' actualizado correctamente.');
 
             return;
         }
@@ -292,7 +304,8 @@ new class extends Component
 
         $this->resetPage(pageName: 'hotelesPage');
 
-        $this->message = ucfirst($unidad).' guardado correctamente.';
+        // Confirmación con el aviso global (components/ui/toast-region).
+        $this->dispatch('toast', type: 'success', message: ucfirst($unidad).' guardado correctamente.');
     }
 
     /*
@@ -571,19 +584,15 @@ new class extends Component
                     Cancelar
                 </button>
 
-                <button
+                <x-ui.button
                     type="submit"
-                    wire:loading.attr="disabled"
-                    class="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[var(--theme-primary)] px-5 text-sm font-medium text-white transition-colors hover:bg-[var(--theme-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                    target="saveHotel"
+                    size="lg"
+                    loading-text="Guardando…"
+                    class="w-full sm:w-auto"
                 >
-                    <span wire:loading.remove wire:target="saveHotel">
-                        {{ $paginaEdicion ? 'Guardar cambios' : 'Guardar '.$unidad }}
-                    </span>
-
-                    <span wire:loading wire:target="saveHotel">
-                        Guardando...
-                    </span>
-                </button>
+                    {{ $paginaEdicion ? 'Guardar cambios' : 'Guardar '.$unidad }}
+                </x-ui.button>
             </div>
         </form>
     @endif

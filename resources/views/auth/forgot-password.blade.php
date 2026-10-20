@@ -111,6 +111,7 @@
 
         {{-- Enviar enlace --}}
         <button
+            id="forgotButton"
             type="submit"
             class="
                 w-full
@@ -134,11 +135,13 @@
                 py-3
 
                 transition-colors
+                disabled:opacity-80
+                disabled:cursor-wait
             "
         >
-            ENVIAR ENLACE
-
-            <svg
+            <span id="forgotNormalState" class="inline-flex items-center justify-center gap-2">
+                ENVIAR ENLACE
+                <svg
                 class="w-4 h-4"
                 viewBox="0 0 24 24"
                 fill="none"
@@ -148,7 +151,28 @@
                 <line x1="5" y1="12" x2="19" y2="12"/>
                 <polyline points="12 5 19 12 12 19"/>
             </svg>
+            </span>
+
+            <span id="forgotLoadingState" class="hidden items-center justify-center gap-2">
+                <x-ui.spinner size="sm" />
+                <span>Enviando…</span>
+            </span>
         </button>
+
+        <script>
+            /*
+             * Evita envíos dobles y muestra que el enlace se está enviando.
+             */
+            (() => {
+                const boton = document.getElementById('forgotButton');
+
+                boton?.form?.addEventListener('submit', () => {
+                    boton.disabled = true;
+                    document.getElementById('forgotNormalState')?.classList.add('hidden');
+                    document.getElementById('forgotLoadingState')?.classList.replace('hidden', 'inline-flex');
+                });
+            })();
+        </script>
 
 
         {{-- Volver --}}

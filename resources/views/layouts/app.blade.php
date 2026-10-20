@@ -1,9 +1,17 @@
+@php
+    /*
+     * Preferencias del usuario (Ajustes › Preferencias):
+     * tema y densidad se aplican antes de pintar la página.
+     */
+    $preferenciasLayout = app(\App\Services\PreferenciasUsuarioService::class)->obtener();
+@endphp
     <!DOCTYPE html>
-    <html lang="es">
+    <html lang="es" data-densidad="{{ $preferenciasLayout['densidad'] }}">
 
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <title>@yield('title', 'Sistema') | Grand Palladium</title>
 
@@ -16,10 +24,25 @@
         >
 
         <script>
+        /*
+         * Tema guardado en el servidor (Ajustes › Preferencias). Tiene
+         * prioridad sobre el navegador para que el tema sea el mismo en
+         * todos los dispositivos del usuario.
+         */
+        window.__trackitTemaServidor = @js($preferenciasLayout['tema']);
+
         (() => {
             const storageKey = 'trackit_theme';
 
             function getThemePreference() {
+                if (
+                    ['light', 'dark', 'system'].includes(
+                        window.__trackitTemaServidor
+                    )
+                ) {
+                    return window.__trackitTemaServidor;
+                }
+
                 try {
                     const saved = localStorage.getItem(storageKey);
 
@@ -73,11 +96,35 @@
             |--------------------------------------------------------------------------
             */
 
-            window.setTrackItTheme = function (preference) {
+            window.setTrackItTheme = function (preference, opciones = {}) {
                 if (
                     !['light', 'dark', 'system'].includes(preference)
                 ) {
                     return;
+                }
+
+                window.__trackitTemaServidor = preference;
+
+                /*
+                 * Guardar en la cuenta (salvo cuando el cambio ya viene
+                 * de Ajustes › Preferencias, que lo guardó por su cuenta).
+                 */
+                if (opciones.persistir !== false) {
+                    const token = document
+                        .querySelector('meta[name="csrf-token"]')
+                        ?.getAttribute('content');
+
+                    fetch(@js(route('preferencias.tema')), {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': token ?? '',
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                        body: JSON.stringify({ tema: preference }),
+                        keepalive: true,
+                    }).catch(() => {});
                 }
 
                 try {
@@ -105,6 +152,32 @@
 
 
             window.getTrackItTheme = getThemePreference;
+
+
+            /*
+             * Ajustes › Preferencias guardó tema y densidad:
+             * se aplican sin recargar.
+             */
+            window.addEventListener(
+                'preferencias-actualizadas',
+                (event) => {
+                    const detalle = Array.isArray(event.detail)
+                        ? (event.detail[0] ?? {})
+                        : (event.detail ?? {});
+
+                    if (detalle.densidad) {
+                        document.documentElement.dataset.densidad =
+                            detalle.densidad;
+                    }
+
+                    if (detalle.tema) {
+                        window.setTrackItTheme(
+                            detalle.tema,
+                            { persistir: false }
+                        );
+                    }
+                }
+            );
 
 
             /*
@@ -193,6 +266,11 @@ document.addEventListener(
         @stack('styles')
 
         @include('layouts.partials.sidebar-styles')
+
+        @include('layouts.partials.densidad-styles')
+
+        {{-- Sistema de carga y movimiento (components/ui) --}}
+        @include('layouts.partials.ui-styles')
 
         @include('layouts.partials.organizacion-logo-styles')
 
@@ -1302,6 +1380,9 @@ document.addEventListener(
 
     @include('layouts.partials.sidebar-script')
 
+    {{-- Funciones de la vista general (cargada en diferido) --}}
+    @include('layouts.partials.dashboard-script')
+
 
     <script>    
         (() => {
@@ -1806,6 +1887,49 @@ document.addEventListener(
         })();
     </script>
 
+
+    {{--
+        Avisos globales (toast). @persist los conserva al navegar con
+        wire:navigate, así un aviso emitido antes de cambiar de página
+        sigue visible.
+    --}}
+    @persist('avisos-globales')
+        <x-ui.toast-region />
+
+        @include('layouts.partials.avisos-eventos')
+    @endpersist
+
+    {{--
+        Avisos enviados con session()->flash() antes de una redirección.
+        Va fuera de @persist para leerse en cada página nueva.
+
+        Formato recomendado:
+            session()->flash('toast', ['type' => 'success', 'message' => '...']);
+
+        También se muestran como éxito los avisos anteriores que se
+        guardaban con estas claves.
+    --}}
+    @php
+        $avisosSesion = [];
+
+        if (is_array(session('toast'))) {
+            $avisosSesion[] = session('toast');
+        }
+
+        foreach (['mantenimientoCreado', 'mantenimientoActualizado', 'success', 'usuarioCreado', 'organizacion_mensaje'] as $claveAviso) {
+            if (is_string(session($claveAviso)) && session($claveAviso) !== '') {
+                $avisosSesion[] = ['type' => 'success', 'message' => session($claveAviso)];
+            }
+        }
+    @endphp
+
+    @if ($avisosSesion !== [])
+        <div
+            x-data
+            x-init="setTimeout(() => @js($avisosSesion).forEach(aviso => $dispatch('toast', aviso)), 50)"
+            hidden
+        ></div>
+    @endif
 
     @stack('scripts')
 

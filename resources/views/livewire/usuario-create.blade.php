@@ -313,16 +313,16 @@
                 Cancelar
             </a>
 
-            <button
+            <x-ui.button
                 type="submit"
-                wire:loading.attr="disabled"
-                wire:target="save"
-                @disabled($dominios === [])
-                class="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[var(--theme-primary)] px-5 text-sm font-medium text-white transition-colors hover:bg-[var(--theme-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                target="save"
+                size="lg"
+                :disabled="$dominios === []"
+                loading-text="Creando…"
+                class="w-full sm:w-auto"
             >
-                <span wire:loading.remove wire:target="save">Crear usuario</span>
-                <span wire:loading wire:target="save">Creando...</span>
-            </button>
+                Crear usuario
+            </x-ui.button>
         </div>
 
     </form>

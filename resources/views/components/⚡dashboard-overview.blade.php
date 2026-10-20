@@ -69,6 +69,13 @@ new class extends Component
 
     public array $alertas = [];
 
+    /*
+     * Gráficas y actividad cargadas (carga por secciones).
+     */
+    public bool $seccionesListas = false;
+
+    public bool $errorSecciones = false;
+
     public array $actividadReciente = [];
 
         /*
@@ -111,7 +118,10 @@ new class extends Component
                 self::CACHE_MODULE
             );
 
+        $this->seccionesListas = false;
+
         $this->loadDashboard();
+        $this->cargarSecciones();
 
         // El botón "Actualizar" (dashboard.blade.php) espera este
         // evento para desbloquearse y detener el giro del icono.
@@ -125,76 +135,83 @@ new class extends Component
     |--------------------------------------------------------------------------
     */
 
+    /*
+     * 1. Tarjetas y alertas (consulta corta).
+     * 2. Gráficas y actividad: si ya están en caché se muestran de
+     *    inmediato; si no, la vista pide cargarSecciones() con wire:init
+     *    y mientras tanto muestra su skeleton.
+     */
     protected function loadDashboard(): void
     {
-    $data =
-        $this->systemCache()
-            ->rememberSimple(
+        $this->aplicarKpis(
+            $this->systemCache()->rememberSimple(
                 self::CACHE_MODULE,
+                'kpis',
+                fn () => $this->buildKpiData(),
+                self::CACHE_TTL_HOURS
+            )
+        );
 
-                'overview',
+        $claveSecciones = $this->systemCache()->key(self::CACHE_MODULE, 'secciones');
 
-                fn () =>
-                    $this->buildDashboardData(),
+        if (\Illuminate\Support\Facades\Cache::has($claveSecciones)) {
+            $this->cargarSecciones();
+        } else {
+            $this->seccionesListas = false;
+        }
+    }
 
+    public function cargarSecciones(): void
+    {
+        if ($this->seccionesListas) {
+            return;
+        }
+
+        $this->errorSecciones = false;
+
+        try {
+            $data = $this->systemCache()->rememberSimple(
+                self::CACHE_MODULE,
+                'secciones',
+                fn () => $this->buildSeccionesData(),
                 self::CACHE_TTL_HOURS
             );
+        } catch (\Throwable $exception) {
+            report($exception);
 
+            // La vista muestra el estado de error con «Reintentar».
+            $this->errorSecciones = true;
 
-        $this->totalEquipos =
-            (int) ($data['totalEquipos'] ?? 0);
+            return;
+        }
 
+        $this->antiguedadEquipos = $data['antiguedadEquipos'] ?? [];
+        $this->estadoMantenimientos = $data['estadoMantenimientos'] ?? [];
+        $this->mantenimientosPorMes = $data['mantenimientosPorMes'] ?? [];
+        $this->actividadReciente = $data['actividadReciente'] ?? [];
 
-        $this->equiposAsignados =
-            (int) ($data['equiposAsignados'] ?? 0);
+        $this->seccionesListas = true;
+    }
 
+    public function reintentarSecciones(): void
+    {
+        $this->seccionesListas = false;
 
-        $this->equiposDisponibles =
-            (int) ($data['equiposDisponibles'] ?? 0);
+        $this->cargarSecciones();
+    }
 
-
-        $this->enMantenimiento =
-            (int) ($data['enMantenimiento'] ?? 0);
-
-
-        $this->mantenimientosVencidos =
-            (int) ($data['mantenimientosVencidos'] ?? 0);
-
-
-        $this->garantiasVencidas =
-            (int) ($data['garantiasVencidas'] ?? 0);
-
-
-        $this->garantiasPorVencer =
-            (int) ($data['garantiasPorVencer'] ?? 0);
-
-
-        $this->porcentajeAsignados =
-            (int) ($data['porcentajeAsignados'] ?? 0);
-
-
-        $this->porcentajeMantenimiento =
-            (int) ($data['porcentajeMantenimiento'] ?? 0);
-
-
-        $this->antiguedadEquipos =
-            $data['antiguedadEquipos'] ?? [];
-
-
-        $this->estadoMantenimientos =
-            $data['estadoMantenimientos'] ?? [];
-
-
-        $this->mantenimientosPorMes =
-            $data['mantenimientosPorMes'] ?? [];
-
-
-        $this->alertas =
-            $data['alertas'] ?? [];
-
-
-        $this->actividadReciente =
-            $data['actividadReciente'] ?? [];
+    protected function aplicarKpis(array $data): void
+    {
+        $this->totalEquipos = (int) ($data['totalEquipos'] ?? 0);
+        $this->equiposAsignados = (int) ($data['equiposAsignados'] ?? 0);
+        $this->equiposDisponibles = (int) ($data['equiposDisponibles'] ?? 0);
+        $this->enMantenimiento = (int) ($data['enMantenimiento'] ?? 0);
+        $this->mantenimientosVencidos = (int) ($data['mantenimientosVencidos'] ?? 0);
+        $this->garantiasVencidas = (int) ($data['garantiasVencidas'] ?? 0);
+        $this->garantiasPorVencer = (int) ($data['garantiasPorVencer'] ?? 0);
+        $this->porcentajeAsignados = (int) ($data['porcentajeAsignados'] ?? 0);
+        $this->porcentajeMantenimiento = (int) ($data['porcentajeMantenimiento'] ?? 0);
+        $this->alertas = $data['alertas'] ?? [];
     }
 
 
@@ -204,7 +221,22 @@ new class extends Component
     |--------------------------------------------------------------------------
     */
 
+    /*
+     * Compatibilidad: todos los datos juntos.
+     */
     protected function buildDashboardData(): array
+    {
+        return $this->buildKpiData() + $this->buildSeccionesData();
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | KPIs Y ALERTAS (primer bloque que se muestra)
+    |--------------------------------------------------------------------------
+    */
+
+    protected function buildKpiData(): array
     {
         $today =
             Carbon::today();
@@ -414,6 +446,137 @@ new class extends Component
                 )
 
                 : 0;
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | ALERTAS
+        |--------------------------------------------------------------------------
+        */
+
+        $alertas = [
+
+            [
+                'title' =>
+                    'Mantenimientos vencidos',
+
+                'description' =>
+                    $mantenimientosVencidos
+                    . ' registro(s) con seguimiento atrasado.',
+
+                'count' =>
+                    $mantenimientosVencidos,
+
+                'color' =>
+                    '#D9775B',
+
+                'soft' =>
+                    'rgba(217, 119, 91, 0.12)',
+            ],
+
+
+            [
+                'title' =>
+                    'Garantías por vencer',
+
+                'description' =>
+                    $garantiasPorVencer
+                    . ' equipo(s) vencen en los próximos 30 días.',
+
+                'count' =>
+                    $garantiasPorVencer,
+
+                'color' =>
+                    '#D9A441',
+
+                'soft' =>
+                    'rgba(217, 164, 65, 0.12)',
+            ],
+
+
+            [
+                'title' =>
+                    'Equipos sin asignar',
+
+                'description' =>
+                    $equiposDisponibles
+                    . ' equipo(s) disponibles actualmente.',
+
+                'count' =>
+                    $equiposDisponibles,
+
+                'color' =>
+                    '#5B5BD6',
+
+                'soft' =>
+                    'rgba(91, 91, 214, 0.12)',
+            ],
+
+
+            [
+                'title' =>
+                    'Garantías vencidas',
+
+                'description' =>
+                    $garantiasVencidas
+                    . ' equipo(s) con garantía vencida.',
+
+                'count' =>
+                    $garantiasVencidas,
+
+                'color' =>
+                    '#6BB38E',
+
+                'soft' =>
+                    'rgba(107, 179, 142, 0.12)',
+            ],
+
+        ];
+
+
+        return [
+            'totalEquipos' => $totalEquipos,
+            'equiposAsignados' => $equiposAsignados,
+            'equiposDisponibles' => $equiposDisponibles,
+            'enMantenimiento' => $enMantenimiento,
+            'mantenimientosVencidos' => $mantenimientosVencidos,
+            'garantiasVencidas' => $garantiasVencidas,
+            'garantiasPorVencer' => $garantiasPorVencer,
+            'porcentajeAsignados' => $porcentajeAsignados,
+            'porcentajeMantenimiento' => $porcentajeMantenimiento,
+            'alertas' => $alertas,
+        ];
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | GRÁFICAS Y ACTIVIDAD (se cargan después de las tarjetas)
+    |--------------------------------------------------------------------------
+    */
+
+    protected function buildSeccionesData(): array
+    {
+        $today =
+            Carbon::today();
+
+        // Inventario operativo: excluye equipos con baja histórica
+        // o estado BAJA, sin borrar sus registros.
+        $equiposVigentes = static function () {
+            return DB::table('equipos as e')
+                ->whereNotExists(function ($query) {
+                    $query->selectRaw('1')
+                        ->from('bajas as b_inventario')
+                        ->whereColumn('b_inventario.id_equipo', 'e.id_equipo');
+                })
+                ->whereNotExists(function ($query) {
+                    $query->selectRaw('1')
+                        ->from('estados_equipo as ee_inventario')
+                        ->whereColumn('ee_inventario.id_estado_equipo', 'e.id_estado_activo')
+                        ->where('ee_inventario.clave', 'BAJA');
+                });
+        };
+
 
 
         /*
@@ -945,92 +1108,6 @@ new class extends Component
 
         /*
         |--------------------------------------------------------------------------
-        | ALERTAS
-        |--------------------------------------------------------------------------
-        */
-
-        $alertas = [
-
-            [
-                'title' =>
-                    'Mantenimientos vencidos',
-
-                'description' =>
-                    $mantenimientosVencidos
-                    . ' registro(s) con seguimiento atrasado.',
-
-                'count' =>
-                    $mantenimientosVencidos,
-
-                'color' =>
-                    '#D9775B',
-
-                'soft' =>
-                    'rgba(217, 119, 91, 0.12)',
-            ],
-
-
-            [
-                'title' =>
-                    'Garantías por vencer',
-
-                'description' =>
-                    $garantiasPorVencer
-                    . ' equipo(s) vencen en los próximos 30 días.',
-
-                'count' =>
-                    $garantiasPorVencer,
-
-                'color' =>
-                    '#D9A441',
-
-                'soft' =>
-                    'rgba(217, 164, 65, 0.12)',
-            ],
-
-
-            [
-                'title' =>
-                    'Equipos sin asignar',
-
-                'description' =>
-                    $equiposDisponibles
-                    . ' equipo(s) disponibles actualmente.',
-
-                'count' =>
-                    $equiposDisponibles,
-
-                'color' =>
-                    '#5B5BD6',
-
-                'soft' =>
-                    'rgba(91, 91, 214, 0.12)',
-            ],
-
-
-            [
-                'title' =>
-                    'Garantías vencidas',
-
-                'description' =>
-                    $garantiasVencidas
-                    . ' equipo(s) con garantía vencida.',
-
-                'count' =>
-                    $garantiasVencidas,
-
-                'color' =>
-                    '#6BB38E',
-
-                'soft' =>
-                    'rgba(107, 179, 142, 0.12)',
-            ],
-
-        ];
-
-
-        /*
-        |--------------------------------------------------------------------------
         | ACTIVIDAD RECIENTE
         |--------------------------------------------------------------------------
         */
@@ -1114,17 +1191,14 @@ new class extends Component
                                 (string) $row->descripcion,
 
 
+                            /*
+                             * Se guarda la fecha original: la vista la
+                             * muestra en la zona horaria de cada usuario.
+                             */
                             'fecha' =>
                                 $row->fecha_hora
-
-                                    ? Carbon::parse(
-                                        $row->fecha_hora
-                                    )
-                                        ->format(
-                                            'd/m/Y H:i'
-                                        )
-
-                                    : '—',
+                                    ? (string) $row->fecha_hora
+                                    : null,
 
                         ];
                     }
@@ -1136,49 +1210,10 @@ new class extends Component
 
 
         return [
-
-            'totalEquipos' =>
-                $totalEquipos,
-
-            'equiposAsignados' =>
-                $equiposAsignados,
-
-            'equiposDisponibles' =>
-                $equiposDisponibles,
-
-            'enMantenimiento' =>
-                $enMantenimiento,
-
-            'mantenimientosVencidos' =>
-                $mantenimientosVencidos,
-
-            'garantiasVencidas' =>
-                $garantiasVencidas,
-
-            'garantiasPorVencer' =>
-                $garantiasPorVencer,
-
-            'porcentajeAsignados' =>
-                $porcentajeAsignados,
-
-            'porcentajeMantenimiento' =>
-                $porcentajeMantenimiento,
-
-            'antiguedadEquipos' =>
-                $antiguedadEquipos,
-
-            'estadoMantenimientos' =>
-                $estadoMantenimientos,
-
-            'mantenimientosPorMes' =>
-                $mantenimientosPorMes,
-
-            'alertas' =>
-                $alertas,
-
-            'actividadReciente' =>
-                $actividadReciente,
-
+            'antiguedadEquipos' => $antiguedadEquipos,
+            'estadoMantenimientos' => $estadoMantenimientos,
+            'mantenimientosPorMes' => $mantenimientosPorMes,
+            'actividadReciente' => $actividadReciente,
         ];
     }
 
@@ -1234,87 +1269,57 @@ new class extends Component
 
 @placeholder
 
-    <div class="space-y-4 animate-pulse">
+    {{-- Misma estructura que la Vista general: tarjetas y secciones --}}
+    <div class="space-y-4" aria-busy="true" aria-live="polite">
+        <span class="sr-only">Cargando vista general…</span>
 
-        <div
-            class="
-                flex
-                items-center
-                justify-between
-            "
-        >
-
-            <div class="space-y-2">
-
-                <div
-                    class="
-                        h-5
-                        w-40
-                        rounded
-                        bg-[var(--theme-surface-soft)]
-                    "
-                ></div>
-
-                <div
-                    class="
-                        h-3
-                        w-72
-                        rounded
-                        bg-[var(--theme-surface-soft)]
-                    "
-                ></div>
-
-            </div>
-
-
-            <div
-                class="
-                    h-9
-                    w-28
-                    rounded-lg
-                    bg-[var(--theme-surface-soft)]
-                "
-            ></div>
-
-        </div>
-
-
-        <div
-            class="
-                grid
-                grid-cols-1
-                sm:grid-cols-2
-                xl:grid-cols-5
-                gap-3
-            "
-        >
-
+        {{-- Tarjetas de métricas --}}
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
             @for ($i = 0; $i < 5; $i++)
+                <div class="flex min-h-[104px] items-center gap-4 rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] px-4 py-3.5">
+                    <x-ui.skeleton class="h-14 w-14 shrink-0 rounded-xl" />
 
-                <div
-                    class="
-                        h-[104px]
-
-                        rounded-xl
-
-                        border
-                        border-[var(--theme-border)]
-
-                        bg-[var(--theme-surface)]
-                    "
-                ></div>
-
+                    <div class="flex-1 space-y-2.5">
+                        <x-ui.skeleton class="h-7 w-14" />
+                        <x-ui.skeleton class="h-3 w-28" />
+                    </div>
+                </div>
             @endfor
-
         </div>
 
+        {{-- Secciones: dos filas de dos tarjetas --}}
+        @for ($fila = 0; $fila < 2; $fila++)
+            <div class="grid grid-cols-1 gap-3 xl:grid-cols-2">
+                @for ($i = 0; $i < 2; $i++)
+                    <div class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4">
+                        <x-ui.skeleton class="h-4 w-44" />
+                        <x-ui.skeleton class="mt-2 h-3 w-64 max-w-full" />
+
+                        <div class="mt-5 space-y-5">
+                            @for ($barra = 0; $barra < 4; $barra++)
+                                <div>
+                                    <div class="mb-2 flex justify-between">
+                                        <x-ui.skeleton class="h-3 w-24" />
+                                        <x-ui.skeleton class="h-3 w-6" />
+                                    </div>
+                                    <x-ui.skeleton class="h-2 w-full" />
+                                </div>
+                            @endfor
+                        </div>
+                    </div>
+                @endfor
+            </div>
+        @endfor
     </div>
 
 @endplaceholder
 
 
 
-<div class="space-y-4">
+<div
+    class="space-y-4"
+    @unless ($seccionesListas || $errorSecciones) wire:init="cargarSecciones" @endunless
+>
 
     {{-- ============================================================
         KPIs PRINCIPALES
@@ -2432,6 +2437,8 @@ new class extends Component
             ANTIGÜEDAD
         ======================================================== --}}
 
+        @if ($seccionesListas)
+
         <section
             class="
                 rounded-xl
@@ -2575,6 +2582,38 @@ new class extends Component
 
         </section>
 
+        @elseif ($errorSecciones)
+
+            <section class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4">
+                <h3 class="text-sm font-semibold text-[var(--theme-text-strong)]">Antigüedad de equipos</h3>
+                <p class="mt-1 text-xs text-[var(--theme-text-muted)]">Distribución según la fecha de compra registrada.</p>
+
+                <x-ui.empty-state variant="error" compact retry="reintentarSecciones" />
+            </section>
+
+        @else
+
+            {{-- Skeleton: título real y forma del contenido --}}
+            <section class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4" aria-busy="true">
+                <h3 class="text-sm font-semibold text-[var(--theme-text-strong)]">Antigüedad de equipos</h3>
+                <p class="mt-1 text-xs text-[var(--theme-text-muted)]">Distribución según la fecha de compra registrada.</p>
+                <span class="sr-only">Cargando…</span>
+
+                <div class="mt-5 space-y-5">
+                    @for ($i = 0; $i < 4; $i++)
+                        <div>
+                            <div class="mb-2 flex justify-between">
+                                <x-ui.skeleton class="h-3 w-24" />
+                                <x-ui.skeleton class="h-3 w-6" />
+                            </div>
+                            <x-ui.skeleton class="h-2 w-full" />
+                        </div>
+                    @endfor
+                </div>
+            </section>
+
+        @endif
+
     </div>
 
 
@@ -2596,6 +2635,8 @@ new class extends Component
         {{-- ========================================================
             ESTADOS
         ======================================================== --}}
+
+        @if ($seccionesListas)
 
         <section
             class="
@@ -2765,11 +2806,45 @@ new class extends Component
 
         </section>
 
+        @elseif ($errorSecciones)
+
+            <section class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4">
+                <h3 class="text-sm font-semibold text-[var(--theme-text-strong)]">Estado de mantenimientos</h3>
+                <p class="mt-1 text-xs text-[var(--theme-text-muted)]">Seguimiento operativo de las intervenciones registradas.</p>
+
+                <x-ui.empty-state variant="error" compact retry="reintentarSecciones" />
+            </section>
+
+        @else
+
+            {{-- Skeleton: título real y forma del contenido --}}
+            <section class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4" aria-busy="true">
+                <h3 class="text-sm font-semibold text-[var(--theme-text-strong)]">Estado de mantenimientos</h3>
+                <p class="mt-1 text-xs text-[var(--theme-text-muted)]">Seguimiento operativo de las intervenciones registradas.</p>
+                <span class="sr-only">Cargando…</span>
+
+                <div class="mt-5 space-y-5">
+                    @for ($i = 0; $i < 4; $i++)
+                        <div>
+                            <div class="mb-2 flex justify-between">
+                                <x-ui.skeleton class="h-3 w-24" />
+                                <x-ui.skeleton class="h-3 w-6" />
+                            </div>
+                            <x-ui.skeleton class="h-2 w-full" />
+                        </div>
+                    @endfor
+                </div>
+            </section>
+
+        @endif
+
 
 
         {{-- ========================================================
             MANTENIMIENTOS POR MES
         ======================================================== --}}
+
+        @if ($seccionesListas)
 
         <section
             class="
@@ -3017,6 +3092,32 @@ new class extends Component
 
         </section>
 
+        @elseif ($errorSecciones)
+
+            <section class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4">
+                <h3 class="text-sm font-semibold text-[var(--theme-text-strong)]">Mantenimientos por mes</h3>
+                <p class="mt-1 text-xs text-[var(--theme-text-muted)]">Preventivos y correctivos de los últimos 12 meses.</p>
+
+                <x-ui.empty-state variant="error" compact retry="reintentarSecciones" />
+            </section>
+
+        @else
+
+            {{-- Skeleton: título real y forma del contenido --}}
+            <section class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4" aria-busy="true">
+                <h3 class="text-sm font-semibold text-[var(--theme-text-strong)]">Mantenimientos por mes</h3>
+                <p class="mt-1 text-xs text-[var(--theme-text-muted)]">Preventivos y correctivos de los últimos 12 meses.</p>
+                <span class="sr-only">Cargando…</span>
+
+                <div class="mt-5 flex h-[170px] items-end gap-3">
+                    @foreach ([35, 60, 45, 80, 30, 55, 70, 40, 65, 50, 75, 45] as $alto)
+                        <x-ui.skeleton class="flex-1 w-auto" style="height: {{ $alto }}%;" />
+                    @endforeach
+                </div>
+            </section>
+
+        @endif
+
     </div>
 
 
@@ -3210,6 +3311,8 @@ new class extends Component
         {{-- ========================================================
             ACTIVIDAD RECIENTE
         ======================================================== --}}
+
+        @if ($seccionesListas)
 
         <section
             class="
@@ -3483,7 +3586,7 @@ new class extends Component
                                             text-[var(--theme-text-muted)]
                                         "
                                     >
-                                        {{ $item['fecha'] }}
+                                        {{ \App\Support\Fecha::conHora($item['fecha']) }}
                                     </p>
 
                                 </td>
@@ -3494,21 +3597,12 @@ new class extends Component
 
                             <tr>
 
-                                <td
-                                    colspan="4"
-
-                                    class="
-                                        px-3
-                                        py-8
-
-                                        text-center
-
-                                        text-xs
-
-                                        text-[var(--theme-text-muted)]
-                                    "
-                                >
-                                    No hay actividad reciente.
+                                <td colspan="4">
+                                    <x-ui.empty-state
+                                        compact
+                                        title="Sin actividad reciente"
+                                        description="Aquí aparecerán los últimos cambios registrados en bitácora."
+                                    />
                                 </td>
 
                             </tr>
@@ -3523,6 +3617,37 @@ new class extends Component
 
         </section>
 
+        @elseif ($errorSecciones)
+
+            <section class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4">
+                <h3 class="text-sm font-semibold text-[var(--theme-text-strong)]">Actividad reciente</h3>
+                <p class="mt-1 text-xs text-[var(--theme-text-muted)]">Últimos movimientos registrados en bitácora.</p>
+
+                <x-ui.empty-state variant="error" compact retry="reintentarSecciones" />
+            </section>
+
+        @else
+
+            {{-- Skeleton: título real y forma del contenido --}}
+            <section class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4" aria-busy="true">
+                <h3 class="text-sm font-semibold text-[var(--theme-text-strong)]">Actividad reciente</h3>
+                <p class="mt-1 text-xs text-[var(--theme-text-muted)]">Últimos movimientos registrados en bitácora.</p>
+                <span class="sr-only">Cargando…</span>
+
+                <div class="mt-4 space-y-3">
+                    @for ($i = 0; $i < 5; $i++)
+                        <div class="flex items-center gap-4">
+                            <x-ui.skeleton class="h-3 w-28" />
+                            <x-ui.skeleton variant="pill" class="h-5 w-24" />
+                            <x-ui.skeleton class="h-3 flex-1 w-auto" />
+                            <x-ui.skeleton class="h-3 w-20" />
+                        </div>
+                    @endfor
+                </div>
+            </section>
+
+        @endif
+
     </div>
 
 </div>
@@ -3531,326 +3656,6 @@ new class extends Component
 
 {{-- ============================================================
     ANIMACIONES DEL DASHBOARD
+    Las funciones (dashboardCounter, dashboardBar, dashboardColumn,
+    dashboardRing) están en layouts/partials/dashboard-script.blade.php
 ============================================================ --}}
-
-@once
-
-    <script>
-
-        /*
-        |--------------------------------------------------------------------------
-        | CONTADOR
-        |--------------------------------------------------------------------------
-        */
-
-        function dashboardCounter(
-            target,
-            duration = 800
-        ) {
-
-            return {
-
-                display: 0,
-
-                target:
-                    Number(
-                        target
-                    ) || 0,
-
-                duration,
-
-
-                init() {
-
-                    /*
-                    |--------------------------------------------------------------
-                    | RESPETAR REDUCED MOTION
-                    |--------------------------------------------------------------
-                    */
-
-                    if (
-                        window.matchMedia(
-                            '(prefers-reduced-motion: reduce)'
-                        ).matches
-                    ) {
-
-                        this.display =
-                            this.target;
-
-                        return;
-                    }
-
-
-                    const start =
-                        performance.now();
-
-
-                    const animate = (
-                        now
-                    ) => {
-
-                        const progress =
-                            Math.min(
-                                (
-                                    now
-                                    - start
-                                )
-                                / this.duration,
-                                1
-                            );
-
-
-                        /*
-                        |----------------------------------------------------------
-                        | EASING
-                        |----------------------------------------------------------
-                        */
-
-                        const eased =
-                            1
-                            -
-                            Math.pow(
-                                1 - progress,
-                                3
-                            );
-
-
-                        this.display =
-                            Math.round(
-                                this.target
-                                * eased
-                            );
-
-
-                        if (
-                            progress
-                            < 1
-                        ) {
-
-                            requestAnimationFrame(
-                                animate
-                            );
-
-                        } else {
-
-                            this.display =
-                                this.target;
-                        }
-                    };
-
-
-                    requestAnimationFrame(
-                        animate
-                    );
-                }
-
-            };
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | BARRAS
-        |--------------------------------------------------------------------------
-        */
-
-        function dashboardBar() {
-
-            return {
-
-                ready: false,
-
-
-                init() {
-
-                    if (
-                        window.matchMedia(
-                            '(prefers-reduced-motion: reduce)'
-                        ).matches
-                    ) {
-
-                        this.ready =
-                            true;
-
-                        return;
-                    }
-
-
-                    requestAnimationFrame(
-                        () => {
-
-                            requestAnimationFrame(
-                                () => {
-
-                                    this.ready =
-                                        true;
-                                }
-                            );
-                        }
-                    );
-                }
-
-            };
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | COLUMNAS
-        |--------------------------------------------------------------------------
-        */
-
-        function dashboardColumn(
-            target
-        ) {
-
-            return {
-
-                height: 0,
-
-                target:
-                    Number(
-                        target
-                    ) || 0,
-
-
-                init() {
-
-                    if (
-                        window.matchMedia(
-                            '(prefers-reduced-motion: reduce)'
-                        ).matches
-                    ) {
-
-                        this.height =
-                            this.target;
-
-                        return;
-                    }
-
-
-                    requestAnimationFrame(
-                        () => {
-
-                            requestAnimationFrame(
-                                () => {
-
-                                    this.height =
-                                        this.target;
-                                }
-                            );
-                        }
-                    );
-                }
-
-            };
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | ANILLO
-        |--------------------------------------------------------------------------
-        */
-
-        function dashboardRing(
-            targetProgress,
-            duration = 900
-        ) {
-
-            return {
-
-                progress: 0,
-
-                targetProgress:
-                    Math.min(
-                        Math.max(
-                            Number(
-                                targetProgress
-                            ) || 0,
-                            0
-                        ),
-                        100
-                    ),
-
-                duration,
-
-
-                init() {
-
-                    if (
-                        window.matchMedia(
-                            '(prefers-reduced-motion: reduce)'
-                        ).matches
-                    ) {
-
-                        this.progress =
-                            this.targetProgress;
-
-                        return;
-                    }
-
-
-                    const start =
-                        performance.now();
-
-
-                    const animate = (
-                        now
-                    ) => {
-
-                        const ratio =
-                            Math.min(
-                                (
-                                    now
-                                    - start
-                                )
-                                / this.duration,
-                                1
-                            );
-
-
-                        const eased =
-                            1
-                            -
-                            Math.pow(
-                                1 - ratio,
-                                3
-                            );
-
-
-                        this.progress =
-                            Math.round(
-                                this.targetProgress
-                                * eased
-                            );
-
-
-                        if (
-                            ratio
-                            < 1
-                        ) {
-
-                            requestAnimationFrame(
-                                animate
-                            );
-
-                        } else {
-
-                            this.progress =
-                                this.targetProgress;
-                        }
-                    };
-
-
-                    requestAnimationFrame(
-                        animate
-                    );
-                }
-
-            };
-        }
-
-    </script>
-
-@endonce

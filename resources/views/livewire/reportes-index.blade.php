@@ -172,37 +172,27 @@
 
         ],
 
+        /*
+         * Los avisos de Reportes usan el aviso global
+         * (components/ui/toast-region).
+         */
         iniciarMensaje(texto, tipo = 'success') {
 
             clearTimeout(this.temporizadorMensaje);
 
-            if (!texto) {
+            this.mensajeVisible = false;
 
-                this.mensajeVisible = false;
+            this.mensajeActual = '';
 
-                this.mensajeActual = '';
+            if (texto) {
 
-                return;
+                window.trackitToast?.(tipo === 'error' ? 'error' : 'success', texto);
 
             }
 
-            this.mensajeActual = texto;
+            $wire.set('successMessage', '', false);
 
-            this.mensajeTipo = tipo;
-
-            this.mensajeVisible = true;
-
-            this.temporizadorMensaje = setTimeout(() => {
-
-                this.mensajeVisible = false;
-
-                this.mensajeActual = '';
-
-                $wire.set('successMessage', '', false);
-
-                $wire.set('errorMessage', '', false);
-
-            }, 2000);
+            $wire.set('errorMessage', '', false);
 
         },
 
@@ -1128,31 +1118,13 @@
 
                         </button>
 
-                        <button
-
+                        <x-ui.button
                             type="submit"
-
-                            wire:loading.attr="disabled"
-
-                            wire:target="aplicarFiltros"
-
-                            class="inline-flex h-10 items-center justify-center rounded-lg border border-[var(--theme-primary)] bg-[var(--theme-primary)] px-5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
-
+                            target="aplicarFiltros"
+                            loading-text="Aplicando…"
                         >
-
-                            <span wire:loading.remove wire:target="aplicarFiltros">
-
-                                Aplicar filtros
-
-                            </span>
-
-                            <span wire:loading wire:target="aplicarFiltros">
-
-                                Aplicando…
-
-                            </span>
-
-                        </button>
+                            Aplicar filtros
+                        </x-ui.button>
 
                     </div>
 
@@ -1172,132 +1144,53 @@
 
                             ] as $formato => $nombre)
 
+                                {{--
+                                    Mismo estilo que los botones secundarios (x-ui.button):
+                                    fondo y borde neutros; el color solo identifica el
+                                    formato en el icono. Mientras genera, el spinner ocupa
+                                    el lugar del icono (el ancho no cambia).
+                                --}}
                                 <button
-
                                     type="button"
-
                                     x-on:click="generarArchivo(@js($formato))"
-
                                     x-bind:disabled="generando !== null"
-
-                                    class="
-
-                                        inline-flex h-9 items-center
-
-                                        justify-center gap-2
-
-                                        whitespace-nowrap rounded-lg
-
-                                        border px-3 text-xs font-semibold
-
-                                        transition-colors
-
-                                        disabled:cursor-wait disabled:opacity-60
-
-                                        {{ $formato === 'xlsx'
-
-                                            ? 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300'
-
-                                            : ''
-
-                                        }}
-
-                                        {{ $formato === 'pdf'
-
-                                            ? 'border-red-200 bg-red-50 text-red-700 hover:bg-red-100 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300'
-
-                                            : ''
-
-                                        }}
-
-                                        {{ $formato === 'csv'
-
-                                            ? 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-300'
-
-                                            : ''
-
-                                        }}
-
-                                    "
-
+                                    x-bind:aria-busy="generando === @js($formato) ? 'true' : 'false'"
+                                    class="inline-flex h-9 select-none items-center justify-center gap-2 whitespace-nowrap rounded-[var(--radius-md)] border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 text-xs font-medium text-[var(--theme-text)] transition-colors duration-[var(--motion-fast)] hover:bg-[var(--theme-surface-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--theme-primary)] disabled:cursor-not-allowed disabled:opacity-60"
                                 >
-
-                                    {{-- ICONO NORMAL --}}
-
-                                    <svg
-
-                                        x-show="generando !== @js($formato)"
-
-                                        class="h-4 w-4 shrink-0"
-
-                                        viewBox="0 0 24 24"
-
-                                        fill="none"
-
-                                        stroke="currentColor"
-
-                                        stroke-width="1.8"
-
-                                        aria-hidden="true"
-
+                                    <span
+                                        @class([
+                                            'grid h-4 w-4 shrink-0 place-items-center',
+                                            'text-emerald-600 dark:text-emerald-400' => $formato === 'xlsx',
+                                            'text-red-600 dark:text-red-400' => $formato === 'pdf',
+                                            'text-[var(--theme-text-muted)]' => $formato === 'csv',
+                                        ])
                                     >
-
-                                        <path d="M6 2h8l4 4v16H6z"/>
-
-                                        <path d="M14 2v5h5M8 12h8M8 16h8"/>
-
-                                    </svg>
-
-                                    {{-- ANIMACIÓN AL HACER CLIC --}}
-
-                                    <svg
-
-                                        x-show="generando === @js($formato)"
-
-                                        x-cloak
-
-                                        class="h-4 w-4 shrink-0 animate-spin"
-
-                                        viewBox="0 0 24 24"
-
-                                        fill="none"
-
-                                        aria-hidden="true"
-
-                                    >
-
-                                        <circle
-
-                                            cx="12"
-
-                                            cy="12"
-
-                                            r="9"
-
+                                        {{-- Icono del formato --}}
+                                        <svg
+                                            x-show="generando !== @js($formato)"
+                                            class="col-start-1 row-start-1 h-4 w-4"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
                                             stroke="currentColor"
+                                            stroke-width="1.8"
+                                            aria-hidden="true"
+                                        >
+                                            <path d="M6 2h8l4 4v16H6z"/>
+                                            <path d="M14 2v5h5M8 12h8M8 16h8"/>
+                                        </svg>
 
-                                            stroke-width="3"
-
-                                            stroke-opacity=".25"
-
-                                        />
-
-                                        <path
-
-                                            d="M21 12a9 9 0 0 0-9-9"
-
-                                            stroke="currentColor"
-
-                                            stroke-width="3"
-
-                                            stroke-linecap="round"
-
-                                        />
-
-                                    </svg>
+                                        {{-- Generando (el x-show va en un span normal: dentro
+                                             de <x-ui.spinner> Blade no procesaría @js) --}}
+                                        <span
+                                            x-show="generando === @js($formato)"
+                                            x-cloak
+                                            class="col-start-1 row-start-1 inline-flex text-[var(--theme-primary)]"
+                                        >
+                                            <x-ui.spinner size="sm" />
+                                        </span>
+                                    </span>
 
                                     <span>{{ $nombre }}</span>
-
                                 </button>
 
                             @endforeach
@@ -1598,349 +1491,102 @@
 
     </div>
 
-    {{-- HISTORIAL --}}
-
-    <section class="mt-5 overflow-hidden rounded-xl border border-[var(--theme-border-strong)] bg-[var(--theme-surface)]">
-
-        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--theme-border)] px-4 py-4 sm:px-5">
-
-            <h2 class="text-sm font-semibold text-[var(--theme-text-strong)]">
-
-                Historial de reportes
-
-            </h2>
-
-            <div class="flex items-center gap-3 text-xs text-[var(--theme-text-muted)]">
-
-                <label class="flex items-center gap-2">
-
-                    <span>Mostrar</span>
-
-                    <div class="w-20 shrink-0">
-                        <x-searchable-select
-                            wire-model="perPage"
-                            :empty-as-null="false"
-                            placeholder="Selecciona..."
-                            :show-clear="false"
-                            compact
-                            :options="[
-                                ['value' => '10', 'label' => '10'],
-                                ['value' => '25', 'label' => '25'],
-                                ['value' => '50', 'label' => '50'],
-                            ]"
-                        />
-                    </div>
-
-                </label>
-
-                <button
-
-                    type="button"
-
-                    wire:click="$set('sort', '{{ $sort === 'asc' ? 'desc' : 'asc' }}')"
-
-                    class="inline-flex h-8 items-center gap-1.5 rounded-md border border-[var(--theme-border-strong)] px-2.5 hover:bg-[var(--theme-surface-soft)]"
-
-                >
-
-                    <svg
-
-                        class="h-4 w-4"
-
-                        viewBox="0 0 24 24"
-
-                        fill="none"
-
-                        stroke="currentColor"
-
-                        stroke-width="1.8"
-
-                    >
-
-                        <path d="M8 4v16M5 7l3-3 3 3M16 20V4M13 17l3 3-3-3"/>
-
-                    </svg>
-
-                    {{ strtoupper($sort) }}
-
-                </button>
-
-            </div>
-
-        </div>
-
-        <div class="overflow-x-auto">
-
-            <table class="min-w-full text-left text-xs">
-
-                <thead class="bg-[var(--theme-surface-soft)] text-[var(--theme-text-muted)]">
-
-                    <tr>
-
-                        <th class="whitespace-nowrap px-4 py-3 font-medium">
-
-                            Tipo de reporte
-
-                        </th>
-
-                        <th class="whitespace-nowrap px-4 py-3 font-medium">
-
-                            Fecha inicial
-
-                        </th>
-
-                        <th class="whitespace-nowrap px-4 py-3 font-medium">
-
-                            Fecha final
-
-                        </th>
-
-                        <th class="whitespace-nowrap px-4 py-3 font-medium">
-
-                            Generado por
-
-                        </th>
-
-                        <th class="whitespace-nowrap px-4 py-3 font-medium">
-
-                            Registros
-
-                        </th>
-
-                        <th class="whitespace-nowrap px-4 py-3 font-medium">
-
-                            Formato
-
-                        </th>
-
-                        <th class="whitespace-nowrap px-4 py-3 font-medium">
-
-                            Fecha de creación
-
-                        </th>
-
-                        <th class="whitespace-nowrap px-4 py-3 text-center font-medium">
-
-                            Acciones
-
-                        </th>
-
-                    </tr>
-
-                </thead>
-
-                <tbody class="divide-y divide-[var(--theme-border)] text-[var(--theme-text)]">
-
-                    @forelse ($historial as $reporte)
-
-                        <tr
-
-                            wire:key="historial-reporte-{{ $reporte->id_reporte }}"
-
-                            class="hover:bg-[var(--theme-primary-soft-subtle)]"
-
-                        >
-
-                            <td class="whitespace-nowrap px-4 py-3 font-medium text-[var(--theme-text-strong)]">
-
-                                {{ $tabs[$reporte->tipo_reporte] ?? ucfirst($reporte->tipo_reporte) }}
-
-                            </td>
-
-                            <td class="whitespace-nowrap px-4 py-3">
-
-                                {{ $reporte->fecha_desde?->format('d/m/Y') ?? 'Sin límite' }}
-
-                            </td>
-
-                            <td class="whitespace-nowrap px-4 py-3">
-
-                                {{ $reporte->fecha_hasta?->format('d/m/Y') ?? 'Sin límite' }}
-
-                            </td>
-
-                            <td class="whitespace-nowrap px-4 py-3">
-
-                                {{ trim(($reporte->usuario?->nombres ?? '') . ' ' . ($reporte->usuario?->apellido_paterno ?? '')) ?: 'Usuario' }}
-
-                            </td>
-
-                            <td class="whitespace-nowrap px-4 py-3">
-
-                                {{ number_format($reporte->total_registros) }}
-
-                            </td>
-
-                            <td class="whitespace-nowrap px-4 py-3">
-
-                                <span class="rounded bg-[var(--theme-danger-soft)] px-2 py-1 text-[10px] font-semibold text-[var(--theme-danger)]">
-
-                                    {{ strtoupper($reporte->formato) }}
-
-                                </span>
-
-                            </td>
-
-                            <td class="whitespace-nowrap px-4 py-3">
-
-                                {{ $reporte->fecha_generacion?->format('d/m/Y H:i') }}
-
-                            </td>
-
-                            <td class="px-4 py-3">
-
-                                <div class="flex items-center justify-center gap-1">
-
-                                    {{-- VER --}}
-
-                                    <a
-
-                                        href="{{ route('reportes.show', $reporte) }}"
-
-                                        target="_blank"
-
-                                        class="inline-flex h-8 w-8 items-center justify-center rounded-md text-[var(--theme-text-muted)] hover:bg-[var(--theme-primary-soft)] hover:text-[var(--theme-primary)]"
-
-                                        title="Ver reporte"
-
-                                        aria-label="Ver reporte"
-
-                                    >
-
-                                        <svg
-
-                                            class="h-4 w-4"
-
-                                            viewBox="0 0 24 24"
-
-                                            fill="none"
-
-                                            stroke="currentColor"
-
-                                            stroke-width="1.8"
-
-                                        >
-
-                                            <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6z"/>
-
-                                            <circle cx="12" cy="12" r="2.5"/>
-
-                                        </svg>
-
-                                    </a>
-
-                                    {{-- DESCARGAR --}}
-
-                                    <a
-
-                                        href="{{ route('reportes.download', $reporte) }}"
-
-                                        class="inline-flex h-8 w-8 items-center justify-center rounded-md text-[var(--theme-text-muted)] hover:bg-[var(--theme-primary-soft)] hover:text-[var(--theme-primary)]"
-
-                                        title="Descargar reporte"
-
-                                        aria-label="Descargar reporte"
-
-                                    >
-
-                                        <svg
-
-                                            class="h-4 w-4"
-
-                                            viewBox="0 0 24 24"
-
-                                            fill="none"
-
-                                            stroke="currentColor"
-
-                                            stroke-width="1.8"
-
-                                        >
-
-                                            <path d="M12 3v12M7 10l5 5 5-5M4 21h16"/>
-
-                                        </svg>
-
-                                    </a>
-
-                                    {{-- ELIMINAR --}}
-
-                                    <button
-
-                                        type="button"
-
-                                        x-on:click="abrirModalEliminar({{ (int) $reporte->id_reporte }})"
-
-                                        class="inline-flex h-8 w-8 items-center justify-center rounded-md text-[var(--theme-text-muted)] hover:bg-[var(--theme-danger-soft)] hover:text-[var(--theme-danger)]"
-
-                                        title="Eliminar reporte"
-
-                                        aria-label="Eliminar reporte"
-
-                                    >
-
-                                        <svg
-
-                                            class="h-4 w-4"
-
-                                            viewBox="0 0 24 24"
-
-                                            fill="none"
-
-                                            stroke="currentColor"
-
-                                            stroke-width="1.8"
-
-                                        >
-
-                                            <path d="M4 7h16M9 7V4h6v3M7 7l1 14h8l1-14M10 11v6M14 11v6"/>
-
-                                        </svg>
-
-                                    </button>
-
-                                </div>
-
-                            </td>
-
-                        </tr>
-
-                    @empty
-
-                        <tr>
-
-                            <td
-
-                                colspan="8"
-
-                                class="px-4 py-12 text-center text-[var(--theme-text-muted)]"
-
-                            >
-
-                                Todavía no se han generado reportes.
-
-                            </td>
-
-                        </tr>
-
-                    @endforelse
-
-                </tbody>
-
-            </table>
-
-        </div>
-
-        @if ($historial->hasPages())
-
-            <div class="border-t border-[var(--theme-border)] px-4 py-3">
-
-                {{ $historial->links() }}
-
-            </div>
-
-        @endif
-
+    {{-- HISTORIAL: tabla común (components/data-table) con paginación numerada --}}
+    <section class="mt-5 space-y-3">
+
+        <h2 class="text-sm font-semibold text-[var(--theme-text-strong)]">
+            Historial de reportes
+        </h2>
+
+        {{--
+            Acciones en el menú ⋮ como acciones del navegador (js):
+            «Ver» abre el archivo en otra pestaña y «Descargar» lo baja
+            directamente; un enlace normal de la tabla usaría la navegación
+            de Livewire, que no sirve para archivos.
+        --}}
+        <x-data-table
+            :rows="$historial"
+            row-key="id_reporte"
+            key-prefix="reporte"
+            page-name="historialPage"
+            per-page-model="perPage"
+            :per-page-options="[10, 25, 50]"
+            sort-model="sort"
+            refresh-action="$refresh"
+            min-width="980px"
+            result-singular="reporte generado"
+            result-plural="reportes generados"
+            empty-title="Sin reportes"
+            empty-variant="empty"
+            empty-message="Todavía no se han generado reportes."
+            :mobile-title="fn ($reporte) => $tabs[$reporte->tipo_reporte] ?? ucfirst($reporte->tipo_reporte)"
+            :mobile-subtitle="fn ($reporte) => \App\Support\Fecha::conHora($reporte->fecha_generacion, '')"
+            :columns="[
+                [
+                    'key' => 'tipo_reporte',
+                    'label' => 'Tipo de reporte',
+                    'width' => '160px',
+                    'strong' => true,
+                    'value' => fn ($reporte) => $tabs[$reporte->tipo_reporte] ?? ucfirst($reporte->tipo_reporte),
+                    'mobile' => false,
+                ],
+                [
+                    'key' => 'fecha_desde',
+                    'label' => 'Fecha inicial',
+                    'width' => '120px',
+                    'value' => fn ($reporte) => $reporte->fecha_desde?->format('d/m/Y') ?? 'Sin límite',
+                ],
+                [
+                    'key' => 'fecha_hasta',
+                    'label' => 'Fecha final',
+                    'width' => '120px',
+                    'value' => fn ($reporte) => $reporte->fecha_hasta?->format('d/m/Y') ?? 'Sin límite',
+                ],
+                [
+                    'key' => 'usuario',
+                    'label' => 'Generado por',
+                    'width' => '200px',
+                    'value' => fn ($reporte) => trim(($reporte->usuario?->nombres ?? '') . ' ' . ($reporte->usuario?->apellido_paterno ?? '')) ?: 'Usuario',
+                ],
+                [
+                    'key' => 'total_registros',
+                    'label' => 'Registros',
+                    'width' => '100px',
+                    'value' => fn ($reporte) => number_format((int) $reporte->total_registros),
+                ],
+                [
+                    'key' => 'formato',
+                    'label' => 'Formato',
+                    'width' => '100px',
+                    'type' => 'list',
+                    'value' => fn ($reporte) => [strtoupper((string) $reporte->formato)],
+                ],
+                [
+                    'key' => 'fecha_generacion',
+                    'label' => 'Fecha de creación',
+                    'width' => '170px',
+                    'value' => fn ($reporte) => \App\Support\Fecha::conHora($reporte->fecha_generacion, ''),
+                    'mobile' => false,
+                ],
+            ]"
+            :actions="fn ($reporte) => [
+                'menu' => [
+                    [
+                        'label' => 'Ver reporte',
+                        'js' => 'window.open(' . \Illuminate\Support\Js::from(route('reportes.show', $reporte)) . ', \'_blank\', \'noopener\')',
+                    ],
+                    [
+                        'label' => 'Descargar',
+                        'js' => 'window.location.href = ' . \Illuminate\Support\Js::from(route('reportes.download', $reporte)),
+                    ],
+                    [
+                        'label' => 'Eliminar',
+                        'js' => 'abrirModalEliminar(' . (int) $reporte->id_reporte . ')',
+                        'danger' => true,
+                    ],
+                ],
+            ]"
+        />
     </section>
 
     {{-- MODAL DE CONFIRMACION DE ELIMINACION --}}
@@ -2041,29 +1687,14 @@
 
                 </button>
 
-                <button
-
-                    type="button"
-
+                <x-ui.button
                     x-on:click="confirmarEliminarReporte()"
-
-                    x-bind:disabled="eliminandoReporte"
-
-                    class="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-[var(--theme-danger)] bg-[var(--theme-danger-soft)] px-4 text-sm font-semibold text-[var(--theme-danger)] hover:opacity-90 disabled:cursor-wait disabled:opacity-60"
-
+                    x-loading="eliminandoReporte"
+                    variant="danger-soft"
+                    loading-text="Eliminando…"
                 >
-
-                    <svg x-show="eliminandoReporte" x-cloak class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-
-                        <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="3" stroke-opacity=".25"/>
-
-                        <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
-
-                    </svg>
-
-                    <span x-text="eliminandoReporte ? 'Eliminando...' : 'Confirmar eliminación'"></span>
-
-                </button>
+                    Confirmar eliminación
+                </x-ui.button>
 
             </div>
 

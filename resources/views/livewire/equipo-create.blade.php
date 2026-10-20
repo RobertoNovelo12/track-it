@@ -174,13 +174,15 @@
                     Cancelar
                 </a>
 
-                <button
+                <x-ui.button
                     type="submit"
-                    :disabled="savingVisual"
-                    :aria-busy="savingVisual"
-                    x-text="savingVisual ? 'Guardando...' : 'Añadir equipo'"
-                    class="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[var(--theme-primary)] px-5 text-sm font-medium text-white transition-colors hover:bg-[var(--theme-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
-                ></button>
+                    x-loading="savingVisual"
+                    size="lg"
+                    loading-text="Guardando…"
+                    class="w-full sm:w-auto"
+                >
+                    Añadir equipo
+                </x-ui.button>
             </div>
         </form>
     </div>
@@ -739,8 +741,14 @@
 
                     this.failed = false;
 
-                    this.message = result.message
-                        || 'Equipo añadido correctamente.';
+                    // Confirmación con el aviso global; el recuadro del
+                    // formulario queda solo para errores.
+                    this.message = '';
+
+                    window.trackitToast?.(
+                        'success',
+                        result.message || 'Equipo añadido correctamente.'
+                    );
                 } catch (error) {
                     const errors = error?.errors ?? {};
 

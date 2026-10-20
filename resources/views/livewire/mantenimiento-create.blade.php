@@ -769,6 +769,8 @@
                             <button
                                 type="button"
                                 wire:click="eliminarRefaccion({{ $index }})"
+                                wire:loading.attr="disabled"
+                                wire:target="eliminarRefaccion({{ $index }})"
 
                                 class="
                                     inline-flex
@@ -908,30 +910,15 @@
             </a>
 
 
-            <button
+            <x-ui.button
                 type="submit"
-
-                wire:loading.attr="disabled"
-                wire:target="guardar"
-
-                class="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[var(--theme-primary)] px-5 text-sm font-medium text-white transition-colors hover:bg-[var(--theme-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                target="guardar"
+                size="lg"
+                loading-text="Guardando…"
+                class="w-full sm:w-auto"
             >
-
-                <span
-                    wire:loading.remove
-                    wire:target="guardar"
-                >
-                    Guardar mantenimiento
-                </span>
-
-                <span
-                    wire:loading
-                    wire:target="guardar"
-                >
-                    Guardando...
-                </span>
-
-            </button>
+                Guardar mantenimiento
+            </x-ui.button>
 
         </div>
 

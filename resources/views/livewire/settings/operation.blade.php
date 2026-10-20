@@ -28,7 +28,7 @@
             [
                 'Último acceso',
                 $usuario->ultimo_acceso
-                    ? \Illuminate\Support\Carbon::parse($usuario->ultimo_acceso)->format('d/m/Y H:i')
+                    ? \App\Support\Fecha::conHora($usuario->ultimo_acceso)
                     : null,
                 'Sin registro',
             ],

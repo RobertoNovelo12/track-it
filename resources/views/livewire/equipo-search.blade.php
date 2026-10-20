@@ -837,122 +837,30 @@
         ======================================================== --}}
         @else
 
-            <section
-                class="
-                    bg-[var(--theme-surface)]
-
-                    border
-                    border-[var(--theme-border)]
-
-                    rounded-xl
-
-                    px-5
-                    py-14
-
-                    text-center
-                "
-            >
-
-                <div
-                    class="
-                        mx-auto
-
-                        w-14
-                        h-14
-
-                        rounded-full
-
-                        flex
-                        items-center
-                        justify-center
-
-                        bg-[var(--theme-surface-soft)]
-                        text-[var(--theme-text-muted)]
-                    "
+            <section class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)]">
+                <x-ui.empty-state
+                    variant="search"
+                    title="No encontramos equipos"
+                    :description="'No hay resultados para “' . $search . '”. Revisa la escritura o busca por código, número de serie, host o nombre.'"
                 >
-                    <svg
-                        class="w-7 h-7"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.6"
-                    >
-                        <circle cx="11" cy="11" r="7"/>
-                        <path d="M20 20l-4-4"/>
-                    </svg>
-                </div>
+                    <x-slot:actions>
+                        <a
+                            href="{{ route('equipos.search') }}"
+                            wire:navigate.hover
+                            class="inline-flex h-9 items-center justify-center rounded-[var(--radius-md)] border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-4 text-xs font-medium text-[var(--theme-text)] transition-colors duration-[var(--motion-fast)] hover:bg-[var(--theme-surface-soft)]"
+                        >
+                            Nueva búsqueda
+                        </a>
 
-
-                <h3
-                    class="
-                        mt-4
-
-                        text-base
-                        font-semibold
-
-                        text-[var(--theme-text-strong)]
-                    "
-                >
-                    No encontramos equipos
-                </h3>
-
-
-                <p
-                    class="
-                        mt-2
-
-                        text-sm
-                        text-[var(--theme-text-muted)]
-                    "
-                >
-
-                    No hay resultados para
-
-                    <span
-                        class="
-                            font-medium
-                            text-[var(--theme-text)]
-                        "
-                    >
-                        “{{ $search }}”
-                    </span>.
-
-                </p>
-
-
-                <a
-                    href="{{ route('equipos.search') }}"
-                    class="
-                        mt-5
-
-                        h-10
-                        px-4
-
-                        inline-flex
-                        items-center
-                        justify-center
-
-                        border
-                        border-[var(--theme-border-strong)]
-
-                        rounded-lg
-
-                        bg-[var(--theme-surface)]
-
-                        text-sm
-                        font-medium
-                        text-[var(--theme-text-muted)]
-
-                        hover:bg-[var(--theme-surface-soft)]
-                        hover:text-[var(--theme-text)]
-                        hover:border-[var(--theme-primary-border)]
-
-                        transition-colors
-                    "
-                >
-                    Limpiar búsqueda
-                </a>
-
+                        <a
+                            href="{{ route('equipos.index') }}"
+                            wire:navigate.hover
+                            class="inline-flex h-9 items-center justify-center rounded-[var(--radius-md)] bg-[var(--theme-primary)] px-4 text-xs font-medium text-white transition-colors duration-[var(--motion-fast)] hover:bg-[var(--theme-primary-hover)]"
+                        >
+                            Ver inventario
+                        </a>
+                    </x-slot:actions>
+                </x-ui.empty-state>
             </section>
 
         @endif

@@ -143,7 +143,8 @@
         CONTENEDOR CON SCROLL HORIZONTAL
     ======================================================== --}}
     <div
-        class="overflow-x-auto"
+        class="overflow-x-auto transition-opacity duration-[var(--motion-base)]"
+        wire:loading.delay.class="opacity-60"
         @scroll="closePopover(); $dispatch('data-table-scroll')"
     >
 
@@ -608,22 +609,12 @@
                 @empty
 
                     <tr>
-                        <td
-                            colspan="{{ $totalColumnas }}"
-
-                            class="
-                                h-28
-
-                                px-5
-                                py-12
-
-                                text-center
-
-                                text-sm
-                                text-[var(--theme-text-muted)]
-                            "
-                        >
-                            {{ $emptyMessage }}
+                        <td colspan="{{ $totalColumnas }}">
+                            <x-ui.empty-state
+                                :variant="$emptyVariant"
+                                :title="$emptyTitle"
+                                :description="$emptyMessage"
+                            />
                         </td>
                     </tr>
 

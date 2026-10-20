@@ -2187,6 +2187,11 @@ class AjustesCuenta extends Component
                     'livewire.placeholders.ajustes-notificaciones'
                 ),
 
+            'preferencias' =>
+                view(
+                    'livewire.placeholders.ajustes-preferencias'
+                ),
+
             default =>
                 view(
                     'livewire.placeholders.ajustes-cuenta'

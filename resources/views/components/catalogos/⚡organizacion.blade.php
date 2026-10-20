@@ -108,7 +108,8 @@ new class extends Component
             ? $tab
             : 'identidad';
 
-        $this->message = (string) session('organizacion_mensaje', '');
+        // El aviso de la sede guardada llega por sesión y lo muestra el layout.
+        $this->message = '';
 
         $this->cargarConfiguracion();
 
@@ -351,7 +352,8 @@ new class extends Component
                 : 'Registro sin restricción de dominio de correo.'
         );
 
-        $this->message = 'Configuración de correo guardada correctamente.';
+        // Confirmación con el aviso global (components/ui/toast-region).
+        $this->dispatch('toast', type: 'success', message: 'Configuración de correo guardada correctamente.');
     }
 
     /*
@@ -391,7 +393,8 @@ new class extends Component
 
         $this->registrarBitacora('Se actualizaron los datos solicitados en el registro de usuarios.');
 
-        $this->message = 'Datos de registro guardados correctamente.';
+        // Confirmación con el aviso global (components/ui/toast-region).
+        $this->dispatch('toast', type: 'success', message: 'Datos de registro guardados correctamente.');
     }
 
     /*
@@ -579,14 +582,16 @@ new class extends Component
 
         if ($this->paginaEdicion) {
             $this->editarSede((int) $this->sedeEditingId);
-            $this->message = 'Sede actualizada correctamente.';
+            // Confirmación con el aviso global (components/ui/toast-region).
+        $this->dispatch('toast', type: 'success', message: 'Sede actualizada correctamente.');
 
             return;
         }
 
         $this->resetSede();
 
-        $this->message = 'Sede guardada correctamente.';
+        // Confirmación con el aviso global (components/ui/toast-region).
+        $this->dispatch('toast', type: 'success', message: 'Sede guardada correctamente.');
     }
 
     /*
@@ -904,15 +909,16 @@ new class extends Component
             </fieldset>
 
             <div class="flex flex-wrap justify-end gap-3 border-t border-[var(--theme-border)] pt-4">
-                <button
+                <x-ui.button
                     type="submit"
-                    wire:loading.attr="disabled"
-                    wire:target="guardarIdentidad,logo"
-                    class="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[var(--theme-primary)] px-5 text-sm font-medium text-white transition-colors hover:bg-[var(--theme-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                    target="guardarIdentidad"
+                    disable-target="guardarIdentidad,logo"
+                    size="lg"
+                    loading-text="Guardando…"
+                    class="w-full sm:w-auto"
                 >
-                    <span wire:loading.remove wire:target="guardarIdentidad">Guardar identidad visual</span>
-                    <span wire:loading wire:target="guardarIdentidad">Guardando...</span>
-                </button>
+                    Guardar identidad visual
+                </x-ui.button>
             </div>
         </form>
     @endif
@@ -1005,14 +1011,15 @@ new class extends Component
             </div>
 
             <div class="flex justify-end border-t border-[var(--theme-border)] pt-4">
-                <button
+                <x-ui.button
                     type="submit"
-                    wire:loading.attr="disabled"
-                    class="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[var(--theme-primary)] px-5 text-sm font-medium text-white transition-colors hover:bg-[var(--theme-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                    target="guardarCorreo"
+                    size="lg"
+                    loading-text="Guardando…"
+                    class="w-full sm:w-auto"
                 >
-                    <span wire:loading.remove wire:target="guardarCorreo">Guardar configuración de correo</span>
-                    <span wire:loading wire:target="guardarCorreo">Guardando...</span>
-                </button>
+                    Guardar configuración de correo
+                </x-ui.button>
             </div>
         </form>
     @endif
@@ -1071,14 +1078,15 @@ new class extends Component
             </div>
 
             <div class="flex justify-end border-t border-[var(--theme-border)] pt-4">
-                <button
+                <x-ui.button
                     type="submit"
-                    wire:loading.attr="disabled"
-                    class="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[var(--theme-primary)] px-5 text-sm font-medium text-white transition-colors hover:bg-[var(--theme-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                    target="guardarRegistro"
+                    size="lg"
+                    loading-text="Guardando…"
+                    class="w-full sm:w-auto"
                 >
-                    <span wire:loading.remove wire:target="guardarRegistro">Guardar datos de registro</span>
-                    <span wire:loading wire:target="guardarRegistro">Guardando...</span>
-                </button>
+                    Guardar datos de registro
+                </x-ui.button>
             </div>
         </form>
     @endif
@@ -1216,14 +1224,15 @@ new class extends Component
                         Cancelar
                     </button>
 
-                    <button
+                    <x-ui.button
                         type="submit"
-                        wire:loading.attr="disabled"
-                        class="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[var(--theme-primary)] px-5 text-sm font-medium text-white transition-colors hover:bg-[var(--theme-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                        target="guardarSede"
+                        size="lg"
+                        loading-text="Guardando…"
+                        class="w-full sm:w-auto"
                     >
-                        <span wire:loading.remove wire:target="guardarSede">{{ $sedeEditingId ? 'Guardar cambios' : 'Guardar sede' }}</span>
-                        <span wire:loading wire:target="guardarSede">Guardando...</span>
-                    </button>
+                        {{ $sedeEditingId ? 'Guardar cambios' : 'Guardar sede' }}
+                    </x-ui.button>
                 </div>
             </form>
         @endif

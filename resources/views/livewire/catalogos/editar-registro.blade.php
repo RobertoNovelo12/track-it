@@ -760,96 +760,15 @@
                 </a>
 
 
-                <button
+                <x-ui.button
                     type="submit"
-
-                    wire:loading.attr="disabled"
-                    wire:target="save"
-
-                    class="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[var(--theme-primary)] px-5 text-sm font-medium text-white transition-colors hover:bg-[var(--theme-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                    target="save"
+                    size="lg"
+                    loading-text="Guardando…"
+                    class="w-full sm:w-auto"
                 >
-                    {{-- ESTADO NORMAL --}}
-                    <span
-                        wire:loading.remove
-                        wire:target="save"
-
-                        class="
-                            inline-flex
-                            items-center
-                            justify-center
-                            gap-2
-                        "
-                    >
-                        <svg
-                            class="w-4 h-4"
-
-                            viewBox="0 0 24 24"
-
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.7"
-                        >
-                            <path d="M5 4h12l2 2v14H5z"/>
-                            <path d="M8 4v6h8V4"/>
-                            <path d="M8 20v-6h8v6"/>
-                        </svg>
-
-                        <span>
-                            Guardar cambios
-                        </span>
-                    </span>
-
-
-                    {{-- ESTADO GUARDANDO --}}
-                    <span
-                        wire:loading.flex
-                        wire:target="save"
-
-                        class="
-                            absolute
-                            inset-0
-
-                            items-center
-                            justify-center
-                        "
-                    >
-                        <svg
-                            class="
-                                w-5
-                                h-5
-
-                                animate-spin
-                            "
-
-                            viewBox="0 0 24 24"
-                            fill="none"
-                        >
-                            <circle
-                                cx="12"
-                                cy="12"
-                                r="9"
-
-                                stroke="currentColor"
-                                stroke-width="2"
-
-                                opacity="0.25"
-                            />
-
-                            <path
-                                d="M21 12a9 9 0 0 0-9-9"
-
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                            />
-                        </svg>
-
-                        <span class="sr-only">
-                            Guardando cambios...
-                        </span>
-                    </span>
-
-                </button>
+                    Guardar cambios
+                </x-ui.button>
 
             </div>
 

@@ -48,23 +48,50 @@
     {{-- ========================================================
         RESULTADOS
     ======================================================== --}}
-    <p class="text-xs xl:text-sm text-[var(--theme-text)]">
+    <div class="flex items-center gap-3">
 
-        Resultados:
+        <p class="text-xs xl:text-sm text-[var(--theme-text)]">
 
-        <span class="font-medium">
-            {{ number_format($total) }}
+            Resultados:
+
+            <span class="font-medium">
+                {{ number_format($total) }}
+            </span>
+
+            {{ $total === 1 ? $resultSingular : $resultPlural }}
+
+        </p>
+
+        {{-- Indicador discreto mientras se actualizan los datos --}}
+        <span
+            wire:loading.delay.flex
+            class="hidden items-center gap-1.5 text-xs text-[var(--theme-text-muted)]"
+            role="status"
+        >
+            <x-ui.spinner size="sm" class="text-[var(--theme-primary)]" />
+            Actualizando…
         </span>
 
-        {{ $total === 1 ? $resultSingular : $resultPlural }}
-
-    </p>
+    </div>
 
 
     {{-- ========================================================
         CONTROLES
     ======================================================== --}}
-    <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+    {{-- Móvil: arriba «Ordenar por» + Actualizar; abajo «Mostrar» y la
+         dirección (con order-*). Desde sm vuelve al orden normal. --}}
+    @php
+        // Clases escritas completas para que Tailwind las genere.
+        $clasesOrden = [
+            2 => 'order-2 sm:order-none',
+            3 => 'order-3 sm:order-none',
+            4 => 'order-4 sm:order-none',
+        ];
+
+        $ordenMovil = fn (int $n) => $columnasOrdenables->isNotEmpty() ? $clasesOrden[$n] : '';
+    @endphp
+
+    <div class="flex w-full flex-wrap items-center gap-x-2 gap-y-2 sm:w-auto sm:gap-x-4">
 
         {{-- Controles adicionales del módulo --}}
         {{ $toolbarActions ?? '' }}
@@ -77,15 +104,15 @@
         ==================================================== --}}
         @if ($columnasOrdenables->isNotEmpty())
             <div
-                class="flex items-center gap-2 lg:hidden"
+                class="order-1 flex min-w-0 flex-1 basis-[calc(100%-2.625rem)] items-center gap-2 sm:order-none sm:flex-none sm:basis-auto lg:hidden"
                 x-data="{ campo: @js((string) $sortField) }"
                 x-init="$watch('campo', valor => { if (valor) $wire.call(@js($sortAction), valor) })"
             >
-                <span class="text-xs text-[var(--theme-text-muted)]">
+                <span class="w-[4.75rem] shrink-0 whitespace-nowrap text-xs text-[var(--theme-text-muted)] sm:w-auto">
                     Ordenar por
                 </span>
 
-                <div class="w-40">
+                <div class="min-w-0 flex-1 sm:w-40 sm:flex-none">
                     <x-searchable-select
                         x-model="campo"
                         :options="$columnasOrdenables->map(fn ($columna) => ['value' => $columna['sort'], 'label' => $columna['label']])->values()->all()"
@@ -102,9 +129,9 @@
             CANTIDAD POR PÁGINA
         ==================================================== --}}
         @if ($perPageModel)
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 {{ $ordenMovil(3) }}">
 
-                <span class="text-xs text-[var(--theme-text-muted)]">
+                <span class="w-[4.75rem] shrink-0 whitespace-nowrap text-xs text-[var(--theme-text-muted)] sm:w-auto">
                     Mostrar
                 </span>
 
@@ -130,7 +157,7 @@
             DIRECCIÓN DEL ORDENAMIENTO
         ==================================================== --}}
         @if ($sortModel)
-            <div class="w-24">
+            <div class="w-24 {{ $ordenMovil(4) }}">
                 <x-searchable-select
                     :wire-model="$sortModel"
                     :options="[
@@ -165,6 +192,9 @@
                     h-[34px]
 
                     shrink-0
+                    ml-auto
+                    sm:ml-0
+                    {{ $ordenMovil(2) }}
 
                     flex
                     items-center

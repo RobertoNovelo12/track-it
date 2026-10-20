@@ -7,6 +7,9 @@ use Livewire\WithPagination;
 
 new class extends Component
 {
+    // Registros por página de Ajustes › Preferencias.
+    use \App\Livewire\Concerns\UsaRegistrosPorPagina;
+
     public function mount(): void
     {
         // Solo Admin modifica la organización (ver AppServiceProvider).
@@ -20,7 +23,18 @@ new class extends Component
      */
     public function placeholder(array $params = [])
     {
-        return view('livewire.placeholders.administracion-seccion');
+        return view('livewire.placeholders.administracion-seccion', [
+            'columnas' => [
+                ['label' => 'Departamento', 'width' => '22%'],
+                ['label' => 'Código', 'width' => '11%'],
+                ['label' => app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['cobertura'], 'width' => '27%'],
+                ['label' => 'Responsable', 'width' => '17%'],
+                ['label' => 'Correo'],
+                ['label' => 'Extensión'],
+                ['label' => 'Estado', 'width' => '12%', 'type' => 'status'],
+            ],
+            'anchoMinimo' => '980px',
+        ]);
     }
 
     public string $search = '';

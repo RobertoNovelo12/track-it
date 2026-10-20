@@ -233,7 +233,7 @@
                     message
                     || 'El equipo fue reasignado correctamente.';
 
-                this.successVisible = true;
+                window.trackitToast?.('success', this.successMessage); /* aviso global */
 
                 if (this.successTimer) {
                     clearTimeout(this.successTimer);
@@ -249,7 +249,7 @@
                     message
                     || 'No fue posible guardar la reasignación.';
 
-                this.errorVisible = true;
+                window.trackitToast?.('error', this.errorMessage); /* aviso global */
 
                 if (this.errorTimer) {
                     clearTimeout(this.errorTimer);
@@ -1509,69 +1509,15 @@
                 </a>
 
 
-                <button
+                <x-ui.button
                     type="submit"
-                    :disabled="savingVisual"
-                    :aria-busy="savingVisual ? 'true' : 'false'"
-                    class="
-                        w-full sm:w-auto
-                        h-11 px-5
-                        flex items-center justify-center gap-2
-                        rounded-lg
-                        bg-[var(--theme-primary)]
-                        hover:bg-[var(--theme-primary-hover)]
-                        text-sm font-medium
-                        text-white
-                        disabled:opacity-60
-                        disabled:cursor-not-allowed
-                        transition-colors
-                    "
+                    x-loading="savingVisual"
+                    size="lg"
+                    loading-text="Guardando…"
+                    class="w-full sm:w-auto"
                 >
-                    <svg
-                        x-show="!savingVisual"
-                        class="w-4 h-4"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.7"
-                    >
-                        <path d="M5 4h12l2 2v14H5z"/>
-                        <path d="M8 4v6h8V4"/>
-                        <path d="M8 20v-6h8v6"/>
-                    </svg>
-
-                    <svg
-                        x-show="savingVisual"
-                        x-cloak
-                        class="w-4 h-4 animate-spin"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                    >
-                        <circle
-                            cx="12"
-                            cy="12"
-                            r="9"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            opacity="0.25"
-                        />
-
-                        <path
-                            d="M21 12a9 9 0 0 0-9-9"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                        />
-                    </svg>
-
-                    <span
-                        x-text="
-                            savingVisual
-                                ? 'Guardando...'
-                                : 'Guardar Reasignación'
-                        "
-                    ></span>
-                </button>
+                    Guardar reasignación
+                </x-ui.button>
             </div>
 
         </form>

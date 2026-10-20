@@ -490,16 +490,22 @@
                 {{-- ====================================================
                     ACCIONES
                 ==================================================== --}}
+                {{--
+                    Móvil: botones y debajo las fechas.
+                    Escritorio: fechas en la esquina izquierda y
+                    botones a la derecha.
+                --}}
+                <div class="flex flex-col gap-4 pt-1 pb-2 sm:flex-row sm:items-center sm:justify-between">
+
                 <div
                     class="
                         flex
                         flex-col-reverse
+                        sm:order-2
                         sm:flex-row
                         sm:items-center
                         sm:justify-end
                         gap-3
-                        pt-1
-                        pb-2
                     "
                 >
                     <a
@@ -510,66 +516,39 @@
                     </a>
 
                     @unless ($soloLectura)
-                    <button
+                    <x-ui.button
                         type="submit"
-                        :disabled="savingVisual"
-                        :aria-busy="
-                            savingVisual
-                                ? 'true'
-                                : 'false'
-                        "
-                        class="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[var(--theme-primary)] px-5 text-sm font-medium text-white transition-colors hover:bg-[var(--theme-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                        x-loading="savingVisual"
+                        size="lg"
+                        loading-text="Guardando…"
+                        class="w-full sm:w-auto"
                     >
-                        <svg
-                            x-show="!savingVisual"
-                            class="w-4 h-4"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.7"
-                        >
-                            <path d="M5 4h12l2 2v14H5z"/>
-                            <path d="M8 4v6h8V4"/>
-                            <path d="M8 20v-6h8v6"/>
-                        </svg>
-
-                        <svg
-                            x-show="savingVisual"
-                            x-cloak
-                            class="
-                                w-4
-                                h-4
-                                animate-spin
-                            "
-                            viewBox="0 0 24 24"
-                            fill="none"
-                        >
-                            <circle
-                                cx="12"
-                                cy="12"
-                                r="9"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                opacity="0.25"
-                            />
-
-                            <path
-                                d="M21 12a9 9 0 0 0-9-9"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                            />
-                        </svg>
-
-                        <span
-                            x-text="
-                                savingVisual
-                                    ? 'Guardando...'
-                                    : 'Guardar cambios'
-                            "
-                        ></span>
-                    </button>
+                        Guardar cambios
+                    </x-ui.button>
                     @endunless
+                </div>
+
+                {{-- FECHAS --}}
+                <dl
+                    x-data="{ modificado: @js(\App\Support\Fecha::conHora($fechaActualizacion, 'Sin modificaciones')) }"
+                    @equipo-fecha-actualizada.window="modificado = $event.detail.fecha"
+                    class="grid grid-cols-2 gap-3 text-xs sm:order-1 sm:flex sm:gap-6"
+                >
+                    <div class="min-w-0">
+                        <dt class="text-[var(--theme-text-muted)]">Fecha de creación</dt>
+                        <dd class="mt-0.5 font-medium text-[var(--theme-text)]">
+                            {{ \App\Support\Fecha::conHora($fechaRegistro, 'Sin registro') }}
+                        </dd>
+                    </div>
+
+                    <div class="min-w-0">
+                        <dt class="text-[var(--theme-text-muted)]">Fecha de modificación</dt>
+                        <dd class="mt-0.5 font-medium text-[var(--theme-text)]" x-text="modificado">
+                            {{ \App\Support\Fecha::conHora($fechaActualizacion, 'Sin modificaciones') }}
+                        </dd>
+                    </div>
+                </dl>
+
                 </div>
 
             </fieldset>
@@ -1412,8 +1391,7 @@
                             message
                             || 'Los cambios se guardaron correctamente.';
 
-                        this.successVisible =
-                            true;
+                        window.trackitToast?.('success', this.successMessage); /* aviso global */
 
                         if (
                             this.successTimer
@@ -1438,8 +1416,7 @@
                             message
                             || 'No fue posible guardar los cambios.';
 
-                        this.errorVisible =
-                            true;
+                        window.trackitToast?.('error', this.errorMessage); /* aviso global */
 
                         if (
                             this.errorTimer

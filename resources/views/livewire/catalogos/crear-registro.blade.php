@@ -526,57 +526,15 @@
                         Cancelar
                     </a>
 
-                    <button
+                    <x-ui.button
                         type="submit"
-                        :disabled="savingVisual"
-                        :aria-busy="savingVisual ? 'true' : 'false'"
-                        class="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[var(--theme-primary)] px-5 text-sm font-medium text-white transition-colors hover:bg-[var(--theme-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                        x-loading="savingVisual"
+                        size="lg"
+                        loading-text="Guardando…"
+                        class="w-full sm:w-auto"
                     >
-                        <svg
-                            x-show="!savingVisual"
-                            class="w-4 h-4"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.7"
-                        >
-                            <path d="M5 4h12l2 2v14H5z"/>
-                            <path d="M8 4v6h8V4"/>
-                            <path d="M8 20v-6h8v6"/>
-                        </svg>
-
-                        <svg
-                            x-show="savingVisual"
-                            x-cloak
-                            class="w-4 h-4 animate-spin"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                        >
-                            <circle
-                                cx="12"
-                                cy="12"
-                                r="9"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                opacity="0.25"
-                            />
-
-                            <path
-                                d="M21 12a9 9 0 0 0-9-9"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                            />
-                        </svg>
-
-                        <span
-                            x-text="
-                                savingVisual
-                                    ? 'Guardando...'
-                                    : 'Guardar registro'
-                            "
-                        ></span>
-                    </button>
+                        Guardar registro
+                    </x-ui.button>
                 </div>
             </fieldset>
         </form>
@@ -704,7 +662,7 @@
                         message
                         || 'El registro se creó correctamente.';
 
-                    this.successVisible = true;
+                    window.trackitToast?.('success', this.successMessage); /* aviso global */
 
                     if (this.successTimer) {
                         clearTimeout(
@@ -728,7 +686,7 @@
                         message
                         || 'No fue posible guardar el registro.';
 
-                    this.errorVisible = true;
+                    window.trackitToast?.('error', this.errorMessage); /* aviso global */
 
                     if (this.errorTimer) {
                         clearTimeout(

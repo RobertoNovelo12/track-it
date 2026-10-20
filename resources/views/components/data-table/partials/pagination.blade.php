@@ -32,6 +32,7 @@
             type="button"
 
             wire:click="previousPage('{{ $pageName }}')"
+            wire:loading.attr="disabled"
 
             @disabled(
                 $rows->onFirstPage()
@@ -97,6 +98,7 @@
                 type="button"
 
                 wire:click="gotoPage({{ $page }}, '{{ $pageName }}')"
+            wire:loading.attr="disabled"
 
                 class="
                     w-8
@@ -167,6 +169,7 @@
                 type="button"
 
                 wire:click="gotoPage({{ $page }}, '{{ $pageName }}')"
+            wire:loading.attr="disabled"
 
                 class="
                     w-8
@@ -234,6 +237,7 @@
                 type="button"
 
                 wire:click="gotoPage({{ $page }}, '{{ $pageName }}')"
+            wire:loading.attr="disabled"
 
                 class="
                     w-8
@@ -266,6 +270,7 @@
             type="button"
 
             wire:click="nextPage('{{ $pageName }}')"
+            wire:loading.attr="disabled"
 
             @disabled(
                 ! $rows->hasMorePages()
@@ -331,6 +336,7 @@
             type="button"
 
             wire:click="previousPage('{{ $pageName }}')"
+            wire:loading.attr="disabled"
 
             @disabled(
                 $rows->onFirstPage()
@@ -400,6 +406,7 @@
             type="button"
 
             wire:click="nextPage('{{ $pageName }}')"
+            wire:loading.attr="disabled"
 
             @disabled(
                 ! $rows->hasMorePages()

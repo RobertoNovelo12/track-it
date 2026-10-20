@@ -19,6 +19,9 @@ use Livewire\WithPagination;
 
 class EquiposIndex extends Component
 {
+    // Registros por página de Ajustes › Preferencias.
+    use \App\Livewire\Concerns\UsaRegistrosPorPagina;
+
     use WithPagination;
 
     protected $paginationTheme = 'tailwind';
@@ -1510,6 +1513,24 @@ class EquiposIndex extends Component
                     ->all(),
             self::CATALOG_CACHE_TTL_HOURS
         );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | HOTEL PREDETERMINADO
+    |--------------------------------------------------------------------------
+    |
+    | equipos/index.blade.php lo envía solo cuando la página se abre sin
+    | filtros en la URL (Ajustes › Preferencias).
+    |
+    */
+
+    public function mount(?int $unidadPredeterminada = null): void
+    {
+        if ($unidadPredeterminada && blank($this->area)) {
+            $this->area = (string) $unidadPredeterminada;
+        }
     }
 
 

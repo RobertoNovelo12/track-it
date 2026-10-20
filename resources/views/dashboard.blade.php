@@ -366,7 +366,11 @@
         DASHBOARD OPERATIVO
     ============================================================ --}}
 
-    <livewire:dashboard-overview />
+    {{--
+        Carga por secciones: la página aparece de inmediato con el
+        skeleton, luego las tarjetas y al final gráficas y actividad.
+    --}}
+    <livewire:dashboard-overview lazy />
 
 </div>
 

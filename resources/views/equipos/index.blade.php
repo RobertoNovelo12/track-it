@@ -7,7 +7,9 @@
 <div>
 
     {{-- Encabezado --}}
-    <div class="flex items-start justify-between mb-6">
+    {{-- En pantallas angostas los botones bajan debajo del título
+         y se reparten el ancho, en lugar de salirse de la pantalla. --}}
+    <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
 
         <div>
 
@@ -34,12 +36,12 @@
         </div>
 
 
-        <div class="flex items-center gap-3">
+        <div class="flex w-full items-center gap-2 sm:w-auto sm:gap-3">
 
             {{-- ====================================================
                 EXPORTAR
             ==================================================== --}}
-            <div class="relative">
+            <div class="relative flex-1 sm:flex-none">
 
                 <button
                     type="button"
@@ -52,6 +54,9 @@
                     "
                     class="
                         flex
+                        w-full
+                        justify-center
+                        sm:w-auto
                         items-center
                         gap-2
 
@@ -104,7 +109,9 @@
                         hidden
 
                         absolute
-                        right-0
+                        left-0
+                        sm:left-auto
+                        sm:right-0
                         top-full
 
                         mt-2
@@ -192,6 +199,9 @@
                 }}"
                 class="
                     flex
+                    flex-1
+                    justify-center
+                    sm:flex-none
                     items-center
                     gap-2
 
@@ -238,7 +248,17 @@
         FILTROS, TABLA Y PAGINACIÓN
         Todo vive dentro del componente Livewire.
     ============================================================ --}}
-    <livewire:equipos-index defer />
+    {{--
+        Hotel predeterminado (Ajustes › Preferencias): solo cuando la
+        página se abre sin filtros, para no pisar enlaces como los de la
+        Vista general.
+    --}}
+    <livewire:equipos-index
+        defer
+        :unidad-predeterminada="request()->query() === []
+            ? app(\App\Services\PreferenciasUsuarioService::class)->valor('id_unidad_predeterminada')
+            : null"
+    />
 
 </div>
 

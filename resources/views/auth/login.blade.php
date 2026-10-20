@@ -287,34 +287,12 @@
                 class="
                     hidden
                     items-center
+                    gap-2
                     justify-center
                 "
             >
-                <svg
-                    class="
-                        w-5
-                        h-5
-                        animate-spin
-                    "
-                    viewBox="0 0 24 24"
-                    fill="none"
-                >
-                    <circle
-                        cx="12"
-                        cy="12"
-                        r="9"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        opacity="0.25"
-                    />
-
-                    <path
-                        d="M21 12a9 9 0 0 0-9-9"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                    />
-                </svg>
+                <x-ui.spinner size="sm" />
+                <span>Ingresando…</span>
             </span>
 
         </button>

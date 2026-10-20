@@ -11,6 +11,9 @@ use Livewire\WithPagination;
 
 class AsignacionesHistory extends Component
 {
+    // Registros por página de Ajustes › Preferencias.
+    use \App\Livewire\Concerns\UsaRegistrosPorPagina;
+
     use WithPagination;
 
     #[Url(as: 'buscar')]

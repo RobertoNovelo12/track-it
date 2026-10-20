@@ -133,17 +133,38 @@ class User extends Authenticatable
 
         static $columnaNivel = null;
 
-        $columnaNivel ??= \Illuminate\Support\Facades\Schema::hasColumn('roles', 'nivel');
+        /*
+         * Consultar el catálogo de la base es lento: se guarda en caché
+         * (10 min si la columna existe, 1 min mientras no se migre).
+         */
+        if ($columnaNivel === null) {
+            $columnaNivel = \Illuminate\Support\Facades\Cache::get('roles.columna_nivel');
+
+            if ($columnaNivel === null) {
+                $columnaNivel = \Illuminate\Support\Facades\Schema::hasColumn('roles', 'nivel');
+
+                \Illuminate\Support\Facades\Cache::put(
+                    'roles.columna_nivel',
+                    $columnaNivel,
+                    $columnaNivel ? now()->addMinutes(10) : now()->addMinute()
+                );
+            }
+        }
 
         if (! $columnaNivel) {
             return $this->nivelAccesoResuelto = self::NIVEL_ADMIN;
         }
 
+        // Nivel del rol en caché 5 min (cambia muy pocas veces).
         $nivel = $this->id_rol
-            ? \Illuminate\Support\Facades\DB::table('roles')
-                ->where('id_rol', $this->id_rol)
-                ->where('activo', true)
-                ->value('nivel')
+            ? \Illuminate\Support\Facades\Cache::remember(
+                'roles.nivel.' . $this->id_rol,
+                now()->addMinutes(5),
+                fn () => \Illuminate\Support\Facades\DB::table('roles')
+                    ->where('id_rol', $this->id_rol)
+                    ->where('activo', true)
+                    ->value('nivel') ?? ''
+            )
             : null;
 
         return $this->nivelAccesoResuelto = in_array(

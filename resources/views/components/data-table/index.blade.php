@@ -91,6 +91,8 @@
 
     'minWidth' => null,
     'emptyMessage' => 'No se encontraron registros.',
+    'emptyTitle' => 'Sin resultados',
+    'emptyVariant' => 'search',
 ])
 
 @php
@@ -181,21 +183,32 @@
 <div
     {{ $attributes->class([
         'relative',
+        // Entrada suave al reemplazar el skeleton de carga.
+        'ui-fade-in',
         'bg-transparent border-0 rounded-none overflow-visible',
         // Sin overflow-hidden: las listas desplegables de la barra no deben recortarse.
         'lg:bg-[var(--theme-surface)] lg:border lg:border-[var(--theme-border)] lg:rounded-lg',
     ]) }}
     wire:key="data-table-{{ $keyPrefix }}"
     data-data-table
+    {{-- Densidad elegida en Ajustes › Preferencias --}}
+    data-densidad="{{ app(\App\Services\PreferenciasUsuarioService::class)->valor('densidad') }}"
 >
 
     {{-- ========================================================
-        OVERLAY DE CARGA
+        ACTUALIZANDO (buscar, filtrar, ordenar, paginar)
+        Los datos actuales siguen visibles; solo una barra fina
+        indeterminada arriba y el aviso «Actualizando…» en la barra
+        de resultados (partials/toolbar). Aparece tras 200 ms para
+        no parpadear en respuestas rápidas.
     ======================================================== --}}
     <div
         wire:loading.delay
-        class="absolute inset-0 z-10 bg-[var(--theme-surface)] opacity-50 pointer-events-none"
-    ></div>
+        class="pointer-events-none absolute inset-x-0 top-0 z-20 h-0.5 overflow-hidden lg:rounded-t-lg"
+        aria-hidden="true"
+    >
+        <div class="ui-progress-indeterminate h-full bg-[var(--theme-primary)]"></div>
+    </div>
 
 
     {{-- ========================================================

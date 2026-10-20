@@ -229,9 +229,7 @@
                                         text-[var(--theme-text-muted)]
                                     "
                                 >
-                                    {{ \Illuminate\Support\Carbon::parse(
-                                        $solicitud->fecha_solicitud
-                                    )->format('d/m/Y H:i') }}
+                                    {{ \App\Support\Fecha::conHora($solicitud->fecha_solicitud) }}
                                 </td>
 
 
@@ -479,9 +477,7 @@
                                     text-[var(--theme-text-muted)]
                                 "
                             >
-                                {{ \Illuminate\Support\Carbon::parse(
-                                    $solicitud->fecha_solicitud
-                                )->format('d/m/Y H:i') }}
+                                {{ \App\Support\Fecha::conHora($solicitud->fecha_solicitud) }}
                             </span>
 
 

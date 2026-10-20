@@ -5,7 +5,7 @@
 
         showToast(message) {
             this.toastMessage = message;
-            this.toastVisible = true;
+            window.trackitToast?.(this.toastType === 'error' ? 'error' : 'success', this.toastMessage); /* aviso global */
 
             setTimeout(() => {
                 this.toastVisible = false;
@@ -1676,13 +1676,20 @@
 
                     @php
 
+                        // Zona horaria y formato de hora del usuario.
+                        $preferenciasFecha =
+                            app(\App\Services\PreferenciasUsuarioService::class);
+
                         $fechaActividad =
                             \Illuminate\Support\Carbon::parse(
-                                $item->fecha
+                                $item->fecha,
+                                config('app.timezone')
+                            )->setTimezone(
+                                $preferenciasFecha->valor('zona_horaria')
                             );
 
                         $horaActividad =
-                            $fechaActividad->format('h:i A');
+                            $preferenciasFecha->hora($item->fecha);
 
                         $fechaTexto =
                             $fechaActividad->isToday()
@@ -1875,29 +1882,11 @@
 
                 @empty
 
-                    <div
-                        class="
-                            min-h-40
-
-                            flex
-                            items-center
-                            justify-center
-
-                            px-5
-                            py-10
-
-                            text-center
-                        "
-                    >
-                        <p
-                            class="
-                                text-sm
-                                text-[var(--theme-text-muted)]
-                            "
-                        >
-                            Todavía no hay actividad registrada.
-                        </p>
-                    </div>
+                    <x-ui.empty-state
+                        compact
+                        title="Todavía no hay actividad"
+                        description="Las asignaciones, reasignaciones y movimientos aparecerán aquí."
+                    />
 
                 @endforelse
 

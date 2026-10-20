@@ -78,7 +78,8 @@ class AuthSessionService
          * Respetar la URL originalmente solicitada.
          */
         $response = redirect()->intended(
-            route('dashboard')
+            // Pantalla de inicio elegida en Ajustes › Preferencias.
+            app(\App\Services\PreferenciasUsuarioService::class)->urlInicio()
         );
 
 

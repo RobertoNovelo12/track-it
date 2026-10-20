@@ -8,6 +8,9 @@ use Livewire\WithPagination;
 
 new class extends Component
 {
+    // Registros por página de Ajustes › Preferencias.
+    use \App\Livewire\Concerns\UsaRegistrosPorPagina;
+
     use WithPagination;
 
     /*
@@ -15,7 +18,15 @@ new class extends Component
      */
     public function placeholder(array $params = [])
     {
-        return view('livewire.placeholders.administracion-seccion');
+        return view('livewire.placeholders.administracion-seccion', [
+            'columnas' => [
+                ['label' => 'ID', 'width' => '80px'],
+                ['label' => 'Tipo de equipo', 'width' => '26%'],
+                ['label' => 'Descripción', 'width' => '44%'],
+                ['label' => 'Estado', 'width' => '120px', 'type' => 'status'],
+            ],
+            'anchoMinimo' => '760px',
+        ]);
     }
 
     /*
@@ -601,8 +612,8 @@ new class extends Component
                 message
                 ?? 'Cambios guardados correctamente.';
 
-            this.toastOpen =
-                true;
+            // Aviso global (components/ui/toast-region).
+            window.trackitToast?.('success', this.toastMessage);
 
             if (this.toastTimer) {
                 clearTimeout(
@@ -1238,61 +1249,15 @@ new class extends Component
                         </button>
 
 
-                        <button
+                        <x-ui.button
                             type="submit"
-
-                            wire:loading.attr="disabled"
-                            wire:target="saveTipo"
-
-                            class="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[var(--theme-primary)] px-5 text-sm font-medium text-white transition-colors hover:bg-[var(--theme-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                            target="saveTipo"
+                            size="lg"
+                            loading-text="Guardando…"
+                            class="w-full sm:w-auto"
                         >
-                            <svg
-                                wire:loading
-                                wire:target="saveTipo"
-
-                                class="
-                                    w-4
-                                    h-4
-
-                                    animate-spin
-                                "
-
-                                viewBox="0 0 24 24"
-                                fill="none"
-                            >
-                                <circle
-                                    cx="12"
-                                    cy="12"
-                                    r="9"
-                                    stroke="currentColor"
-                                    stroke-width="3"
-                                    opacity=".25"
-                                />
-
-                                <path
-                                    d="M21 12a9 9 0 00-9-9"
-                                    stroke="currentColor"
-                                    stroke-width="3"
-                                    stroke-linecap="round"
-                                />
-                            </svg>
-
-
-                            <span
-                                wire:loading.remove
-                                wire:target="saveTipo"
-                            >
-                                <span x-text="modo === 'edit' ? 'Guardar cambios' : 'Crear tipo'"></span>
-                            </span>
-
-
-                            <span
-                                wire:loading
-                                wire:target="saveTipo"
-                            >
-                                Guardando...
-                            </span>
-                        </button>
+                            <span x-text="modo === 'edit' ? 'Guardar cambios' : 'Crear tipo'"></span>
+                        </x-ui.button>
                     </div>
                 </form>
 

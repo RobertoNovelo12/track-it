@@ -13,6 +13,14 @@ use Livewire\WithPagination;
 
 class MarcasModelos extends Component
 {
+    // Registros por página de Ajustes › Preferencias.
+    use \App\Livewire\Concerns\UsaRegistrosPorPagina;
+
+    protected function propiedadesRegistrosPorPagina(): array
+    {
+        return ['perPageMarcas', 'perPageModelos'];
+    }
+
     use WithPagination;
 
     private const CACHE_MODULE =
@@ -2200,11 +2208,39 @@ class MarcasModelos extends Component
     |--------------------------------------------------------------------------
     */
 
-    public function placeholder(): View
+    public function placeholder(array $params = []): View
     {
-        // Mismo esqueleto que el resto de pestañas de Administración.
+        // Mismo esqueleto que el resto de pestañas, con las columnas reales.
+        $modelos = ($params['vista'] ?? 'ambos') === 'modelos';
+
         return view(
-            'livewire.placeholders.administracion-seccion'
+            'livewire.placeholders.administracion-seccion',
+            $modelos
+                ? [
+                    'columnas' => [
+                        ['label' => 'ID', 'width' => '70px'],
+                        ['label' => 'Modelo', 'width' => '19%'],
+                        ['label' => 'Marca', 'width' => '14%'],
+                        ['label' => 'Tipo de equipo', 'width' => '15%'],
+                        ['label' => 'Descripción', 'width' => '18%'],
+                        ['label' => 'Estado', 'width' => '110px', 'type' => 'status'],
+                        ['label' => 'Equipos', 'width' => '95px'],
+                        ['label' => 'Fecha de creación', 'width' => '150px'],
+                    ],
+                    'anchoMinimo' => '1050px',
+                ]
+                : [
+                    'columnas' => [
+                        ['label' => 'ID', 'width' => '70px'],
+                        ['label' => 'Marca', 'width' => '20%'],
+                        ['label' => 'Descripción', 'width' => '26%'],
+                        ['label' => 'Estado', 'width' => '110px', 'type' => 'status'],
+                        ['label' => 'Modelos', 'width' => '100px'],
+                        ['label' => 'Equipos', 'width' => '100px'],
+                        ['label' => 'Fecha de creación', 'width' => '150px'],
+                    ],
+                    'anchoMinimo' => '900px',
+                ]
         );
     }
 

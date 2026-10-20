@@ -777,6 +777,13 @@
 
             if (open) {
 
+                window.__trackItDrawerClosing =
+                    null;
+
+                window.__trackItDrawerContinuingUntil =
+                    0;
+
+
                 /*
                  * Mantener el header visible antes
                  * de abrir el drawer.
@@ -913,6 +920,13 @@
 
             if (immediate) {
 
+                window.__trackItDrawerClosing =
+                    null;
+
+                window.__trackItDrawerContinuingUntil =
+                    0;
+
+
                 sidebar.dataset.mobileOpen =
                     '0';
 
@@ -996,6 +1010,19 @@
             | CERRAR CON ANIMACIÓN
             |--------------------------------------------------------------------------
             */
+
+            /*
+             * Se registra el inicio para que, si la página nueva llega
+             * antes de terminar (navegación rápida o precargada), el
+             * drawer de la página nueva continúe desde el mismo punto.
+             */
+            window.__trackItDrawerClosing = {
+                start:
+                    performance.now(),
+                duration:
+                    MOBILE_DRAWER_TRANSITION_MS,
+            };
+
 
             sidebar.dataset.mobileOpen =
                 '0';
@@ -1149,6 +1176,230 @@
 
         /*
         |--------------------------------------------------------------------------
+        | TRASPASO DEL CIERRE AL NAVEGAR (MÓVIL)
+        |--------------------------------------------------------------------------
+        |
+        | Livewire reemplaza el <body> al navegar y el drawer nuevo llega
+        | cerrado. Si la página carga antes de que termine la animación de
+        | cierre, ésta se cortaba de golpe. Aquí se toma la posición exacta
+        | del drawer y del overlay justo antes del cambio y el drawer de la
+        | página nueva continúa el cierre desde ahí, sin retrasar la carga.
+        |
+        */
+
+        function captureClosingDrawer() {
+
+            const closing =
+                window.__trackItDrawerClosing;
+
+            const sidebar =
+                getSidebar();
+
+            const overlay =
+                getOverlay();
+
+
+            if (
+                !closing
+                || !sidebar
+            ) {
+                return null;
+            }
+
+
+            const elapsed =
+                performance.now()
+                - closing.start;
+
+            const remaining =
+                closing.duration
+                - elapsed;
+
+
+            if (remaining <= 16) {
+                return null;
+            }
+
+
+            const width =
+                sidebar.offsetWidth
+                || SIDEBAR_OPEN_WIDTH;
+
+            let offsetX =
+                -width;
+
+
+            try {
+
+                const matrix =
+                    new DOMMatrixReadOnly(
+                        getComputedStyle(sidebar)
+                            .transform
+                    );
+
+                offsetX =
+                    matrix.m41;
+
+            } catch (error) {
+                // Sin transform legible: se cierra desde fuera de pantalla.
+            }
+
+
+            const opacity =
+                overlay
+                    ? Number(
+                        getComputedStyle(overlay)
+                            .opacity
+                    ) || 0
+                    : 0;
+
+
+            return {
+                ratio:
+                    Math.min(
+                        Math.max(
+                            offsetX / width,
+                            -1
+                        ),
+                        0
+                    ),
+                opacity,
+                remaining:
+                    Math.max(
+                        remaining,
+                        140
+                    ),
+            };
+        }
+
+
+        function continueDrawerClose(
+            handoff
+        ) {
+
+            const sidebar =
+                getSidebar();
+
+            const overlay =
+                getOverlay();
+
+
+            if (!sidebar) {
+                return;
+            }
+
+
+            normalizeMobileSidebar();
+            prepareMobileOverlay();
+            cancelMobileCloseTimer();
+
+
+            sidebar.dataset.mobileOpen =
+                '0';
+
+            sidebar.classList.add(
+                '-translate-x-full'
+            );
+
+            sidebar.classList.remove(
+                'translate-x-0'
+            );
+
+
+            /*
+             * Punto de partida: donde iba el drawer anterior.
+             */
+            sidebar.style.transition =
+                'none';
+
+            sidebar.style.transform =
+                `translate3d(${(handoff.ratio * 100).toFixed(2)}%, 0, 0)`;
+
+
+            if (overlay) {
+
+                overlay.classList.remove(
+                    'hidden'
+                );
+
+                overlay.style.transition =
+                    'none';
+
+                overlay.style.opacity =
+                    String(handoff.opacity);
+
+                overlay.style.pointerEvents =
+                    'none';
+            }
+
+
+            void sidebar.offsetWidth;
+
+
+            window.__trackItDrawerContinuingUntil =
+                performance.now()
+                + handoff.remaining;
+
+
+            sidebar.style.transition =
+                `transform ${Math.round(handoff.remaining)}ms cubic-bezier(0.4, 0, 0.2, 1)`;
+
+            sidebar.style.transform =
+                'translate3d(-100%, 0, 0)';
+
+
+            if (overlay) {
+
+                overlay.style.transition =
+                    `opacity ${Math.round(handoff.remaining)}ms ease-in`;
+
+                overlay.style.opacity =
+                    '0';
+            }
+
+
+            window.__trackItSidebarCloseTimer =
+                window.setTimeout(
+                    () => {
+
+                        window.__trackItSidebarCloseTimer =
+                            null;
+
+                        window.__trackItDrawerContinuingUntil =
+                            0;
+
+
+                        if (
+                            sidebar.dataset
+                                .mobileOpen
+                            === '1'
+                        ) {
+                            return;
+                        }
+
+
+                        overlay
+                            ?.classList
+                            .add(
+                                'hidden'
+                            );
+
+
+                        /*
+                         * Transición normal lista para la
+                         * siguiente apertura.
+                         */
+                        normalizeMobileSidebar();
+                        prepareMobileOverlay();
+
+                    },
+                    handoff.remaining
+                );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
         | SINCRONIZAR SIDEBAR
         |--------------------------------------------------------------------------
         */
@@ -1159,6 +1410,38 @@
 
 
             if (isMobileViewport()) {
+
+                /*
+                 * Página nueva con un cierre en curso:
+                 * continuar la animación en lugar de cortarla.
+                 */
+                const handoff =
+                    window.__trackItDrawerHandoff;
+
+                if (handoff) {
+
+                    window.__trackItDrawerHandoff =
+                        null;
+
+                    continueDrawerClose(
+                        handoff
+                    );
+
+                    return;
+                }
+
+
+                /*
+                 * livewire:navigated llega después del swap:
+                 * no interrumpir el cierre que sigue en curso.
+                 */
+                if (
+                    (window.__trackItDrawerContinuingUntil || 0)
+                    > performance.now()
+                ) {
+                    return;
+                }
+
 
                 normalizeMobileSidebar();
 
@@ -2291,10 +2574,46 @@
                         isMobileViewport()
                     ) {
 
-                        applyMobileSidebarState(
-                            false,
-                            true
-                        );
+                        const handoff =
+                            captureClosingDrawer();
+
+
+                        if (handoff) {
+
+                            /*
+                             * El drawer anterior sigue cerrándose
+                             * hasta el swap; el nuevo continúa
+                             * desde la misma posición.
+                             */
+                            window.__trackItDrawerHandoff =
+                                handoff;
+
+                            window.__trackItDrawerClosing =
+                                null;
+
+                            /*
+                             * El temporizador de cierre sigue activo: si la
+                             * navegación se cancela, oculta el overlay igual.
+                             * Si la página nueva llega, continueDrawerClose lo
+                             * reemplaza.
+                             */
+
+                            setMobileHeaderDimmed(
+                                false
+                            );
+
+                            unlockMobilePageScroll();
+
+                        } else {
+
+                            window.__trackItDrawerHandoff =
+                                null;
+
+                            applyMobileSidebarState(
+                                false,
+                                true
+                            );
+                        }
                     }
 
 

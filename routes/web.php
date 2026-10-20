@@ -13,8 +13,9 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
+    // Pantalla de inicio elegida en Ajustes › Preferencias.
     return auth()->check()
-        ? redirect()->route('dashboard')
+        ? redirect()->to(app(\App\Services\PreferenciasUsuarioService::class)->urlInicio())
         : redirect()->route('login');
 });
 
@@ -376,6 +377,39 @@ Route::middleware([
     | Seguridad y roles
     |--------------------------------------------------------------------------
     */
+
+    /*
+    |--------------------------------------------------------------------------
+    | Guía de componentes de carga (UX)
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/ui/componentes',
+        fn () => view('ui.componentes')
+    )->name('ui.componentes')->middleware('can:administrar');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Tema desde el menú (se guarda en Ajustes › Preferencias)
+    |--------------------------------------------------------------------------
+    */
+
+    Route::post(
+        '/preferencias/tema',
+        function (\Illuminate\Http\Request $request) {
+            $datos = $request->validate([
+                'tema' => ['required', 'in:light,dark,system'],
+            ]);
+
+            app(\App\Services\PreferenciasUsuarioService::class)
+                ->guardar((int) auth()->id(), ['tema' => $datos['tema']]);
+
+            return response()->json(['ok' => true]);
+        }
+    )->name('preferencias.tema');
+
 
     Route::get(
         '/seguridad',

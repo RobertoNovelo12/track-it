@@ -15,6 +15,11 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(
             \App\Services\OrganizacionService::class
         );
+
+        // Preferencias del usuario: una lectura por petición.
+        $this->app->singleton(
+            \App\Services\PreferenciasUsuarioService::class
+        );
     }
 
     /**

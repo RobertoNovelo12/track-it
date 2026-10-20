@@ -551,83 +551,15 @@
                 </button>
 
 
-                <button
+                <x-ui.button
                     type="submit"
-
-                    wire:loading.attr="disabled"
-                    wire:target="requestOrganizationChange"
-
-                    @disabled($organizationChangeField === '')
-
-                    class="
-                        relative
-
-                        h-9
-                        px-4
-
-                        rounded-md
-
-                        bg-[var(--theme-primary)]
-                        text-white
-
-                        text-xs
-                        font-medium
-
-                        hover:bg-[var(--theme-primary-hover)]
-
-                        disabled:opacity-60
-                        disabled:cursor-not-allowed
-
-                        transition-colors
-                    "
+                    target="requestOrganizationChange"
+                    :disabled="$organizationChangeField === ''"
+                    size="compact"
+                    loading-text="Enviando…"
                 >
-                    <span
-                        wire:loading.class="invisible"
-                        wire:target="requestOrganizationChange"
-                    >
-                        Enviar solicitud
-                    </span>
-
-                    <span
-                        wire:loading.flex
-                        wire:target="requestOrganizationChange"
-
-                        class="
-                            absolute
-                            inset-0
-
-                            items-center
-                            justify-center
-                        "
-                    >
-                        <svg
-                            class="w-5 h-5 animate-spin"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            aria-hidden="true"
-                        >
-                            <circle
-                                cx="12"
-                                cy="12"
-                                r="9"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                opacity="0.25"
-                            />
-
-                            <path
-                                d="M21 12a9 9 0 0 0-9-9"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                            />
-                        </svg>
-
-                        <span class="sr-only">
-                            Enviando solicitud...
-                        </span>
-                    </span>
-                </button>
+                    Enviar solicitud
+                </x-ui.button>
 
             </div>
 

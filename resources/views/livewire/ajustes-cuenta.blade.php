@@ -55,6 +55,18 @@
 
 
     {{-- ============================================================
+        PLACEHOLDER - PREFERENCIAS
+    ============================================================ --}}
+    <div
+        wire:loading.delay.shortest
+        wire:target="setSection('preferencias')"
+        class="w-full"
+    >
+        @include('livewire.placeholders.ajustes-preferencias')
+    </div>
+
+
+    {{-- ============================================================
         CONTENIDO DE LA SECCIÓN ACTIVA
     ============================================================ --}}
     <div

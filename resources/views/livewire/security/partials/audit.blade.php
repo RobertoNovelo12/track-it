@@ -113,7 +113,7 @@
                             text-[var(--theme-text-muted)]
                         "
                     >
-                        {{ \Illuminate\Support\Carbon::parse($registro->fecha_hora)->format('d/m/Y H:i') }}
+                        {{ \App\Support\Fecha::conHora($registro->fecha_hora) }}
                     </td>
 
                     <td
@@ -235,7 +235,7 @@
                                 text-[var(--theme-text-muted)]
                             "
                         >
-                            {{ \Illuminate\Support\Carbon::parse($registro->fecha_hora)->format('d/m/Y H:i') }}
+                            {{ \App\Support\Fecha::conHora($registro->fecha_hora) }}
                         </p>
 
                     </div>
