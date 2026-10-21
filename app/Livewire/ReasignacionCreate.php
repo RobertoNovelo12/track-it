@@ -194,6 +194,19 @@ class ReasignacionCreate extends Component
                 $payload
             );
 
+        /*
+         * Nuevo colaborador: usuario elegido (id) o nombre escrito sin
+         * cuenta («texto:…»), igual que en Asignar.
+         */
+        $colaboradores = app(\App\Services\ColaboradoresService::class);
+
+        $colaborador = $colaboradores->resolver(
+            (string) ($payload['colaborador'] ?? ''),
+            (string) ($payload['nombreNuevoColaborador'] ?? '')
+        );
+
+        $payload['nombreNuevoColaborador'] = $colaborador['nombre'];
+
         $validated =
             Validator::make(
                 $payload,
@@ -341,7 +354,9 @@ class ReasignacionCreate extends Component
                     $validated,
                     $organizacion,
                     $idTipoMovimiento,
-                    $fechaReasignacion
+                    $fechaReasignacion,
+                    $colaboradores,
+                    $colaborador
                 ): array {
 
                     $equipoId =
@@ -509,13 +524,8 @@ class ReasignacionCreate extends Component
                                     'id_equipo' =>
                                         $equipoId,
 
-                                    'nombre_colaborador' =>
-                                        trim(
-                                            (string) $validated['nombreNuevoColaborador']
-                                        ),
-
-                                    'numero_colaborador' =>
-                                        null,
+                                    // nombre, número y cuenta (id_usuario)
+                                    ...$colaboradores->columnasAsignacion($colaborador),
 
                                     /*
                                      * Igual que en asignación: la
@@ -659,7 +669,9 @@ class ReasignacionCreate extends Component
             'ok' => true,
 
             'message' =>
-                'El equipo fue reasignado correctamente.',
+                $colaborador['sin_cuenta']
+                    ? 'El equipo fue reasignado. «' . $colaborador['nombre'] . '» no tiene cuenta: un administrador deberá crearla en Seguridad y roles.'
+                    : 'El equipo fue reasignado correctamente.',
 
             'record' => [
                 'movementId' =>
@@ -850,6 +862,10 @@ class ReasignacionCreate extends Component
 
             'ubicaciones' =>
                 $organizacion['ubicaciones'],
+
+            // Selector del nuevo colaborador (cuentas existentes).
+            'usuarios' =>
+                app(\App\Services\ColaboradoresService::class)->opcionesUsuarios(),
 
             'defaults' => [
                 'fechaReasignacion' =>
@@ -1085,6 +1101,7 @@ class ReasignacionCreate extends Component
                 'idEquipoReasignar' => '',
                 'idAsignacionActual' => '',
                 'motivoReasignacion' => '',
+                'colaborador' => '',
                 'nombreNuevoColaborador' => '',
                 'idUnidadNueva' => '',
                 'idDepartamentoNuevo' => '',

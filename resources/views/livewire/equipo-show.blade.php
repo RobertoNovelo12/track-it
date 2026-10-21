@@ -687,18 +687,28 @@
                 <div class="flex justify-between gap-4">
 
                     <dt class="text-xs text-[var(--theme-text-muted)]">
-
                         Código de inventario
-
                     </dt>
-
                     <dd class="text-xs font-medium text-[var(--theme-text)] text-right">
-
                         {{ $equipo['codigo_inventario'] ?? '—' }}
-
                     </dd>
-
                 </div>
+
+                {{-- Código de barras (solo el número del código de inventario) --}}
+                @if (\App\Support\CodigoBarras::numero($equipo['codigo_inventario'] ?? null))
+                    <div class="flex justify-between gap-4">
+                        <dt class="text-xs text-[var(--theme-text-muted)]">
+                            Código de barras
+                        </dt>
+
+                        <dd>
+                            <x-equipo.codigo-barras
+                                :codigo="$equipo['codigo_inventario']"
+                                class="items-end"
+                            />
+                        </dd>
+                    </div>
+                @endif
 
                 <div class="flex justify-between gap-4">
 

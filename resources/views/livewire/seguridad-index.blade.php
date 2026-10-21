@@ -24,6 +24,9 @@
 
             @include('livewire.security.partials.users')
 
+            {{-- Equipos asignados a personas sin cuenta --}}
+            @include('livewire.security.partials.colaboradores-sin-cuenta')
+
             @include('livewire.security.partials.requests')
 
             @include('livewire.security.partials.audit')

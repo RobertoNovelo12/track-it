@@ -1040,6 +1040,9 @@ class EquipoCreate extends Component
                 'id_proveedor'
             ),
 
+            // Selector de propietario (cuentas existentes).
+            'usuarios' => app(\App\Services\ColaboradoresService::class)->opcionesUsuarios(),
+
             'condiciones' => $this->toFrontendOptions(
                 $this->condiciones,
                 'id_valor'
@@ -1269,8 +1272,22 @@ class EquipoCreate extends Component
         $codigoInventario =
             $this->generarCodigoInventario();
 
+        /*
+         * Propietario: usuario elegido (id) o nombre escrito sin cuenta
+         * («texto:…»). Sin cuenta se guarda igual y aparece en Seguridad
+         * y roles › Colaboradores sin cuenta.
+         */
+        $colaboradores = app(\App\Services\ColaboradoresService::class);
+        $propietarioCapturado = trim((string) ($payload['propietario'] ?? ''));
+
+        $colaboradorPropietario = $propietarioCapturado !== ''
+            ? $colaboradores->resolver($propietarioCapturado, $propietarioCapturado)
+            : null;
+
         $idEquipo = DB::transaction(
             function () use (
+                $colaboradores,
+                $colaboradorPropietario,
                 $payload,
                 $validated,
                 $definitions,
@@ -1427,11 +1444,10 @@ class EquipoCreate extends Component
                 |--------------------------------------------------------------------------
                 */
 
-                $propietario = trim(
-                    (string) $payload['propietario']
-                );
-
-                if ($propietario !== '') {
+                if (
+                    $colaboradorPropietario
+                    && $colaboradorPropietario['nombre'] !== ''
+                ) {
                     $idTipoAsignacion =
                         DB::table('catalogo_valores')
                             ->join(
@@ -1456,8 +1472,8 @@ class EquipoCreate extends Component
                         DB::table('asignaciones')->insert([
                             'id_equipo' => $idEquipo,
 
-                            'nombre_colaborador' =>
-                                $propietario,
+                            // nombre, número y cuenta (id_usuario)
+                            ...$colaboradores->columnasAsignacion($colaboradorPropietario),
 
                             'id_unidad' => $organizacion['id_unidad'],
 
@@ -1497,7 +1513,9 @@ class EquipoCreate extends Component
             'ok' => true,
 
             'message' =>
-                'Equipo añadido correctamente.',
+                ($colaboradorPropietario['sin_cuenta'] ?? false)
+                    ? 'Equipo añadido. «' . $colaboradorPropietario['nombre'] . '» no tiene cuenta: un administrador deberá crearla en Seguridad y roles.'
+                    : 'Equipo añadido correctamente.',
 
             'record' => [
                 'id' => $idEquipo,

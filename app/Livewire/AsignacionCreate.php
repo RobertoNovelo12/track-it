@@ -107,6 +107,21 @@ class AsignacionCreate extends Component
         $payload =
             $this->normalizePayload($payload);
 
+        /*
+         * Colaborador: usuario elegido (id) o nombre escrito sin cuenta
+         * («texto:…»). Sin cuenta la asignación se guarda igual y aparece
+         * en Seguridad y roles › Colaboradores sin cuenta.
+         */
+        $colaboradores = app(\App\Services\ColaboradoresService::class);
+
+        $colaborador = $colaboradores->resolver(
+            (string) ($payload['colaborador'] ?? ''),
+            (string) ($payload['nombreColaborador'] ?? ''),
+            (string) ($payload['numeroColaborador'] ?? '')
+        );
+
+        $payload['nombreColaborador'] = $colaborador['nombre'];
+
         $validated =
             Validator::make(
                 $payload,
@@ -168,7 +183,7 @@ class AsignacionCreate extends Component
                         'Selecciona un equipo.',
 
                     'nombreColaborador.required' =>
-                        'Escribe el nombre completo del colaborador.',
+                        'Busca un usuario o escribe el nombre del colaborador.',
 
                     'idUnidadAsignar.required' =>
                         'Selecciona un hotel.',
@@ -264,7 +279,9 @@ class AsignacionCreate extends Component
                     $payload,
                     $validated,
                     $organizacion,
-                    $fechaAsignacion
+                    $fechaAsignacion,
+                    $colaboradores,
+                    $colaborador
                 ): array {
 
                     $equipoId =
@@ -355,15 +372,8 @@ class AsignacionCreate extends Component
                                     'id_equipo' =>
                                         $equipoId,
 
-                                    'nombre_colaborador' =>
-                                        trim(
-                                            (string) $validated['nombreColaborador']
-                                        ),
-
-                                    'numero_colaborador' =>
-                                        $this->nullableString(
-                                            $payload['numeroColaborador']
-                                        ),
+                                    // nombre, número y cuenta (id_usuario)
+                                    ...$colaboradores->columnasAsignacion($colaborador),
 
                                     /*
                                      * El área ya no se captura: la
@@ -472,7 +482,9 @@ class AsignacionCreate extends Component
             'ok' => true,
 
             'message' =>
-                'El equipo fue asignado correctamente.',
+                $colaborador['sin_cuenta']
+                    ? 'El equipo fue asignado. «' . $colaborador['nombre'] . '» no tiene cuenta: un administrador deberá crearla en Seguridad y roles.'
+                    : 'El equipo fue asignado correctamente.',
 
             'record' => [
                 'id' =>
@@ -537,7 +549,9 @@ class AsignacionCreate extends Component
 
             'tiposAsignacion' =>
                 $tiposAsignacion,
-
+            // Selector de colaborador (cuentas existentes).
+            'usuarios' =>
+                app(\App\Services\ColaboradoresService::class)->opcionesUsuarios(),
             'defaults' => [
                 'fechaAsignacion' =>
                     $this->fechaAsignacion,
@@ -810,6 +824,9 @@ class AsignacionCreate extends Component
                     'asignacion',
 
                 'idEquipoAsignar' =>
+                    '',
+
+                'colaborador' =>
                     '',
 
                 'nombreColaborador' =>

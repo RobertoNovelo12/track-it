@@ -27,6 +27,17 @@
      * <input type="hidden" name="..."> con el valor seleccionado.
      */
     'name' => null,
+
+    /*
+     * Permite escribir un valor que no está en la lista (p. ej. un
+     * colaborador sin cuenta). Se guarda como customPrefix + texto
+     * («texto:Juan Pérez»); las opciones normales conservan su valor.
+     * Las opciones pueden traer 'search' con texto extra para buscar
+     * (número de colaborador, usuario, correo...).
+     */
+    'allowCustom' => false,
+    'customPrefix' => 'texto:',
+    'customHint' => 'sin cuenta',
 ])
 
 @php
@@ -94,6 +105,8 @@
         clearLabel: @js((string) $clearLabel),
 
         clearValue: @js($clearValue),
+        allowCustom: @js((bool) $allowCustom),
+        customPrefix: @js((string) $customPrefix),
 
         /*
         |--------------------------------------------------------------------------
@@ -168,10 +181,70 @@
             }
 
             return this.options.filter(option =>
-                String(option.label ?? '')
+                (String(option.label ?? '') + ' ' + String(option.search ?? ''))
                     .toLowerCase()
                     .includes(query)
             );
+        },
+
+        /*
+        |--------------------------------------------------------------------------
+        | Texto libre (allow-custom)
+        |--------------------------------------------------------------------------
+        */
+        isCustomValue(value) {
+            return this.allowCustom
+                && typeof value === 'string'
+                && value.startsWith(this.customPrefix);
+        },
+
+        get exactOption() {
+            const query = String(this.query ?? '').trim().toLowerCase();
+
+            if (query === '') {
+                return null;
+            }
+
+            return this.options.find(option =>
+                String(option.label ?? '').trim().toLowerCase() === query
+                || String(option.nombre ?? '').trim().toLowerCase() === query
+            ) ?? null;
+        },
+
+        get showCustom() {
+            return this.allowCustom
+                && String(this.query ?? '').trim() !== ''
+                && ! this.exactOption;
+        },
+
+        pickCustom() {
+            const texto = String(this.query ?? '').trim().replace(/\s+/g, ' ');
+
+            if (texto === '') {
+                return;
+            }
+
+            this.pick(this.customPrefix + texto, texto);
+        },
+
+        /*
+         * Enter o salir del campo con texto escrito: si coincide con una
+         * opción se elige esa; si no, se usa el texto escrito.
+         */
+        commitTyped() {
+            if (! this.allowCustom) {
+                return;
+            }
+
+            const exacta = this.exactOption;
+
+            if (exacta) {
+                this.pick(exacta.value, exacta.label);
+
+                return;
+            }
+
+            this.pickCustom();
         },
 
         /*
@@ -203,6 +276,12 @@
         */
 
         syncSelectedLabel() {
+            if (this.isCustomValue(this.selected)) {
+                this.query = String(this.selected).slice(this.customPrefix.length);
+
+                return;
+            }
+
             const option = this.selectedOption();
 
             if (option) {
@@ -253,8 +332,22 @@
         |--------------------------------------------------------------------------
         */
 
-        closeDropdown() {
+        closeDropdown(confirmar = true) {
             if (!this.open) {
+                return;
+            }
+
+            const escrito = String(this.query ?? '').trim();
+
+            if (
+                confirmar
+                && this.allowCustom
+                && escrito !== ''
+                && ! (this.selectedOption() && this.selectedOption().label === this.query)
+                && ! (this.isCustomValue(this.selected) && String(this.selected).slice(this.customPrefix.length) === escrito)
+            ) {
+                this.commitTyped();
+
                 return;
             }
 
@@ -394,7 +487,7 @@
     @endif
 
     @click.outside="closeDropdown()"
-    @keydown.escape.window="closeDropdown()"
+    @keydown.escape.window="closeDropdown(false)"
 
     class="relative"
 >
@@ -465,6 +558,9 @@
             "
 
             @input="handleInput()"
+            @if ($allowCustom)
+                @keydown.enter.prevent="commitTyped()"
+            @endif
 
             :disabled="disabled"
             :placeholder="currentPlaceholder"
@@ -611,6 +707,30 @@
             </div>
         @endif
 
+        {{-- Texto libre: usar lo escrito (allow-custom) --}}
+        @if ($allowCustom)
+            <div
+                x-show="showCustom"
+                @click="pickCustom()"
+                @class([
+                    'flex items-center justify-between gap-2 border-b border-[var(--theme-border)]',
+                    'text-[var(--theme-primary)]',
+                    'hover:bg-[var(--theme-primary-soft-subtle)]',
+                    'cursor-pointer',
+                    'px-3 py-2 text-xs' => $compact,
+                    'px-3 py-2 text-sm' => ! $compact,
+                ])
+            >
+                <span class="min-w-0 truncate">
+                    Usar «<span x-text="String(query ?? '').trim()"></span>»
+                </span>
+
+                <span class="shrink-0 rounded-full bg-[var(--theme-warning-soft)] px-2 py-0.5 text-[10px] font-medium text-[var(--theme-warning)]">
+                    {{ $customHint }}
+                </span>
+            </div>
+        @endif
+
         {{-- ========================================================
             OPCIONES
         ======================================================== --}}
@@ -647,7 +767,7 @@
         ======================================================== --}}
 
         <div
-            x-show="filtered.length === 0"
+            x-show="filtered.length === 0 && ! showCustom"
 
             @class([
                 'text-[var(--theme-text-muted)]',

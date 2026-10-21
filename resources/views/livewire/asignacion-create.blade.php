@@ -22,6 +22,8 @@
             idEquipoAsignar: '',
             hostEquipo: '',
 
+            // Selector: id del usuario o «texto:Nombre» (sin cuenta).
+            colaborador: '',
             nombreColaborador: '',
             numeroColaborador: '',
 
@@ -39,7 +41,43 @@
 
             observacionesAsignacion: '',
 
+            /*
+             * Colaborador: con cuenta toma nombre y número de la cuenta;
+             * escrito a mano queda «sin cuenta» (se avisa debajo).
+             */
+            usuarioSeleccionado() {
+                const valor = String(this.colaborador ?? '');
+
+                return (this.data?.usuarios ?? []).find(
+                    usuario => String(usuario.value) === valor
+                ) ?? null;
+            },
+
+            colaboradorSinCuenta() {
+                return String(this.colaborador ?? '').startsWith('texto:');
+            },
+
             init() {
+                this.$watch('colaborador', (valor) => {
+                    this.clearValidationError('nombreColaborador');
+
+                    const texto = String(valor ?? '');
+
+                    if (texto.startsWith('texto:')) {
+                        this.nombreColaborador = texto.slice(6);
+
+                        return;
+                    }
+
+                    const usuario = this.usuarioSeleccionado();
+
+                    this.nombreColaborador = usuario ? usuario.nombre : '';
+
+                    if (usuario && usuario.numero) {
+                        this.numeroColaborador = usuario.numero;
+                    }
+                });
+
                 this.$watch(
                     'idEquipoAsignar',
                     (value, previous) => {
@@ -276,6 +314,11 @@
                             this.idEquipoAsignar ?? ''
                         ),
 
+                    colaborador:
+                        String(
+                            this.colaborador ?? ''
+                        ),
+
                     nombreColaborador:
                         String(
                             this.nombreColaborador ?? ''
@@ -395,7 +438,7 @@
                     ).trim() === ''
                 ) {
                     errors.nombreColaborador = [
-                        'Escribe el nombre completo del colaborador.'
+                        'Busca un usuario o escribe el nombre del colaborador.'
                     ];
                 }
 
@@ -1037,50 +1080,35 @@
                                 text-[var(--theme-text-muted)]
                             "
                         >
-                            Nombre Completo de Colaborador *
+                            Colaborador *
                         </label>
 
-                        <input
-                            id="assignment-collaborator"
-                            type="text"
+                        <div id="assignment-collaborator">
+                            <x-searchable-select
+                                x-model="colaborador"
+                                x-options="data.usuarios ?? []"
+                                :options="$assignmentData['usuarios'] ?? []"
+                                :show-clear="false"
+                                allow-custom
+                                placeholder="Busca un usuario o escribe un nombre"
+                            />
+                        </div>
 
-                            x-model="nombreColaborador"
-
-                            @input="
-                                clearValidationError(
-                                    'nombreColaborador'
-                                )
-                            "
-
-                            placeholder="Nombre completo del colaborador"
-
-                            class="
-                                w-full
-
-                                px-3
-                                py-2.5
-
-                                rounded-md
-
-                                border
-                                border-[var(--theme-border-strong)]
-
-                                bg-[var(--theme-surface)]
-
-                                text-sm
-                                text-[var(--theme-text)]
-
-                                placeholder:text-[var(--theme-text-muted)]
-
-                                outline-none
-
-                                focus:ring-1
-                                focus:ring-[var(--theme-primary)]
-                                focus:border-[var(--theme-primary)]
-
-                                transition-colors
-                            "
+                        {{-- Sin cuenta: se guarda igual; un administrador la crea después --}}
+                        <p
+                            x-show="colaboradorSinCuenta()"
+                            x-cloak
+                            class="mt-1.5 flex items-start gap-1.5 text-xs text-[var(--theme-warning)]"
                         >
+                            <svg class="mt-px h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M12 9v4M12 16.5v.5"/>
+                                <path d="M10.3 3.9L2.6 17.3A2 2 0 0 0 4.3 20h15.4a2 2 0 0 0 1.7-2.7L13.7 3.9a2 2 0 0 0-3.4 0z"/>
+                            </svg>
+                            <span>
+                                Este colaborador no tiene cuenta. La asignación se guardará y un
+                                administrador deberá crear su cuenta en Seguridad y roles.
+                            </span>
+                        </p>
 
                         <p
                             x-show="fieldError('nombreColaborador')"
@@ -1118,6 +1146,8 @@
                             type="text"
 
                             x-model="numeroColaborador"
+                            x-bind:readonly="!! (usuarioSeleccionado()?.numero)"
+                            x-bind:title="usuarioSeleccionado()?.numero ? 'Número tomado de la cuenta del usuario' : ''"
 
                             placeholder="Ej. 001245"
 

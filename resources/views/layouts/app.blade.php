@@ -419,6 +419,81 @@ document.addEventListener(
 
 
             {{-- ========================================================
+                BUSCADOR (Ctrl K) — busca en Equipos tecnológicos.
+                En móvil incluye el escáner de códigos de barras.
+            ======================================================== --}}
+            <form
+                id="topQuickSearch"
+                action="{{ route('equipos.index') }}"
+                method="GET"
+                role="search"
+                class="col-start-2 min-w-0 w-full md:max-w-md md:justify-self-end"
+                x-data="{
+                    query: @js(request()->routeIs('equipos.index') ? (string) request('buscar', '') : ''),
+
+                    enfocar() {
+                        this.$refs.campo?.focus();
+                        this.$refs.campo?.select();
+                    },
+                }"
+                x-init="window.focusTopSearch = () => enfocar()"
+                @keydown.window.ctrl.k.prevent="enfocar()"
+                @keydown.window.meta.k.prevent="enfocar()"
+                @submit.prevent="
+                    const destino = new URL($el.action, window.location.origin);
+                    const texto = String(query ?? '').trim();
+
+                    if (texto !== '') {
+                        destino.searchParams.set('buscar', texto);
+                    }
+
+                    $refs.campo?.blur();
+
+                    window.Livewire?.navigate
+                        ? window.Livewire.navigate(destino.toString())
+                        : (window.location.href = destino.toString());
+                "
+            >
+                <div class="relative flex h-10 items-center rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface)] transition-colors focus-within:border-[var(--theme-border-strong)]">
+                    <svg class="pointer-events-none absolute left-3 h-4 w-4 text-[var(--theme-text-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="11" cy="11" r="7"/>
+                        <path d="M20 20l-4-4"/>
+                    </svg>
+
+                    <input
+                        x-ref="campo"
+                        type="search"
+                        name="buscar"
+                        x-model="query"
+                        placeholder="Buscar equipos..."
+                        autocomplete="off"
+                        enterkeyhint="search"
+                        aria-label="Buscar equipos"
+                        class="h-full w-full min-w-0 border-0 bg-transparent pl-9 pr-11 text-sm text-[var(--theme-text)] placeholder:text-[var(--theme-text-muted)] focus:outline-none focus:ring-0 md:pr-16"
+                    >
+
+                    {{-- Atajo (escritorio) --}}
+                    <span class="pointer-events-none absolute right-2.5 hidden h-6 items-center rounded border border-[var(--theme-border)] px-1.5 text-[10px] font-medium text-[var(--theme-text-muted)] md:inline-flex">
+                        Ctrl K
+                    </span>
+
+                    {{-- Escáner de códigos de barras (móvil) --}}
+                    <button
+                        type="button"
+                        x-on:click="$dispatch('abrir-escaner')"
+                        class="absolute right-1 flex h-8 w-8 items-center justify-center rounded-md text-[var(--theme-text-muted)] transition-colors hover:bg-[var(--theme-primary-soft)] hover:text-[var(--theme-primary)] md:hidden"
+                        aria-label="Escanear código de barras"
+                        title="Escanear código de barras"
+                    >
+                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/>
+                            <path d="M8 9v6M11 9v6M13.5 9v6M16 9v6"/>
+                        </svg>
+                    </button>
+                </div>
+            </form>
+
+            {{-- ========================================================
                 USUARIO / PERFIL
             ======================================================== --}}
             @php
@@ -459,6 +534,13 @@ document.addEventListener(
 
                 class="col-start-3 flex shrink-0 items-center gap-2 sm:gap-3"
             >
+
+                {{-- Equipos enviados desde el teléfono (bandeja personal) --}}
+                @can('gestionar')
+                    <div class="hidden md:block">
+                        <livewire:equipos-recibidos-panel />
+                    </div>
+                @endcan
 
                 {{-- ====================================================
                     NOTIFICACIONES
@@ -1399,6 +1481,9 @@ document.addEventListener(
     {{-- ============================================================
         PANEL GLOBAL DE NOTIFICACIONES
     ============================================================ --}}
+    {{-- Escáner de códigos de barras (se abre desde el buscador en móvil) --}}
+    @include('layouts.partials.escaner-movil')
+
     <livewire:notifications-panel
         :initial-unread-count="$initialUnreadNotifications"
     />

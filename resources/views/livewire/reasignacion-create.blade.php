@@ -34,6 +34,8 @@
             idTipoAsignacionActual: '',
 
             motivoReasignacion: '',
+            // Selector: id del usuario o «texto:Nombre» (sin cuenta).
+            colaborador: '',
             nombreNuevoColaborador: '',
 
             idUnidadNueva: '',
@@ -47,6 +49,23 @@
             observacionesReasignacion: '',
 
             init() {
+                this.$watch('colaborador', (valor) => {
+                    this.clearValidationError('nombreNuevoColaborador');
+
+                    const texto = String(valor ?? '');
+
+                    if (texto.startsWith('texto:')) {
+                        this.nombreNuevoColaborador = texto.slice(6);
+
+                        return;
+                    }
+
+                    const usuario = (this.data?.usuarios ?? []).find(
+                        opcion => String(opcion.value) === texto
+                    );
+
+                    this.nombreNuevoColaborador = usuario ? usuario.nombre : '';
+                });
                 this.$watch('idEquipoReasignar', () => {
                     this.loadSelectedAssignment();
                     this.clearValidationError('idEquipoReasignar');
@@ -271,6 +290,9 @@
                     motivoReasignacion:
                         String(this.motivoReasignacion ?? ''),
 
+                    colaborador:
+                        String(this.colaborador ?? ''),
+
                     nombreNuevoColaborador:
                         String(this.nombreNuevoColaborador ?? ''),
 
@@ -377,7 +399,7 @@
                     ).trim() === ''
                 ) {
                     errors.nombreNuevoColaborador = [
-                        'Escribe el nombre del nuevo colaborador.'
+                        'Busca un usuario o escribe el nombre del nuevo colaborador.'
                     ];
                 }
 
@@ -1254,31 +1276,35 @@
                                 text-[var(--theme-text-muted)]
                             "
                         >
-                            Nombre del Nuevo Colaborador *
+                            Nuevo colaborador *
                         </label>
 
-                        <input
-                            id="reassignment-collaborator"
-                            type="text"
-                            x-model="nombreNuevoColaborador"
-                            @input="clearValidationError('nombreNuevoColaborador')"
-                            placeholder="Nombre completo del nuevo colaborador"
-                            class="
-                                w-full
-                                px-3 py-2.5
-                                rounded-md
-                                border border-[var(--theme-border-strong)]
-                                bg-[var(--theme-surface)]
-                                text-sm
-                                text-[var(--theme-text)]
-                                placeholder:text-[var(--theme-text-muted)]
-                                outline-none
-                                focus:ring-1
-                                focus:ring-[var(--theme-primary)]
-                                focus:border-[var(--theme-primary)]
-                                transition-colors
-                            "
+                        <div id="reassignment-collaborator">
+                            <x-searchable-select
+                                x-model="colaborador"
+                                x-options="data.usuarios ?? []"
+                                :options="$reassignmentData['usuarios'] ?? []"
+                                :show-clear="false"
+                                allow-custom
+                                placeholder="Busca un usuario o escribe un nombre"
+                            />
+                        </div>
+
+                        {{-- Sin cuenta: se guarda igual; un administrador la crea después --}}
+                        <p
+                            x-show="String(colaborador ?? '').startsWith('texto:')"
+                            x-cloak
+                            class="mt-1.5 flex items-start gap-1.5 text-xs text-[var(--theme-warning)]"
                         >
+                            <svg class="mt-px h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M12 9v4M12 16.5v.5"/>
+                                <path d="M10.3 3.9L2.6 17.3A2 2 0 0 0 4.3 20h15.4a2 2 0 0 0 1.7-2.7L13.7 3.9a2 2 0 0 0-3.4 0z"/>
+                            </svg>
+                            <span>
+                                Este colaborador no tiene cuenta. La reasignación se guardará y un
+                                administrador deberá crear su cuenta en Seguridad y roles.
+                            </span>
+                        </p>
 
                         <p
                             x-show="fieldError('nombreNuevoColaborador')"

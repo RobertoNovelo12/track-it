@@ -480,6 +480,9 @@ class EquipoBaja extends Component
         $systemCache->refreshModule('dashboard');
         $systemCache->refreshModule('equipos');
 
+        // Equipos recibidos desde el teléfono: la baja lo saca de las bandejas.
+        app(\App\Services\EquiposRecibidosService::class)->atenderPorBaja((int) $this->equipoId);
+
         Cache::forget('equipos.edit.base.' . $this->equipoId);
 
         $version = (int) Cache::get(

@@ -55,6 +55,54 @@ Route::middleware([
     */
 
     /*
+    |--------------------------------------------------------------------------
+    | Escáner del teléfono → bandeja «Equipos recibidos» (de la misma cuenta)
+    |--------------------------------------------------------------------------
+    */
+    Route::get(
+        '/equipos/escaneo/{codigo}',
+        [\App\Http\Controllers\EquiposRecibidosController::class, 'buscar']
+    )
+        ->where('codigo', '[A-Za-z0-9\-]{1,60}')
+        ->name('equipos.escaneo.buscar');
+
+    Route::post(
+        '/equipos/recibidos',
+        [\App\Http\Controllers\EquiposRecibidosController::class, 'enviar']
+    )->name('equipos.recibidos.enviar');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Código de barras de un equipo (SVG)
+    |--------------------------------------------------------------------------
+    |
+    | Solo el número del código de inventario (ACT-000061 → 000061).
+    | Siempre es el mismo para un número: el navegador lo guarda en caché.
+    | ?descargar=1 lo baja como archivo (ACT-000061.svg).
+    |
+    */
+    Route::get(
+        '/equipos/codigo-barras/{numero}.svg',
+        function (string $numero) {
+            $svg = \App\Support\CodigoBarras::svg($numero);
+
+            $respuesta = response($svg, 200, [
+                'Content-Type' => 'image/svg+xml',
+                'Cache-Control' => 'private, max-age=31536000, immutable',
+                'X-Content-Type-Options' => 'nosniff',
+            ]);
+
+            if (request()->boolean('descargar')) {
+                $respuesta->header('Content-Disposition', 'attachment; filename="ACT-' . $numero . '.svg"');
+            }
+
+            return $respuesta;
+        }
+    )
+        ->where('numero', '[0-9]{1,40}')
+        ->name('equipos.codigo-barras');
+
+    /*
      * La búsqueda ahora se muestra en la tabla de Equipos tecnológicos.
      * Se conserva la ruta para enlaces anteriores (/buscar-equipos?q=...).
      */

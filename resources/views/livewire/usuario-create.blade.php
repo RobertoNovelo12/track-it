@@ -16,6 +16,22 @@
 <div>
     <form wire:submit="save" class="space-y-5">
 
+        {{-- Cuenta para un colaborador sin cuenta (desde Seguridad y roles) --}}
+        @if ($colaboradorNombre !== '')
+            <div class="flex items-start gap-3 rounded-xl border border-[var(--theme-primary)] bg-[var(--theme-primary-soft)] px-4 py-3 text-sm text-[var(--theme-text-strong)]">
+                <svg class="mt-0.5 h-4 w-4 shrink-0 text-[var(--theme-primary)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1.5 1.5"/>
+                    <path d="M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1.5-1.5"/>
+                </svg>
+
+                <p>
+                    Cuenta para <span class="font-semibold">{{ $colaboradorNombre }}</span>.
+                    Al guardarla, los equipos asignados a este colaborador quedarán vinculados a la nueva cuenta.
+                    Revisa nombres y apellidos antes de guardar.
+                </p>
+            </div>
+        @endif
+
         {{-- ====================================================
             SIN DOMINIOS CONFIGURADOS
         ==================================================== --}}

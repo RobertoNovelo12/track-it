@@ -35,14 +35,24 @@
                         Tipo de equipo
                     </h2>
 
-                    <p class="text-xs text-[var(--theme-text-muted)]">
-                        Código de inventario:
+                    <div class="flex flex-col items-start gap-2 sm:items-end">
+                        <p class="text-xs text-[var(--theme-text-muted)]">
+                            Código de inventario:
 
-                        <span
-                            x-text="codigoInventarioPreview"
-                            class="font-semibold text-[var(--theme-primary)]"
-                        ></span>
-                    </p>
+                            <span
+                                x-text="codigoInventarioPreview"
+                                class="font-semibold text-[var(--theme-primary)]"
+                            ></span>
+                        </p>
+
+                        {{-- Código de barras (solo el número del código de inventario) --}}
+                        <x-equipo.codigo-barras
+                            x-codigo="codigoInventarioPreview"
+                            vista-previa
+                            compacto
+                            class="sm:items-end"
+                        />
+                    </div>
                 </div>
 
                 <div class="max-w-lg">
@@ -96,6 +106,30 @@
                                     class="mb-1.5 block text-xs text-[var(--theme-text-muted)]"
                                 ></label>
 
+                                {{--
+                                    PROPIETARIO: busca una cuenta o permite escribir
+                                    un nombre (sin cuenta: lo resuelve un administrador
+                                    en Seguridad y roles).
+                                --}}
+                                <template x-if="field.model === 'propietario'">
+                                    <div>
+                                        <x-searchable-select
+                                            x-model="values[field.model]"
+                                            x-options="data.usuarios ?? []"
+                                            :show-clear="false"
+                                            allow-custom
+                                            placeholder="Busca un usuario o escribe un nombre"
+                                        />
+
+                                        <p
+                                            x-show="String(values[field.model] ?? '').startsWith('texto:')"
+                                            class="mt-1.5 text-xs text-[var(--theme-warning)]"
+                                        >
+                                            Sin cuenta: el equipo se guardará y un administrador deberá crear la cuenta en Seguridad y roles.
+                                        </p>
+                                    </div>
+                                </template>
+
                                 {{-- LISTAS --}}
                                 <template x-if="field.type === 'select'">
                                     <div>
@@ -139,7 +173,7 @@
 
                                 {{-- TEXTO, NÚMERO Y FECHA --}}
                                 <template
-                                    x-if="!['select', 'boolean', 'textarea'].includes(field.type)"
+                                    x-if="!['select', 'boolean', 'textarea'].includes(field.type) && field.model !== 'propietario'"
                                 >
                                     <input
                                         :id="'equipment-' + field.key"

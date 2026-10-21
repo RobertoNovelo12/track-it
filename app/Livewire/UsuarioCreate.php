@@ -48,6 +48,45 @@ class UsuarioCreate extends Component
     public string $password = '';
     public string $passwordConfirmation = '';
 
+    /*
+     * Cuenta para un colaborador sin cuenta (Seguridad y roles ›
+     * Colaboradores sin cuenta): al guardar se le vinculan sus equipos.
+     */
+    #[\Livewire\Attributes\Locked]
+    public string $colaboradorNombre = '';
+
+    #[\Livewire\Attributes\Locked]
+    public string $colaboradorClave = '';
+
+    public function mount(): void
+    {
+        $nombre = trim((string) preg_replace('/\s+/u', ' ', (string) request()->query('colaborador', '')));
+
+        if ($nombre === '' || mb_strlen($nombre) > 255) {
+            return;
+        }
+
+        $this->colaboradorNombre = $nombre;
+        $this->colaboradorClave = app(\App\Services\ColaboradoresService::class)->clave($nombre);
+
+        /*
+         * Nombre escrito → nombres y apellidos: las dos últimas palabras
+         * se toman como apellidos («Juan Carlos Pérez López»). El
+         * administrador puede corregirlo antes de guardar.
+         */
+        $partes = explode(' ', $nombre);
+
+        if (count($partes) >= 3) {
+            $this->apellidoMaterno = array_pop($partes);
+            $this->apellidoPaterno = array_pop($partes);
+        } elseif (count($partes) === 2) {
+            $this->apellidoPaterno = array_pop($partes);
+        }
+
+        $this->nombres = implode(' ', $partes);
+        $this->numeroColaborador = mb_substr(trim((string) request()->query('numero', '')), 0, 50);
+    }
+
     public function updatedIdUnidad(): void
     {
         $this->idDepartamento = null;
@@ -279,7 +318,21 @@ class UsuarioCreate extends Component
             $notificaciones->administradoresDeUsuarios()
         );
 
-        session()->flash('usuarioCreado', 'La cuenta de ' . $usuario->nombres . ' se creó correctamente.');
+        // Selector de colaboradores: incluir la cuenta nueva.
+        $colaboradores = app(\App\Services\ColaboradoresService::class);
+        $colaboradores->olvidarOpciones();
+
+        $vinculadas = $this->colaboradorClave !== ''
+            ? $colaboradores->vincular($this->colaboradorClave, (int) $usuario->id_usuario)
+            : 0;
+
+        session()->flash(
+            'usuarioCreado',
+            'La cuenta de ' . $usuario->nombres . ' se creó correctamente.'
+                . ($vinculadas > 0
+                    ? ' Se le vincularon ' . $vinculadas . ($vinculadas === 1 ? ' asignación.' : ' asignaciones.')
+                    : '')
+        );
 
         return $this->redirectRoute('usuarios.index', navigate: true);
     }

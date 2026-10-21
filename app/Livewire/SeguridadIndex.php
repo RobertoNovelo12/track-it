@@ -1283,6 +1283,8 @@ class SeguridadIndex extends Component
             ]);
         }
 
+        $colaboradores = app(\App\Services\ColaboradoresService::class);
+
         return view(
             'livewire.seguridad-index',
             [
@@ -1298,7 +1300,62 @@ class SeguridadIndex extends Component
                 'auditoria' => $auditoria,
                 'resumenSemanal' => $resumenSemanal,
                 'alertas' => $alertas,
+
+                // Equipos asignados a colaboradores sin cuenta.
+                'colaboradoresSinCuenta' => $colaboradores->pendientes(),
+                'opcionesCuentas' => $colaboradores->opcionesUsuarios(),
             ]
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Colaboradores sin cuenta: vincular con una cuenta existente
+    |--------------------------------------------------------------------------
+    |
+    | Para cuando el colaborador ya tiene cuenta con otro nombre (p. ej.
+    | «Beto Novelo» → Roberto Novelo Poot). Sus asignaciones pasan a la
+    | cuenta y toman su nombre y número.
+    |
+    */
+
+    public function vincularColaborador(string $clave, mixed $idUsuario): void
+    {
+        \Illuminate\Support\Facades\Gate::authorize('administrar');
+
+        $idUsuario = is_numeric($idUsuario) ? (int) $idUsuario : 0;
+
+        if ($idUsuario <= 0) {
+            $this->dispatch('toast', type: 'warning', message: 'Elige la cuenta con la que se vinculará el colaborador.');
+
+            return;
+        }
+
+        $nombreCuenta = DB::table('usuarios')
+            ->where('id_usuario', $idUsuario)
+            ->selectRaw("TRIM(CONCAT_WS(' ', nombres, apellido_paterno, apellido_materno)) as nombre")
+            ->value('nombre');
+
+        $vinculadas = app(\App\Services\ColaboradoresService::class)->vincular($clave, $idUsuario);
+
+        if ($vinculadas === 0) {
+            $this->dispatch('toast', type: 'warning', message: 'No había asignaciones pendientes para ese colaborador.');
+
+            return;
+        }
+
+        DB::table('bitacora_auditoria')->insert([
+            'id_usuario' => auth()->id(),
+            'accion' => 'COLABORADOR_VINCULADO',
+            'modulo' => 'SEGURIDAD',
+            'descripcion' => 'Se vincularon ' . $vinculadas . ' asignación(es) del colaborador «' . $clave . '» con la cuenta de ' . $nombreCuenta . '.',
+            'fecha_hora' => now(),
+        ]);
+
+        $this->dispatch(
+            'toast',
+            type: 'success',
+            message: 'Se vincularon ' . $vinculadas . ($vinculadas === 1 ? ' asignación' : ' asignaciones') . ' con la cuenta de ' . $nombreCuenta . '.'
         );
     }
 

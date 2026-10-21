@@ -2306,10 +2306,12 @@
                         return;
                     }
 
+                    // El buscador ahora está en la barra superior.
+                    if (window.focusTopSearch) {
+                        return;
+                    }
 
                     event.preventDefault();
-
-
                     openSidebarSearch();
                 }
             );

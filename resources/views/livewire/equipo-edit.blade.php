@@ -352,14 +352,23 @@
                         Tipo de equipo
                     </h2>
 
-                    <p class="text-xs text-[var(--theme-text-muted)]">
-                        Código de inventario:
+                    <div class="flex flex-col items-start gap-2 sm:items-end">
+                        <p class="text-xs text-[var(--theme-text-muted)]">
+                            Código de inventario:
 
-                        <span
-                            x-text="codigoInventario"
-                            class="font-semibold text-[var(--theme-primary)]"
-                        ></span>
-                    </p>
+                            <span
+                                x-text="codigoInventario"
+                                class="font-semibold text-[var(--theme-primary)]"
+                            ></span>
+                        </p>
+
+                        {{-- Código de barras (solo el número del código de inventario) --}}
+                        <x-equipo.codigo-barras
+                            :codigo="$codigoInventario"
+                            compacto
+                            class="sm:items-end"
+                        />
+                    </div>
                 </div>
 
                 <div class="max-w-lg">
