@@ -44,7 +44,11 @@
             this.mensaje = '';
 
             try {
-                await window.trackitEscaner.iniciar(this.$refs.video, (codigo) => this.leido(codigo));
+                // Por id y no con $refs: reanudar() también se llama desde botones
+                // dentro de <template x-if>, donde $refs.video llega undefined.
+                const video = document.getElementById('trackitEscanerVideo');
+
+                await window.trackitEscaner.iniciar(video, (codigo) => this.leido(codigo));
             } catch (error) {
                 console.error('[Track-IT] No se pudo abrir la cámara.', error);
 
@@ -204,7 +208,7 @@
 
         {{-- Cámara --}}
         <div class="relative min-h-0 flex-1 overflow-hidden">
-            <video x-ref="video" class="absolute inset-0 h-full w-full object-cover" playsinline muted></video>
+            <video id="trackitEscanerVideo" x-ref="video" class="absolute inset-0 h-full w-full object-cover" playsinline muted></video>
 
             {{-- Guía de encuadre --}}
             <div

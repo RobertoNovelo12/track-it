@@ -152,6 +152,10 @@ let inicioEnCurso = null;
  * video (AbortError).
  */
 export async function iniciarEscaner(video, alLeer) {
+    if (! (video instanceof HTMLVideoElement)) {
+        throw new Error('No se encontró el elemento de video del escáner.');
+    }
+
     if (inicioEnCurso) {
         try {
             await inicioEnCurso;
