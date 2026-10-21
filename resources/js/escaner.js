@@ -143,7 +143,36 @@ async function iniciarZxing(video) {
     await enfoqueContinuo(video.srcObject);
 }
 
+let inicioEnCurso = null;
+
+/*
+ * Una sola apertura a la vez: si se pide de nuevo mientras la cámara se
+ * está abriendo (p. ej. dos toques en «Volver a intentar»), se espera a
+ * que termine la anterior. Abrirla dos veces en paralelo interrumpe el
+ * video (AbortError).
+ */
 export async function iniciarEscaner(video, alLeer) {
+    if (inicioEnCurso) {
+        try {
+            await inicioEnCurso;
+        } catch (error) {
+            // La apertura anterior falló: se intenta con esta.
+        }
+    }
+
+    inicioEnCurso = iniciarInterno(video, alLeer);
+
+    try {
+        await inicioEnCurso;
+    } finally {
+        inicioEnCurso = null;
+    }
+}
+
+// Errores de permisos o de hardware: no tiene caso probar otro lector.
+const ERRORES_DEFINITIVOS = ['NotAllowedError', 'NotFoundError', 'SecurityError', 'OverconstrainedError'];
+
+async function iniciarInterno(video, alLeer) {
     alLeerActual = alLeer;
     pausado = false;
 
@@ -158,9 +187,31 @@ export async function iniciarEscaner(video, alLeer) {
     pausado = false;
     videoActual = video;
 
-    const encender = async () => (await lectorNativoDisponible())
-        ? iniciarNativo(video)
-        : iniciarZxing(video);
+    /*
+     * Lector nativo primero; si falla al iniciar (en algunos Android
+     * existe pero aún no está listo), se usa @zxing automáticamente.
+     */
+    const encender = async () => {
+        if (await lectorNativoDisponible()) {
+            try {
+                await iniciarNativo(video);
+
+                return;
+            } catch (error) {
+                if (ERRORES_DEFINITIVOS.includes(error?.name)) {
+                    throw error;
+                }
+
+                console.warn('[Track-IT] El lector nativo no inició; se usa @zxing.', error);
+
+                await detenerEscaner();
+                alLeerActual = alLeer;
+                videoActual = video;
+            }
+        }
+
+        await iniciarZxing(video);
+    };
 
     try {
         await encender();

@@ -46,6 +46,8 @@
             try {
                 await window.trackitEscaner.iniciar(this.$refs.video, (codigo) => this.leido(codigo));
             } catch (error) {
+                console.error('[Track-IT] No se pudo abrir la cámara.', error);
+
                 const nombre = error?.name ?? '';
 
                 this.mostrarError(
@@ -55,7 +57,7 @@
                             ? 'No se encontró una cámara en este dispositivo.'
                             : nombre === 'NotReadableError'
                                 ? 'La cámara está ocupada por otra aplicación. Ciérrala e inténtalo de nuevo.'
-                                : 'No se pudo abrir la cámara (' + (nombre || error?.message || 'error desconocido') + '). Inténtalo de nuevo.'
+                                : 'No se pudo abrir la cámara (' + [nombre, error?.message].filter(Boolean).join(': ') + '). Inténtalo de nuevo.'
                 );
             }
         },
