@@ -81,9 +81,9 @@ class RegisteredUserController extends Controller
             'departamentos' => $departamentos,
             'roles' => $roles,
             'campos' => $organizacion->camposRegistro(),
-            'dominios' => $organizacion->restringeDominio()
-                ? $organizacion->dominios()
-                : [],
+            // El registro público SIEMPRE utiliza la lista del catálogo.
+            // No depende de la casilla opcional usada por otras pantallas.
+            'dominios' => $organizacion->dominios(),
             'etiquetas' => $plantilla->etiquetas(),
         ]);
     }
@@ -124,12 +124,14 @@ class RegisteredUserController extends Controller
                 'required',
                 'string',
                 'max:255',
+                'regex:/^[\p{L}\p{M}]+(?: [\p{L}\p{M}]+)*$/u',
             ],
 
             'apellido_paterno' => [
                 'required',
                 'string',
                 'max:255',
+                'regex:/^[\p{L}\p{M}]+(?: [\p{L}\p{M}]+)*$/u',
             ],
 
             'username' => [
@@ -142,16 +144,31 @@ class RegisteredUserController extends Controller
             'correo' => [
                 'required',
                 'string',
-                'email',
+                'email:rfc',
                 'max:255',
+                // Permite puntos, guiones, guiones bajos y + en el usuario;
+                // rechaza emojis, espacios y otros símbolos no permitidos.
+                'regex:/^[A-Za-z0-9]+(?:[._%+\-][A-Za-z0-9]+)*@[A-Za-z0-9](?:[A-Za-z0-9.\-]*[A-Za-z0-9])?\.[A-Za-z]{2,63}$/',
                 'unique:usuarios,correo',
                 function (string $attribute, mixed $value, Closure $fail) use ($organizacion) {
-                    if (! $organizacion->correoPermitido((string) $value)) {
-                        $dominios = collect($organizacion->dominios())
-                            ->map(fn ($dominio) => '@'.$dominio)
+                    // Los dominios se leen del catálogo, incluidos los futuros.
+                    // Nunca permitimos cualquier correo si la lista está vacía.
+                    $permitidos = $organizacion->dominios();
+
+                    if ($permitidos === []) {
+                        $fail('No hay dominios corporativos configurados. Contacta al administrador.');
+                        return;
+                    }
+
+                    $partes = explode('@', trim((string) $value));
+                    $dominio = count($partes) === 2 ? mb_strtolower($partes[1]) : '';
+
+                    if (! in_array($dominio, $permitidos, true)) {
+                        $lista = collect($permitidos)
+                            ->map(fn ($item) => '@'.$item)
                             ->implode(', ');
 
-                        $fail('Utiliza tu correo corporativo ('.$dominios.').');
+                        $fail('Utiliza un correo corporativo autorizado: '.$lista.'.');
                     }
                 },
             ],
@@ -195,12 +212,17 @@ class RegisteredUserController extends Controller
                 'required',
                 'string',
                 'min:8',
+                // Mayúscula, número, símbolo especial y sin espacios.
+                'regex:/^(?=.*\p{Lu})(?=.*[0-9])(?=.*[^\p{L}\p{N}\s])\S{8,}$/u',
                 'confirmed',
             ],
         ];
 
         if ($organizacion->campoVisible('apellido_materno')) {
-            $rules['apellido_materno'] = [$regla('apellido_materno'), 'string', 'max:255'];
+            $rules['apellido_materno'] = [
+                $regla('apellido_materno'), 'string', 'max:255',
+                'regex:/^[\p{L}\p{M}]+(?: [\p{L}\p{M}]+)*$/u',
+            ];
         }
 
         if ($organizacion->campoVisible('telefono')) {
@@ -212,12 +234,16 @@ class RegisteredUserController extends Controller
                 $regla('numero_colaborador'),
                 'string',
                 'max:255',
+                'regex:/^[0-9]+$/',
                 'unique:usuarios,numero_colaborador',
             ];
         }
 
         if ($organizacion->campoVisible('puesto')) {
-            $rules['puesto'] = [$regla('puesto'), 'string', 'max:255'];
+            $rules['puesto'] = [
+                $regla('puesto'), 'string', 'max:255',
+                'regex:/^[\p{L}\p{M}]+(?: [\p{L}\p{M}]+)*$/u',
+            ];
         }
 
         if ($organizacion->campoVisible('id_rol')) {
@@ -235,6 +261,16 @@ class RegisteredUserController extends Controller
             'id_sede.required' => 'Selecciona tu sede.',
             'id_departamento.required' => 'Selecciona tu departamento.',
             'telefono.regex' => 'Escribe un teléfono válido.',
+            'nombres.regex' => 'El nombre solo puede contener letras y espacios entre palabras (se admiten acentos y ñ).',
+            'apellido_paterno.regex' => 'El apellido paterno solo puede contener letras y espacios entre palabras.',
+            'apellido_materno.regex' => 'El apellido materno solo puede contener letras y espacios entre palabras.',
+            'puesto.regex' => 'El puesto solo puede contener letras y espacios entre palabras.',
+            'numero_colaborador.regex' => 'El número de colaborador debe contener únicamente dígitos (0-9).',
+            'correo.email' => 'Introduce una dirección de correo válida.',
+            'correo.regex' => 'El correo tiene caracteres no permitidos. Puedes usar letras, números, puntos, guiones, guion bajo y +.',
+            'password.min' => 'La contraseña debe tener al menos 8 caracteres.',
+            'password.regex' => 'La contraseña debe tener al menos 8 caracteres, una mayúscula, un número y un carácter especial, sin espacios.',
+            'password.confirmed' => 'La confirmación de contraseña no coincide.',
         ]);
 
 
