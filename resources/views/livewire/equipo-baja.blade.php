@@ -287,7 +287,7 @@
                     href="{{ route('equipos.index') }}"
                     class="transition-colors hover:text-[var(--theme-primary)]"
                 >
-                    Equipos Tecnológicos
+                    Inventario
                 </a>
 
                 <span class="mx-1">›</span>

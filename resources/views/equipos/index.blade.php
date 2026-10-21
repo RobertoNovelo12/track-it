@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Equipos Tecnológicos')
+@section('title', 'Inventario')
 
 @section('content')
 
@@ -20,7 +20,7 @@
                     text-[var(--theme-text-strong)]
                 "
             >
-                Equipos tecnológicos
+                Inventario
             </h1>
 
             <p
@@ -30,7 +30,7 @@
                     mt-1
                 "
             >
-                Equipos Tecnológicos
+                Inventario
             </p>
 
         </div>
@@ -192,11 +192,20 @@
             {{-- ====================================================
                 AÑADIR
             ==================================================== --}}
+            {{-- Si hay un tipo filtrado (?tipo_activo=), el alta abre con ese tipo (?tipo=). --}}
             <a
                 href="{{ Route::has('equipos.create')
                     ? route('equipos.create')
                     : '#'
                 }}"
+                x-data
+                x-on:click="
+                    const tipo = new URLSearchParams(window.location.search).get('tipo_activo');
+                    const destino = new URL($el.getAttribute('href'), window.location.origin);
+                    destino.searchParams.delete('tipo');
+                    if (tipo) destino.searchParams.set('tipo', tipo);
+                    $el.href = destino.toString();
+                "
                 class="
                     flex
                     flex-1

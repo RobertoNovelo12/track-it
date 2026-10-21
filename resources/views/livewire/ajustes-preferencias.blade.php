@@ -213,7 +213,7 @@
                 <div class="min-w-0">
                     <p class="text-sm font-medium text-[var(--theme-text)]">{{ $etiquetas['unidad_singular'] }} predeterminado</p>
                     <p class="mt-0.5 text-xs text-[var(--theme-text-muted)]">
-                        Equipos tecnológicos se abrirá filtrado por este {{ $unidadSingular }}. Deja «Todos» para ver todo el inventario.
+                        Inventario se abrirá filtrado por este {{ $unidadSingular }}. Deja «Todos» para ver todos los equipos.
                     </p>
                 </div>
 

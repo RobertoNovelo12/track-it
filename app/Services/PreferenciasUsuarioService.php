@@ -39,7 +39,7 @@ class PreferenciasUsuarioService
      */
     public const PANTALLAS_INICIO = [
         'dashboard' => ['label' => 'Vista general', 'route' => 'dashboard', 'permiso' => null],
-        'equipos' => ['label' => 'Equipos tecnológicos', 'route' => 'equipos.index', 'permiso' => null],
+        'equipos' => ['label' => 'Inventario', 'route' => 'equipos.index', 'permiso' => null],
         'asignaciones' => ['label' => 'Asignaciones y movimientos', 'route' => 'asignaciones.index', 'permiso' => 'gestionar'],
     ];
 

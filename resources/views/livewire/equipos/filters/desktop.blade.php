@@ -21,8 +21,9 @@
         abierto: true,
 
         init() {
-            // Misma fuente que el esqueleto (script del <head> en layouts/app).
-            this.abierto = ! document.documentElement.classList.contains('filtros-equipos-plegados');
+            // La preferencia guardada manda (no el estado del DOM restaurado).
+            this.abierto = ! (window.trackitFiltrosPlegados?.() ?? false);
+            document.documentElement.classList.toggle('filtros-equipos-plegados', ! this.abierto);
         },
 
         alternar() {

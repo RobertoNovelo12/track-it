@@ -267,17 +267,42 @@ document.addEventListener(
         La clase la mantiene al día livewire/equipos/filters/desktop.
     --}}
     <script>
-        try {
-            if (localStorage.getItem('trackit_filtros_equipos') === 'plegado') {
-                document.documentElement.classList.add('filtros-equipos-plegados');
+        /*
+         * La preferencia vive en localStorage. Se vuelve a aplicar en cada
+         * navegación (wire:navigate y botón «atrás»), porque Livewire
+         * reemplaza los atributos de <html> al cambiar de página.
+         */
+        window.trackitFiltrosPlegados = function () {
+            try {
+                return localStorage.getItem('trackit_filtros_equipos') === 'plegado';
+            } catch (error) {
+                return false;
             }
-        } catch (error) {
-            //
+        };
+
+        document.documentElement.classList.toggle('filtros-equipos-plegados', window.trackitFiltrosPlegados());
+
+        if (! window.__trackitFiltrosNavegacion) {
+            window.__trackitFiltrosNavegacion = true;
+
+            ['livewire:navigating', 'livewire:navigated'].forEach(function (evento) {
+                document.addEventListener(evento, function () {
+                    document.documentElement.classList.toggle('filtros-equipos-plegados', window.trackitFiltrosPlegados());
+                });
+            });
         }
     </script>
 
     <style>
         html.filtros-equipos-plegados [data-filtros-equipos-cuerpo] {
+            display: none;
+        }
+
+        /* Sin la «X» nativa del buscador (se usa un botón propio). */
+        .top-search-input::-webkit-search-cancel-button,
+        .top-search-input::-webkit-search-decoration {
+            -webkit-appearance: none;
+            appearance: none;
             display: none;
         }
 
@@ -469,8 +494,23 @@ document.addEventListener(
                         autocomplete="off"
                         enterkeyhint="search"
                         aria-label="Buscar equipos"
-                        class="h-full w-full min-w-0 border-0 bg-transparent pl-9 pr-11 text-sm text-[var(--theme-text)] placeholder:text-[var(--theme-text-muted)] focus:outline-none focus:ring-0 md:pr-16"
+                        class="top-search-input h-full w-full min-w-0 border-0 bg-transparent pl-9 pr-[4.5rem] text-sm text-[var(--theme-text)] placeholder:text-[var(--theme-text-muted)] focus:outline-none focus:ring-0 md:pr-[6.25rem]"
                     >
+
+                    {{-- Limpiar (reemplaza la «X» nativa del navegador) --}}
+                    <button
+                        type="button"
+                        x-show="String(query ?? '') !== ''"
+                        x-cloak
+                        x-on:click="query = ''; $refs.campo?.focus()"
+                        class="absolute right-9 flex h-7 w-7 items-center justify-center rounded-md text-[var(--theme-text-muted)] transition-colors hover:bg-[var(--theme-surface-soft)] hover:text-[var(--theme-text-strong)] md:right-[3.75rem]"
+                        aria-label="Limpiar búsqueda"
+                        title="Limpiar"
+                    >
+                        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true">
+                            <path d="M6 6l12 12M18 6L6 18"/>
+                        </svg>
+                    </button>
 
                     {{-- Atajo (escritorio) --}}
                     <span class="pointer-events-none absolute right-2.5 hidden h-6 items-center rounded border border-[var(--theme-border)] px-1.5 text-[10px] font-medium text-[var(--theme-text-muted)] md:inline-flex">

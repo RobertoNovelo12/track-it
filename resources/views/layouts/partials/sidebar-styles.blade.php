@@ -685,6 +685,12 @@
         }
 
 
+        /* Submenús (tipos de equipo): no caben en el menú colapsado. */
+        html.sidebar-collapsed .sidebar-submenu {
+            display: none !important;
+        }
+
+
         /*
         |--------------------------------------------------------------------------
         | BUSCADOR

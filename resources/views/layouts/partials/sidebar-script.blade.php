@@ -1559,6 +1559,11 @@
                     .filter(
                         link => {
 
+                            // Los tipos del submenú no se precargan (serían muchas peticiones).
+                            if (link.closest('.sidebar-submenu')) {
+                                return false;
+                            }
+
                             const href =
                                 link.getAttribute(
                                     'href'

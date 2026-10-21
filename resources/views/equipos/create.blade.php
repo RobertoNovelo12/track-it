@@ -40,7 +40,7 @@
             "
         >
             <span>
-                Equipos Tecnológicos
+                Inventario
             </span>
 
             <span

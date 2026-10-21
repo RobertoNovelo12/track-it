@@ -345,14 +345,40 @@
                 @disabled($soloLectura)
             >
 
-            {{-- SELECCIÓN DEL TIPO --}}
+            {{-- SELECCIÓN DEL TIPO
+                Título y select quedan arriba a la izquierda; el código de
+                barras va en su propia columna y no mueve el título. --}}
             <section class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 sm:p-6">
-                <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-                    <h2 class="text-sm font-semibold text-[var(--theme-text-strong)]">
-                        Tipo de equipo
-                    </h2>
+                <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                    <div class="min-w-0 flex-1">
+                        <h2 class="mb-4 text-sm font-semibold text-[var(--theme-text-strong)]">
+                            Tipo de equipo
+                        </h2>
 
-                    <div class="flex flex-col items-start gap-2 sm:items-end">
+                        <div class="max-w-lg">
+                            <x-searchable-select
+                                x-model="idTipoEquipo"
+                                x-options="data.tiposEquipo"
+                                label="Tipo de equipo *"
+                                placeholder="Buscar tipo de equipo..."
+                            />
+
+                            <p
+                                x-show="fieldError('idTipoEquipo')"
+                                x-text="fieldError('idTipoEquipo')"
+                                class="mt-1 text-xs text-[var(--theme-danger)]"
+                            ></p>
+                        </div>
+
+                        <p
+                            x-show="!typeId"
+                            class="mt-3 text-xs text-[var(--theme-text-muted)]"
+                        >
+                            Selecciona un tipo para mostrar sus campos configurados.
+                        </p>
+                    </div>
+
+                    <div class="flex shrink-0 flex-col items-start gap-2 sm:items-end">
                         <p class="text-xs text-[var(--theme-text-muted)]">
                             Código de inventario:
 
@@ -370,28 +396,6 @@
                         />
                     </div>
                 </div>
-
-                <div class="max-w-lg">
-                    <x-searchable-select
-                        x-model="idTipoEquipo"
-                        x-options="data.tiposEquipo"
-                        label="Tipo de equipo *"
-                        placeholder="Buscar tipo de equipo..."
-                    />
-
-                    <p
-                        x-show="fieldError('idTipoEquipo')"
-                        x-text="fieldError('idTipoEquipo')"
-                        class="mt-1 text-xs text-[var(--theme-danger)]"
-                    ></p>
-                </div>
-
-                <p
-                    x-show="!typeId"
-                    class="mt-3 text-xs text-[var(--theme-text-muted)]"
-                >
-                    Selecciona un tipo para mostrar sus campos configurados.
-                </p>
             </section>
 
             {{-- SECCIONES Y CAMPOS CONFIGURADOS --}}

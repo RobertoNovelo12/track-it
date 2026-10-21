@@ -9,6 +9,47 @@
     |
     */
 
+    /*
+     * Submenú de Equipos Tecnológicos: un enlace por tipo de equipo
+     * que abre el listado ya filtrado (?tipo_activo=ID).
+     * Se cachea en el módulo «catalogos» (solo arrays).
+     */
+    $tiposEquipoMenu = [];
+
+    if (Route::has('equipos.index')) {
+        try {
+            $tiposEquipoMenu = app(\App\Services\SystemCacheService::class)->rememberSimple(
+                'catalogos',
+                'sidebar.tipos_equipo',
+                fn (): array => \Illuminate\Support\Facades\DB::table('tipos_equipo')
+                    ->where('activo', true)
+                    ->orderBy('nombre')
+                    ->get(['id_tipo_equipo', 'nombre'])
+                    ->map(fn ($tipo): array => [
+                        'id' => (int) $tipo->id_tipo_equipo,
+                        'nombre' => (string) $tipo->nombre,
+                    ])
+                    ->all()
+            );
+        } catch (\Throwable $e) {
+            report($e);
+            $tiposEquipoMenu = [];
+        }
+    }
+
+    $tipoActivoMenu = request()->routeIs('equipos.index')
+        ? (string) request()->query('tipo_activo', '')
+        : '';
+
+    $submenuEquipos = array_map(
+        fn (array $tipo): array => [
+            'label' => $tipo['nombre'],
+            'url' => route('equipos.index', ['tipo_activo' => $tipo['id']]),
+            'active' => $tipoActivoMenu === (string) $tipo['id'],
+        ],
+        $tiposEquipoMenu
+    );
+
     $sidebarItems = [
         [
             'label' => 'Vista General',
@@ -18,12 +59,14 @@
         ],
 
         [
-            'label' => 'Equipos Tecnológicos',
+            'label' => 'Inventario',
             'url' => Route::has('equipos.index')
                 ? route('equipos.index')
                 : '#',
             'active' => request()->routeIs('equipos.*'),
             'icon' => 'equipos',
+            'submenu' => $submenuEquipos,
+            'submenuClave' => 'equipos',
         ],
 
         [
@@ -377,6 +420,33 @@
 
         @foreach ($sidebarItems as $item)
 
+            @php
+                $tieneSubmenu = ! empty($item['submenu']);
+                $submenuActivo = $tieneSubmenu
+                    && collect($item['submenu'])->contains('active', true);
+            @endphp
+
+            {{-- Elemento con submenú: el enlace lleva al listado sin filtros
+                y la flecha de la derecha solo despliega las opciones. --}}
+            <div
+                @if ($tieneSubmenu)
+                    x-data="{
+                        abierto: {{ $submenuActivo ? 'true' : 'false' }},
+                        clave: 'trackit_submenu_{{ $item['submenuClave'] }}',
+                        init() {
+                            if (! {{ $submenuActivo ? 'true' : 'false' }}) {
+                                try { this.abierto = localStorage.getItem(this.clave) === '1'; } catch (e) {}
+                            }
+                        },
+                        alternar() {
+                            this.abierto = ! this.abierto;
+                            try { localStorage.setItem(this.clave, this.abierto ? '1' : '0'); } catch (e) {}
+                        },
+                    }"
+                @endif
+                class="relative"
+            >
+
             <a
                 href="{{ $item['url'] }}"
 
@@ -462,18 +532,10 @@
                             stroke-linecap="round"
                             stroke-linejoin="round"
                         >
-                            <rect
-                                x="3"
-                                y="4"
-
-                                width="18"
-                                height="13"
-
-                                rx="1.5"
-                            />
-
-                            <path d="M8 21h8"/>
-                            <path d="M12 17v4"/>
+                            {{-- Caja de inventario --}}
+                            <path d="M21 8l-9-5-9 5 9 5 9-5z"/>
+                            <path d="M3 8v8l9 5 9-5V8"/>
+                            <path d="M12 13v8"/>
                         </svg>
 
                         @break
@@ -685,7 +747,100 @@
                     {{ $item['label'] }}
                 </span>
 
+                {{-- Espacio para la flecha del submenú --}}
+                @if ($tieneSubmenu)
+                    <span class="sidebar-expanded-only w-6 shrink-0" aria-hidden="true"></span>
+                @endif
+
             </a>
+
+            @if ($tieneSubmenu)
+                <button
+                    type="button"
+                    x-on:click.stop.prevent="alternar()"
+                    x-bind:aria-expanded="abierto ? 'true' : 'false'"
+                    aria-label="Mostrar tipos de equipo"
+                    title="Tipos de equipo"
+                    class="
+                        sidebar-expanded-only
+                        sidebar-submenu-toggle
+
+                        absolute
+                        right-1.5
+                        top-[5px]
+
+                        w-8
+                        h-8
+
+                        flex
+                        items-center
+                        justify-center
+
+                        rounded-md
+
+                        text-[var(--theme-text-muted)]
+
+                        hover:bg-[var(--theme-surface)]
+                        hover:text-[var(--theme-text-strong)]
+
+                        transition-colors
+                    "
+                >
+                    <svg
+                        class="w-4 h-4 transition-transform duration-200"
+                        x-bind:class="abierto ? 'rotate-180' : ''"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                    >
+                        <path d="M6 9l6 6 6-6"/>
+                    </svg>
+                </button>
+
+                <div
+                    x-show="abierto"
+                    x-collapse.duration.200ms
+                    @unless ($submenuActivo) x-cloak @endunless
+                    class="sidebar-submenu"
+                >
+                    <div class="ml-[1.4rem] mt-1 mb-1 pl-3 border-l border-[var(--theme-border)] space-y-0.5">
+                        @foreach ($item['submenu'] as $sub)
+                            <a
+                                href="{{ $sub['url'] }}"
+                                wire:navigate.hover
+                                class="
+                                    block
+
+                                    truncate
+
+                                    px-3
+                                    py-1.5
+
+                                    rounded-md
+
+                                    text-[13px]
+
+                                    transition-colors
+
+                                    {{ $sub['active']
+                                        ? 'bg-[var(--theme-surface)] font-semibold text-[var(--theme-text-strong)] shadow-[0_1px_3px_rgba(15,23,42,0.06)]'
+                                        : 'text-[var(--theme-text-muted)] hover:bg-[var(--theme-surface)] hover:text-[var(--theme-text-strong)]'
+                                    }}
+                                "
+                                title="{{ $sub['label'] }}"
+                            >
+                                {{ $sub['label'] }}
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            </div>
 
         @endforeach
 

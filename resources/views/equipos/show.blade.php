@@ -57,7 +57,7 @@
                         transition-colors
                     "
                 >
-                    Equipos Tecnológicos
+                    Inventario
                 </a>
 
                 <span
