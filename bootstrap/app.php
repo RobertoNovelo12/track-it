@@ -51,6 +51,10 @@ return Application::configure(
             $middleware->alias([
                 'active.session' =>
                     EnsureActiveSession::class,
+
+                // Obliga a cambiar la contraseña temporal (restablecida por un administrador).
+                'password.temporal' =>
+                    \App\Http\Middleware\ExigirCambioContrasena::class,
             ]);
 
             /*

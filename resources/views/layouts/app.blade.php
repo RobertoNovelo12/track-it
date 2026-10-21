@@ -428,6 +428,15 @@ document.addEventListener(
                 "
             >
 
+                    @php
+                        $encabezadoPagina = \App\Support\Encabezado::actual();
+                    @endphp
+
+                    {{-- Título y ruta de la pantalla (escritorio); en móvil van arriba del contenido --}}
+                    <div class="col-start-1 row-start-1 hidden min-w-0 max-w-[45vw] md:block">
+                        @include('layouts.partials.encabezado', ['variante' => 'barra', 'encabezado' => $encabezadoPagina])
+                    </div>
+
                     {{-- Hamburguesa móvil: abre el drawer --}}
                     <button
                         type="button"
@@ -456,12 +465,20 @@ document.addEventListener(
                 x-data="{
                     query: @js(request()->routeIs('equipos.index') ? (string) request('buscar', '') : ''),
 
+                    /*
+                     * Se registra aquí y no en x-init: Alpine ejecuta la función
+                     * que devuelve una expresión de x-init, y eso enfocaba el
+                     * buscador (y abría el teclado) en cada carga de página.
+                     */
+                    init() {
+                        window.focusTopSearch = () => this.enfocar();
+                    },
+
                     enfocar() {
                         this.$refs.campo?.focus();
                         this.$refs.campo?.select();
                     },
                 }"
-                x-init="window.focusTopSearch = () => enfocar()"
                 @keydown.window.ctrl.k.prevent="enfocar()"
                 @keydown.window.meta.k.prevent="enfocar()"
                 @submit.prevent="
@@ -1509,6 +1526,8 @@ document.addEventListener(
                     CONTENIDO ESPECÍFICO DE CADA PÁGINA
                 ======================================================== --}}
                 <main class="p-6">
+
+                    @include('layouts.partials.encabezado', ['variante' => 'movil', 'encabezado' => $encabezadoPagina ?? null])
 
                     @yield('content')
 

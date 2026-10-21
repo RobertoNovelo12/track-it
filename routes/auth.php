@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\TwoFactorChallengeController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Auth\CambioContrasenaController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use Illuminate\Support\Facades\Route;
@@ -82,6 +83,21 @@ Route::middleware('guest')->group(function () {
         [PasswordResetLinkController::class, 'store']
     )->name('password.email');
 
+    Route::get(
+        '/olvide-mi-contrasena/preguntas',
+        [PasswordResetLinkController::class, 'preguntas']
+    )->name('password.preguntas');
+
+    Route::post(
+        '/olvide-mi-contrasena/preguntas',
+        [PasswordResetLinkController::class, 'verificar']
+    )->name('password.verificar');
+
+    Route::get(
+        '/olvide-mi-contrasena/enviada',
+        [PasswordResetLinkController::class, 'solicitada']
+    )->name('password.solicitada');
+
 
     /*
     |--------------------------------------------------------------------------
@@ -127,5 +143,19 @@ Route::middleware('auth')->group(function () {
         '/logout',
         [AuthenticatedSessionController::class, 'destroy']
     )->name('logout');
+
+    /*
+     * Cambio obligatorio de la contraseña temporal
+     * (ver App\Http\Middleware\ExigirCambioContrasena).
+     */
+    Route::get(
+        '/cambiar-contrasena',
+        [CambioContrasenaController::class, 'create']
+    )->name('password.cambiar');
+
+    Route::post(
+        '/cambiar-contrasena',
+        [CambioContrasenaController::class, 'store']
+    )->name('password.cambiar.guardar');
 
 });

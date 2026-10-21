@@ -1,6 +1,16 @@
 <div wire:key="reassignment-create-ui">
 
+    {{-- ?equipo=ID (enlace desde Editar equipo): el equipo llega preseleccionado. --}}
     <div
+        x-init="
+            $nextTick(() => {
+                const equipo = new URLSearchParams(window.location.search).get('equipo') ?? '';
+
+                if (equipo !== '' && (data?.equipos ?? []).some(opcion => String(opcion.value) === equipo)) {
+                    idEquipoReasignar = equipo;
+                }
+            })
+        "
         x-data="{
             data: @js($reassignmentData),
 
@@ -654,77 +664,6 @@
                 ></p>
             </div>
         </div>
-
-
-        {{-- ============================================================
-            ENCABEZADO
-        ============================================================ --}}
-        <section class="mb-6">
-
-            <div
-                class="
-                    flex items-center flex-wrap gap-2
-                    mb-2
-                    text-xs
-                    text-[var(--theme-text-muted)]
-                "
-            >
-                <a
-                    href="{{ route('dashboard') }}"
-                    wire:navigate.hover
-                    class="
-                        hover:text-[var(--theme-primary)]
-                        transition-colors
-                    "
-                >
-                    Vista General
-                </a>
-
-                <svg
-                    class="w-3 h-3"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.8"
-                >
-                    <path d="M9 6l6 6-6 6"/>
-                </svg>
-
-                <a
-                    href="{{ route('asignaciones.index') }}"
-                    wire:navigate.hover
-                    class="
-                        hover:text-[var(--theme-primary)]
-                        transition-colors
-                    "
-                >
-                    Asignación y Movimientos
-                </a>
-
-                <svg
-                    class="w-3 h-3"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.8"
-                >
-                    <path d="M9 6l6 6-6 6"/>
-                </svg>
-
-                <span>
-                    Reasignar equipo
-                </span>
-            </div>
-
-            <h1
-                class="
-                    text-xl font-semibold leading-tight
-                    text-[var(--theme-text-strong)]
-                "
-            >
-                Reasignación de Equipo
-            </h1>
-        </section>
 
 
         <form
@@ -1550,4 +1489,4 @@
 
     </div>
 
-</div>
+</div>

@@ -1319,6 +1319,66 @@ class SeguridadIndex extends Component
     |
     */
 
+    /*
+    |--------------------------------------------------------------------------
+    | Restablecer contraseña (contraseña temporal)
+    |--------------------------------------------------------------------------
+    |
+    | Solo con una solicitud vigente: el usuario respondió sus preguntas de
+    | seguridad en «¿Olvidaste tu contraseña?». Devuelve la contraseña
+    | temporal para mostrarla UNA vez al administrador; al entrar con ella
+    | el usuario debe elegir una nueva.
+    |
+    */
+
+    public function restablecerContrasena(mixed $idUsuario): array
+    {
+        \Illuminate\Support\Facades\Gate::authorize('administrar');
+
+        $idUsuario = is_numeric($idUsuario) ? (int) $idUsuario : 0;
+        $servicio = app(\App\Services\RestablecimientoContrasenaService::class);
+
+        if ($idUsuario <= 0 || $idUsuario === (int) auth()->id()) {
+            return [
+                'ok' => false,
+                'mensaje' => 'Para cambiar tu propia contraseña usa Ajustes › Seguridad.',
+            ];
+        }
+
+        if (! $servicio->solicitudVigente($idUsuario)) {
+            return [
+                'ok' => false,
+                'mensaje' => 'El usuario no tiene una solicitud vigente. Debe responder sus preguntas de seguridad en «¿Olvidaste tu contraseña?».',
+            ];
+        }
+
+        $usuario = DB::table('usuarios')
+            ->where('id_usuario', $idUsuario)
+            ->first(['nombres', 'apellido_paterno', 'username']);
+
+        if (! $usuario) {
+            return ['ok' => false, 'mensaje' => 'No se encontró el usuario.'];
+        }
+
+        $temporal = $servicio->restablecer($idUsuario, (int) auth()->id());
+
+        DB::table('bitacora_auditoria')->insert([
+            'id_usuario' => auth()->id(),
+            'accion' => 'CONTRASENA_RESTABLECIDA',
+            'modulo' => 'SEGURIDAD',
+            'descripcion' => 'Se asignó una contraseña temporal a '
+                . trim($usuario->nombres . ' ' . $usuario->apellido_paterno)
+                . ' (' . $usuario->username . ') tras verificar sus preguntas de seguridad.',
+            'fecha_hora' => now(),
+        ]);
+
+        return [
+            'ok' => true,
+            'temporal' => $temporal,
+            'usuario' => $usuario->username,
+        ];
+    }
+
     public function vincularColaborador(string $clave, mixed $idUsuario): void
     {
         \Illuminate\Support\Facades\Gate::authorize('administrar');

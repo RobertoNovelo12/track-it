@@ -38,6 +38,8 @@ class User extends Authenticatable
         'id_area',
         'id_unidad',
         'id_departamento',
+        'fecha_nacimiento',
+        'debe_cambiar_password',
     ];
 
 
@@ -59,6 +61,10 @@ class User extends Authenticatable
             'two_factor_recovery_codes' => 'array',
 
             'two_factor_confirmed_at' => 'datetime',
+
+            'fecha_nacimiento' => 'date',
+
+            'debe_cambiar_password' => 'boolean',
         ];
     }
 

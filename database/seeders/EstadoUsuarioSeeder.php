@@ -20,7 +20,7 @@ class EstadoUsuarioSeeder extends Seeder
         $idCatalogo = DB::table('catalogos')->where('clave', 'estado_usuario')->value('id_catalogo');
 
         $valores = [
-            ['clave' => 'pendiente', 'nombre' => 'Pendiente de aprobación', 'orden' => 1],
+            ['clave' => 'pendiente', 'nombre' => 'Pendiente', 'orden' => 1],
             ['clave' => 'activo', 'nombre' => 'Activo', 'orden' => 2],
             ['clave' => 'bloqueado', 'nombre' => 'Bloqueado', 'orden' => 3],
             ['clave' => 'rechazado', 'nombre' => 'Rechazado', 'orden' => 4],

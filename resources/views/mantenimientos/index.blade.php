@@ -12,55 +12,9 @@
             gap-4
             sm:flex-row
             sm:items-center
-            sm:justify-between
+            sm:justify-end
         "
     >
-        <div>
-            <h1 class="text-2xl font-bold text-[var(--theme-text-strong)]">
-                Mantenimientos
-            </h1>
-            {{-- Breadcrumb --}}
-<div
-    class="
-        flex
-        items-center
-        flex-wrap
-        gap-2
-        mb-2
-        text-xs
-        text-[var(--theme-text-muted)]
-    "
->
-    <a
-        href="{{ route('dashboard') }}"
-        wire:navigate
-        class="
-            hover:text-[var(--theme-primary)]
-            transition-colors
-        "
-    >
-        Vista General
-    </a>
-
-    <svg
-        class="w-3 h-3"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.8"
-    >
-        <path d="M9 6l6 6-6 6"/>
-    </svg>
-
-    <span>
-        Mantenimientos
-    </span>
-</div>
-
-            <p class="mt-1 text-sm text-[var(--theme-text-muted)]">
-                Consulta, registra y administra los mantenimientos realizados a los equipos tecnológicos.
-            </p>
-        </div>
 
         <a
             href="{{ route('mantenimientos.create') }}"

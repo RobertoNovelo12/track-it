@@ -356,12 +356,18 @@
                         </h2>
 
                         <div class="max-w-lg">
+                            {{-- Bloqueado: el tipo de un equipo no se cambia al editar. --}}
                             <x-searchable-select
                                 x-model="idTipoEquipo"
                                 x-options="data.tiposEquipo"
+                                x-disabled="true"
                                 label="Tipo de equipo *"
                                 placeholder="Buscar tipo de equipo..."
                             />
+
+                            <p class="mt-1 text-xs text-[var(--theme-text-muted)]">
+                                El tipo de equipo no se puede cambiar.
+                            </p>
 
                             <p
                                 x-show="fieldError('idTipoEquipo')"
@@ -493,6 +499,23 @@
                                     x-text="fieldError(errorKey(field))"
                                     class="mt-1 text-xs text-[var(--theme-danger)]"
                                 ></p>
+
+                                {{-- Propietario: se cambia desde Asignación / Movimientos --}}
+                                <template x-if="!field.child && field.model === 'propietario'">
+                                    <p class="mt-1 text-xs text-[var(--theme-text-muted)]">
+                                        Las modificaciones de propietario se hacen en
+                                        @if ($soloLectura)
+                                            Asignación / Movimientos.
+                                        @else
+                                            <a
+                                                href="{{ $propietario !== '' ? route('asignaciones.reassign', ['equipo' => $equipoId]) : route('asignaciones.create', ['equipo' => $equipoId]) }}"
+                                                wire:navigate
+                                                class="font-medium text-[var(--theme-primary)] underline-offset-2 hover:underline"
+                                                title="{{ $propietario !== '' ? 'Reasignar este equipo' : 'Asignar este equipo' }}"
+                                            >Asignación / Movimientos</a>.
+                                        @endif
+                                    </p>
+                                </template>
                             </div>
                         </template>
                     </div>
@@ -834,6 +857,8 @@
                     label: 'Propietario / Responsable',
                     type: 'text',
                     sectionKey: 'adicional',
+                    // Siempre visible (solo lectura) aunque el tipo no lo configure.
+                    alwaysVisible: true,
                 },
 
                 id_condicion_activo: {

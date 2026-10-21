@@ -38,6 +38,7 @@
         [
             ['Correo electrónico', $usuario->correo, 'break-all'],
             ['Teléfono', $usuario->telefono ?: null, ''],
+            ['Fecha de nacimiento', $usuario->fecha_nacimiento ? \Illuminate\Support\Carbon::parse($usuario->fecha_nacimiento)->format('d/m/Y') : null, ''],
         ],
     ];
 @endphp

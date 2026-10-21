@@ -46,6 +46,7 @@ Route::get(
 Route::middleware([
     'active.session',
     'auth',
+    'password.temporal',
 ])->group(function () {
 
     /*

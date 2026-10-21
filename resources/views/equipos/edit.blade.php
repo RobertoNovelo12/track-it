@@ -13,7 +13,7 @@
         class="
             flex
             items-start
-            justify-between
+            justify-end
 
             gap-3
             sm:gap-4
@@ -23,80 +23,6 @@
         "
     >
 
-        {{-- Título y breadcrumb --}}
-        <div class="min-w-0 flex-1">
-
-            <h1
-                class="
-                    text-xl
-                    font-semibold
-                    leading-tight
-
-                    text-[var(--theme-text-strong)]
-                "
-            >
-                Editar equipo
-            </h1>
-
-
-            <p
-                class="
-                    text-xs
-                    text-[var(--theme-text-muted)]
-
-                    mt-1
-
-                    leading-relaxed
-                "
-            >
-
-            <a
-                href="{{ route('equipos.index') }}"
-                wire:navigate.hover
-                class="
-                    hover:text-[var(--theme-primary)]
-                    transition-colors
-                "
-            >
-                Inventario
-            </a>
-
-                <span
-                    class="
-                        mx-1
-                        text-[var(--theme-text-muted)]
-                    "
-                >
-                    ›
-                </span>
-
-
-                <a
-                    href="{{ route('equipos.show', $equipoId) }}"
-                    class="
-                        hover:text-[var(--theme-primary)]
-                        transition-colors
-                    "
-                >
-                    Detalle del equipo
-                </a>
-
-                <span
-                    class="
-                        mx-1
-                        text-[var(--theme-text-muted)]
-                    "
-                >
-                    ›
-                </span>
-
-                <span class="text-[var(--theme-text)]">
-                    Editar
-                </span>
-
-            </p>
-
-        </div>
 
 
         {{-- Volver --}}

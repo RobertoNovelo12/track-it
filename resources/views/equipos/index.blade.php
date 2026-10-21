@@ -9,31 +9,8 @@
     {{-- Encabezado --}}
     {{-- En pantallas angostas los botones bajan debajo del título
          y se reparten el ancho, en lugar de salirse de la pantalla. --}}
-    <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-end">
 
-        <div>
-
-            <h1
-                class="
-                    text-xl
-                    font-semibold
-                    text-[var(--theme-text-strong)]
-                "
-            >
-                Inventario
-            </h1>
-
-            <p
-                class="
-                    text-xs
-                    text-[var(--theme-text-muted)]
-                    mt-1
-                "
-            >
-                Inventario
-            </p>
-
-        </div>
 
 
         <div class="flex w-full items-center gap-2 sm:w-auto sm:gap-3">

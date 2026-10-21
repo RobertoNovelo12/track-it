@@ -15,38 +15,10 @@
 
             flex
             items-start
-            justify-between
+            justify-end
             gap-4
         ">
 
-            <div>
-
-                <h1
-                    class="
-                    text-xl
-                    font-semibold
-                    text-[var(--theme-text-strong)]
-                ">
-                    Administración y seguridad
-                </h1>
-
-
-                <p
-                    class="
-                    mt-1
-                    text-xs
-                    text-[var(--theme-text-muted)]
-                ">
-                    Inicio
-
-                    <span class="mx-1">
-                        &gt;
-                    </span>
-
-                    Seguridad y Roles
-                </p>
-
-            </div>
 
 
             {{-- Nuevo usuario --}}

@@ -64,6 +64,9 @@ class AjustesCuenta extends Component
 
     public string $editTelefono = '';
 
+    // Pregunta de seguridad para «¿Olvidaste tu contraseña?».
+    public string $editFechaNacimiento = '';
+
 
     /*
     |--------------------------------------------------------------------------
@@ -180,6 +183,9 @@ class AjustesCuenta extends Component
 
         $this->editTelefono =
             $usuario->telefono ?? '';
+
+        $this->editFechaNacimiento =
+            $usuario->fecha_nacimiento?->toDateString() ?? '';
 
 
         $this->twoFactorEnabled =
@@ -745,7 +751,23 @@ class AjustesCuenta extends Component
                 'string',
                 'max:50',
             ],
+
+            'editFechaNacimiento' => [
+                'nullable',
+                'date',
+                'before:today',
+                'after:1900-01-01',
+            ],
         ], [
+            'editFechaNacimiento.date' =>
+                'Escribe una fecha de nacimiento válida.',
+
+            'editFechaNacimiento.before' =>
+                'La fecha de nacimiento debe ser anterior a hoy.',
+
+            'editFechaNacimiento.after' =>
+                'Escribe una fecha de nacimiento válida.',
+
             'editNombres.required' =>
                 'El nombre es obligatorio.',
 
@@ -791,6 +813,13 @@ class AjustesCuenta extends Component
                             ? trim(
                                 $validated['editTelefono']
                             )
+                            : null,
+
+                    'fecha_nacimiento' =>
+                        filled(
+                            $validated['editFechaNacimiento']
+                        )
+                            ? $validated['editFechaNacimiento']
                             : null,
                 ]);
 
@@ -2265,6 +2294,7 @@ class AjustesCuenta extends Component
                 'u.username',
                 'u.correo',
                 'u.telefono',
+                'u.fecha_nacimiento',
                 'u.numero_colaborador',
                 'u.puesto',
                 'u.fecha_registro',

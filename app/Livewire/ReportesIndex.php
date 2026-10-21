@@ -95,7 +95,9 @@ class ReportesIndex extends Component
     public string $sugerenciasTermino = '';
     public string $sugerenciasTipo = '';
 
-    /** Consulta ligera para el selector. Solo el primer lote se cachea. */
+    /** Consulta ligera para el selector. Solo el primer lote se cachea.
+     *  Renderless: solo devuelve datos; no vuelve a pintar la pantalla. */
+    #[\Livewire\Attributes\Renderless]
     public function obtenerSugerenciasRapidas(string $tipo, string $texto = '', int $pagina = 1): array
     {
         $tipo = app(ReporteDataService::class)->normalizarTipo($tipo);

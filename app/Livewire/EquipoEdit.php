@@ -434,6 +434,9 @@ class EquipoEdit extends Component
 
                     )
 
+                    // Solo la asignación vigente (sin fecha de fin).
+                    ->whereNull('asignacion.fecha_fin')
+
                     ->orderByDesc(
 
                         'asignacion.fecha_asignacion'
@@ -2335,6 +2338,11 @@ class EquipoEdit extends Component
         abort_if($this->equipoDadoDeBaja(), 403, 'No se puede editar un equipo dado de baja.');
 
         $payload = $this->normalizePayload($payload);
+
+        // El tipo de equipo no se cambia al editar: siempre el registrado.
+        $payload['idTipoEquipo'] = (string) DB::table('equipos')
+            ->where('id_equipo', $this->equipoId)
+            ->value('id_tipo_equipo');
 
         $validated = Validator::make(
 

@@ -1,62 +1,23 @@
 {{-- ============================================================
     ENCABEZADO DE FORMULARIO (agregar / editar)
     ------------------------------------------------------------
-    Mismo diseño que "Nueva Alta de equipo":
+    El título y la ruta ahora se muestran en la barra superior
+    (layouts/partials/encabezado + App\Support\Encabezado).
+    Aquí solo quedan los botones opcionales de la pantalla.
 
-    <x-form.page-header
-        title="Editar hotel"
-        :crumbs="[
-            ['label' => 'Administración', 'href' => route('catalogos.index')],
-            ['label' => 'Hoteles', 'href' => route('catalogos.index', ['section' => 'hoteles'])],
-            ['label' => 'Editar'],
-        ]"
-    >
+    <x-form.page-header title="Editar hotel" :crumbs="[...]">
         (opcional) botones a la derecha
     </x-form.page-header>
+
+    title y crumbs se conservan por compatibilidad (no se pintan).
 ============================================================ --}}
 @props([
-    'title',
+    'title' => null,
     'crumbs' => [],
 ])
 
-{{-- En pantallas angostas (≈360 px) los botones bajan debajo del título
-     en lugar de empujarlo. --}}
-<div class="mb-5 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-
-    {{-- Título y ruta --}}
-    <div class="min-w-0 flex-1">
-
-        <h1 class="text-xl font-semibold leading-tight text-[var(--theme-text-strong)]">
-            {{ $title }}
-        </h1>
-
-        @if ($crumbs !== [])
-            <p class="mt-1 text-xs leading-relaxed text-[var(--theme-text-muted)]">
-                @foreach ($crumbs as $crumb)
-                    @if (! $loop->first)
-                        <span class="mx-1" aria-hidden="true">›</span>
-                    @endif
-
-                    @if (! empty($crumb['href']))
-                        <a
-                            href="{{ $crumb['href'] }}"
-                            wire:navigate.hover
-                            class="transition-colors hover:text-[var(--theme-primary)]"
-                        >{{ $crumb['label'] }}</a>
-                    @else
-                        <span>{{ $crumb['label'] }}</span>
-                    @endif
-                @endforeach
-            </p>
-        @endif
-
+@if (trim(preg_replace('/<!--.*?-->/s', '', (string) $slot)) !== '')
+    <div class="mb-5 flex flex-wrap items-center justify-end gap-2 sm:mb-6">
+        {{ $slot }}
     </div>
-
-    {{-- Acciones opcionales --}}
-    @if (trim(preg_replace('/<!--.*?-->/s', '', (string) $slot)) !== '')
-        <div class="flex flex-wrap items-center gap-2 sm:shrink-0">
-            {{ $slot }}
-        </div>
-    @endif
-
-</div>
+@endif

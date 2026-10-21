@@ -8,7 +8,7 @@
     class="
         flex
         items-start
-        justify-between
+        justify-end
         gap-3
         sm:gap-4
         mb-5
@@ -16,48 +16,6 @@
     "
 >
 
-    {{-- Título y breadcrumb --}}
-    <div class="min-w-0 flex-1">
-
-        <h1
-            class="
-                text-xl
-                sm:text-xl
-                font-semibold
-                leading-tight
-                text-[var(--theme-text-strong)]
-            "
-        >
-            Nueva Alta de equipo
-        </h1>
-
-        <p
-            class="
-                text-xs
-                text-[var(--theme-text-muted)]
-                mt-1
-                leading-relaxed
-            "
-        >
-            <span>
-                Inventario
-            </span>
-
-            <span
-                class="
-                    mx-1
-                    text-[var(--theme-text-muted)]
-                "
-            >
-                ›
-            </span>
-
-            <span>
-                Nuevo activo
-            </span>
-        </p>
-
-    </div>
 
 
     {{-- Importar --}}

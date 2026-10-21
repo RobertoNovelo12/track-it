@@ -437,6 +437,37 @@
                 </div>
 
 
+                {{-- Fecha de nacimiento (pregunta de seguridad) --}}
+                <div>
+                    <label
+                        for="editFechaNacimiento"
+                        class="mb-1.5 block text-xs font-medium text-[var(--theme-text)]"
+                    >
+                        Fecha de nacimiento
+                    </label>
+
+                    <input
+                        id="editFechaNacimiento"
+                        type="date"
+                        wire:model="editFechaNacimiento"
+                        autocomplete="bday"
+                        min="1900-01-01"
+                        max="{{ now()->subDay()->toDateString() }}"
+                        class="h-10 w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 text-sm text-[var(--theme-text)] focus:border-[var(--theme-primary)] focus:ring-1 focus:ring-[var(--theme-primary)]"
+                    >
+
+                    <p class="mt-1.5 text-[11px] text-[var(--theme-text-muted)]">
+                        Se usa como pregunta de seguridad si olvidas tu contraseña.
+                    </p>
+
+                    @error('editFechaNacimiento')
+                        <p class="mt-1.5 text-xs text-[var(--theme-danger)]">
+                            {{ $message }}
+                        </p>
+                    @enderror
+                </div>
+
+
                 {{-- Información no editable --}}
                 <div
                     class="

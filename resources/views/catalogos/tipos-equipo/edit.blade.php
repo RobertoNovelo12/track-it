@@ -29,112 +29,12 @@
 
                 sm:flex-row
                 sm:items-center
-                sm:justify-between
+                sm:justify-end
 
                 gap-4
             "
         >
 
-            {{-- ========================================================
-                TÍTULO / BREADCRUMBS
-            ======================================================== --}}
-            <div
-                class="
-                    min-w-0
-                "
-            >
-
-                <h1
-                    class="
-                        text-xl
-                        font-semibold
-                        text-[var(--theme-text-strong)]
-                    "
-                >
-                    Editar tipo de equipo
-                </h1>
-
-
-                <div
-                    class="
-                        mt-1
-
-                        flex
-                        flex-wrap
-                        items-center
-
-                        text-xs
-                        text-[var(--theme-text-muted)]
-                    "
-                >
-
-                    <a
-                        href="{{ route('catalogos.index') }}"
-
-                        wire:navigate.hover
-
-                        class="
-                            hover:text-[var(--theme-primary)]
-
-                            transition-colors
-                        "
-                    >
-                        Administración
-                    </a>
-
-
-                    <span
-                        class="
-                            mx-2
-                            text-[var(--theme-text-muted)]
-                        "
-                    >
-                        ›
-                    </span>
-
-
-                    <a
-                        href="{{ route(
-                            'catalogos.index',
-                            [
-                                'section' =>
-                                    'equipos',
-                            ]
-                        ) }}"
-
-                        wire:navigate.hover
-
-                        class="
-                            hover:text-[var(--theme-primary)]
-
-                            transition-colors
-                        "
-                    >
-                        Equipos
-                    </a>
-
-
-                    <span
-                        class="
-                            mx-2
-                            text-[var(--theme-text-muted)]
-                        "
-                    >
-                        ›
-                    </span>
-
-
-                    <span
-                        class="
-                            text-[var(--theme-text)]
-                        "
-                    >
-                        Editar
-                    </span>
-
-                </div>
-
-            </div>
 
 
             {{-- ========================================================

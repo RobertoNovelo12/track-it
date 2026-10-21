@@ -141,6 +141,14 @@ class RegisteredUserController extends Controller
                 'unique:usuarios,username',
             ],
 
+            // Pregunta de seguridad para recuperar la contraseña.
+            'fecha_nacimiento' => [
+                'required',
+                'date',
+                'before:today',
+                'after:1900-01-01',
+            ],
+
             'correo' => [
                 'required',
                 'string',
@@ -271,6 +279,10 @@ class RegisteredUserController extends Controller
             'password.min' => 'La contraseña debe tener al menos 8 caracteres.',
             'password.regex' => 'La contraseña debe tener al menos 8 caracteres, una mayúscula, un número y un carácter especial, sin espacios.',
             'password.confirmed' => 'La confirmación de contraseña no coincide.',
+            'fecha_nacimiento.required' => 'Escribe tu fecha de nacimiento.',
+            'fecha_nacimiento.date' => 'Escribe una fecha de nacimiento válida.',
+            'fecha_nacimiento.before' => 'La fecha de nacimiento debe ser anterior a hoy.',
+            'fecha_nacimiento.after' => 'Escribe una fecha de nacimiento válida.',
         ]);
 
 
@@ -353,6 +365,7 @@ class RegisteredUserController extends Controller
             'apellido_paterno' => trim($validated['apellido_paterno']),
             'apellido_materno' => $opcional('apellido_materno'),
             'telefono' => $opcional('telefono'),
+            'fecha_nacimiento' => $validated['fecha_nacimiento'],
 
             'username' => $validated['username'],
             'correo' => $validated['correo'],

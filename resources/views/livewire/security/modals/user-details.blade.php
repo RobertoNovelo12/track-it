@@ -6,8 +6,17 @@
 ============================================================ --}}
 
 @php
+    try {
+        $solicitudesRestablecimientoDetalle = app(\App\Services\RestablecimientoContrasenaService::class)
+            ->solicitudesVigentes($usuarios->getCollection()->pluck('id_usuario')->map(fn ($id) => (int) $id)->all());
+    } catch (\Throwable $e) {
+        $solicitudesRestablecimientoDetalle = [];
+    }
+
     $userDetailsData = $usuarios->getCollection()
-        ->mapWithKeys(function ($usuario) {
+        ->mapWithKeys(function ($usuario) use ($solicitudesRestablecimientoDetalle) {
+            $solicitudReset = $solicitudesRestablecimientoDetalle[(int) $usuario->id_usuario] ?? null;
+
             $nombreCompleto = trim(
                 implode(' ', array_filter([
                     $usuario->nombres,
@@ -33,6 +42,12 @@
                     'lastAccess' => $usuario->ultimo_acceso
                         ? \App\Support\Fecha::conHora($usuario->ultimo_acceso)
                         : 'Sin registro',
+                    // Restablecer contraseña (solo con solicitud vigente).
+                    'id' => (int) $usuario->id_usuario,
+                    'resetRequestedAt' => $solicitudReset
+                        ? \App\Support\Fecha::conHora($solicitudReset)
+                        : null,
+                    'isSelf' => (int) $usuario->id_usuario === (int) auth()->id(),
                 ],
             ];
         });
@@ -215,6 +230,30 @@
                 </div>
             </div>
 
+            {{-- Contraseña: restablecer con contraseña temporal --}}
+            <div>
+                <p class="mb-2 text-[10px] font-semibold uppercase tracking-wider text-[var(--theme-text-muted)]">
+                    Contraseña
+                </p>
+
+                <div class="rounded-lg border border-[var(--theme-border)] px-3 py-3">
+                    <p id="user-details-reset-text" class="text-xs leading-relaxed text-[var(--theme-text-muted)]">—</p>
+
+                    <button
+                        id="user-details-reset-button"
+                        type="button"
+                        onclick="window.openResetPasswordFromDetails()"
+                        class="mt-3 hidden h-9 items-center justify-center gap-2 rounded-md bg-[var(--theme-primary)] px-3 text-xs font-medium text-white transition-colors hover:bg-[var(--theme-primary-hover)]"
+                    >
+                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <circle cx="8" cy="15" r="4"/>
+                            <path d="M10.85 12.15L19 4M18 5l2 2M15 8l2 2"/>
+                        </svg>
+                        Restablecer contraseña
+                    </button>
+                </div>
+            </div>
+
             {{-- Organización --}}
             <div>
                 <p
@@ -344,6 +383,22 @@
         setText('user-details-area', user.area);
         setText('user-details-department', user.department);
 
+        // Contraseña: solo se restablece con una solicitud verificada vigente.
+        window.__userDetailsActual = user;
+
+        const resetButton = document.getElementById('user-details-reset-button');
+        let resetText = 'Sin solicitudes. Solo se puede restablecer cuando el usuario responde sus preguntas de seguridad en «¿Olvidaste tu contraseña?».';
+
+        if (user.isSelf) {
+            resetText = 'Para cambiar tu propia contraseña usa Ajustes › Seguridad.';
+        } else if (user.resetRequestedAt) {
+            resetText = 'Respondió sus preguntas de seguridad el ' + user.resetRequestedAt + ' y espera una contraseña temporal.';
+        }
+
+        setText('user-details-reset-text', resetText);
+        resetButton?.classList.toggle('hidden', ! (user.resetRequestedAt && ! user.isSelf));
+        resetButton?.classList.toggle('inline-flex', !! (user.resetRequestedAt && ! user.isSelf));
+
         if (window.__userDetailsCloseTimer) {
             clearTimeout(window.__userDetailsCloseTimer);
             window.__userDetailsCloseTimer = null;
@@ -378,6 +433,17 @@
                     ?.focus({ preventScroll: true });
             });
         });
+    };
+
+    window.openResetPasswordFromDetails = () => {
+        const user = window.__userDetailsActual;
+        if (!user) return;
+
+        window.closeUserDetailsModalFast();
+
+        window.dispatchEvent(new CustomEvent('abrir-restablecer-contrasena', {
+            detail: { id: user.id, nombre: user.name, username: user.username },
+        }));
     };
 
     window.closeUserDetailsModalFast = () => {

@@ -4,60 +4,6 @@
         ENCABEZADO
     ============================================================ --}}
     <section>
-        <div
-            class="
-                flex items-center flex-wrap gap-2
-                mb-2
-                text-xs
-                text-[var(--theme-text-muted)]
-            "
-        >
-            <a
-                href="{{ route('dashboard') }}"
-                wire:navigate.hover
-                class="
-                    hover:text-[var(--theme-primary)]
-                    transition-colors
-                "
-            >
-                Vista General
-            </a>
-
-            <svg
-                class="w-3 h-3"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.8"
-            >
-                <path d="M9 6l6 6-6 6"/>
-            </svg>
-
-            <a
-                href="{{ route('asignaciones.index') }}"
-                wire:navigate.hover
-                class="
-                    hover:text-[var(--theme-primary)]
-                    transition-colors
-                "
-            >
-                Asignación y Movimientos
-            </a>
-
-            <svg
-                class="w-3 h-3"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.8"
-            >
-                <path d="M9 6l6 6-6 6"/>
-            </svg>
-
-            <span>
-                Historial
-            </span>
-        </div>
 
         <div
             class="
@@ -69,20 +15,9 @@
             "
         >
             <div>
-                <h1
-                    class="
-                        text-xl
-                        font-semibold
-                        leading-tight
-                        text-[var(--theme-text-strong)]
-                    "
-                >
-                    Historial de Asignaciones y Movimientos
-                </h1>
 
                 <p
                     class="
-                        mt-1
                         text-xs
                         text-[var(--theme-text-muted)]
                     "

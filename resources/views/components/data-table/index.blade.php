@@ -87,6 +87,14 @@
     'sortModel' => null,
     'refreshAction' => null,
 
+    /*
+     * Acciones que muestran el estado «Actualizando…» de la tabla
+     * (separadas por coma). Vacío = cualquier petición del componente.
+     * Útil cuando el componente tiene otras acciones que no cambian la
+     * tabla (p. ej. Reportes: buscador de activos, vista previa).
+     */
+    'loadingTarget' => null,
+
     'pageName' => 'page',
 
     'minWidth' => null,
@@ -204,6 +212,7 @@
     ======================================================== --}}
     <div
         wire:loading.delay
+        @if (filled($loadingTarget)) wire:target="{{ $loadingTarget }}" @endif
         class="pointer-events-none absolute inset-x-0 top-0 z-20 h-0.5 overflow-hidden lg:rounded-t-lg"
         aria-hidden="true"
     >

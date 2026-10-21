@@ -170,69 +170,13 @@
             xl:flex-row
 
             xl:items-end
-            xl:justify-between
+            xl:justify-end
 
             gap-5
 
             mb-6
         "
     >
-
-        {{-- Texto --}}
-        <div class="min-w-0">
-
-            {{-- Breadcrumb --}}
-            <div
-                class="
-                    flex
-                    items-center
-                    flex-wrap
-                    gap-2
-
-                    mb-2
-
-                    text-xs
-                    text-[var(--theme-text-muted)]
-                "
-            >
-                <a
-                    href="{{ route('dashboard') }}"
-                    class="
-                        hover:text-[var(--theme-primary)]
-                        transition-colors
-                    "
-                >
-                    Vista General
-                </a>
-
-                <svg
-                    class="w-3 h-3"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.8"
-                >
-                    <path d="M9 6l6 6-6 6"/>
-                </svg>
-
-                <span>
-                    Asignación y Movimientos
-                </span>
-            </div>
-
-
-            <h1
-                class="
-                    text-xl
-                    font-semibold
-                    leading-tight
-                    text-[var(--theme-text-strong)]
-                "
-            >
-                Asignación y Movimientos
-            </h1>
-
-        </div>
 
 
         {{-- ========================================================
@@ -1896,4 +1840,4 @@
 
     </div>
 
-</div>
+</div>

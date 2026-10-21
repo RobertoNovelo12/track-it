@@ -22,6 +22,9 @@
         {{-- Columna izquierda --}}
         <div class="space-y-5">
 
+            {{-- Usuarios que esperan una contraseña temporal --}}
+            @include('livewire.security.partials.restablecimientos')
+
             @include('livewire.security.partials.users')
 
             {{-- Equipos asignados a personas sin cuenta --}}
@@ -60,5 +63,9 @@
 
     {{-- Solicitudes de cambio organizacional --}}
     @include('livewire.security.modals.organization-request')
+
+
+    {{-- Restablecer contraseña (contraseña temporal) --}}
+    @include('livewire.security.modals.reset-password')
 
 </div>

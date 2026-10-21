@@ -90,6 +90,18 @@
                     @error('telefono') <p class="{{ $errorClase }}">{{ $message }}</p> @enderror
                 </div>
             @endif
+            {{-- Pregunta de seguridad si algún día olvida su contraseña --}}
+            <div>
+                <label for="fecha_nacimiento" class="mb-1 block text-[11px] text-[var(--theme-text-muted)]">
+                    Fecha de nacimiento
+                </label>
+                <input type="date" id="fecha_nacimiento" name="fecha_nacimiento" value="{{ old('fecha_nacimiento') }}"
+                    autocomplete="bday" required min="1900-01-01" max="{{ now()->subDay()->toDateString() }}" class="{{ $campoClase }}">
+                <p class="mt-1 text-[11px] text-[var(--theme-text-muted)]">
+                    Se usa para verificar tu identidad si olvidas tu contraseña.
+                </p>
+                @error('fecha_nacimiento') <p class="{{ $errorClase }}">{{ $message }}</p> @enderror
+            </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                     <input type="email" name="correo" value="{{ old('correo') }}" autocomplete="email" required

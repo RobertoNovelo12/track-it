@@ -574,7 +574,39 @@
     {{-- ============================================================
         REFACCIONES / PARTES UTILIZADAS
     ============================================================ --}}
+    {{-- Refacciones en Alpine: agregar y quitar es instantáneo.
+        Se sincronizan con Livewire (entangle diferido) al guardar. --}}
     <section
+        x-data="{
+            filas: $wire.entangle('refacciones'),
+            errores: {},
+
+            agregar() {
+                this.filas.push({ id_mantenimiento_refaccion: null, nombre_refaccion: '', codigo_parte: '', cantidad: 1, unidad: '' });
+
+                this.$nextTick(() => {
+                    const campos = this.$root.querySelectorAll('[data-refaccion-nombre]');
+                    campos[campos.length - 1]?.focus();
+                });
+            },
+
+            quitar(indice) {
+                this.filas.splice(indice, 1);
+                this.errores = {};
+            },
+
+            error(indice, campo) {
+                return this.errores['refacciones.' + indice + '.' + campo]?.[0] ?? '';
+            },
+
+            leerErrores(elemento) {
+                try {
+                    this.errores = JSON.parse(elemento.dataset.errores || '{}');
+                } catch (e) {
+                    this.errores = {};
+                }
+            },
+        }"
         class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 sm:p-6"
     >
         <div
@@ -609,7 +641,7 @@
 
             <button
                 type="button"
-                wire:click="agregarRefaccion"
+                x-on:click="agregar()"
                 class="
                     rounded-lg
                     border
@@ -626,84 +658,61 @@
         </div>
 
 
-        @if (count($refacciones) === 0)
+        {{-- Errores de validación de las refacciones (los lee Alpine) --}}
+        <div
+            hidden
+            data-errores="{{ json_encode(collect($errors->getMessages())->filter(fn ($mensajes, $clave) => str_starts_with($clave, 'refacciones.'))->all(), JSON_FORCE_OBJECT) }}"
+            x-init="leerErrores($el); new MutationObserver(() => leerErrores($el)).observe($el, { attributes: true })"
+        ></div>
 
-            <div
-                class="
-                    rounded-lg
-                    border
-                    border-dashed
-                    border-[var(--theme-border)]
-                    px-4
-                    py-5
-                    text-center
-                "
-            >
-                <p class="text-sm text-[var(--theme-text-muted)]">
-                    No se han agregado refacciones.
-                </p>
+        {{-- wire:ignore: las filas las pinta Alpine; Livewire no las toca. --}}
+        <div wire:ignore>
+            <div x-show="filas.length === 0">
+                <div class="rounded-lg border border-dashed border-[var(--theme-border)] px-4 py-5 text-center">
+                    <p class="text-sm text-[var(--theme-text-muted)]">
+                        No se han agregado refacciones.
+                    </p>
+                </div>
             </div>
 
-        @else
-
-            <div class="space-y-3">
-
-                @foreach ($refacciones as $index => $refaccion)
-
-                    <div
-                        wire:key="
-                            refaccion-edit-
-                            {{ $refaccion['id_mantenimiento_refaccion'] ?? 'new' }}-
-                            {{ $index }}
-                        "
-                        class="grid grid-cols-1 gap-4 rounded-lg border border-[var(--theme-border)] p-3 md:grid-cols-[minmax(0,2fr)_minmax(0,1.5fr)_120px_minmax(0,1fr)_auto]"
-                    >
-
-                        {{-- Nombre --}}
+            <div x-show="filas.length > 0" class="space-y-3">
+                <template x-for="(fila, indice) in filas" :key="indice">
+                    <div class="grid grid-cols-1 gap-4 rounded-lg border border-[var(--theme-border)] p-3 md:grid-cols-[minmax(0,2fr)_minmax(0,1.5fr)_120px_minmax(0,1fr)_auto]">
                         <div>
-                            <label
-                                class="mb-1.5 block text-xs text-[var(--theme-text-muted)]"
-                            >
+                            <label class="mb-1.5 block text-xs text-[var(--theme-text-muted)]">
                                 Refacción
                             </label>
 
                             <input
                                 type="text"
-                                wire:model="refacciones.{{ $index }}.nombre_refaccion"
+                                data-refaccion-nombre
+                                x-model="fila.nombre_refaccion"
                                 placeholder="Nombre"
                                 class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)]"
                             >
 
-                            @error("refacciones.$index.nombre_refaccion")
-                                <p class="mt-1 text-xs text-red-500">
-                                    {{ $message }}
-                                </p>
-                            @enderror
+                            <p
+                                x-show="error(indice, 'nombre_refaccion')"
+                                x-text="error(indice, 'nombre_refaccion')"
+                                class="mt-1 text-xs text-red-500"
+                            ></p>
                         </div>
 
-
-                        {{-- Código --}}
                         <div>
-                            <label
-                                class="mb-1.5 block text-xs text-[var(--theme-text-muted)]"
-                            >
+                            <label class="mb-1.5 block text-xs text-[var(--theme-text-muted)]">
                                 Código / parte
                             </label>
 
                             <input
                                 type="text"
-                                wire:model="refacciones.{{ $index }}.codigo_parte"
+                                x-model="fila.codigo_parte"
                                 placeholder="Código"
                                 class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)]"
                             >
                         </div>
 
-
-                        {{-- Cantidad --}}
                         <div>
-                            <label
-                                class="mb-1.5 block text-xs text-[var(--theme-text-muted)]"
-                            >
+                            <label class="mb-1.5 block text-xs text-[var(--theme-text-muted)]">
                                 Cantidad
                             </label>
 
@@ -711,63 +720,43 @@
                                 type="number"
                                 min="0.01"
                                 step="0.01"
-                                wire:model="refacciones.{{ $index }}.cantidad"
+                                x-model="fila.cantidad"
                                 class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)]"
                             >
 
-                            @error("refacciones.$index.cantidad")
-                                <p class="mt-1 text-xs text-red-500">
-                                    {{ $message }}
-                                </p>
-                            @enderror
+                            <p
+                                x-show="error(indice, 'cantidad')"
+                                x-text="error(indice, 'cantidad')"
+                                class="mt-1 text-xs text-red-500"
+                            ></p>
                         </div>
 
-
-                        {{-- Unidad --}}
                         <div>
-                            <label
-                                class="mb-1.5 block text-xs text-[var(--theme-text-muted)]"
-                            >
+                            <label class="mb-1.5 block text-xs text-[var(--theme-text-muted)]">
                                 Unidad
                             </label>
 
                             <input
                                 type="text"
-                                wire:model="refacciones.{{ $index }}.unidad"
+                                x-model="fila.unidad"
                                 placeholder="Pieza, unidad..."
                                 class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)]"
                             >
                         </div>
 
-
-                        {{-- Quitar --}}
                         <div class="flex items-end">
                             <button
                                 type="button"
-                                wire:click="eliminarRefaccion({{ $index }})"
-                                wire:loading.attr="disabled"
-                                wire:target="eliminarRefaccion({{ $index }})"
-                                class="
-                                    rounded-lg
-                                    border
-                                    border-[var(--theme-border)]
-                                    px-3
-                                    py-2
-                                    text-sm
-                                    text-[var(--theme-text-muted)]
-                                "
+                                x-on:click="quitar(indice)"
+                                class="rounded-lg border border-[var(--theme-border)] px-3 py-2 text-sm text-[var(--theme-text-muted)]"
                             >
                                 Quitar
                             </button>
                         </div>
-
                     </div>
-
-                @endforeach
-
+                </template>
             </div>
-
-        @endif
+        </div>
     </section>
 
 

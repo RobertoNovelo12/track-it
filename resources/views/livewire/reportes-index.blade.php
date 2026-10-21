@@ -1513,6 +1513,7 @@
             :per-page-options="[10, 25, 50]"
             sort-model="sort"
             refresh-action="$refresh"
+            loading-target="previousPage,nextPage,gotoPage,perPage,sort,$refresh,eliminarReporte"
             min-width="980px"
             result-singular="reporte generado"
             result-plural="reportes generados"

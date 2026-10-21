@@ -145,6 +145,7 @@
     <div
         class="overflow-x-auto transition-opacity duration-[var(--motion-base)]"
         wire:loading.delay.class="opacity-60"
+        @if (filled($loadingTarget ?? null)) wire:target="{{ $loadingTarget }}" @endif
         @scroll="closePopover(); $dispatch('data-table-scroll')"
     >
 

@@ -188,40 +188,12 @@
 >
 
 
-    {{-- ============================================================
-        ENCABEZADO
-    ============================================================ --}}
-    {{--
-        Único título de la pantalla. Cada sección solo agrega su
-        ubicación en la ruta; los componentes no repiten títulos.
-    --}}
-    <div class="mb-5">
-
-        <h1 class="text-xl font-semibold text-[var(--theme-text-strong)]">
-            Administración
-        </h1>
-
-        <nav
-            aria-label="Ubicación"
-            class="mt-1 flex items-center gap-2 text-xs text-[var(--theme-text-muted)]"
-        >
-            <a
-                href="{{ route('dashboard') }}"
-                wire:navigate.hover
-                class="hover:text-[var(--theme-primary)]"
-            >
-                Inicio
-            </a>
-
-            <span aria-hidden="true">›</span>
-
-            <span
-                class="text-[var(--theme-text)]"
-                x-text="sectionCrumb()"
-            >{{ collect($administrationSections)->firstWhere('key', $seccionInicial)['crumb'] ?? '' }}</span>
-        </nav>
-
-    </div>
+    {{-- La sección activa se agrega a la ruta de la barra superior
+        (layouts/partials/encabezado). --}}
+    <div
+        hidden
+        x-effect="$dispatch('encabezado-seccion', { miga: sectionCrumb() })"
+    ></div>
 
 
     {{-- ============================================================

@@ -18,7 +18,7 @@
 
             sm:flex-row
             sm:items-center
-            sm:justify-between
+            sm:justify-end
         "
     >
 
@@ -26,34 +26,6 @@
             TÍTULO
         ======================================================== --}}
 
-        <div class="min-w-0">
-
-            <h1
-                class="
-                    text-2xl
-                    font-semibold
-                    leading-tight
-
-                    text-[var(--theme-text-strong)]
-                "
-            >
-                Vista general
-            </h1>
-
-
-            <p
-                class="
-                    mt-1
-
-                    text-xs
-
-                    text-[var(--theme-text-muted)]
-                "
-            >
-                Inicio
-            </p>
-
-        </div>
 
 
 

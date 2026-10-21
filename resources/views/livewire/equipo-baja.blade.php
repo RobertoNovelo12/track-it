@@ -276,42 +276,7 @@
     </div>
 
     {{-- ENCABEZADO --}}
-    <div class="mb-5 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div class="min-w-0">
-            <h1 class="text-xl font-semibold leading-tight text-[var(--theme-text-strong)]">
-                Dar de baja equipo
-            </h1>
-
-            <p class="mt-1 text-xs leading-relaxed text-[var(--theme-text-muted)]">
-                <a
-                    href="{{ route('equipos.index') }}"
-                    class="transition-colors hover:text-[var(--theme-primary)]"
-                >
-                    Inventario
-                </a>
-
-                <span class="mx-1">›</span>
-
-                <a
-                    href="{{ route('equipos.show', $equipoId) }}"
-                    class="transition-colors hover:text-[var(--theme-primary)]"
-                >
-                    Detalle del equipo
-                </a>
-
-                <span class="mx-1">›</span>
-
-                <a
-                    href="{{ route('equipos.edit', $equipoId) }}"
-                    class="transition-colors hover:text-[var(--theme-primary)]"
-                >
-                    Editar equipo
-                </a>
-
-                <span class="mx-1">›</span>
-                <span class="text-[var(--theme-text)]">Dar de baja</span>
-            </p>
-        </div>
+    <div class="mb-5 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-end">
 
         <div class="flex items-center gap-3">
             <a

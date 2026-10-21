@@ -65,6 +65,7 @@
         {{-- Indicador discreto mientras se actualizan los datos --}}
         <span
             wire:loading.delay.flex
+            @if (filled($loadingTarget ?? null)) wire:target="{{ $loadingTarget }}" @endif
             class="hidden items-center gap-1.5 text-xs text-[var(--theme-text-muted)]"
             role="status"
         >
