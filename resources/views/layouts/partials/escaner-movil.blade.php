@@ -53,7 +53,9 @@
                         ? 'Permite el acceso a la cámara en tu navegador para escanear.'
                         : nombre === 'NotFoundError'
                             ? 'No se encontró una cámara en este dispositivo.'
-                            : 'No se pudo abrir la cámara. Inténtalo de nuevo.'
+                            : nombre === 'NotReadableError'
+                                ? 'La cámara está ocupada por otra aplicación. Ciérrala e inténtalo de nuevo.'
+                                : 'No se pudo abrir la cámara (' + (nombre || error?.message || 'error desconocido') + '). Inténtalo de nuevo.'
                 );
             }
         },
@@ -65,8 +67,18 @@
             document.documentElement.style.overflow = '';
         },
 
-        mostrarError(texto) {
-            window.trackitEscaner?.detener();
+        /*
+         * apagarCamara: solo en errores de la propia cámara. Si el código no
+         * existe o falla la conexión, la cámara queda encendida (en pausa)
+         * para que «Volver a intentar» sea inmediato.
+         */
+        mostrarError(texto, apagarCamara = true) {
+            if (apagarCamara) {
+                window.trackitEscaner?.detener();
+            } else {
+                window.trackitEscaner?.pausar();
+            }
+
             this.estado = 'error';
             this.mensaje = texto;
         },
@@ -88,7 +100,7 @@
             navigator.vibrate?.(60);
 
             this.estado = 'consultando';
-            await window.trackitEscaner.detener();
+            window.trackitEscaner.pausar();
 
             try {
                 const respuesta = await fetch(
@@ -98,7 +110,7 @@
                 const datos = await respuesta.json().catch(() => ({}));
 
                 if (! respuesta.ok || ! datos.encontrado) {
-                    this.mostrarError(datos.mensaje ?? ('No hay ningún equipo con el código ' + codigo + '.'));
+                    this.mostrarError(datos.mensaje ?? ('No hay ningún equipo con el código ' + codigo + '.'), false);
 
                     return;
                 }
@@ -107,7 +119,7 @@
                 this.puedeEnviar = Boolean(datos.puede_enviar);
                 this.estado = 'equipo';
             } catch (error) {
-                this.mostrarError('Sin conexión con el servidor. Revisa tu conexión e inténtalo de nuevo.');
+                this.mostrarError('Sin conexión con el servidor. Revisa tu conexión e inténtalo de nuevo.', false);
             }
         },
 
@@ -141,7 +153,7 @@
                 const datos = await respuesta.json().catch(() => ({}));
 
                 if (! respuesta.ok) {
-                    this.mostrarError(datos.message ?? 'No se pudo enviar el equipo. Inténtalo de nuevo.');
+                    this.mostrarError(datos.message ?? 'No se pudo enviar el equipo. Inténtalo de nuevo.', false);
 
                     return;
                 }
@@ -154,7 +166,7 @@
                 // Ráfaga: volver a la cámara para el siguiente equipo.
                 this.temporizador = setTimeout(() => this.abierto && this.reanudar(), 1300);
             } catch (error) {
-                this.mostrarError('Sin conexión con el servidor. Revisa tu conexión e inténtalo de nuevo.');
+                this.mostrarError('Sin conexión con el servidor. Revisa tu conexión e inténtalo de nuevo.', false);
             } finally {
                 this.enviando = false;
             }

@@ -12,7 +12,8 @@
 |    Esa librería se descarga solo la primera vez que se abre el escáner.
 |
 |   window.trackitEscaner.iniciar(videoElement, codigo => { ... })
-|   window.trackitEscaner.detener()
+|   window.trackitEscaner.pausar()    // entre lecturas (cámara encendida)
+|   window.trackitEscaner.detener()   // al cerrar
 |
 | La interfaz está en layouts/partials/escaner-movil.blade.php.
 |
@@ -30,7 +31,23 @@ const RESTRICCIONES = {
 let controles = null;      // @zxing
 let flujo = null;          // cámara (lector nativo)
 let temporizador = null;
-let activo = false;
+let activo = false;        // cámara encendida
+let pausado = false;       // lectura en pausa (la cámara sigue encendida)
+let videoActual = null;
+let alLeerActual = null;
+
+/*
+ * Entre lecturas NO se apaga la cámara: apagarla y volver a pedirla al
+ * instante falla en Android (la cámara sigue «ocupada»). Solo se pausa
+ * la lectura mientras se decide qué hacer con el equipo.
+ */
+function entregar(codigo) {
+    if (! pausado && codigo && alLeerActual) {
+        alLeerActual(codigo);
+    }
+}
+
+const esperar = (ms) => new Promise((resolver) => setTimeout(resolver, ms));
 
 /*
  * Enfoque continuo cuando la cámara lo permite (mejora la lectura de
@@ -64,7 +81,7 @@ async function lectorNativoDisponible() {
     }
 }
 
-async function iniciarNativo(video, alLeer) {
+async function iniciarNativo(video) {
     const detector = new window.BarcodeDetector({ formats: ['code_128'] });
 
     flujo = await navigator.mediaDevices.getUserMedia(RESTRICCIONES);
@@ -85,7 +102,7 @@ async function iniciarNativo(video, alLeer) {
                 const encontrados = await detector.detect(video);
 
                 if (activo && encontrados.length > 0) {
-                    alLeer(String(encontrados[0].rawValue ?? '').trim());
+                    entregar(String(encontrados[0].rawValue ?? '').trim());
                 }
             } catch (error) {
                 // Cuadro no disponible todavía: se intenta en el siguiente.
@@ -98,7 +115,7 @@ async function iniciarNativo(video, alLeer) {
     ciclo();
 }
 
-async function iniciarZxing(video, alLeer) {
+async function iniciarZxing(video) {
     const [{ BrowserMultiFormatOneDReader }, { BarcodeFormat, DecodeHintType }] = await Promise.all([
         import('@zxing/browser'),
         import('@zxing/library'),
@@ -115,9 +132,11 @@ async function iniciarZxing(video, alLeer) {
         delayBetweenScanSuccess: 600,
     });
 
+    activo = true;
+
     controles = await lector.decodeFromConstraints(RESTRICCIONES, video, (resultado) => {
         if (resultado) {
-            alLeer(String(resultado.getText() ?? '').trim());
+            entregar(String(resultado.getText() ?? '').trim());
         }
     });
 
@@ -125,19 +144,49 @@ async function iniciarZxing(video, alLeer) {
 }
 
 export async function iniciarEscaner(video, alLeer) {
-    await detenerEscaner();
+    alLeerActual = alLeer;
+    pausado = false;
 
-    if (await lectorNativoDisponible()) {
-        await iniciarNativo(video, alLeer);
-
+    // Ya está encendida en este mismo video: solo reanudar la lectura.
+    if (activo && videoActual === video) {
         return;
     }
 
-    await iniciarZxing(video, alLeer);
+    await detenerEscaner();
+
+    alLeerActual = alLeer;
+    pausado = false;
+    videoActual = video;
+
+    const encender = async () => (await lectorNativoDisponible())
+        ? iniciarNativo(video)
+        : iniciarZxing(video);
+
+    try {
+        await encender();
+    } catch (error) {
+        // Cámara aún ocupada o reproducción interrumpida: un reintento.
+        if (! ['NotReadableError', 'AbortError', 'TrackStartError'].includes(error?.name)) {
+            throw error;
+        }
+
+        await detenerEscaner();
+        await esperar(400);
+
+        alLeerActual = alLeer;
+        videoActual = video;
+        await encender();
+    }
+}
+
+/* Pausa la lectura sin apagar la cámara. */
+export function pausarEscaner() {
+    pausado = true;
 }
 
 export async function detenerEscaner() {
     activo = false;
+    pausado = false;
     clearTimeout(temporizador);
 
     try {
@@ -148,12 +197,19 @@ export async function detenerEscaner() {
 
     flujo?.getTracks?.().forEach((pista) => pista.stop());
 
+    if (videoActual) {
+        videoActual.srcObject?.getTracks?.().forEach((pista) => pista.stop());
+        videoActual.srcObject = null;
+    }
+
     controles = null;
     flujo = null;
+    videoActual = null;
 }
 
 window.trackitEscaner = {
     iniciar: iniciarEscaner,
+    pausar: pausarEscaner,
     detener: detenerEscaner,
 };
 

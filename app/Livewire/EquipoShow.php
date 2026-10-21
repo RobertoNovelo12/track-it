@@ -1124,24 +1124,33 @@ class EquipoShow extends Component
 
         $mantenimientos = [];
 
+        /*
+         * Botón «Editar»: el formulario no se abre para equipos dados de
+         * baja (mismo criterio que EquipoEdit::equipoDadoDeBaja).
+         */
+        $dadoDeBaja = DB::table('equipos as e')
+            ->leftJoin('estados_equipo as ee', 'ee.id_estado_equipo', '=', 'e.id_estado_activo')
+            ->where('e.id_equipo', $this->equipoId)
+            ->where(function ($query): void {
+                $query->where('ee.clave', 'BAJA')
+                    ->orWhereExists(function ($subquery): void {
+                        $subquery->selectRaw('1')
+                            ->from('bajas as b')
+                            ->whereColumn('b.id_equipo', 'e.id_equipo');
+                    });
+            })
+            ->exists();
+
         return view(
-
             'livewire.equipo-show',
-
             compact(
-
                 'equipo',
-
                 'especificaciones',
-
                 'asignacionActual',
-
                 'movimientos',
-
-                'mantenimientos'
-
+                'mantenimientos',
+                'dadoDeBaja'
             )
-
         );
 
     }

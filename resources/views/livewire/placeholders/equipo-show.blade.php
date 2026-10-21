@@ -94,16 +94,32 @@
             </div>
 
 
-            {{-- Exportar --}}
-            <div
-                class="
-                    h-10
-                    w-full
-                    sm:w-28
-                    rounded-lg
-                    bg-[var(--theme-surface-soft)]
-                "
-            ></div>
+            {{-- Acciones: Editar + Exportar (mismo acomodo que la vista real) --}}
+            <div class="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row">
+
+                {{-- Editar --}}
+                <div
+                    class="
+                        h-10
+                        w-full
+                        sm:w-28
+                        rounded-lg
+                        bg-[var(--theme-surface-soft)]
+                    "
+                ></div>
+
+                {{-- Exportar --}}
+                <div
+                    class="
+                        h-10
+                        w-full
+                        sm:w-28
+                        rounded-lg
+                        bg-[var(--theme-surface-soft)]
+                    "
+                ></div>
+
+            </div>
 
         </div>
 

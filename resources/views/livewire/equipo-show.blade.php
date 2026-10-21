@@ -300,8 +300,34 @@
 
             </div>
 
-            {{-- Exportar: solo visual --}}
+            {{-- Acciones: Editar + Exportar --}}
+            <div class="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row">
 
+            {{--
+                Editar: todos los roles (Lectura abre el formulario en solo
+                lectura, igual que en la tabla de Equipos). Los equipos dados
+                de baja no se pueden editar.
+            --}}
+            @unless ($dadoDeBaja)
+                <a
+                    href="{{ route('equipos.edit', $this->equipoId) }}"
+                    wire:navigate.hover
+                    class="flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-transparent bg-[var(--theme-primary)] px-4 text-sm font-medium text-white transition-colors hover:bg-[var(--theme-primary-hover)] sm:w-auto"
+                >
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M12 20h9"/>
+                        <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>
+                    </svg>
+
+                    @can('gestionar')
+                        Editar
+                    @else
+                        Ver formulario
+                    @endcan
+                </a>
+            @endunless
+
+            {{-- Exportar: solo visual --}}
             <button
 
                 type="button"
@@ -371,8 +397,9 @@
                 </svg>
 
                 Exportar
-
             </button>
+
+            </div>
 
         </div>
 
