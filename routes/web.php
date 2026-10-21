@@ -84,7 +84,11 @@ Route::middleware([
     Route::get(
         '/equipos/codigo-barras/{numero}.svg',
         function (string $numero) {
-            $svg = \App\Support\CodigoBarras::svg($numero);
+            // ?alto= solo cambia la altura; el ancho de las barras (2 px por
+            // módulo) se mantiene para que siempre se pueda leer.
+            $alto = max(24, min(120, (int) request()->query('alto', 60)));
+
+            $svg = \App\Support\CodigoBarras::svg($numero, $alto);
 
             $respuesta = response($svg, 200, [
                 'Content-Type' => 'image/svg+xml',

@@ -29,7 +29,16 @@
 @php
     $base = rtrim(url('/equipos/codigo-barras'), '/') . '/';
     $numero = \App\Support\CodigoBarras::numero($codigo);
-    $altoImagen = $compacto ? 'h-9' : 'h-12';
+    /*
+     * El código se muestra SIEMPRE a su tamaño natural: reducirlo con CSS
+     * hace que el navegador redondee las barras a píxeles enteros y se
+     * pierden espacios de un módulo (deja de poder leerse, sobre todo en
+     * pantallas a escala 1x). Para la versión compacta se pide al servidor
+     * una imagen más baja (?alto=), sin tocar el ancho de las barras.
+     */
+    $alto = $compacto ? 40 : 60;
+    $altoParam = '?alto=' . $alto;
+    $claseImagen = 'block max-w-none';
 @endphp
 
 @if ($xCodigo)
@@ -42,11 +51,11 @@
         {{ $attributes->class(['flex flex-col items-start gap-1.5']) }}
         x-show="{{ $numeroJs }} !== ''"
     >
-        <div class="inline-flex flex-col items-center rounded-md border border-[var(--theme-border)] bg-white px-3 pb-1 pt-2">
+        <div class="inline-flex max-w-full flex-col items-center overflow-x-auto rounded-md border border-[var(--theme-border)] bg-white px-3 pb-1 pt-2">
             <img
-                x-bind:src="{{ \Illuminate\Support\Js::from($base) }} + {{ $numeroJs }} + '.svg'"
+                x-bind:src="{{ \Illuminate\Support\Js::from($base) }} + {{ $numeroJs }} + '.svg{{ $altoParam }}'"
                 x-bind:alt="'Código de barras ' + {{ $numeroJs }}"
-                class="{{ $altoImagen }} w-auto max-w-full"
+                class="{{ $claseImagen }}"
                 decoding="async"
             >
             <span class="mt-0.5 font-mono text-[11px] tracking-[0.25em] text-slate-900" x-text="{{ $numeroJs }}"></span>
@@ -61,11 +70,11 @@
 @elseif ($numero !== null)
     {{-- Fijo --}}
     <div {{ $attributes->class(['flex flex-col items-start gap-1.5']) }}>
-        <div class="inline-flex flex-col items-center rounded-md border border-[var(--theme-border)] bg-white px-3 pb-1 pt-2">
+        <div class="inline-flex max-w-full flex-col items-center overflow-x-auto rounded-md border border-[var(--theme-border)] bg-white px-3 pb-1 pt-2">
             <img
-                src="{{ route('equipos.codigo-barras', ['numero' => $numero]) }}"
+                src="{{ route('equipos.codigo-barras', ['numero' => $numero, 'alto' => $alto]) }}"
                 alt="Código de barras {{ $numero }}"
-                class="{{ $altoImagen }} w-auto max-w-full"
+                class="{{ $claseImagen }}"
                 decoding="async"
             >
             <span class="mt-0.5 font-mono text-[11px] tracking-[0.25em] text-slate-900">{{ $numero }}</span>
