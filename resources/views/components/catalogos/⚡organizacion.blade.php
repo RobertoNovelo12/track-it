@@ -38,6 +38,7 @@ new class extends Component
 
     private const PESTANAS = [
         'identidad',
+        'colores',
         'correo',
         'registro',
         'sedes',
@@ -57,6 +58,12 @@ new class extends Component
     public int $logoEscala = 100;
 
     public string $logoModoOscuro = 'blanco';
+
+    // Color de la placa cuando la apariencia en modo oscuro es «fondo».
+    public string $logoColorFondo = '#FFFFFF';
+
+    // Color principal de la organización (pestaña «Colores»).
+    public string $colorPrimario = OrganizacionService::COLOR_PRIMARIO_PREDETERMINADO;
 
     /*
      * Correo
@@ -136,6 +143,8 @@ new class extends Component
         $this->nombreOrganizacion = (string) ($config['nombre_organizacion'] ?? '');
         $this->logoEscala = (int) $config['logo_escala'];
         $this->logoModoOscuro = $config['logo_modo_oscuro'];
+        $this->logoColorFondo = (string) ($config['logo_color_fondo'] ?? OrganizacionService::COLOR_FONDO_PREDETERMINADO);
+        $this->colorPrimario = (string) ($config['color_primario'] ?? OrganizacionService::COLOR_PRIMARIO_PREDETERMINADO);
 
         $this->restringirDominio = (bool) $config['restringir_dominio_correo'];
         $this->dominios = $config['dominios_correo'];
@@ -207,11 +216,16 @@ new class extends Component
                     'required',
                     Rule::in(array_keys(OrganizacionService::MODOS_OSCURO)),
                 ],
+                'logoColorFondo' => [
+                    'required',
+                    'regex:/^#[0-9A-Fa-f]{6}$/',
+                ],
             ],
             $this->mensajesLogo() + [
                 'nombreOrganizacion.max' => 'El nombre no puede superar 150 caracteres.',
                 'logoEscala.between' => 'El tamaño debe estar entre '.OrganizacionService::ESCALA_MINIMA.' % y '.OrganizacionService::ESCALA_MAXIMA.' %.',
                 'logoModoOscuro.in' => 'Selecciona una apariencia válida.',
+                'logoColorFondo.regex' => 'Elige un color de fondo válido.',
             ]
         );
 
@@ -221,6 +235,7 @@ new class extends Component
                 : null,
             'logo_escala' => (int) $validated['logoEscala'],
             'logo_modo_oscuro' => $validated['logoModoOscuro'],
+            'logo_color_fondo' => strtoupper($validated['logoColorFondo']),
         ];
 
         if ($this->logo) {
@@ -270,6 +285,53 @@ new class extends Component
         $this->registrarBitacora('Se restauró el logotipo predeterminado.');
 
         $this->recargar('identidad', 'Se restauró el logotipo predeterminado.');
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Colores
+    |--------------------------------------------------------------------------
+    */
+
+    public function guardarColores(): void
+    {
+        abort_unless(auth()->check(), 403);
+
+        $validated = $this->validate([
+            'colorPrimario' => ['required', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+        ], [
+            'colorPrimario.required' => 'Elige un color.',
+            'colorPrimario.regex' => 'Elige un color válido.',
+        ]);
+
+        if (! \Illuminate\Support\Facades\Schema::hasColumn('configuracion_organizacion', 'color_primario')) {
+            $this->addError('colorPrimario', 'Falta ejecutar php artisan migrate para guardar los colores.');
+
+            return;
+        }
+
+        $color = strtoupper($validated['colorPrimario']);
+
+        // El color predeterminado se guarda como «sin personalizar».
+        $this->organizacion()->actualizar([
+            'color_primario' => $color === OrganizacionService::COLOR_PRIMARIO_PREDETERMINADO ? null : $color,
+        ]);
+
+        $this->registrarBitacora('Se cambió el color principal de la organización a '.$color.'.');
+
+        // Recarga completa para aplicar el color en todo el sistema.
+        $this->recargar('colores', 'Colores guardados correctamente.');
+    }
+
+    public function restaurarColores(): void
+    {
+        abort_unless(auth()->check(), 403);
+
+        $this->organizacion()->actualizar(['color_primario' => null]);
+
+        $this->registrarBitacora('Se restauraron los colores predeterminados.');
+
+        $this->recargar('colores', 'Se restauraron los colores predeterminados.');
     }
 
     public function descartarLogo(): void
@@ -643,6 +705,7 @@ new class extends Component
 
     $pestanas = [
         'identidad' => 'Identidad visual',
+        'colores' => 'Colores',
         'correo' => 'Dominio de correo',
         'registro' => 'Datos de registro',
         'sedes' => 'Sedes',
@@ -742,7 +805,7 @@ new class extends Component
         <form
             wire:submit="guardarIdentidad"
             class="space-y-6"
-            x-data="{ escala: $wire.entangle('logoEscala'), modo: $wire.entangle('logoModoOscuro') }"
+            x-data="{ escala: $wire.entangle('logoEscala'), modo: $wire.entangle('logoModoOscuro'), colorFondo: $wire.entangle('logoColorFondo') }"
         >
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
@@ -832,7 +895,7 @@ new class extends Component
                             Tamaño
                         </label>
 
-                        <span class="text-xs font-medium text-[var(--theme-text-strong)]" x-text="escala + ' %'"></span>
+                        <span class="rounded-md bg-[var(--theme-surface-soft)] px-2 py-0.5 text-xs font-medium tabular-nums text-[var(--theme-text-strong)]" x-text="escala + ' %'"></span>
                     </div>
 
                     <div class="flex items-center gap-3">
@@ -840,7 +903,7 @@ new class extends Component
                             type="button"
                             aria-label="Hacer más pequeño"
                             x-on:click="escala = Math.max({{ \App\Services\OrganizacionService::ESCALA_MINIMA }}, Number(escala) - 5)"
-                            class="h-8 w-8 shrink-0 rounded-lg border border-[var(--theme-border)] text-sm text-[var(--theme-text)]"
+                            class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] text-base leading-none text-[var(--theme-text)] transition-colors hover:bg-[var(--theme-surface-soft)] hover:text-[var(--theme-text-strong)]"
                         >−</button>
 
                         <input
@@ -850,21 +913,23 @@ new class extends Component
                             max="{{ \App\Services\OrganizacionService::ESCALA_MAXIMA }}"
                             step="5"
                             x-model.number="escala"
-                            class="w-full accent-[var(--theme-primary)]"
+                            class="ui-range w-full"
+                            x-bind:style="'--valor: ' + ((escala - {{ \App\Services\OrganizacionService::ESCALA_MINIMA }}) / ({{ \App\Services\OrganizacionService::ESCALA_MAXIMA }} - {{ \App\Services\OrganizacionService::ESCALA_MINIMA }}) * 100) + '%'"
                         >
 
                         <button
                             type="button"
                             aria-label="Hacer más grande"
                             x-on:click="escala = Math.min({{ \App\Services\OrganizacionService::ESCALA_MAXIMA }}, Number(escala) + 5)"
-                            class="h-8 w-8 shrink-0 rounded-lg border border-[var(--theme-border)] text-sm text-[var(--theme-text)]"
+                            class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] text-base leading-none text-[var(--theme-text)] transition-colors hover:bg-[var(--theme-surface-soft)] hover:text-[var(--theme-text-strong)]"
                         >+</button>
 
                         <button
                             type="button"
                             x-on:click="escala = 100"
-                            class="shrink-0 text-xs text-[var(--theme-text-muted)] hover:underline"
-                        >100 %</button>
+                            class="shrink-0 rounded-md px-2 py-1 text-xs text-[var(--theme-text-muted)] transition-colors hover:bg-[var(--theme-surface-soft)] hover:text-[var(--theme-text)]"
+                            title="Restablecer al tamaño original"
+                        >Restablecer</button>
                     </div>
 
                     <p class="mt-1 text-xs text-[var(--theme-text-muted)]">
@@ -880,7 +945,7 @@ new class extends Component
                 <div>
                     <p class="mb-2 text-xs text-[var(--theme-text-muted)]">Apariencia en modo oscuro</p>
 
-                    <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
                         @foreach (\App\Services\OrganizacionService::MODOS_OSCURO as $clave => $modo)
                             <label
                                 wire:key="org-modo-{{ $clave }}"
@@ -905,6 +970,35 @@ new class extends Component
                     @error('logoModoOscuro')
                         <p class="mt-1 text-xs text-[var(--theme-danger)]">{{ $message }}</p>
                     @enderror
+
+                    {{-- Color de la placa (solo con «Con fondo») --}}
+                    <div x-show="modo === 'fondo'" x-cloak class="mt-3 flex flex-wrap items-center gap-3">
+                        <label for="org-color-fondo" class="text-xs text-[var(--theme-text-muted)]">Color del fondo</label>
+
+                        <input
+                            id="org-color-fondo"
+                            type="color"
+                            x-model="colorFondo"
+                            class="h-9 w-12 cursor-pointer rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] p-1"
+                        >
+
+                        @foreach (['#FFFFFF' => 'Blanco', '#F3F4F6' => 'Gris claro', '#FFFCFF' => 'Fondo claro del sistema'] as $color => $nombreColor)
+                            <button
+                                type="button"
+                                x-on:click="colorFondo = @js($color)"
+                                class="h-7 w-7 rounded-full border border-[var(--theme-border-strong)]"
+                                style="background-color: {{ $color }}"
+                                title="{{ $nombreColor }}"
+                                aria-label="{{ $nombreColor }}"
+                            ></button>
+                        @endforeach
+
+                        <span class="font-mono text-xs text-[var(--theme-text-muted)]" x-text="String(colorFondo).toUpperCase()"></span>
+                    </div>
+
+                    @error('logoColorFondo')
+                        <p class="mt-1 text-xs text-[var(--theme-danger)]">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 {{-- Vista previa --}}
@@ -916,25 +1010,52 @@ new class extends Component
                         @endif
                     </p>
 
-                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        <div class="flex h-28 items-center rounded-lg border border-[var(--theme-border)] bg-white px-5">
-                            <img
-                                src="{{ $logoPrevio ?? $logoActual }}"
-                                alt="Vista previa en modo claro"
-                                class="h-auto max-h-[4.5rem] object-contain"
-                                x-bind:style="'width: ' + Math.min(Math.round(135 * escala / 100), 170) + 'px'"
-                            >
-                        </div>
+                    {{--
+                        Mismo tamaño que la cabecera del menú lateral (256 × 96 px) y
+                        los colores reales del sistema: fondo claro #FFFCFF y fondo
+                        oscuro #111416 (resources/css/app.css, --theme-bg).
+                    --}}
+                    @php
+                        $previas = [
+                            ['titulo' => 'Modo claro', 'fondo' => '#FFFCFF', 'borde' => 'rgba(80, 81, 79, 0.10)', 'boton' => '#FFFFFF', 'icono' => '#7A7B79', 'oscuro' => false],
+                            ['titulo' => 'Modo oscuro', 'fondo' => '#111416', 'borde' => 'rgba(255, 255, 255, 0.08)', 'boton' => '#181C1F', 'icono' => '#969DA1', 'oscuro' => true],
+                        ];
+                    @endphp
 
-                        <div class="flex h-28 items-center rounded-lg border border-[var(--theme-border)] bg-[#111827] px-5">
-                            <img
-                                src="{{ $logoPrevio ?? $logoActual }}"
-                                alt="Vista previa en modo oscuro"
-                                class="org-logo-preview-dark h-auto max-h-[4.5rem] object-contain"
-                                x-bind:data-dark-mode="modo"
-                                x-bind:style="'width: ' + Math.min(Math.round(135 * escala / 100), 170) + 'px'"
-                            >
-                        </div>
+                    <div class="flex flex-wrap gap-4">
+                        @foreach ($previas as $previa)
+                            <figure class="w-64 max-w-full">
+                                <div
+                                    class="flex h-24 items-center justify-between gap-3 rounded-lg border px-5"
+                                    style="background-color: {{ $previa['fondo'] }}; border-color: {{ $previa['borde'] }};"
+                                >
+                                    <img
+                                        src="{{ $logoPrevio ?? $logoActual }}"
+                                        alt="Vista previa en {{ mb_strtolower($previa['titulo']) }}"
+                                        @class([
+                                            'h-auto max-h-[4.5rem] min-w-0 object-contain',
+                                            'org-logo-preview-dark' => $previa['oscuro'],
+                                        ])
+                                        @if ($previa['oscuro']) x-bind:data-dark-mode="modo" @endif
+                                        x-bind:style="'width: ' + Math.min(Math.round(135 * escala / 100), 170) + 'px; --org-logo-bg: ' + colorFondo"
+                                    >
+
+                                    {{-- Botón de colapsar del menú (referencia de espacio) --}}
+                                    <span
+                                        class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border"
+                                        style="background-color: {{ $previa['boton'] }}; border-color: {{ $previa['borde'] }}; color: {{ $previa['icono'] }};"
+                                        aria-hidden="true"
+                                    >
+                                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M15 6l-6 6 6 6"/>
+                                            <path d="M4 4v16"/>
+                                        </svg>
+                                    </span>
+                                </div>
+
+                                <figcaption class="mt-1.5 text-[11px] text-[var(--theme-text-muted)]">{{ $previa['titulo'] }}</figcaption>
+                            </figure>
+                        @endforeach
                     </div>
                 </div>
             </fieldset>
@@ -952,6 +1073,13 @@ new class extends Component
                 </x-ui.button>
             </div>
         </form>
+    @endif
+
+    {{-- ============================================================
+        COLORES (color principal de la organización)
+    ============================================================ --}}
+    @if ($tab === 'colores')
+        @include('components.catalogos.organizacion.colores')
     @endif
 
     {{-- ============================================================

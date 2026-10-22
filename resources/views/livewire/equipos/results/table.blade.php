@@ -225,6 +225,10 @@
     @keydown.escape.window="closePopover()"
     @resize.window="closePopover()"
 
+    {{-- Se cierra al desplazar la página (ver components/data-table/partials/desktop). --}}
+    @scroll.window.capture.passive="open && closePopover()"
+    @wheel.window.passive="open && closePopover()"
+
     class="
         hidden
         md:block

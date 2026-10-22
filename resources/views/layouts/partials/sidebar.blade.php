@@ -220,7 +220,7 @@
 
                     data-dark-mode="{{ $organizacion->logoModoOscuro() }}"
 
-                    style="--org-logo-w: {{ $organizacion->logoAncho(135) }}px;"
+                    style="--org-logo-w: {{ $organizacion->logoAncho(135) }}px; --org-logo-bg: {{ $organizacion->logoColorFondo() }};"
 
                     class="
                         org-logo
@@ -414,7 +414,7 @@
 
             px-3
 
-            space-y-1
+            space-y-0.5
         "
     >
 
@@ -460,16 +460,16 @@
                         : ''
                     }}
 
-                    min-h-10
+                    min-h-8
 
                     flex
                     items-center
 
                     gap-3
 
-                    px-3.5
+                    px-2.5
 
-                    rounded-lg
+                    rounded-md
 
                     text-sm
                 "
@@ -767,10 +767,10 @@
 
                         absolute
                         right-1.5
-                        top-[5px]
+                        top-1
 
-                        w-8
-                        h-8
+                        w-6
+                        h-6
 
                         flex
                         items-center
@@ -807,7 +807,7 @@
                     @unless ($submenuActivo) x-cloak @endunless
                     class="sidebar-submenu"
                 >
-                    <div class="ml-[1.4rem] mt-1 mb-1 pl-3 border-l border-[var(--theme-border)] space-y-0.5">
+                    <div class="ml-[1.15rem] mt-1 mb-1 pl-3 border-l border-[var(--theme-border)] space-y-0.5">
                         @foreach ($item['submenu'] as $sub)
                             <a
                                 href="{{ $sub['url'] }}"
@@ -827,7 +827,7 @@
                                     transition-colors
 
                                     {{ $sub['active']
-                                        ? 'bg-[var(--theme-surface)] font-semibold text-[var(--theme-text-strong)] shadow-[0_1px_3px_rgba(15,23,42,0.06)]'
+                                        ? 'bg-[color-mix(in_srgb,var(--theme-surface)_94%,var(--theme-text-strong)_6%)] font-semibold text-[var(--theme-text-strong)]'
                                         : 'text-[var(--theme-text-muted)] hover:bg-[var(--theme-surface)] hover:text-[var(--theme-text-strong)]'
                                     }}
                                 "
@@ -864,7 +864,7 @@
             border-t
             border-[var(--theme-border)]
 
-            space-y-1
+            space-y-0.5
         "
     >
 
@@ -879,7 +879,7 @@
             class="
                 sidebar-footer-link
 
-                min-h-10
+                min-h-8
 
                 flex
                 items-center
@@ -888,7 +888,7 @@
 
                 px-2
 
-                rounded-lg
+                rounded-md
 
                 text-sm
                 font-medium
@@ -982,7 +982,7 @@
                 sidebar-footer-link
 
                 w-full
-                min-h-10
+                min-h-8
 
                 flex
                 items-center
@@ -991,7 +991,7 @@
 
                 px-2
 
-                rounded-lg
+                rounded-md
 
                 text-sm
                 font-medium
@@ -1106,7 +1106,7 @@
                 sidebar-footer-link
 
                 w-full
-                min-h-10
+                min-h-8
 
                 flex
                 items-center
@@ -1115,7 +1115,7 @@
 
                 px-2
 
-                rounded-lg
+                rounded-md
 
                 text-sm
                 font-medium

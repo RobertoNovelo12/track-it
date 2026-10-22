@@ -159,23 +159,24 @@
     | OPCIÓN ACTIVA
     |--------------------------------------------------------------------------
     |
-    | Sin azul.
-    | Superficie limpia.
-    | Borde tenue.
-    | Sombra discreta.
+    | Superficie con un gris suave (neutro).
+    | Borde visible.
+    | Sin sombra.
     |
     */
 
     .sidebar-nav-active {
-        background: var(--theme-surface);
+        /*
+         * Como el menú de Claude: relleno gris suave, sin borde ni sombra.
+         * Un poco más marcado que el hover.
+         */
+        background: color-mix(in srgb, var(--theme-surface) 94%, var(--theme-text-strong) 6%);
 
-        border-color: var(--theme-border);
+        border-color: transparent;
 
         color: var(--theme-text-strong);
 
-        box-shadow:
-            0 2px 8px rgba(15, 23, 42, 0.06),
-            0 1px 2px rgba(15, 23, 42, 0.03);
+        box-shadow: none;
     }
 
 
@@ -186,34 +187,13 @@
     */
 
     .sidebar-nav-link:not(.sidebar-nav-active):hover {
-        background: var(--theme-surface);
+        background: color-mix(in srgb, var(--theme-surface) 97%, var(--theme-text-strong) 3%);
 
-        border-color: var(--theme-border);
+        border-color: transparent;
 
         color: var(--theme-text-strong);
 
-        box-shadow:
-            0 2px 8px rgba(15, 23, 42, 0.035);
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | SOMBRA EN MODO OSCURO
-    |--------------------------------------------------------------------------
-    */
-
-    html.dark .sidebar-nav-active {
-        box-shadow:
-            0 2px 10px rgba(0, 0, 0, 0.20),
-            0 1px 3px rgba(0, 0, 0, 0.12);
-    }
-
-
-    html.dark
-    .sidebar-nav-link:not(.sidebar-nav-active):hover {
-        box-shadow:
-            0 2px 8px rgba(0, 0, 0, 0.12);
+        box-shadow: none;
     }
 
 
@@ -588,6 +568,73 @@
 
     /*
     |--------------------------------------------------------------------------
+    | MÓVIL: OPCIONES CÓMODAS PARA EL DEDO
+    |--------------------------------------------------------------------------
+    |
+    | En escritorio las opciones son delgadas (32px). En el teléfono se
+    | usan 44px de alto (mínimo recomendado para tocar), texto e íconos
+    | un poco más grandes y más separación entre opciones.
+    |
+    */
+
+    @media (max-width: 767px) {
+
+        #sidebarNav {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        #sidebarNav > * + * {
+            margin-top: 0 !important;
+        }
+
+        #sidebar .sidebar-nav-link,
+        #sidebar .sidebar-footer-link {
+            min-height: 2.75rem;
+
+            gap: 0.875rem;
+
+            padding-left: 0.75rem;
+            padding-right: 0.75rem;
+
+            border-radius: 0.5rem;
+
+            font-size: 0.9375rem;
+        }
+
+        #sidebar .sidebar-nav-link > svg,
+        #sidebar .sidebar-footer-link > svg {
+            flex-basis: 20px;
+
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Flecha del submenú: área de toque de 36px centrada en la fila. */
+        #sidebar .sidebar-submenu-toggle {
+            top: 0.25rem;
+            right: 0.25rem;
+
+            width: 2.25rem;
+            height: 2.25rem;
+        }
+
+        #sidebar .sidebar-submenu a {
+            padding-top: 0.625rem;
+            padding-bottom: 0.625rem;
+
+            font-size: 0.875rem;
+        }
+
+        #sidebar .sidebar-submenu > div {
+            margin-left: 1.35rem;
+        }
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
     | SIDEBAR COLAPSADO - ESCRITORIO
     |--------------------------------------------------------------------------
     */
@@ -784,7 +831,8 @@
 
         html.sidebar-collapsed
         .sidebar-nav-link > svg {
-            transform: translateX(5px);
+            /* Centrado con el relleno de 10px (px-2.5) de las opciones. */
+            transform: translateX(9px);
         }
 
 

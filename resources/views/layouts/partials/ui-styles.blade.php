@@ -182,4 +182,97 @@
     [x-cloak] {
         display: none !important;
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | CONTROL DESLIZANTE (input type="range") — clase .ui-range
+    |--------------------------------------------------------------------------
+    |
+    | Pista delgada con el color de borde del tema; la parte recorrida en
+    | --theme-primary (variable --valor = porcentaje, la pone la vista).
+    | Perilla blanca con borde primario, como los controles del sistema.
+    |
+    */
+    .ui-range {
+        --valor: 50%;
+        -webkit-appearance: none;
+        appearance: none;
+        height: 1.25rem;
+        background: transparent;
+        cursor: pointer;
+    }
+
+    .ui-range:focus {
+        outline: none;
+    }
+
+    .ui-range::-webkit-slider-runnable-track {
+        height: 6px;
+        border-radius: 9999px;
+        background: linear-gradient(
+            to right,
+            var(--theme-primary) 0%,
+            var(--theme-primary) var(--valor),
+            var(--theme-border-strong) var(--valor),
+            var(--theme-border-strong) 100%
+        );
+    }
+
+    .ui-range::-moz-range-track {
+        height: 6px;
+        border-radius: 9999px;
+        background: var(--theme-border-strong);
+    }
+
+    .ui-range::-moz-range-progress {
+        height: 6px;
+        border-radius: 9999px;
+        background: var(--theme-primary);
+    }
+
+    .ui-range::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 18px;
+        height: 18px;
+        margin-top: -6px;
+        border-radius: 9999px;
+        border: 2px solid var(--theme-primary);
+        background: var(--theme-surface);
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.15);
+        transition: transform 120ms ease-out, box-shadow 120ms ease-out;
+    }
+
+    .ui-range::-moz-range-thumb {
+        width: 14px;
+        height: 14px;
+        border-radius: 9999px;
+        border: 2px solid var(--theme-primary);
+        background: var(--theme-surface);
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.15);
+        transition: transform 120ms ease-out, box-shadow 120ms ease-out;
+    }
+
+    .ui-range:hover::-webkit-slider-thumb,
+    .ui-range:active::-webkit-slider-thumb {
+        transform: scale(1.1);
+    }
+
+    .ui-range:hover::-moz-range-thumb,
+    .ui-range:active::-moz-range-thumb {
+        transform: scale(1.1);
+    }
+
+    .ui-range:focus-visible::-webkit-slider-thumb {
+        box-shadow: 0 0 0 4px var(--theme-primary-soft);
+    }
+
+    .ui-range:focus-visible::-moz-range-thumb {
+        box-shadow: 0 0 0 4px var(--theme-primary-soft);
+    }
+
+    .ui-range:disabled {
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
 </style>

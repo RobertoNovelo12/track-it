@@ -40,6 +40,7 @@ class EquiposIndex extends Component
     public const SITUACIONES = [
         'vigentes' => 'Equipos vigentes',
         'asignados' => 'Asignados',
+        'sin_asignar' => 'Sin asignar',
         'en_mantenimiento' => 'En mantenimiento',
         'mantenimiento_vencido' => 'Mantenimiento vencido',
         'garantia_vencida' => 'Garantía vencida',
@@ -166,7 +167,7 @@ class EquiposIndex extends Component
 
     /*
      * Situación operativa (accesos de la Vista general):
-     * vigentes, asignados, en_mantenimiento, mantenimiento_vencido,
+     * vigentes, asignados, sin_asignar, en_mantenimiento, mantenimiento_vencido,
      * garantia_vencida, garantia_por_vencer.
      */
     #[Url]
@@ -1679,6 +1680,14 @@ class EquiposIndex extends Component
 
         match ($situacion) {
             'asignados' => $query->whereExists(function (Builder $q): void {
+                $q->selectRaw('1')
+                    ->from('asignaciones as a_situacion')
+                    ->whereColumn('a_situacion.id_equipo', 'e.id_equipo')
+                    ->whereNull('a_situacion.fecha_fin');
+            }),
+
+            // Vigentes sin asignación activa (tarjeta «Equipos no asignados»).
+            'sin_asignar' => $query->whereNotExists(function (Builder $q): void {
                 $q->selectRaw('1')
                     ->from('asignaciones as a_situacion')
                     ->whereColumn('a_situacion.id_equipo', 'e.id_equipo')

@@ -184,10 +184,14 @@
         ======================================================== --}}
         <div
             class="
-                flex
-                flex-wrap
-                items-center
+                {{-- Móvil: los tres botones en una sola fila del mismo ancho --}}
+                grid
+                grid-cols-3
                 gap-2
+
+                sm:flex
+                sm:flex-wrap
+                sm:items-center
 
                 xl:justify-end
             "
@@ -199,12 +203,14 @@
                 wire:navigate.hover
                 class="
                     h-9
-                    px-4
+                    px-2
+                    sm:px-4
 
                     inline-flex
                     items-center
                     justify-center
-                    gap-2
+                    gap-1.5
+                    sm:gap-2
 
                     rounded-md
 
@@ -239,12 +245,14 @@
                 wire:navigate.hover
                 class="
                     h-9
-                    px-4
+                    px-2
+                    sm:px-4
 
                     inline-flex
                     items-center
                     justify-center
-                    gap-2
+                    gap-1.5
+                    sm:gap-2
 
                     rounded-md
 
@@ -286,12 +294,14 @@
                 wire:navigate.hover
                 class="
                     h-9
-                    px-4
+                    px-2
+                    sm:px-4
 
                     inline-flex
                     items-center
                     justify-center
-                    gap-2
+                    gap-1.5
+                    sm:gap-2
 
                     rounded-md
 
@@ -348,7 +358,10 @@
         {{-- ========================================================
             EQUIPOS ASIGNADOS
         ======================================================== --}}
-        <div
+        <a
+            href="{{ route('equipos.index', ['situacion' => 'asignados']) }}"
+            wire:navigate.hover
+            title="Ver equipos asignados en el inventario"
             class="
                 bg-[var(--theme-surface)]
 
@@ -364,6 +377,12 @@
                 flex
                 items-center
                 gap-4
+
+                transition-colors
+                hover:bg-[var(--theme-surface-soft)]
+                focus-visible:outline-none
+                focus-visible:ring-2
+                focus-visible:ring-[var(--theme-primary)]
             "
         >
 
@@ -465,13 +484,16 @@
                 <path d="M9 6l6 6-6 6"/>
             </svg>
 
-        </div>
+        </a>
 
 
         {{-- ========================================================
             EQUIPOS NO ASIGNADOS
         ======================================================== --}}
-        <div
+        <a
+            href="{{ route('equipos.index', ['situacion' => 'sin_asignar']) }}"
+            wire:navigate.hover
+            title="Ver equipos sin asignar en el inventario"
             class="
                 bg-[var(--theme-surface)]
 
@@ -487,6 +509,12 @@
                 flex
                 items-center
                 gap-4
+
+                transition-colors
+                hover:bg-[var(--theme-surface-soft)]
+                focus-visible:outline-none
+                focus-visible:ring-2
+                focus-visible:ring-[var(--theme-primary)]
             "
         >
 
@@ -573,13 +601,16 @@
                 <path d="M9 6l6 6-6 6"/>
             </svg>
 
-        </div>
+        </a>
 
 
         {{-- ========================================================
             MOVIMIENTOS
         ======================================================== --}}
-        <div
+        <a
+            href="{{ route('asignaciones.history') }}"
+            wire:navigate.hover
+            title="Ver el historial de movimientos"
             class="
                 bg-[var(--theme-surface)]
 
@@ -595,6 +626,12 @@
                 flex
                 items-center
                 gap-4
+
+                transition-colors
+                hover:bg-[var(--theme-surface-soft)]
+                focus-visible:outline-none
+                focus-visible:ring-2
+                focus-visible:ring-[var(--theme-primary)]
             "
         >
 
@@ -682,7 +719,7 @@
                 <path d="M9 6l6 6-6 6"/>
             </svg>
 
-        </div>
+        </a>
 
     </section>
 

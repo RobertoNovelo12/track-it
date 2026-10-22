@@ -21,10 +21,15 @@
         ======================================================== --}}
         <div
             class="
-                flex
-                flex-wrap
-                items-center
+                {{-- Móvil: los tres botones en una sola fila del mismo ancho --}}
+                grid
+                grid-cols-3
                 gap-2
+
+                sm:flex
+                sm:flex-wrap
+                sm:items-center
+
                 xl:justify-end
             "
         >
@@ -35,11 +40,13 @@
                 disabled
                 class="
                     h-9
-                    px-4
+                    px-2
+                    sm:px-4
                     inline-flex
                     items-center
                     justify-center
-                    gap-2
+                    gap-1.5
+                    sm:gap-2
                     rounded-md
                     bg-[var(--theme-primary)]
                     text-sm
@@ -70,12 +77,14 @@
                 wire:navigate.hover
                 class="
                     h-9
-                    px-4
+                    px-2
+                    sm:px-4
 
                     inline-flex
                     items-center
                     justify-center
-                    gap-2
+                    gap-1.5
+                    sm:gap-2
 
                     rounded-md
 
@@ -117,12 +126,14 @@
                 wire:navigate.hover
                 class="
                     h-9
-                    px-4
+                    px-2
+                    sm:px-4
 
                     inline-flex
                     items-center
                     justify-center
-                    gap-2
+                    gap-1.5
+                    sm:gap-2
 
                     rounded-md
 

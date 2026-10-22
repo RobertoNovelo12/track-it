@@ -64,7 +64,8 @@ Route::middleware([
         '/equipos/escaneo/{codigo}',
         [\App\Http\Controllers\EquiposRecibidosController::class, 'buscar']
     )
-        ->where('codigo', '[A-Za-z0-9\-]{1,60}')
+        // Cualquier texto: también números de serie (con puntos, barras, espacios…).
+        ->where('codigo', '.{1,100}')
         ->name('equipos.escaneo.buscar');
 
     Route::post(
@@ -389,6 +390,39 @@ Route::middleware([
     | Editar marca o modelo
     |--------------------------------------------------------------------------
     */
+
+    /*
+     * Ubicaciones y tipos de ubicación: agregar y editar en páginas propias.
+     */
+    Route::get(
+        '/catalogos/ubicaciones/nueva',
+        fn () => view('catalogos.ubicaciones.create')
+    )->name('catalogos.ubicaciones.create')->middleware('can:administrar');
+
+    Route::get(
+        '/catalogos/ubicaciones/{ubicacion}/editar',
+        fn (int $ubicacion) => view('catalogos.ubicaciones.edit', ['ubicacionId' => $ubicacion])
+    )->whereNumber('ubicacion')->name('catalogos.ubicaciones.edit')->middleware('can:administrar');
+
+    Route::get(
+        '/catalogos/ubicaciones/tipos',
+        fn () => view('catalogos.ubicaciones.tipos.index')
+    )->name('catalogos.tipos-ubicacion.index')->middleware('can:administrar');
+
+    Route::get(
+        '/catalogos/ubicaciones/tipos/nuevo',
+        fn () => view('catalogos.ubicaciones.tipos.create')
+    )->name('catalogos.tipos-ubicacion.create')->middleware('can:administrar');
+
+    Route::get(
+        '/catalogos/ubicaciones/tipos/{tipo}/editar',
+        fn (int $tipo) => view('catalogos.ubicaciones.tipos.edit', ['tipoId' => $tipo])
+    )->whereNumber('tipo')->name('catalogos.tipos-ubicacion.edit')->middleware('can:administrar');
+
+    Route::get(
+        '/catalogos/departamentos/nuevo',
+        fn () => view('catalogos.departamentos.create')
+    )->name('catalogos.departamentos.create')->middleware('can:administrar');
 
     Route::get(
         '/catalogos/departamentos/{departamento}/editar',

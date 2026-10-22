@@ -67,6 +67,14 @@ async function enfoqueContinuo(stream) {
     }
 }
 
+/*
+ * Formatos leídos: el código de inventario es Code 128; los demás son
+ * los habituales en etiquetas de número de serie (Code 39/93, EAN/UPC,
+ * ITF), para poder dar de alta un equipo que todavía no está registrado.
+ */
+const FORMATOS_NATIVOS = ['code_128', 'code_39', 'code_93', 'ean_13', 'ean_8', 'upc_a', 'upc_e', 'itf'];
+let formatosNativos = ['code_128'];
+
 async function lectorNativoDisponible() {
     if (! ('BarcodeDetector' in window)) {
         return false;
@@ -75,6 +83,8 @@ async function lectorNativoDisponible() {
     try {
         const formatos = await window.BarcodeDetector.getSupportedFormats();
 
+        formatosNativos = FORMATOS_NATIVOS.filter((formato) => formatos.includes(formato));
+
         return formatos.includes('code_128');
     } catch (error) {
         return false;
@@ -82,7 +92,7 @@ async function lectorNativoDisponible() {
 }
 
 async function iniciarNativo(video) {
-    const detector = new window.BarcodeDetector({ formats: ['code_128'] });
+    const detector = new window.BarcodeDetector({ formats: formatosNativos });
 
     flujo = await navigator.mediaDevices.getUserMedia(RESTRICCIONES);
     video.srcObject = flujo;
@@ -121,9 +131,18 @@ async function iniciarZxing(video) {
         import('@zxing/library'),
     ]);
 
-    // Solo Code 128 y búsqueda intensiva (más tolerante a reflejos y pantallas).
+    // Códigos de una dimensión habituales y búsqueda intensiva (más tolerante a reflejos y pantallas).
     const pistas = new Map([
-        [DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.CODE_128]],
+        [DecodeHintType.POSSIBLE_FORMATS, [
+            BarcodeFormat.CODE_128,
+            BarcodeFormat.CODE_39,
+            BarcodeFormat.CODE_93,
+            BarcodeFormat.EAN_13,
+            BarcodeFormat.EAN_8,
+            BarcodeFormat.UPC_A,
+            BarcodeFormat.UPC_E,
+            BarcodeFormat.ITF,
+        ]],
         [DecodeHintType.TRY_HARDER, true],
     ]);
 

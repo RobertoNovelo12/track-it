@@ -5,6 +5,7 @@ namespace App\Services;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 /*
@@ -52,7 +53,17 @@ class OrganizacionService
             'etiqueta' => 'Versión blanca',
             'descripcion' => 'Convierte el logotipo en una silueta blanca.',
         ],
+        'fondo' => [
+            'etiqueta' => 'Con fondo',
+            'descripcion' => 'Coloca el logotipo sobre una placa de color, sin alterar sus colores.',
+        ],
     ];
+
+    /** Color principal del sistema cuando la organización no elige uno. */
+    public const COLOR_PRIMARIO_PREDETERMINADO = '#247BA0';
+
+    /** Color de la placa cuando la apariencia en modo oscuro es «fondo». */
+    public const COLOR_FONDO_PREDETERMINADO = '#FFFFFF';
 
     public const MODOS_CAMPO = [
         'obligatorio' => 'Obligatorio',
@@ -97,7 +108,7 @@ class OrganizacionService
         ],
     ];
 
-    private const CACHE_KEY = 'trackit.organizacion.configuracion.v1';
+    private const CACHE_KEY = 'trackit.organizacion.configuracion.v3';
 
     private ?array $memoria = null;
 
@@ -242,6 +253,17 @@ class OrganizacionService
         return $this->configuracion()['logo_modo_oscuro'];
     }
 
+    /** Color principal elegido por la organización (null = predeterminado). */
+    public function colorPrimario(): ?string
+    {
+        return $this->configuracion()['color_primario'] ?? null;
+    }
+
+    public function logoColorFondo(): string
+    {
+        return $this->configuracion()['logo_color_fondo'] ?? self::COLOR_FONDO_PREDETERMINADO;
+    }
+
     /*
      * Ancho en píxeles a partir del tamaño base de cada ubicación.
      */
@@ -307,7 +329,15 @@ class OrganizacionService
             'logo_version',
             'logo_escala',
             'logo_modo_oscuro',
+            'logo_color_fondo',
+            'color_primario',
         ];
+
+        foreach (['logo_color_fondo', 'color_primario'] as $columnaNueva) {
+            if (array_key_exists($columnaNueva, $cambios) && ! Schema::hasColumn('configuracion_organizacion', $columnaNueva)) {
+                unset($cambios[$columnaNueva]);
+            }
+        }
 
         $datos = array_intersect_key($cambios, array_flip($permitidas));
 
@@ -354,6 +384,8 @@ class OrganizacionService
                 'logo_escala',
                 'logo_modo_oscuro',
                 'actualizado_en',
+                ...(Schema::hasColumn('configuracion_organizacion', 'logo_color_fondo') ? ['logo_color_fondo'] : []),
+                ...(Schema::hasColumn('configuracion_organizacion', 'color_primario') ? ['color_primario'] : []),
             ]);
 
         if (! $fila) {
@@ -383,6 +415,12 @@ class OrganizacionService
             'logo_modo_oscuro' => array_key_exists($fila->logo_modo_oscuro, self::MODOS_OSCURO)
                 ? $fila->logo_modo_oscuro
                 : 'blanco',
+            'logo_color_fondo' => preg_match('/^#[0-9A-Fa-f]{6}$/', (string) ($fila->logo_color_fondo ?? ''))
+                ? strtoupper($fila->logo_color_fondo)
+                : self::COLOR_FONDO_PREDETERMINADO,
+            'color_primario' => preg_match('/^#[0-9A-Fa-f]{6}$/', (string) ($fila->color_primario ?? ''))
+                ? strtoupper($fila->color_primario)
+                : null,
             'actualizado_en' => $fila->actualizado_en,
         ];
     }
@@ -398,6 +436,8 @@ class OrganizacionService
             'logo_version' => null,
             'logo_escala' => 100,
             'logo_modo_oscuro' => 'blanco',
+            'logo_color_fondo' => self::COLOR_FONDO_PREDETERMINADO,
+            'color_primario' => null,
             'actualizado_en' => null,
         ];
     }

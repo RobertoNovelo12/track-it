@@ -10,7 +10,7 @@ class Ubicacion extends Model
     protected $primaryKey = 'id_ubicacion';
     public $timestamps = false;
 
-    protected $fillable = ['id_sede', 'id_area', 'nombre', 'descripcion', 'activo'];
+    protected $fillable = ['id_sede', 'id_area', 'id_unidad', 'id_tipo_ubicacion', 'nombre', 'descripcion', 'activo'];
 
     public function sede()
     {

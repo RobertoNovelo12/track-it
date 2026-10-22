@@ -23,10 +23,15 @@
 @endphp
 
 
+{{-- La sección activa se agrega a la ruta de la barra superior
+    (Inicio › Ajustes › Cuenta). --}}
 <div
     x-data="{
-        activeSection: @js($section)
+        activeSection: @js($section),
+        etiquetasSeccion: @js(collect($sections)->map(fn ($seccion) => $seccion['label'])->all()),
     }"
+
+    x-effect="$dispatch('encabezado-seccion', { miga: etiquetasSeccion[activeSection] ?? '' })"
 
     class="mb-5"
 >

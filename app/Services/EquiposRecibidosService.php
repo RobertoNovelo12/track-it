@@ -42,6 +42,30 @@ class EquiposRecibidosService
     }
 
     /*
+     * ¿Ya se corrió la migración de códigos no registrados? Solo se guarda el «sí».
+     */
+    public function admiteCodigos(): bool
+    {
+        if (Cache::get('trackit.equipos_recibidos.codigo.v1') === true) {
+            return true;
+        }
+
+        $existe = $this->disponible() && Schema::hasColumn('equipos_recibidos', 'codigo');
+
+        if ($existe) {
+            Cache::forever('trackit.equipos_recibidos.codigo.v1', true);
+        }
+
+        return $existe;
+    }
+
+    /** Código leído tal como se guardará (sin espacios de más, máx. 100). */
+    public function normalizarCodigo(string $leido): string
+    {
+        return mb_substr(trim(preg_replace('/\s+/', ' ', $leido) ?? ''), 0, 100);
+    }
+
+    /*
     |--------------------------------------------------------------------------
     | Buscar el equipo de un código escaneado
     |--------------------------------------------------------------------------
@@ -53,29 +77,53 @@ class EquiposRecibidosService
 
     public function buscarPorCodigo(string $leido): ?array
     {
-        $numero = CodigoBarras::numero($leido);
+        $leido = $this->normalizarCodigo($leido);
 
-        if ($numero === null || strlen($numero) > 40) {
+        if ($leido === '') {
             return null;
         }
 
-        $equipo = DB::table('equipos as e')
+        $consulta = fn () => DB::table('equipos as e')
             ->leftJoin('tipos_equipo as te', 'te.id_tipo_equipo', '=', 'e.id_tipo_equipo')
             ->leftJoin('marcas as ma', 'ma.id_marca', '=', 'e.id_marca')
             ->leftJoin('modelos as mo', 'mo.id_modelo', '=', 'e.id_modelo')
             ->leftJoin('estados_equipo as ee', 'ee.id_estado_equipo', '=', 'e.id_estado_activo')
-            ->whereRaw("REGEXP_REPLACE(e.codigo_inventario, '[^0-9]', '', 'g') = ?", [$numero])
-            ->orderBy('e.id_equipo')
-            ->first([
-                'e.id_equipo',
-                'e.codigo_inventario',
-                'e.nombre_equipo',
-                'te.nombre as tipo',
-                'ma.nombre as marca',
-                'mo.nombre as modelo',
-                'ee.nombre as estado',
-                'ee.clave as estado_clave',
-            ]);
+            ->orderBy('e.id_equipo');
+
+        $columnas = [
+            'e.id_equipo',
+            'e.codigo_inventario',
+            'e.nombre_equipo',
+            'te.nombre as tipo',
+            'ma.nombre as marca',
+            'mo.nombre as modelo',
+            'ee.nombre as estado',
+            'ee.clave as estado_clave',
+        ];
+
+        $equipo = null;
+
+        /*
+         * 1) Código de inventario: nuestro código de barras (solo dígitos)
+         *    o el código escrito completo («ACT-000061»). Un número de serie
+         *    con letras y dígitos NO se compara por sus dígitos, para no
+         *    confundirlo con otro equipo.
+         */
+        $numero = CodigoBarras::numero($leido);
+
+        if ($numero !== null && strlen($numero) <= 40 && (ctype_digit($leido) || preg_match('/^[A-Za-z]{1,6}-?\d+$/', $leido))) {
+            $equipo = $consulta()
+                ->whereRaw("REGEXP_REPLACE(e.codigo_inventario, '[^0-9]', '', 'g') = ?", [$numero])
+                ->when(! ctype_digit($leido), fn ($query) => $query->whereRaw('UPPER(e.codigo_inventario) = ?', [mb_strtoupper($leido)]))
+                ->first($columnas);
+        }
+
+        // 2) Número de serie exacto (sin distinguir mayúsculas).
+        if (! $equipo) {
+            $equipo = $consulta()
+                ->whereRaw('UPPER(TRIM(e.numero_serie)) = ?', [mb_strtoupper($leido)])
+                ->first($columnas);
+        }
 
         if (! $equipo) {
             return null;
@@ -135,6 +183,62 @@ class EquiposRecibidosService
     }
 
     /*
+     * Código que no está en el inventario: se guarda el texto leído para
+     * darlo de alta desde la PC (se usará como número de serie).
+     */
+    public function enviarCodigo(int $idUsuario, string $codigo): string
+    {
+        $codigo = $this->normalizarCodigo($codigo);
+
+        $pendiente = DB::table('equipos_recibidos')
+            ->where('id_usuario', $idUsuario)
+            ->whereNull('id_equipo')
+            ->where('codigo', $codigo)
+            ->whereNull('atendido_en')
+            ->exists();
+
+        if ($pendiente) {
+            return 'duplicado';
+        }
+
+        try {
+            DB::table('equipos_recibidos')->insert([
+                'id_equipo' => null,
+                'codigo' => $codigo,
+                'id_usuario' => $idUsuario,
+                'recibido_en' => now(),
+            ]);
+        } catch (QueryException $e) {
+            if (($e->errorInfo[0] ?? null) === '23505') {
+                return 'duplicado';
+            }
+
+            throw $e;
+        }
+
+        return 'enviado';
+    }
+
+    /*
+     * Al dar de alta un equipo con ese número de serie, el código
+     * pendiente sale de todas las bandejas.
+     */
+    public function atenderPorSerie(?string $numeroSerie): void
+    {
+        $numeroSerie = $this->normalizarCodigo((string) $numeroSerie);
+
+        if ($numeroSerie === '' || ! $this->admiteCodigos()) {
+            return;
+        }
+
+        DB::table('equipos_recibidos')
+            ->whereNull('id_equipo')
+            ->whereRaw('UPPER(codigo) = ?', [mb_strtoupper($numeroSerie)])
+            ->whereNull('atendido_en')
+            ->update(['atendido_en' => now(), 'motivo_atencion' => 'alta']);
+    }
+
+    /*
     |--------------------------------------------------------------------------
     | Bandeja
     |--------------------------------------------------------------------------
@@ -146,8 +250,10 @@ class EquiposRecibidosService
             return [];
         }
 
+        $codigos = $this->admiteCodigos();
+
         return DB::table('equipos_recibidos as r')
-            ->join('equipos as e', 'e.id_equipo', '=', 'r.id_equipo')
+            ->leftJoin('equipos as e', 'e.id_equipo', '=', 'r.id_equipo')
             ->leftJoin('tipos_equipo as te', 'te.id_tipo_equipo', '=', 'e.id_tipo_equipo')
             ->leftJoin('estados_equipo as ee', 'ee.id_estado_equipo', '=', 'e.id_estado_activo')
             ->where('r.id_usuario', $idUsuario)
@@ -163,11 +269,15 @@ class EquiposRecibidosService
                 'te.nombre as tipo',
                 'ee.nombre as estado',
                 'ee.clave as estado_clave',
+                $codigos ? 'r.codigo as codigo_leido' : DB::raw('NULL as codigo_leido'),
             ])
             ->map(fn ($fila): array => [
                 'id' => (int) $fila->id_recibido,
-                'id_equipo' => (int) $fila->id_equipo,
-                'codigo' => (string) $fila->codigo_inventario,
+                'id_equipo' => $fila->id_equipo !== null ? (int) $fila->id_equipo : null,
+                // Sin equipo: código leído que no está en el inventario (número de serie).
+                'nuevo' => $fila->id_equipo === null,
+                'codigo_leido' => (string) ($fila->codigo_leido ?? ''),
+                'codigo' => (string) ($fila->codigo_inventario ?? ''),
                 'nombre' => (string) $fila->nombre_equipo,
                 'tipo' => (string) ($fila->tipo ?? ''),
                 'estado' => (string) ($fila->estado ?? ''),

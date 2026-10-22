@@ -233,6 +233,12 @@ new class extends Component
             ]"
         />
 
+        <x-slot:actions>
+            <x-admin.action-button :href="route('catalogos.departamentos.create')">
+                Añadir departamento
+            </x-admin.action-button>
+        </x-slot:actions>
+
         <x-slot:footer>
             @if ($search !== '' || $estado !== 'todos' || $hotelId !== '')
                 <button

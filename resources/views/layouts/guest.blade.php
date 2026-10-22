@@ -441,7 +441,7 @@
                     src="{{ $organizacion->logoUrl() }}"
                     alt="{{ $organizacion->nombre() }}"
                     data-dark-mode="{{ $organizacion->logoModoOscuro() }}"
-                    style="--org-logo-w: {{ $organizacion->logoAncho(150) }}px; --org-logo-w-sm: {{ $organizacion->logoAncho(170) }}px;"
+                    style="--org-logo-w: {{ $organizacion->logoAncho(150) }}px; --org-logo-w-sm: {{ $organizacion->logoAncho(170) }}px; --org-logo-bg: {{ $organizacion->logoColorFondo() }};"
                     class="
                         org-logo
 

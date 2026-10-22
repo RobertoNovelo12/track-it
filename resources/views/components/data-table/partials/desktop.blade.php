@@ -132,6 +132,15 @@
     @keydown.escape.window="closePopover()"
     @resize.window="closePopover()"
 
+    {{--
+        El acceso rápido usa posición fija: al desplazar la página (o
+        cualquier contenedor) se cierra. Si el puntero se queda quieto
+        mientras la página se mueve, el navegador no siempre envía
+        mouseleave, y la ventana quedaba flotando sobre otros elementos.
+    --}}
+    @scroll.window.capture.passive="open && closePopover()"
+    @wheel.window.passive="open && closePopover()"
+
     class="
         hidden
         lg:block

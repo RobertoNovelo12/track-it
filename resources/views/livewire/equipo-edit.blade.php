@@ -221,18 +221,23 @@
 
         {{-- ============================================================
             ACCIONES SUPERIORES
+            Volver a la izquierda; exportar y dar de baja a la derecha.
         ============================================================ --}}
-        <div
-            class="
-                flex
-                flex-col
-                sm:flex-row
-                sm:items-center
-                sm:justify-end
-                gap-3
-                mb-4
-            "
-        >
+        <div class="mb-4 flex items-center gap-2 sm:gap-3">
+            <a
+                href="{{ route('equipos.index') }}"
+                wire:navigate.hover
+                class="flex h-10 shrink-0 items-center justify-center gap-2 rounded-lg border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 text-sm font-medium text-[var(--theme-text-muted)] transition-colors hover:border-[var(--theme-primary-border)] hover:bg-[var(--theme-surface-soft)] hover:text-[var(--theme-text)] sm:px-4"
+                aria-label="Volver al inventario"
+            >
+                <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+                    <path d="M15 6l-6 6 6 6"/>
+                </svg>
+
+                <span class="hidden sm:inline">Volver</span>
+            </a>
+
+            <div class="flex min-w-0 flex-1 items-center justify-end gap-2 sm:gap-3">
             <button
                 type="button"
                 class="
@@ -315,6 +320,7 @@
                 Dar de baja
             </a>
             @endunless
+            </div>
         </div>
 
         {{-- ============================================================
@@ -356,17 +362,33 @@
                         </h2>
 
                         <div class="max-w-lg">
-                            {{-- Bloqueado: el tipo de un equipo no se cambia al editar. --}}
-                            <x-searchable-select
-                                x-model="idTipoEquipo"
-                                x-options="data.tiposEquipo"
-                                x-disabled="true"
-                                label="Tipo de equipo *"
-                                placeholder="Buscar tipo de equipo..."
-                            />
+                            {{--
+                                Bloqueado: cambiar el tipo borraría los datos específicos
+                                ya capturados (p. ej. «Información de Teléfono»).
+                                Se muestra como campo de solo lectura con candado.
+                            --}}
+                            <label class="mb-1.5 block text-xs text-[var(--theme-text-muted)]">
+                                Tipo de equipo *
+                            </label>
+
+                            <div
+                                class="flex h-[42px] w-full cursor-not-allowed items-center gap-2 rounded-md border border-[var(--theme-border)] bg-[var(--theme-surface-soft)] px-3 text-sm text-[var(--theme-text)]"
+                                aria-readonly="true"
+                                title="El tipo de equipo no se puede cambiar"
+                            >
+                                <span
+                                    class="min-w-0 flex-1 truncate"
+                                    x-text="(data.tiposEquipo ?? []).find(opcion => String(opcion.value) === String(idTipoEquipo))?.label ?? 'Sin tipo'"
+                                ></span>
+
+                                <svg class="h-4 w-4 shrink-0 text-[var(--theme-text-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <rect x="5" y="11" width="14" height="9" rx="1.5"/>
+                                    <path d="M8 11V8a4 4 0 0 1 8 0v3"/>
+                                </svg>
+                            </div>
 
                             <p class="mt-1 text-xs text-[var(--theme-text-muted)]">
-                                El tipo de equipo no se puede cambiar.
+                                No se puede cambiar: los datos específicos del tipo se perderían.
                             </p>
 
                             <p
@@ -831,6 +853,8 @@
                     label: 'Modelo',
                     type: 'select',
                     options: 'modelos',
+                    // Va con la marca: siempre visible (opcional).
+                    alwaysVisible: true,
                 },
 
                 direccion_mac: {
@@ -911,7 +935,13 @@
                     ([key, base], index) => {
                         const meta = configured[key];
 
-                        if (!base.required && !base.alwaysVisible && !meta) {
+                        /*
+                         * Un campo que ya tiene dato se muestra aunque el tipo no
+                         * lo tenga configurado, para no ocultar (ni perder) lo guardado.
+                         */
+                        const tieneDato = String(this.data?.initial?.[base.model] ?? '').trim() !== '';
+
+                        if (!base.required && !base.alwaysVisible && !meta && !tieneDato) {
                             return;
                         }
 

@@ -21,6 +21,16 @@
         avisos: [],
         siguiente: 1,
 
+        /*
+         * Se registra aquí y no en x-init: Alpine ejecuta la función que
+         * devuelve una expresión de x-init, y eso creaba un aviso vacío
+         * en cada carga de página.
+         */
+        init() {
+            window.trackitToast = (type, message, title = null) =>
+                this.agregar({ type, message, title });
+        },
+
         agregar(detalle) {
             const datos = Array.isArray(detalle) ? (detalle[0] ?? {}) : (detalle ?? {});
 
@@ -103,10 +113,6 @@
         },
     }"
 
-    x-init="
-        window.trackitToast = (type, message, title = null) =>
-            agregar({ type, message, title });
-    "
 
     @toast.window="agregar($event.detail)"
 

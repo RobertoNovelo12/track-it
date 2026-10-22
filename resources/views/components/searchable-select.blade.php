@@ -474,16 +474,17 @@
         x-model="{{ $xModel }}"
     @endif
 
-    @if (filled($xOptions))
-        x-effect="syncOptions({{ $xOptions }})"
-    @endif
-
-    @if (filled($xDisabled))
-        x-effect="syncDisabled({{ $xDisabled }})"
-    @endif
-
-    @if (filled($xPlaceholder))
-        x-effect="syncPlaceholder({{ $xPlaceholder }})"
+    {{--
+        Un solo x-effect: el navegador descarta los atributos repetidos, así
+        que con varios x-effect solo funcionaba el primero (x-options) y
+        x-disabled / x-placeholder nunca se aplicaban.
+    --}}
+    @if (filled($xOptions) || filled($xDisabled) || filled($xPlaceholder))
+        x-effect="
+            @if (filled($xOptions)) syncOptions({{ $xOptions }}); @endif
+            @if (filled($xDisabled)) syncDisabled({{ $xDisabled }}); @endif
+            @if (filled($xPlaceholder)) syncPlaceholder({{ $xPlaceholder }}); @endif
+        "
     @endif
 
     @click.outside="closeDropdown()"

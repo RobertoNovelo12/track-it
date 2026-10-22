@@ -1,7 +1,10 @@
 <div aria-busy="true" aria-label="Cargando formulario de edición" class="space-y-5">
-    <div class="flex justify-end gap-3" aria-hidden="true">
-        <div class="h-10 w-32 animate-pulse rounded-lg bg-[var(--theme-surface-soft)]"></div>
-        <div class="h-10 w-32 animate-pulse rounded-lg bg-[var(--theme-surface-soft)]"></div>
+    <div class="flex items-center gap-2 sm:gap-3" aria-hidden="true">
+        <div class="h-10 w-10 animate-pulse rounded-lg bg-[var(--theme-surface-soft)] sm:w-24"></div>
+        <div class="flex flex-1 justify-end gap-2 sm:gap-3">
+            <div class="h-10 flex-1 animate-pulse rounded-lg bg-[var(--theme-surface-soft)] sm:w-32 sm:flex-none"></div>
+            <div class="h-10 flex-1 animate-pulse rounded-lg bg-[var(--theme-surface-soft)] sm:w-32 sm:flex-none"></div>
+        </div>
     </div>
     <section class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 sm:p-6">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">

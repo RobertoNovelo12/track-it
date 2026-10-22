@@ -12,7 +12,9 @@
 <div
     x-data="{
         abierto: false,
-        estado: 'camara',      // camara | consultando | equipo | enviado | error
+        estado: 'camara',      // camara | consultando | equipo | nuevo | enviado | error
+        // Código que no está en el inventario (probable número de serie).
+        codigoNuevo: null,
         mensaje: '',
         equipo: null,
         puedeEnviar: false,
@@ -41,6 +43,7 @@
             clearTimeout(this.temporizador);
             this.estado = 'camara';
             this.equipo = null;
+            this.codigoNuevo = null;
             this.mensaje = '';
 
             try {
@@ -115,6 +118,19 @@
                 );
                 const datos = await respuesta.json().catch(() => ({}));
 
+                // No está en el inventario: ofrecer darlo de alta (código = número de serie).
+                if (respuesta.status === 404 && datos.encontrado === false && datos.codigo) {
+                    this.codigoNuevo = {
+                        codigo: datos.codigo,
+                        puedeAgregar: Boolean(datos.puede_agregar),
+                        urlAgregar: datos.url_agregar ?? null,
+                    };
+                    this.puedeEnviar = Boolean(datos.puede_enviar);
+                    this.estado = 'nuevo';
+
+                    return;
+                }
+
                 if (! respuesta.ok || ! datos.encontrado) {
                     this.mostrarError(datos.mensaje ?? ('No hay ningún equipo con el código ' + codigo + '.'), false);
 
@@ -129,6 +145,15 @@
             }
         },
 
+        agregarAqui() {
+            const url = this.codigoNuevo?.urlAgregar;
+            this.cerrar();
+
+            if (url) {
+                window.Livewire?.navigate ? window.Livewire.navigate(url) : (window.location.href = url);
+            }
+        },
+
         abrirAqui() {
             const url = this.equipo?.url;
             this.cerrar();
@@ -139,7 +164,9 @@
         },
 
         async enviar() {
-            if (! this.equipo || this.enviando) {
+            const esNuevo = this.estado === 'nuevo' && this.codigoNuevo;
+
+            if ((! this.equipo && ! esNuevo) || this.enviando) {
                 return;
             }
 
@@ -154,7 +181,7 @@
                         'X-Requested-With': 'XMLHttpRequest',
                         'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ?? '',
                     },
-                    body: JSON.stringify({ id_equipo: this.equipo.id }),
+                    body: JSON.stringify(esNuevo ? { codigo: this.codigoNuevo.codigo } : { id_equipo: this.equipo.id }),
                 });
                 const datos = await respuesta.json().catch(() => ({}));
 
@@ -164,9 +191,14 @@
                     return;
                 }
 
-                this.mensaje = datos.estado === 'duplicado'
-                    ? 'Este equipo ya estaba en tu bandeja.'
-                    : 'Enviado a tu PC (' + datos.pendientes + (datos.pendientes === 1 ? ' equipo' : ' equipos') + ' en la bandeja).';
+                const enBandeja = ' (' + datos.pendientes + (datos.pendientes === 1 ? ' pendiente' : ' pendientes') + ' en la bandeja).';
+
+                if (datos.estado === 'duplicado') {
+                    this.mensaje = esNuevo ? 'Este código ya estaba en tu bandeja.' : 'Este equipo ya estaba en tu bandeja.';
+                } else {
+                    this.mensaje = (esNuevo ? 'Código enviado a tu PC para agregarlo' : 'Enviado a tu PC') + enBandeja;
+                }
+
                 this.estado = 'enviado';
 
                 // Ráfaga: volver a la cámara para el siguiente equipo.
@@ -238,7 +270,7 @@
 
         {{-- Resultado / acciones --}}
         <div
-            x-show="['equipo', 'enviado', 'error'].includes(estado)"
+            x-show="['equipo', 'nuevo', 'enviado', 'error'].includes(estado)"
             x-transition.opacity
             class="rounded-t-2xl bg-[var(--theme-surface)] px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 text-[var(--theme-text)]"
         >
@@ -263,6 +295,61 @@
                             class="inline-flex h-11 items-center justify-center rounded-[var(--radius-md)] border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] text-sm font-medium text-[var(--theme-text)]"
                         >
                             Abrir aquí
+                        </button>
+
+                        <button
+                            type="button"
+                            x-show="puedeEnviar"
+                            x-on:click="enviar()"
+                            x-bind:disabled="enviando"
+                            class="inline-flex h-11 items-center justify-center gap-2 rounded-[var(--radius-md)] bg-[var(--theme-primary)] text-sm font-medium text-white disabled:opacity-60"
+                        >
+                            <span x-show="enviando"><x-ui.spinner size="sm" /></span>
+                            Enviar a la PC
+                        </button>
+                    </div>
+
+                    <button
+                        type="button"
+                        x-on:click="reanudar()"
+                        class="mt-2 w-full py-2 text-xs font-medium text-[var(--theme-text-muted)]"
+                    >
+                        Seguir escaneando
+                    </button>
+                </div>
+            </template>
+
+            {{-- Código que no está en el inventario: se puede agregar con ese número de serie --}}
+            <template x-if="estado === 'nuevo' && codigoNuevo">
+                <div>
+                    <div class="flex items-start gap-3">
+                        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--theme-warning-soft)] text-[var(--theme-warning)]">
+                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M12 9v4M12 17h.01"/>
+                                <path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/>
+                            </svg>
+                        </span>
+
+                        <div class="min-w-0">
+                            <p class="text-sm font-semibold text-[var(--theme-text-strong)]">No está en el inventario</p>
+                            <p class="mt-0.5 break-all font-mono text-xs text-[var(--theme-text)]" x-text="codigoNuevo.codigo"></p>
+                            <p class="mt-1 text-xs text-[var(--theme-text-muted)]" x-show="codigoNuevo.puedeAgregar">
+                                Puedes agregarlo como equipo nuevo; este código se guardará como su número de serie.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div
+                        x-show="codigoNuevo.puedeAgregar"
+                        class="mt-4 grid gap-2"
+                        x-bind:class="puedeEnviar ? 'grid-cols-2' : 'grid-cols-1'"
+                    >
+                        <button
+                            type="button"
+                            x-on:click="agregarAqui()"
+                            class="inline-flex h-11 items-center justify-center rounded-[var(--radius-md)] border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] text-sm font-medium text-[var(--theme-text)]"
+                        >
+                            Agregar aquí
                         </button>
 
                         <button

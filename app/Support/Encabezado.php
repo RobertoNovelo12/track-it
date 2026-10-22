@@ -148,14 +148,47 @@ class Encabezado
                 self::miga('Sedes', 'catalogos.index', ['section' => 'organizacion', 'tab' => 'sedes']),
                 self::miga('Editar'),
             ]],
+            'catalogos.ubicaciones.create' => ['Administración', [
+                self::miga('Administración', 'catalogos.index'),
+                self::miga('Ubicaciones', 'catalogos.index', ['section' => 'ubicaciones']),
+                self::miga('Nueva'),
+            ]],
+            'catalogos.ubicaciones.edit' => ['Administración', [
+                self::miga('Administración', 'catalogos.index'),
+                self::miga('Ubicaciones', 'catalogos.index', ['section' => 'ubicaciones']),
+                self::miga('Editar'),
+            ]],
+            'catalogos.tipos-ubicacion.index' => ['Administración', [
+                self::miga('Administración', 'catalogos.index'),
+                self::miga('Ubicaciones', 'catalogos.index', ['section' => 'ubicaciones']),
+                self::miga('Tipos de ubicación'),
+            ]],
+            'catalogos.tipos-ubicacion.create' => ['Administración', [
+                self::miga('Administración', 'catalogos.index'),
+                self::miga('Ubicaciones', 'catalogos.index', ['section' => 'ubicaciones']),
+                self::miga('Tipos de ubicación', 'catalogos.tipos-ubicacion.index'),
+                self::miga('Nuevo'),
+            ]],
+            'catalogos.tipos-ubicacion.edit' => ['Administración', [
+                self::miga('Administración', 'catalogos.index'),
+                self::miga('Ubicaciones', 'catalogos.index', ['section' => 'ubicaciones']),
+                self::miga('Tipos de ubicación', 'catalogos.tipos-ubicacion.index'),
+                self::miga('Editar'),
+            ]],
+            'catalogos.departamentos.create' => ['Administración', [
+                self::miga('Administración', 'catalogos.index'),
+                self::miga('Departamentos', 'catalogos.index', ['section' => 'departamentos']),
+                self::miga('Nuevo'),
+            ]],
             'catalogos.departamentos.edit' => ['Administración', [
                 self::miga('Administración', 'catalogos.index'),
                 self::miga('Departamentos', 'catalogos.index', ['section' => 'departamentos']),
                 self::miga('Editar'),
             ]],
 
+            // La pestaña activa (Cuenta, Seguridad…) la agrega la propia pantalla.
             'ajustes.index' => ['Ajustes', [
-                self::miga('Ajustes'),
+                self::miga('Ajustes', 'ajustes.index'),
             ]],
 
             'ui.componentes' => ['Componentes', [

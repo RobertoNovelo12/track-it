@@ -304,6 +304,8 @@
                     label: 'Modelo',
                     type: 'select',
                     options: 'modelos',
+                    // Va con la marca: siempre visible (opcional).
+                    alwaysVisible: true,
                 },
 
                 direccion_mac: {
@@ -389,6 +391,16 @@
                     this.values.idTipoEquipo = tipoInicial;
                 }
 
+                /*
+                 * Número de serie (?numero_serie=): llega desde el escáner
+                 * cuando se leyó un código que no está en el inventario.
+                 */
+                const serieInicial = (new URLSearchParams(window.location.search).get('numero_serie') ?? '').trim();
+
+                if (serieInicial !== '') {
+                    this.values.numeroSerie = serieInicial.slice(0, 255);
+                }
+
                 this.$watch('values.idTipoEquipo', (value, previous) => {
                     if (
                         this.suspendDependencies
@@ -452,7 +464,7 @@
                     ([key, base], index) => {
                         const meta = configured[key];
 
-                        if (!base.required && !meta) {
+                        if (!base.required && !base.alwaysVisible && !meta) {
                             return;
                         }
 

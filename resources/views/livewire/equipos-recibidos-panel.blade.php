@@ -68,12 +68,54 @@
             <x-ui.empty-state
                 compact
                 title="Sin equipos pendientes"
-                description="Escanea códigos de barras desde tu teléfono y elige «Enviar a la PC»."
+                description="Escanea códigos de barras desde tu teléfono y elige «Enviar a la PC». Los códigos que no estén en el inventario llegan aquí para agregarlos."
             />
         @else
             <ul class="max-h-[60vh] divide-y divide-[var(--theme-border)] overflow-y-auto">
                 @foreach ($equipos as $equipo)
                     <li wire:key="recibido-{{ $equipo['id'] }}" class="px-4 py-3">
+                        @if ($equipo['nuevo'])
+                            {{-- Código que no está en el inventario: agregarlo con ese número de serie --}}
+                            <div class="flex items-start justify-between gap-3">
+                                <div class="min-w-0">
+                                    <p class="truncate text-sm font-medium text-[var(--theme-text-strong)]">
+                                        No está en el inventario
+                                    </p>
+
+                                    <p class="mt-0.5 break-all text-[11px] text-[var(--theme-text-muted)]">
+                                        SN <span class="font-mono text-[var(--theme-text)]">{{ $equipo['codigo_leido'] }}</span>
+                                        · {{ \App\Support\Fecha::hora($equipo['recibido_en']) }}
+                                    </p>
+                                </div>
+
+                                <span class="shrink-0 rounded-full bg-[var(--theme-warning-soft)] px-2 py-0.5 text-[10px] font-medium text-[var(--theme-warning)]">
+                                    Nuevo
+                                </span>
+                            </div>
+
+                            <div class="mt-2 flex flex-wrap items-center gap-2">
+                                @if ($puedeDarDeBaja)
+                                    <a
+                                        href="{{ route('equipos.create', ['numero_serie' => $equipo['codigo_leido']]) }}"
+                                        wire:navigate
+                                        x-on:click="abierto = false"
+                                        class="inline-flex h-7 items-center rounded-[var(--radius-md)] bg-[var(--theme-primary)] px-2.5 text-[11px] font-medium text-white hover:bg-[var(--theme-primary-hover)]"
+                                    >
+                                        Agregar equipo
+                                    </a>
+                                @endif
+
+                                <button
+                                    type="button"
+                                    wire:click="atender({{ $equipo['id'] }})"
+                                    wire:loading.attr="disabled"
+                                    wire:target="atender({{ $equipo['id'] }})"
+                                    class="ml-auto inline-flex h-7 items-center rounded-[var(--radius-md)] px-2.5 text-[11px] font-medium text-[var(--theme-text-muted)] hover:bg-[var(--theme-surface-soft)] hover:text-[var(--theme-text)] disabled:opacity-60"
+                                >
+                                    Descartar
+                                </button>
+                            </div>
+                        @else
                         <div class="flex items-start justify-between gap-3">
                             <div class="min-w-0">
                                 <p class="truncate text-sm font-medium text-[var(--theme-text-strong)]">
@@ -123,6 +165,7 @@
                                 Atendido
                             </button>
                         </div>
+                        @endif
                     </li>
                 @endforeach
             </ul>

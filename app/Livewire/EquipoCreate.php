@@ -1509,6 +1509,13 @@ class EquipoCreate extends Component
 
         $this->dispatch('notificaciones-actualizadas');
 
+        // Si llegó desde el escáner como código no registrado, sale de la bandeja.
+        try {
+            app(\App\Services\EquiposRecibidosService::class)->atenderPorSerie($validated['numeroSerie'] ?? null);
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
         return [
             'ok' => true,
 

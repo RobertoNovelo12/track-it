@@ -50,6 +50,11 @@
             'label' => 'Departamentos',
         ],
         [
+            'key' => 'ubicaciones',
+            'crumb' => 'Ubicaciones',
+            'label' => 'Ubicaciones',
+        ],
+        [
             'key' => 'plantillas',
             'crumb' => 'Plantillas',
             'label' => 'Plantillas',
@@ -65,7 +70,7 @@
      * Estándar solo administra los catálogos de equipo. Hoteles,
      * departamentos, plantillas y organización son exclusivos de Admin.
      */
-    $seccionesOrganizacion = ['hoteles', 'departamentos', 'plantillas', 'organizacion'];
+    $seccionesOrganizacion = ['hoteles', 'departamentos', 'ubicaciones', 'plantillas', 'organizacion'];
 
     $puedeAdministrar = \Illuminate\Support\Facades\Gate::allows('administrar');
 
@@ -629,6 +634,17 @@
             <livewire:catalogos.departamentos
                 :key="'administracion-departamentos'"
                 :lazy="$diferir('departamentos')"
+            />
+        </div>
+
+
+        {{-- ========================================================
+            UBICACIONES (cocinas, clubes, cuartos de comunicaciones…)
+        ======================================================== --}}
+        <div x-show="section === 'ubicaciones'" x-cloak>
+            <livewire:catalogos.ubicaciones
+                :key="'administracion-ubicaciones'"
+                :lazy="$diferir('ubicaciones')"
             />
         </div>
 

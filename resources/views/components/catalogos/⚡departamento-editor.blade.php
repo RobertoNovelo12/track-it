@@ -30,10 +30,20 @@ new class extends Component
 
     public string $message = '';
 
-    public function mount(int $departamentoId): void
+    /*
+     * departamentoId = 0: alta de un departamento nuevo
+     * (ruta catalogos.departamentos.create).
+     */
+    public function mount(int $departamentoId = 0): void
     {
         // Solo Admin modifica la organización (ver AppServiceProvider).
         \Illuminate\Support\Facades\Gate::authorize('administrar');
+
+        if ($departamentoId === 0) {
+            $this->departamentoId = 0;
+
+            return;
+        }
 
         $departamento = Departamento::query()
             ->principales()
@@ -63,6 +73,24 @@ new class extends Component
      * La sección de ubicaciones aparece cuando ya se ejecutó la
      * migración que crea departamento_ubicacion.
      */
+    /*
+     * Código corto y único a partir del nombre (p. ej. «Animación» → ANIM,
+     * ANIM2…). Solo se usa al crear; el código no se muestra al editar.
+     */
+    private function codigoDisponible(string $nombre): string
+    {
+        $base = strtoupper(substr(preg_replace('/[^A-Za-z]/', '', \Illuminate\Support\Str::ascii($nombre)) ?: 'DEP', 0, 4));
+        $codigo = $base;
+        $intento = 1;
+
+        while (DB::table('departamentos')->where('codigo', $codigo)->exists()) {
+            $intento++;
+            $codigo = $base.$intento;
+        }
+
+        return $codigo;
+    }
+
     public function gestionaUbicaciones(): bool
     {
         return Schema::hasTable('departamento_ubicacion')
@@ -222,7 +250,20 @@ new class extends Component
 
         $gestionaUbicaciones = $this->gestionaUbicaciones();
 
-        DB::transaction(function () use ($validated, $hotelIds, $ubicacionIds, $gestionaUbicaciones): void {
+        $esNuevo = $this->departamentoId === 0;
+
+        DB::transaction(function () use ($validated, $hotelIds, $ubicacionIds, $gestionaUbicaciones, $esNuevo): void {
+            if ($esNuevo) {
+                $departamento = Departamento::query()->create([
+                    'nombre' => $validated['nombre'],
+                    'codigo' => $this->codigoDisponible($validated['nombre']),
+                    'activo' => true,
+                    'atiende_todas_unidades' => false,
+                ]);
+
+                $this->departamentoId = (int) $departamento->id_departamento;
+            }
+
             $departamento = Departamento::query()
                 ->principales()
                 ->where('id_departamento', $this->departamentoId)
@@ -272,6 +313,14 @@ new class extends Component
 
         $this->hotelIds = array_map('strval', $hotelIds);
         $this->ubicacionIds = array_map('strval', $ubicacionIds);
+
+        if ($esNuevo) {
+            session()->flash('toast', ['type' => 'success', 'message' => 'Departamento «'.$validated['nombre'].'» creado.']);
+
+            $this->redirectRoute('catalogos.index', ['section' => 'departamentos'], navigate: true);
+
+            return;
+        }
 
         // Confirmación con el aviso global (components/ui/toast-region).
         $this->dispatch('toast', type: 'success', message: 'Departamento, hoteles y ubicaciones actualizados correctamente.');
@@ -550,7 +599,7 @@ new class extends Component
                 loading-text="Guardando…"
                 class="w-full sm:w-auto"
             >
-                Guardar cambios
+                {{ $departamentoId === 0 ? 'Crear departamento' : 'Guardar cambios' }}
             </x-ui.button>
         </div>
     </form>
