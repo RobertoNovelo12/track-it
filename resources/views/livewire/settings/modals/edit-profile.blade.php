@@ -3,6 +3,8 @@
 ============================================================ --}}
 <div
     x-data="{ open: false }"
+    {{-- ?completar=perfil (aviso «Aún necesitamos información de tu cuenta»): se abre solo. --}}
+    x-init="if (new URLSearchParams(window.location.search).get('completar') === 'perfil') { open = true; $nextTick(() => document.getElementById('editFechaNacimiento')?.focus()); }"
     @abrir-edicion-perfil.window="open = true"
     @perfil-actualizado.window="open = false"
     x-show="open"

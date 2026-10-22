@@ -506,6 +506,49 @@ class SeguridadIndex extends Component
                 }
 
                 $valorAplicado = $area->nombre;
+            } elseif ($solicitud->campo === 'hotel') {
+                if (! $this->organizationRequestCatalogId) {
+                    return [
+                        'ok' => false,
+                        'message' =>
+                            'Selecciona el hotel que se asignará al usuario.',
+                    ];
+                }
+
+                $unidad = DB::table('unidades_organizativas')
+                    ->where('id_unidad', $this->organizationRequestCatalogId)
+                    ->where('activo', true)
+                    ->first([
+                        'id_unidad',
+                        'nombre',
+                    ]);
+
+                if (! $unidad) {
+                    return [
+                        'ok' => false,
+                        'message' =>
+                            'El hotel seleccionado no está disponible.',
+                    ];
+                }
+
+                $datosActualizar = [
+                    'id_unidad' => $unidad->id_unidad,
+                ];
+
+                // El departamento se conserva solo si atiende el nuevo hotel.
+                if ($usuario->id_departamento) {
+                    $mantenerDepartamento = \App\Models\Departamento::query()
+                        ->disponiblesParaUnidad((int) $unidad->id_unidad)
+                        ->where('departamentos.id_departamento', $usuario->id_departamento)
+                        ->exists();
+
+                    if (! $mantenerDepartamento) {
+                        $datosActualizar['id_departamento'] = null;
+                        $datosActualizar['id_area'] = null;
+                    }
+                }
+
+                $valorAplicado = $unidad->nombre;
             } elseif ($solicitud->campo === 'departamento') {
                 if (! $this->organizationRequestCatalogId) {
                     return [
@@ -1432,6 +1475,7 @@ class SeguridadIndex extends Component
             'puesto' => 'Puesto',
             'rol' => 'Rol',
             'area' => 'Área',
+            'hotel' => app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['unidad_singular'],
             'departamento' => 'Departamento',
             default => 'Información organizacional',
         };
@@ -1463,6 +1507,14 @@ class SeguridadIndex extends Component
                     [$requestedValue]
                 )
                 ->value('id_area'),
+
+            'hotel' => DB::table('unidades_organizativas')
+                ->where('activo', true)
+                ->whereRaw(
+                    'LOWER(nombre) = LOWER(?)',
+                    [$requestedValue]
+                )
+                ->value('id_unidad'),
 
             'departamento' => DB::table('departamentos')
                 ->where('activo', true)

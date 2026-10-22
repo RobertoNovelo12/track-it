@@ -136,6 +136,7 @@
                                     'puesto' => 'Puesto',
                                     'rol' => 'Rol',
                                     'area' => 'Área',
+                                    'hotel' => app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['unidad_singular'],
                                     'departamento' => 'Departamento',
                                     default => ucfirst(
                                         str_replace('_', ' ', $solicitud->campo)
@@ -325,6 +326,7 @@
                             'puesto' => 'Puesto',
                             'rol' => 'Rol',
                             'area' => 'Área',
+                            'hotel' => app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['unidad_singular'],
                             'departamento' => 'Departamento',
                             default => ucfirst(
                                 str_replace('_', ' ', $solicitud->campo)

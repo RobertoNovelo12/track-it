@@ -266,6 +266,47 @@
                 </div>
             </div>
 
+            @php
+                $unidadesSolicitud = \Illuminate\Support\Facades\DB::table('unidades_organizativas')
+                    ->where('activo', true)
+                    ->orderBy('nombre')
+                    ->get(['id_unidad', 'nombre'])
+                    ->map(fn ($unidad) => ['value' => (string) $unidad->id_unidad, 'label' => $unidad->nombre])
+                    ->values()
+                    ->all();
+                $etiquetaUnidadSolicitud = mb_strtolower(app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['unidad_singular']);
+            @endphp
+
+            <div
+                id="organization-request-catalog-hotel"
+                class="{{ $organizationRequestField === 'hotel' ? '' : 'hidden' }}"
+            >
+                <label
+                    for="organization-request-hotel-select"
+                    class="block mb-1.5 text-xs font-medium text-[var(--theme-text)]"
+                >
+                    {{ ucfirst($etiquetaUnidadSolicitud) }} que se asignará
+                    <span class="text-[var(--theme-danger)]">*</span>
+                </label>
+
+                <div
+                    id="organization-request-hotel-select"
+                    data-options="{{ json_encode($unidadesSolicitud) }}"
+                    x-data="{ valor: '' }"
+                    x-init="$watch('valor', v => window.syncOrganizationRequestCatalog(v ?? ''))"
+                    @org-request-catalog.window="if ($event.detail.id === $el.id) valor = $event.detail.value"
+                >
+                    <x-searchable-select
+                        x-model="valor"
+                        :options="$unidadesSolicitud"
+                        :placeholder="'Selecciona un '.$etiquetaUnidadSolicitud"
+                        :show-clear="true"
+                        :clear-label="'Selecciona un '.$etiquetaUnidadSolicitud"
+                        :empty-as-null="false"
+                    />
+                </div>
+            </div>
+
             <div
                 id="organization-request-catalog-department"
                 class="{{ $organizationRequestField === 'departamento' ? '' : 'hidden' }}"
@@ -438,6 +479,7 @@
     const hideCatalogs = () => {
         document.getElementById('organization-request-catalog-role')?.classList.add('hidden');
         document.getElementById('organization-request-catalog-area')?.classList.add('hidden');
+        document.getElementById('organization-request-catalog-hotel')?.classList.add('hidden');
         document.getElementById('organization-request-catalog-department')?.classList.add('hidden');
     };
 
@@ -532,6 +574,12 @@
             document.getElementById('organization-request-catalog-area')?.classList.remove('hidden');
             catalogId = selectRequestedCatalogValue(
                 'organization-request-area-select',
+                requestedValue
+            );
+        } else if (field === 'hotel') {
+            document.getElementById('organization-request-catalog-hotel')?.classList.remove('hidden');
+            catalogId = selectRequestedCatalogValue(
+                'organization-request-hotel-select',
                 requestedValue
             );
         } else if (field === 'departamento') {

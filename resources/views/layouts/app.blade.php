@@ -1527,6 +1527,9 @@ document.addEventListener(
                 ======================================================== --}}
                 <main class="p-6">
 
+                    {{-- Aviso fijo si faltan datos para recuperar la contraseña --}}
+                    @include('layouts.partials.aviso-cuenta-incompleta')
+
                     @include('layouts.partials.encabezado', ['variante' => 'movil', 'encabezado' => $encabezadoPagina ?? null])
 
                     @yield('content')
@@ -2064,6 +2067,9 @@ document.addEventListener(
     --}}
     @persist('avisos-globales')
         <x-ui.toast-region />
+
+        {{-- Ventana de confirmación del sistema ($dispatch('confirmar', {...})) --}}
+        @include('layouts.partials.confirmacion')
 
         @include('layouts.partials.avisos-eventos')
     @endpersist

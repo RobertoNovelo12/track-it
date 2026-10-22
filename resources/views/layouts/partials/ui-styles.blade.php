@@ -275,4 +275,48 @@
         cursor: not-allowed;
         opacity: 0.6;
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | CAMPOS DE FECHA Y HORA
+    |--------------------------------------------------------------------------
+    |
+    | El calendario que abre el navegador no admite estilos propios; lo
+    | que sí se controla: que siga el tema (claro / oscuro), el color de
+    | acento y el ícono del campo.
+    |
+    */
+    input[type="date"],
+    input[type="datetime-local"],
+    input[type="month"],
+    input[type="time"] {
+        color-scheme: light;
+        accent-color: var(--theme-primary);
+    }
+
+    html.dark input[type="date"],
+    html.dark input[type="datetime-local"],
+    html.dark input[type="month"],
+    html.dark input[type="time"] {
+        color-scheme: dark;
+    }
+
+    input[type="date"]::-webkit-calendar-picker-indicator,
+    input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+    input[type="month"]::-webkit-calendar-picker-indicator,
+    input[type="time"]::-webkit-calendar-picker-indicator {
+        cursor: pointer;
+        padding: 3px;
+        border-radius: 4px;
+        opacity: 0.55;
+        transition: opacity 120ms ease-out, background-color 120ms ease-out;
+    }
+
+    input[type="date"]:hover::-webkit-calendar-picker-indicator,
+    input[type="datetime-local"]:hover::-webkit-calendar-picker-indicator,
+    input[type="month"]:hover::-webkit-calendar-picker-indicator,
+    input[type="time"]:hover::-webkit-calendar-picker-indicator {
+        opacity: 1;
+        background-color: var(--theme-surface-soft);
+    }
 </style>

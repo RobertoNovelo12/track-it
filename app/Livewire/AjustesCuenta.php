@@ -377,10 +377,10 @@ class AjustesCuenta extends Component
                 'u.id_rol'
             )
             ->leftJoin(
-                'areas as a',
-                'a.id_area',
+                'unidades_organizativas as uo',
+                'uo.id_unidad',
                 '=',
-                'u.id_area'
+                'u.id_unidad'
             )
             ->leftJoin(
                 'departamentos as d',
@@ -396,7 +396,7 @@ class AjustesCuenta extends Component
                 'u.numero_colaborador',
                 'u.puesto',
                 'r.nombre as rol_nombre',
-                'a.nombre as area_nombre',
+                'uo.nombre as hotel_nombre',
                 'd.nombre as departamento_nombre',
             ])
             ->first();
@@ -419,8 +419,8 @@ class AjustesCuenta extends Component
             'rol' =>
                 $usuario->rol_nombre,
 
-            'area' =>
-                $usuario->area_nombre,
+            'hotel' =>
+                $usuario->hotel_nombre,
 
             'departamento' =>
                 $usuario->departamento_nombre,
@@ -430,6 +430,41 @@ class AjustesCuenta extends Component
         };
     }
 
+
+    /*
+     * Opciones del valor solicitado para los datos que se eligen de una
+     * lista. El valor es el nombre (así lo resuelve Seguridad al aprobar).
+     */
+    public function organizationRequestOptions(): array
+    {
+        $opciones = fn ($filas) => collect($filas)
+            ->map(fn ($fila) => ['value' => (string) $fila->nombre, 'label' => (string) $fila->nombre])
+            ->unique('value')
+            ->values()
+            ->all();
+
+        return match ($this->organizationChangeField) {
+            'rol' => $opciones(DB::table('roles')->where('activo', true)->orderBy('nombre')->get(['nombre'])),
+
+            'hotel' => $opciones(DB::table('unidades_organizativas')->where('activo', true)->orderBy('nombre')->get(['nombre'])),
+
+            // Departamentos que atienden el hotel del usuario (todos si no tiene hotel).
+            'departamento' => $opciones(
+                auth()->user()?->id_unidad
+                    ? \App\Models\Departamento::query()
+                        ->disponiblesParaUnidad((int) auth()->user()->id_unidad)
+                        ->orderBy('departamentos.nombre')
+                        ->get(['departamentos.nombre'])
+                    : DB::table('departamentos')
+                        ->whereNull('id_departamento_principal')
+                        ->where('activo', true)
+                        ->orderBy('nombre')
+                        ->get(['nombre'])
+            ),
+
+            default => [],
+        };
+    }
 
     /*
     |--------------------------------------------------------------------------
@@ -443,7 +478,7 @@ class AjustesCuenta extends Component
             'organizationChangeField' => [
                 'required',
                 'string',
-                'in:numero_colaborador,puesto,rol,area,departamento',
+                'in:numero_colaborador,puesto,rol,hotel,departamento',
             ],
 
             'organizationRequestedValue' => [
@@ -489,10 +524,10 @@ class AjustesCuenta extends Component
                 'u.id_rol'
             )
             ->leftJoin(
-                'areas as a',
-                'a.id_area',
+                'unidades_organizativas as uo',
+                'uo.id_unidad',
                 '=',
-                'u.id_area'
+                'u.id_unidad'
             )
             ->leftJoin(
                 'departamentos as d',
@@ -509,7 +544,7 @@ class AjustesCuenta extends Component
                 'u.numero_colaborador',
                 'u.puesto',
                 'r.nombre as rol_nombre',
-                'a.nombre as area_nombre',
+                'uo.nombre as hotel_nombre',
                 'd.nombre as departamento_nombre',
             ])
             ->first();
@@ -538,8 +573,8 @@ class AjustesCuenta extends Component
             'rol' =>
                 $usuario->rol_nombre,
 
-            'area' =>
-                $usuario->area_nombre,
+            'hotel' =>
+                $usuario->hotel_nombre,
 
             'departamento' =>
                 $usuario->departamento_nombre,
@@ -552,6 +587,17 @@ class AjustesCuenta extends Component
         $valorSolicitado = trim(
             $validated['organizationRequestedValue']
         );
+
+        // Rol, hotel y departamento se eligen de una lista: debe ser una opción válida.
+        if (in_array($validated['organizationChangeField'], ['rol', 'hotel', 'departamento'], true)) {
+            $permitidos = array_column($this->organizationRequestOptions(), 'value');
+
+            if (! in_array($valorSolicitado, $permitidos, true)) {
+                $this->addError('organizationRequestedValue', 'Selecciona una opción de la lista.');
+
+                return;
+            }
+        }
 
 
         /*

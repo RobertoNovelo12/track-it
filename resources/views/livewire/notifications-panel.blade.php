@@ -318,8 +318,15 @@
                         <button
                             type="button"
 
-                            wire:click="deleteAllNotifications"
-                            wire:confirm="¿Eliminar todas las notificaciones? Esta acción no se puede deshacer."
+                            {{-- Confirmación con la ventana del sistema (layouts/partials/confirmacion) --}}
+                            x-data
+                            x-on:click="$dispatch('confirmar', {
+                                titulo: 'Eliminar todas las notificaciones',
+                                mensaje: 'Se borrarán todas tus notificaciones. Esta acción no se puede deshacer.',
+                                confirmar: 'Eliminar todas',
+                                peligro: true,
+                                accion: () => $wire.deleteAllNotifications(),
+                            })"
 
                             wire:loading.attr="disabled"
                             wire:target="deleteAllNotifications"
@@ -602,6 +609,48 @@
                     overflow-y-auto
                 "
             >
+
+                {{-- =================================================
+                    RECORDATORIO FIJO: CUENTA INCOMPLETA
+                    (no se puede borrar; desaparece al agregar la
+                    fecha de nacimiento en Ajustes › Cuenta)
+                ================================================= --}}
+                @php
+                    $atributosCuenta = auth()->user()?->getAttributes() ?? [];
+                    $cuentaIncompleta = array_key_exists('fecha_nacimiento', $atributosCuenta)
+                        && blank($atributosCuenta['fecha_nacimiento']);
+                @endphp
+
+                @if ($cuentaIncompleta)
+                    <a
+                        href="{{ route('ajustes.index', ['section' => 'cuenta', 'completar' => 'perfil']) }}"
+                        onclick="event.preventDefault(); window.closeNotificationsPanelFast?.(); window.trackitCompletarPerfil(this.href);"
+                        class="flex items-start gap-3 border-b border-[var(--theme-border)] bg-[var(--theme-warning-soft)] px-4 py-3.5 transition-opacity hover:opacity-90"
+                    >
+                        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--theme-surface)] text-[var(--theme-warning)]">
+                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <circle cx="12" cy="8" r="4"/>
+                                <path d="M4 21a8 8 0 0 1 16 0"/>
+                            </svg>
+                        </span>
+
+                        <span class="min-w-0 flex-1">
+                            <span class="flex items-center gap-2">
+                                <span class="text-sm font-semibold text-[var(--theme-text-strong)]">Aún necesitamos información de tu cuenta</span>
+                                <span class="shrink-0 rounded-full bg-[var(--theme-surface)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--theme-warning)]">Fijo</span>
+                            </span>
+
+                            <span class="mt-0.5 block text-xs leading-relaxed text-[var(--theme-text)]">
+                                Agrega tu fecha de nacimiento para poder recuperar tu contraseña si la olvidas.
+                            </span>
+
+                            <span class="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-[var(--theme-primary)]">
+                                Completar ahora
+                                <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+                            </span>
+                        </span>
+                    </a>
+                @endif
 
                 {{-- =================================================
                     TODAVÍA NO SE HAN CARGADO
@@ -1278,6 +1327,18 @@
 
                 card.style.transform =
                     'translateY(-6px) scale(0.99)';
+
+
+                /*
+                * Quitar el foco antes de ocultar: si un enlace o botón
+                * del panel lo conserva, el navegador bloquea aria-hidden
+                * («Blocked aria-hidden… retained focus»).
+                */
+                if (
+                    root.contains(document.activeElement)
+                ) {
+                    document.activeElement.blur();
+                }
 
 
                 root.setAttribute(

@@ -2,17 +2,35 @@
     EQUIPOS RECIBIDOS (barra superior, escritorio)
     Lo que el usuario envió desde su teléfono con el escáner.
 ============================================================ --}}
+{{--
+    El estado «abierto» vive en un store global de Alpine
+    ($store.equiposRecibidos), no en x-data: el refresco periódico
+    (wire:poll) vuelve a evaluar el botón y el panel en una copia del
+    HTML donde a veces no se encuentra el x-data del contenedor
+    («abierto is not defined»). El store no depende de ese alcance.
+--}}
+<div wire:poll.15s.visible="refrescar">
+<script>
+    (function () {
+        const registrar = () => {
+            if (! window.Alpine.store('equiposRecibidos')) {
+                window.Alpine.store('equiposRecibidos', { abierto: false });
+            }
+        };
+
+        window.Alpine ? registrar() : document.addEventListener('alpine:init', registrar);
+    })();
+</script>
 <div
     class="relative"
-    wire:poll.15s.visible="refrescar"
-    x-data="{ abierto: false }"
-    x-on:keydown.escape.window="abierto = false"
-    x-on:click.outside="abierto = false"
+    x-data
+    x-on:keydown.escape.window="$store.equiposRecibidos.abierto = false"
+    x-on:click.outside="$store.equiposRecibidos.abierto = false"
 >
     <button
         type="button"
-        x-on:click="abierto = ! abierto"
-        x-bind:aria-expanded="abierto ? 'true' : 'false'"
+        x-on:click="$store.equiposRecibidos.abierto = ! $store.equiposRecibidos.abierto"
+        x-bind:aria-expanded="$store.equiposRecibidos?.abierto ? 'true' : 'false'"
         aria-haspopup="dialog"
         title="Equipos recibidos desde el teléfono"
         aria-label="Equipos recibidos desde el teléfono"
@@ -34,7 +52,7 @@
 
     {{-- Panel --}}
     <div
-        x-show="abierto"
+        x-show="$store.equiposRecibidos?.abierto"
         x-cloak
         x-transition:enter="transition ease-out duration-[var(--motion-base)]"
         x-transition:enter-start="opacity-0 -translate-y-1"
@@ -98,7 +116,7 @@
                                     <a
                                         href="{{ route('equipos.create', ['numero_serie' => $equipo['codigo_leido']]) }}"
                                         wire:navigate
-                                        x-on:click="abierto = false"
+                                        x-on:click="$store.equiposRecibidos.abierto = false"
                                         class="inline-flex h-7 items-center rounded-[var(--radius-md)] bg-[var(--theme-primary)] px-2.5 text-[11px] font-medium text-white hover:bg-[var(--theme-primary-hover)]"
                                     >
                                         Agregar equipo
@@ -138,7 +156,7 @@
                             <a
                                 href="{{ route('equipos.show', $equipo['id_equipo']) }}"
                                 wire:navigate
-                                x-on:click="abierto = false"
+                                x-on:click="$store.equiposRecibidos.abierto = false"
                                 class="inline-flex h-7 items-center rounded-[var(--radius-md)] border border-[var(--theme-border-strong)] px-2.5 text-[11px] font-medium text-[var(--theme-text)] hover:bg-[var(--theme-surface-soft)]"
                             >
                                 Ver
@@ -148,7 +166,7 @@
                                 <a
                                     href="{{ route('equipos.baja', $equipo['id_equipo']) }}"
                                     wire:navigate
-                                    x-on:click="abierto = false"
+                                    x-on:click="$store.equiposRecibidos.abierto = false"
                                     class="inline-flex h-7 items-center rounded-[var(--radius-md)] border border-transparent bg-[var(--theme-danger-soft)] px-2.5 text-[11px] font-medium text-[var(--theme-danger)] hover:opacity-90"
                                 >
                                     Dar de baja
@@ -171,4 +189,5 @@
             </ul>
         @endif
     </div>
+</div>
 </div>

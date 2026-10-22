@@ -267,7 +267,7 @@
                             ['value' => 'numero_colaborador', 'label' => 'Número de colaborador'],
                             ['value' => 'puesto', 'label' => 'Puesto'],
                             ['value' => 'rol', 'label' => 'Rol'],
-                            ['value' => 'area', 'label' => 'Área'],
+                            ['value' => 'hotel', 'label' => app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['unidad_singular']],
                             ['value' => 'departamento', 'label' => 'Departamento'],
                         ]"
                     />
@@ -357,12 +357,26 @@
                     </label>
 
 
+                    @if (in_array($organizationChangeField, ['rol', 'hotel', 'departamento'], true))
+                        {{-- Rol, hotel y departamento: se eligen de la lista --}}
+                        <div wire:key="valor-solicitado-{{ $organizationChangeField }}">
+                            <x-searchable-select
+                                wire-model="organizationRequestedValue"
+                                :options="$this->organizationRequestOptions()"
+                                placeholder="Selecciona una opción"
+                                :show-clear="true"
+                                clear-label="Selecciona una opción"
+                                :empty-as-null="false"
+                            />
+                        </div>
+                    @else
                     <input
                         id="organizationRequestedValue"
                         type="text"
                         wire:model="organizationRequestedValue"
 
-                        placeholder="Ingresa la información correcta"
+                        placeholder="{{ $organizationChangeField === 'numero_colaborador' ? 'Ej. 12345' : 'Ingresa la información correcta' }}"
+                        @if ($organizationChangeField === 'numero_colaborador') inputmode="numeric" @endif
 
                         @disabled($organizationChangeField === '')
 
@@ -393,6 +407,7 @@
                             disabled:bg-[var(--theme-surface-soft)]
                         "
                     >
+                    @endif
 
 
                     @error('organizationRequestedValue')

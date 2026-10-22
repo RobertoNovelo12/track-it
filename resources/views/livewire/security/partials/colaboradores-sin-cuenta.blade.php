@@ -50,7 +50,7 @@
             @foreach ($colaboradoresSinCuenta as $grupo)
                 <li
                     wire:key="colaborador-sin-cuenta-{{ md5($grupo['clave']) }}"
-                    x-data="{ vinculando: false, cuenta: '', enviando: false }"
+                    x-data="{ vinculando: false, cuenta: '', enviando: false, clave: @js($grupo['clave']) }"
                     class="px-4 py-4 sm:px-5"
                 >
                     <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
@@ -127,6 +127,7 @@
                                 Cancelar
                             </x-ui.button>
 
+                            {{-- «clave» viene del x-data del <li>: @js no se compila dentro de <x-…>. --}}
                             <x-ui.button
                                 size="sm"
                                 x-loading="enviando"
@@ -134,7 +135,7 @@
                                 x-disabled="enviando || cuenta === ''"
                                 x-on:click="
                                     enviando = true;
-                                    $wire.vincularColaborador(@js($grupo['clave']), cuenta)
+                                    $wire.vincularColaborador(clave, cuenta)
                                         .finally(() => { enviando = false; });
                                 "
                             >
