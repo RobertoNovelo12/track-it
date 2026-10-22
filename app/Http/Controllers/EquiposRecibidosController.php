@@ -65,6 +65,12 @@ class EquiposRecibidosController extends Controller
         ]);
     }
 
+    /*
+     * Destinos: «incluirme» (la propia bandeja) y/o id_destinatarios
+     * (otros usuarios con permiso de gestionar). Sin ninguno de los dos,
+     * va a la propia cuenta. id_destinatario (uno solo) se acepta por
+     * compatibilidad con la versión anterior del escáner.
+     */
     public function enviar(Request $request, EquiposRecibidosService $recibidos): JsonResponse
     {
         Gate::authorize('gestionar');
@@ -74,35 +80,66 @@ class EquiposRecibidosController extends Controller
         $datos = $request->validate([
             'id_equipo' => ['required_without:codigo', 'nullable', 'integer', 'exists:equipos,id_equipo'],
             'codigo' => ['required_without:id_equipo', 'nullable', 'string', 'max:100'],
-            // Vacío: a la propia cuenta.
+            'incluirme' => ['nullable', 'boolean'],
+            'id_destinatarios' => ['nullable', 'array', 'max:50'],
+            'id_destinatarios.*' => ['integer'],
             'id_destinatario' => ['nullable', 'integer'],
         ]);
 
         $idRemitente = (int) $request->user()->getKey();
-        $idUsuario = $idRemitente;
 
-        if (filled($datos['id_destinatario'] ?? null) && (int) $datos['id_destinatario'] !== $idRemitente) {
-            abort_unless(
-                $recibidos->puedeRecibir((int) $datos['id_destinatario'], $idRemitente),
+        $otros = collect($datos['id_destinatarios'] ?? [])
+            ->when(filled($datos['id_destinatario'] ?? null), fn ($ids) => $ids->push($datos['id_destinatario']))
+            ->map(fn ($id) => (int) $id)
+            ->reject(fn (int $id) => $id === $idRemitente)
+            ->unique()
+            ->values();
+
+        $incluirme = array_key_exists('incluirme', $datos) && $datos['incluirme'] !== null
+            ? (bool) $datos['incluirme']
+            : $otros->isEmpty();
+
+        if ($otros->isNotEmpty()) {
+            $permitidos = collect($recibidos->destinatarios($idRemitente))->keyBy('id');
+
+            abort_if(
+                $otros->contains(fn (int $id) => ! $permitidos->has($id)),
                 422,
-                'Ese usuario no puede recibir equipos.'
+                'Alguno de los usuarios elegidos no puede recibir equipos.'
             );
-
-            $idUsuario = (int) $datos['id_destinatario'];
         }
 
-        if (filled($datos['id_equipo'] ?? null)) {
-            $estado = $recibidos->enviar($idUsuario, (int) $datos['id_equipo'], $idRemitente);
-        } else {
+        $ids = $otros->when($incluirme, fn ($ids) => $ids->prepend($idRemitente))->values();
+
+        abort_if($ids->isEmpty(), 422, 'Elige al menos a una persona.');
+
+        if (blank($datos['id_equipo'] ?? null)) {
             abort_unless($recibidos->admiteCodigos(), 503, 'Falta ejecutar la migración de códigos no registrados.');
-
-            $estado = $recibidos->enviarCodigo($idUsuario, (string) $datos['codigo'], $idRemitente);
         }
+
+        $resultados = $ids->map(function (int $idUsuario) use ($datos, $recibidos, $idRemitente) {
+            $estado = filled($datos['id_equipo'] ?? null)
+                ? $recibidos->enviar($idUsuario, (int) $datos['id_equipo'], $idRemitente)
+                : $recibidos->enviarCodigo($idUsuario, (string) $datos['codigo'], $idRemitente);
+
+            return [
+                'id' => $idUsuario,
+                'propio' => $idUsuario === $idRemitente,
+                'estado' => $estado,
+                'pendientes' => $recibidos->contarPendientes($idUsuario),
+            ];
+        })->all();
+
+        $primero = $resultados[0];
 
         return response()->json([
-            'estado' => $estado,
-            'propio' => $idUsuario === $idRemitente,
-            'pendientes' => $recibidos->contarPendientes($idUsuario),
+            'resultados' => $resultados,
+            'enviados' => count(array_filter($resultados, fn ($r) => $r['estado'] === 'enviado')),
+            'duplicados' => count(array_filter($resultados, fn ($r) => $r['estado'] === 'duplicado')),
+            // Compatibilidad (un solo destino).
+            'estado' => $primero['estado'],
+            'propio' => $primero['propio'],
+            'pendientes' => $primero['pendientes'],
         ]);
     }
 }

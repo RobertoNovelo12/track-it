@@ -1,6 +1,6 @@
 {{--
-    Botón dividido del escáner: «Enviar a mi PC» (o al último usuario
-    elegido) + flecha para elegir a quién más enviarlo.
+    Botón dividido del escáner: «Enviar a mi PC» (o a las personas
+    elegidas, que se conservan entre códigos) + flecha para elegirlas.
     Usa el estado de layouts/partials/escaner-movil.
 --}}
 <div x-show="puedeEnviar" class="flex min-w-0">
@@ -11,7 +11,7 @@
         class="inline-flex h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-l-[var(--radius-md)] bg-[var(--theme-primary)] px-3 text-sm font-medium text-white disabled:opacity-60"
     >
         <span x-show="enviando" class="shrink-0"><x-ui.spinner size="sm" /></span>
-        <span class="truncate" x-text="destino ? 'Enviar a ' + destino.corto : 'Enviar a mi PC'">Enviar a mi PC</span>
+        <span class="truncate" x-text="etiquetaEnvio">Enviar a mi PC</span>
     </button>
 
     <button

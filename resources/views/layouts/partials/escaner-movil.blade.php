@@ -6,8 +6,8 @@
     - Abrir aquí: ver el equipo en el teléfono.
     - Enviar a mi PC: llega a «Equipos recibidos» de la misma cuenta
       (bandeja personal en la barra superior de escritorio). La flecha
-      junto al botón permite enviarlo a otro usuario; el elegido se
-      recuerda para los siguientes códigos. La cámara sigue abierta
+      junto al botón permite elegir a varias personas (y si incluirte);
+      la selección se conserva para los siguientes códigos. La cámara sigue abierta
       para escanear el siguiente (ráfaga).
     Lectura: resources/js/escaner.js (@zxing/browser). Exige HTTPS.
 ============================================================ --}}
@@ -22,8 +22,12 @@
         puedeEnviar: false,
         enviando: false,
 
-        // Destino: null = mi cuenta; { id, nombre, corto } = otro usuario.
-        destino: null,
+        /*
+         * Destinos (se mantienen para los siguientes códigos):
+         * incluirme = mi propia bandeja; destinos = otros usuarios.
+         */
+        incluirme: true,
+        destinos: [],
         eligiendo: false,
         destinatarios: null,
         cargandoDestinatarios: false,
@@ -218,11 +222,45 @@
             return lista.filter((d) => [d.nombre, d.detalle, d.usuario].join(' ').toLowerCase().includes(texto));
         },
 
-        /* null = mi cuenta. Envía de inmediato y se recuerda para los siguientes. */
-        elegirDestino(destinatario) {
-            this.destino = destinatario
-                ? { id: destinatario.id, nombre: destinatario.nombre, corto: destinatario.nombre.split(' ')[0] }
-                : null;
+        estaElegido(id) {
+            return this.destinos.some((d) => d.id === id);
+        },
+
+        alternarDestino(persona) {
+            this.destinos = this.estaElegido(persona.id)
+                ? this.destinos.filter((d) => d.id !== persona.id)
+                : [...this.destinos, { id: persona.id, nombre: persona.nombre, corto: persona.nombre.split(' ')[0] }];
+        },
+
+        get totalDestinos() {
+            return this.destinos.length + (this.incluirme ? 1 : 0);
+        },
+
+        /* Texto del botón principal. */
+        get etiquetaEnvio() {
+            if (this.totalDestinos === 0 || (this.incluirme && this.destinos.length === 0)) {
+                return 'Enviar a mi PC';
+            }
+
+            if (! this.incluirme && this.destinos.length === 1) {
+                return 'Enviar a ' + this.destinos[0].corto;
+            }
+
+            return 'Enviar a ' + this.totalDestinos + ' personas';
+        },
+
+        /* Resumen de la selección (lista de destinatarios). */
+        get resumenDestinos() {
+            const nombres = [...(this.incluirme ? ['Mi PC'] : []), ...this.destinos.map((d) => d.corto)];
+
+            return nombres.length ? nombres.join(', ') : 'Nadie seleccionado';
+        },
+
+        confirmarDestinos() {
+            if (this.totalDestinos === 0) {
+                return;
+            }
+
             this.eligiendo = false;
             this.enviar();
         },
@@ -247,7 +285,8 @@
                     },
                     body: JSON.stringify({
                         ...(esNuevo ? { codigo: this.codigoNuevo.codigo } : { id_equipo: this.equipo.id }),
-                        id_destinatario: this.destino?.id ?? null,
+                        incluirme: this.totalDestinos === 0 ? true : this.incluirme,
+                        id_destinatarios: this.destinos.map((d) => d.id),
                     }),
                 });
                 const datos = await respuesta.json().catch(() => ({}));
@@ -258,15 +297,28 @@
                     return;
                 }
 
-                const propio = datos.propio !== false;
-                const bandeja = propio ? 'tu bandeja' : 'la bandeja de ' + this.destino.nombre;
-                const enBandeja = ' (' + datos.pendientes + (datos.pendientes === 1 ? ' pendiente' : ' pendientes') + ' en ' + bandeja + ').';
+                /*
+                 * Mensaje según a quién llegó. «resultados» trae un registro
+                 * por destinatario (enviado o ya estaba en su bandeja).
+                 */
+                const resultados = datos.resultados ?? [{ propio: datos.propio !== false, estado: datos.estado, pendientes: datos.pendientes }];
+                const nombre = (r) => r.propio ? 'tu PC' : (this.destinos.find((d) => d.id === r.id)?.nombre ?? 'otro usuario');
+                const enviados = resultados.filter((r) => r.estado === 'enviado');
+                const repetidos = resultados.filter((r) => r.estado === 'duplicado');
+                const que = esNuevo ? 'Código enviado' : 'Enviado';
 
-                if (datos.estado === 'duplicado') {
-                    this.mensaje = (esNuevo ? 'Este código ya estaba en ' : 'Este equipo ya estaba en ') + bandeja + '.';
+                if (resultados.length === 1) {
+                    const r = resultados[0];
+                    const bandeja = r.propio ? 'tu bandeja' : 'la bandeja de ' + nombre(r);
+
+                    this.mensaje = r.estado === 'duplicado'
+                        ? (esNuevo ? 'Este código ya estaba en ' : 'Este equipo ya estaba en ') + bandeja + '.'
+                        : que + ' a ' + nombre(r) + (esNuevo ? ' para agregarlo' : '') + ' (' + r.pendientes + (r.pendientes === 1 ? ' pendiente' : ' pendientes') + ').';
+                } else if (enviados.length === 0) {
+                    this.mensaje = 'Ya estaba en la bandeja de las ' + resultados.length + ' personas.';
                 } else {
-                    const a = propio ? 'tu PC' : this.destino.nombre;
-                    this.mensaje = (esNuevo ? 'Código enviado a ' + a + ' para agregarlo' : 'Enviado a ' + a) + enBandeja;
+                    this.mensaje = que + ' a ' + enviados.map(nombre).join(', ') + '.'
+                        + (repetidos.length ? ' Ya lo tenía: ' + repetidos.map(nombre).join(', ') + '.' : '');
                 }
 
                 this.estado = 'enviado';
@@ -426,7 +478,7 @@
                 </div>
             </template>
 
-            {{-- Elegir a quién enviarlo --}}
+            {{-- Elegir a quién enviarlo (varios). La selección se conserva para los siguientes códigos. --}}
             <div x-show="eligiendo" x-cloak>
                 <div class="flex items-center gap-2">
                     <button
@@ -438,7 +490,19 @@
                         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
                     </button>
 
-                    <p class="text-sm font-semibold text-[var(--theme-text-strong)]">Enviar a…</p>
+                    <div class="min-w-0 flex-1">
+                        <p class="text-sm font-semibold text-[var(--theme-text-strong)]">Enviar a…</p>
+                        <p class="truncate text-xs text-[var(--theme-text-muted)]" x-text="resumenDestinos"></p>
+                    </div>
+
+                    <button
+                        type="button"
+                        x-show="destinos.length > 0"
+                        x-on:click="destinos = []; incluirme = true"
+                        class="shrink-0 px-2 py-1 text-xs font-medium text-[var(--theme-text-muted)] hover:text-[var(--theme-text)]"
+                    >
+                        Limpiar
+                    </button>
                 </div>
 
                 <input
@@ -449,15 +513,15 @@
                     class="mt-3 h-10 w-full rounded-[var(--radius-md)] border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)]"
                 >
 
-                <ul class="mt-2 max-h-[45vh] divide-y divide-[var(--theme-border)] overflow-y-auto overscroll-contain" role="listbox" aria-label="Destinatarios">
+                <ul class="mt-2 max-h-[40vh] divide-y divide-[var(--theme-border)] overflow-y-auto overscroll-contain" role="listbox" aria-multiselectable="true" aria-label="Destinatarios">
                     {{-- Mi cuenta --}}
                     <li x-show="! busqueda.trim()">
                         <button
                             type="button"
-                            x-on:click="elegirDestino(null)"
+                            x-on:click="incluirme = ! incluirme"
                             class="flex w-full items-center gap-3 py-2.5 text-left"
                             role="option"
-                            x-bind:aria-selected="destino === null ? 'true' : 'false'"
+                            x-bind:aria-selected="incluirme ? 'true' : 'false'"
                         >
                             <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--theme-primary-soft)] text-[var(--theme-primary)]">
                                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>
@@ -466,7 +530,13 @@
                                 <span class="block text-sm font-medium text-[var(--theme-text-strong)]">Mi PC</span>
                                 <span class="block text-xs text-[var(--theme-text-muted)]">Tu propia bandeja</span>
                             </span>
-                            <svg x-show="destino === null" class="h-4 w-4 shrink-0 text-[var(--theme-primary)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>
+                            <span
+                                class="flex h-5 w-5 shrink-0 items-center justify-center rounded border transition-colors"
+                                x-bind:class="incluirme ? 'border-[var(--theme-primary)] bg-[var(--theme-primary)] text-white' : 'border-[var(--theme-border-strong)] text-transparent'"
+                                aria-hidden="true"
+                            >
+                                <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg>
+                            </span>
                         </button>
                     </li>
 
@@ -474,10 +544,10 @@
                         <li>
                             <button
                                 type="button"
-                                x-on:click="elegirDestino(persona)"
+                                x-on:click="alternarDestino(persona)"
                                 class="flex w-full items-center gap-3 py-2.5 text-left"
                                 role="option"
-                                x-bind:aria-selected="destino?.id === persona.id ? 'true' : 'false'"
+                                x-bind:aria-selected="estaElegido(persona.id) ? 'true' : 'false'"
                             >
                                 <span
                                     class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--theme-surface-soft)] text-xs font-semibold text-[var(--theme-text)]"
@@ -488,7 +558,13 @@
                                     <span class="block truncate text-sm font-medium text-[var(--theme-text-strong)]" x-text="persona.nombre"></span>
                                     <span class="block truncate text-xs text-[var(--theme-text-muted)]" x-text="persona.detalle || persona.usuario"></span>
                                 </span>
-                                <svg x-show="destino?.id === persona.id" class="h-4 w-4 shrink-0 text-[var(--theme-primary)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>
+                                <span
+                                    class="flex h-5 w-5 shrink-0 items-center justify-center rounded border transition-colors"
+                                    x-bind:class="estaElegido(persona.id) ? 'border-[var(--theme-primary)] bg-[var(--theme-primary)] text-white' : 'border-[var(--theme-border-strong)] text-transparent'"
+                                    aria-hidden="true"
+                                >
+                                    <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg>
+                                </span>
                             </button>
                         </li>
                     </template>
@@ -509,6 +585,16 @@
                     class="py-4 text-center text-xs text-[var(--theme-text-muted)]"
                     x-text="busqueda.trim() ? 'Ningún usuario coincide con la búsqueda.' : 'No hay otros usuarios que puedan recibir equipos.'"
                 ></p>
+
+                <button
+                    type="button"
+                    x-on:click="confirmarDestinos()"
+                    x-bind:disabled="totalDestinos === 0 || enviando"
+                    class="mt-3 inline-flex h-11 w-full items-center justify-center gap-2 rounded-[var(--radius-md)] bg-[var(--theme-primary)] text-sm font-medium text-white disabled:opacity-50"
+                >
+                    <span x-show="enviando"><x-ui.spinner size="sm" /></span>
+                    <span x-text="totalDestinos === 0 ? 'Elige al menos a una persona' : (totalDestinos === 1 ? 'Enviar' : 'Enviar a ' + totalDestinos + ' personas')"></span>
+                </button>
             </div>
 
             {{-- Enviado (vuelve solo a la cámara) --}}
