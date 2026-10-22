@@ -1,10 +1,6 @@
-{{-- Mismo x-data que la raíz de livewire/equipos-index: al reemplazar este
-     placeholder por el componente (carga diferida), el estado ya existe y
-     Alpine no evalúa «filtersOpen» antes de tiempo. --}}
+{{-- Comparte todo el estado Alpine con el inventario: Livewire lo conserva durante la carga diferida. --}}
 <div
-    x-data="{
-        filtersOpen: false
-    }"
+    x-data="@include('livewire.equipos.estado-alpine')"
 >
 
     {{-- ============================================================
