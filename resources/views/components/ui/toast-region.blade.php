@@ -11,7 +11,13 @@
         window.trackitToast('success', 'Copiado al portapapeles');
         $dispatch('toast', { type: 'info', message: '...' })
 
-    Tipos: success | error | warning | info
+    Tipos: success | error | warning | info | loading
+
+    «loading» (proceso en curso) no se cierra solo y muestra un
+    indicador girando. trackitToast() devuelve su id para cambiarlo
+    cuando termine:
+        const id = window.trackitToast('loading', 'Esto puede tardar…', 'Generando PDF…');
+        window.trackitToastActualizar(id, 'success', 'La descarga comenzó.', 'Archivo listo');
     - Máximo 3 visibles; el más antiguo sale primero.
     - Éxito/info: 4 s. Error/advertencia: 7 s (más tiempo para leer).
     - Se pausan al pasar el cursor. Anunciados a lectores de pantalla.
@@ -29,6 +35,9 @@
         init() {
             window.trackitToast = (type, message, title = null) =>
                 this.agregar({ type, message, title });
+
+            window.trackitToastActualizar = (id, type, message, title = null) =>
+                this.actualizar(id, { type, message, title });
         },
 
         agregar(detalle) {
@@ -44,25 +53,18 @@
             if (texto(datos.message) === '' && texto(datos.title) === '') {
                 console.warn('[Track-IT] Aviso vacío ignorado', detalle, new Error().stack);
 
-                return;
+                return null;
             }
 
-            const tipo = ['success', 'error', 'warning', 'info'].includes(datos.type) ? datos.type : 'info';
-
-            const titulos = {
-                success: 'Listo',
-                error: 'Algo salió mal',
-                warning: 'Atención',
-                info: 'Aviso',
-            };
+            const tipo = this.tipoValido(datos.type);
 
             const aviso = {
                 id: this.siguiente++,
                 tipo,
-                titulo: datos.title ?? titulos[tipo],
+                titulo: datos.title ?? this.titulos[tipo],
                 mensaje: datos.message ?? '',
                 visible: true,
-                restante: tipo === 'error' || tipo === 'warning' ? 7000 : 4000,
+                restante: this.duracion(tipo),
                 timer: null,
                 inicio: 0,
             };
@@ -70,10 +72,56 @@
             this.avisos.push(aviso);
 
             if (this.avisos.length > 3) {
-                this.cerrar(this.avisos[0].id);
+                // Un proceso en curso no se quita para hacer espacio.
+                const antiguo = this.avisos.find(item => item.tipo !== 'loading') ?? this.avisos[0];
+                this.cerrar(antiguo.id);
             }
 
             this.$nextTick(() => this.reanudar(aviso.id));
+
+            return aviso.id;
+        },
+
+        /*
+         * Cambia un aviso existente (p. ej. «Generando…» → «Archivo
+         * listo»). Si ya se cerró, se muestra uno nuevo.
+         */
+        actualizar(id, detalle) {
+            const aviso = this.buscar(id);
+
+            if (! aviso || ! aviso.visible) {
+                return this.agregar(detalle);
+            }
+
+            clearTimeout(aviso.timer);
+            aviso.timer = null;
+            aviso.tipo = this.tipoValido(detalle.type);
+            aviso.titulo = detalle.title ?? this.titulos[aviso.tipo];
+            aviso.mensaje = detalle.message ?? '';
+            aviso.restante = this.duracion(aviso.tipo);
+
+            this.reanudar(id);
+
+            return id;
+        },
+
+        titulos: {
+            success: 'Listo',
+            error: 'Algo salió mal',
+            warning: 'Atención',
+            info: 'Aviso',
+            loading: 'Procesando…',
+        },
+
+        tipoValido(tipo) {
+            return ['success', 'error', 'warning', 'info', 'loading'].includes(tipo) ? tipo : 'info';
+        },
+
+        // null = no se cierra solo (proceso en curso).
+        duracion(tipo) {
+            if (tipo === 'loading') return null;
+
+            return tipo === 'error' || tipo === 'warning' ? 7000 : 4000;
         },
 
         buscar(id) {
@@ -83,7 +131,7 @@
         pausar(id) {
             const aviso = this.buscar(id);
 
-            if (! aviso || ! aviso.timer) return;
+            if (! aviso || ! aviso.timer || aviso.restante === null) return;
 
             clearTimeout(aviso.timer);
             aviso.timer = null;
@@ -93,7 +141,7 @@
         reanudar(id) {
             const aviso = this.buscar(id);
 
-            if (! aviso) return;
+            if (! aviso || aviso.restante === null) return;
 
             aviso.inicio = Date.now();
             aviso.timer = setTimeout(() => this.cerrar(id), Math.max(aviso.restante, 1500));
@@ -134,6 +182,7 @@
             @mouseleave="reanudar(aviso.id)"
 
             :role="aviso.tipo === 'error' ? 'alert' : 'status'"
+            :aria-busy="aviso.tipo === 'loading' ? 'true' : 'false'"
 
             class="pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-[var(--radius-lg)] border border-[var(--theme-border)] bg-[var(--theme-surface)] px-4 py-3 theme-shadow-xl"
         >
@@ -144,10 +193,15 @@
                     'bg-[var(--theme-success-soft)] text-[var(--theme-success)]': aviso.tipo === 'success',
                     'bg-[var(--theme-danger-soft)] text-[var(--theme-danger)]': aviso.tipo === 'error',
                     'bg-[var(--theme-warning-soft)] text-[var(--theme-warning)]': aviso.tipo === 'warning',
-                    'bg-[var(--theme-primary-soft)] text-[var(--theme-primary)]': aviso.tipo === 'info',
+                    'bg-[var(--theme-primary-soft)] text-[var(--theme-primary)]': aviso.tipo === 'info' || aviso.tipo === 'loading',
                 }"
             >
-                <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <svg x-show="aviso.tipo === 'loading'" class="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.4" opacity="0.25"/>
+                    <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+                </svg>
+
+                <svg x-show="aviso.tipo !== 'loading'" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path x-show="aviso.tipo === 'success'" d="M5 12.5l4.5 4.5L19 7"/>
                     <path x-show="aviso.tipo === 'error'" d="M6 6l12 12M18 6L6 18"/>
                     <path x-show="aviso.tipo === 'warning'" d="M12 8v5M12 16.5v.5"/>

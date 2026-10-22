@@ -2,7 +2,7 @@
     x-data="@include('livewire.equipos.estado-alpine')"
 
     @exportar-inventario.window="exportar($event.detail.formato)"
-    @inventario-exportacion-vacia.window="alert('No hay equipos para exportar con estos filtros o selección.')"
+    @inventario-exportacion-vacia.window="exportacionVacia()"
     x-effect="
         document.body.classList.toggle(
             'overflow-hidden',
@@ -21,9 +21,7 @@
     "
 >
 
-    <div x-cloak x-show="exportando" role="status" class="fixed bottom-5 right-5 z-50 rounded-lg bg-[var(--theme-surface)] border border-[var(--theme-border)] p-4 shadow-lg">
-        Generando documento…
-    </div>
+    {{-- El progreso de la exportación se muestra en el aviso global (toast). --}}
     {{-- ============================================================
         X-CLOAK
     ============================================================ --}}

@@ -6,6 +6,7 @@ use App\Exports\InventarioEquiposExport;
 use App\Services\InventarioDocumentoService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Livewire\Attributes\On;
+use Livewire\Attributes\Renderless;
 use Maatwebsite\Excel\Facades\Excel;
 
 /**
@@ -14,7 +15,12 @@ use Maatwebsite\Excel\Facades\Excel;
  */
 trait ExportaInventario
 {
+    /*
+     * Renderless: generar el archivo no cambia la tabla, así que no se
+     * vuelve a dibujar el listado (antes parecía que se recargaba).
+     */
     #[On('inventario-exportar')]
+    #[Renderless]
     public function exportarInventario(string $formato = 'pdf', array $seleccionados = [])
     {
         abort_unless(auth()->check(), 403);

@@ -26,6 +26,7 @@
     per-page-model="perPage"
     sort-model="sort"
     refresh-action="refreshTable"
+    loading-except="exportarInventario"
 
     result-singular="Equipo encontrado"
     result-plural="Equipos encontrados"

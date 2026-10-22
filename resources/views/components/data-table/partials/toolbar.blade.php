@@ -65,7 +65,7 @@
         {{-- Indicador discreto mientras se actualizan los datos --}}
         <span
             wire:loading.delay.flex
-            @if (filled($loadingTarget ?? null)) wire:target="{{ $loadingTarget }}" @endif
+            @if (filled($loadingTarget ?? null)) wire:target="{{ $loadingTarget }}" @elseif (filled($loadingExcept ?? null)) wire:target.except="{{ $loadingExcept }}" @endif
             class="hidden items-center gap-1.5 text-xs text-[var(--theme-text-muted)]"
             role="status"
         >

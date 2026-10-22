@@ -95,6 +95,13 @@
      */
     'loadingTarget' => null,
 
+    /*
+     * Lo contrario: acciones que NO muestran «Actualizando…» (separadas
+     * por coma). Solo se usa si loadingTarget está vacío. P. ej. la
+     * exportación de Inventario, que no cambia la tabla.
+     */
+    'loadingExcept' => null,
+
     'pageName' => 'page',
 
     'minWidth' => null,
@@ -212,7 +219,7 @@
     ======================================================== --}}
     <div
         wire:loading.delay
-        @if (filled($loadingTarget)) wire:target="{{ $loadingTarget }}" @endif
+        @if (filled($loadingTarget)) wire:target="{{ $loadingTarget }}" @elseif (filled($loadingExcept)) wire:target.except="{{ $loadingExcept }}" @endif
         class="pointer-events-none absolute inset-x-0 top-0 z-20 h-0.5 overflow-hidden lg:rounded-t-lg"
         aria-hidden="true"
     >
