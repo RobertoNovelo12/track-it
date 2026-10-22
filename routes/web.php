@@ -163,6 +163,9 @@ Route::middleware([
     |--------------------------------------------------------------------------
     */
 
+    Route::get('/equipos/{equipo}/exportar', [EquipoController::class, 'exportar'])
+        ->whereNumber('equipo')->name('equipos.ficha');
+
     Route::get(
         '/equipos/{equipo}',
         function (int $equipo) {

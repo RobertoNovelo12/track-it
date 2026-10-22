@@ -238,8 +238,8 @@
             </a>
 
             <div class="flex min-w-0 flex-1 items-center justify-end gap-2 sm:gap-3">
-            <button
-                type="button"
+            <a
+                href="{{ route('equipos.ficha', $equipoId) }}"
                 class="
                     w-full
                     sm:w-auto
@@ -256,9 +256,9 @@
                     text-sm
                     font-medium
                     text-[var(--theme-text-muted)]
-                    cursor-default
+                    hover:text-[var(--theme-primary)]
                 "
-                title="Función no habilitada por el momento"
+                title="Descargar ficha del equipo en PDF"
             >
                 <svg
                     class="w-4 h-4"
@@ -272,8 +272,8 @@
                     <path d="M4 21h16"/>
                 </svg>
 
-                Exportar Alta
-            </button>
+                Exportar ficha
+            </a>
 
             @unless ($soloLectura)
             {{-- Dar de baja --}}

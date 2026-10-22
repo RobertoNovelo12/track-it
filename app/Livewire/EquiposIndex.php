@@ -24,6 +24,9 @@ class EquiposIndex extends Component
 
     use WithPagination;
 
+    // Únicamente la exportación; no cambia filtros ni consultas existentes.
+    use \App\Livewire\Concerns\ExportaInventario;
+
     protected $paginationTheme = 'tailwind';
 
 

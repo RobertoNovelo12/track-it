@@ -327,10 +327,10 @@
                 </a>
             @endunless
 
-            {{-- Exportar: solo visual --}}
-            <button
+            {{-- Ficha completa del equipo --}}
+            <a
 
-                type="button"
+                href="{{ route('equipos.ficha', $equipoId) }}"
 
                 class="
 
@@ -366,11 +366,11 @@
 
                     text-[var(--theme-text-muted)]
 
-                    cursor-default
+                    hover:text-[var(--theme-primary)]
 
                 "
 
-                title="Función de exportación no habilitada por el momento"
+                title="Descargar ficha del equipo en PDF"
 
             >
 
@@ -397,7 +397,7 @@
                 </svg>
 
                 Exportar
-            </button>
+            </a>
 
             </div>
 

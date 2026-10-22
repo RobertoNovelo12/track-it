@@ -114,10 +114,7 @@
                 >
 
                     <a
-                        href="{{ Route::has('equipos.export')
-                            ? route('equipos.export', ['format' => 'pdf'])
-                            : '#'
-                        }}"
+                        href="#" onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('exportar-inventario', {detail: {formato: 'pdf'}}))"
                         class="
                             block
 
@@ -138,10 +135,7 @@
 
 
                     <a
-                        href="{{ Route::has('equipos.export')
-                            ? route('equipos.export', ['format' => 'xlsx'])
-                            : '#'
-                        }}"
+                        href="#" onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('exportar-inventario', {detail: {formato: 'xlsx'}}))"
                         class="
                             block
 

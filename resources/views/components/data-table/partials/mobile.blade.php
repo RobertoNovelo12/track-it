@@ -45,6 +45,9 @@
 
         <article
             x-data="{ selected: false, menuOpen: false }"
+            @if ($selectable)
+                :data-export-selected="selected ? @js((string) $id) : null"
+            @endif
             @data-table-menu-open.window="if ($event.detail !== $el) menuOpen = false"
 
             @click="selected = ! selected"
