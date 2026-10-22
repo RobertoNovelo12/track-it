@@ -662,8 +662,9 @@
             fixed
             z-[120]
 
-            w-[290px]
-            max-w-[calc(100vw-24px)]
+            w-max
+            min-w-[180px]
+            max-w-[min(260px,calc(100vw-24px))]
 
             bg-[var(--theme-surface)]
 
@@ -672,7 +673,7 @@
 
             rounded-lg
 
-            shadow-lg
+            shadow-md
 
             overflow-hidden
 
@@ -681,7 +682,7 @@
     >
 
         {{-- INFORMACIÓN SELECCIONADA --}}
-        <div class="px-3 pt-2.5 pb-2 pointer-events-none">
+        <div class="px-2.5 pt-2 pb-1.5 pointer-events-none">
 
             <div
                 class="
@@ -698,9 +699,9 @@
 
             <div
                 class="
-                    mt-1
+                    mt-0.5
 
-                    max-h-20
+                    max-h-16
 
                     overflow-hidden
 
@@ -708,7 +709,7 @@
 
                     text-xs
                     font-medium
-                    leading-5
+                    leading-[1.125rem]
 
                     text-[var(--theme-text-strong)]
                 "
@@ -730,10 +731,9 @@
                 flex
                 items-center
 
-                gap-1
+                gap-0.5
 
-                px-2
-                py-2
+                p-1
 
                 border-t
                 border-[var(--theme-border)]
@@ -749,7 +749,7 @@
                 @click="copyValue()"
 
                 class="
-                    h-8
+                    h-7
 
                     flex-1
 
@@ -757,7 +757,11 @@
                     items-center
                     justify-center
 
-                    gap-1.5
+                    gap-1
+
+                    px-2
+
+                    whitespace-nowrap
 
                     rounded-md
 
@@ -772,7 +776,7 @@
                 "
             >
                 <svg
-                    class="w-3.5 h-3.5 shrink-0"
+                    class="w-3 h-3 shrink-0"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -798,7 +802,7 @@
                 @click="if (editUrl === '#') { $event.preventDefault(); }"
 
                 class="
-                    h-8
+                    h-7
 
                     flex-1
 
@@ -806,7 +810,11 @@
                     items-center
                     justify-center
 
-                    gap-1.5
+                    gap-1
+
+                    px-2
+
+                    whitespace-nowrap
 
                     rounded-md
 
@@ -821,7 +829,7 @@
                 "
             >
                 <svg
-                    class="w-3.5 h-3.5 shrink-0"
+                    class="w-3 h-3 shrink-0"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -848,7 +856,7 @@
                 @click="if (detailUrl === '#') { $event.preventDefault(); }"
 
                 class="
-                    h-8
+                    h-7
 
                     flex-1
 
@@ -856,7 +864,11 @@
                     items-center
                     justify-center
 
-                    gap-1.5
+                    gap-1
+
+                    px-2
+
+                    whitespace-nowrap
 
                     rounded-md
 
@@ -871,7 +883,7 @@
                 "
             >
                 <svg
-                    class="w-3.5 h-3.5 shrink-0"
+                    class="w-3 h-3 shrink-0"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"

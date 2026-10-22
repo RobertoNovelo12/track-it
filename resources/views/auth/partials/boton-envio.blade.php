@@ -21,11 +21,32 @@
 <script>
     (() => {
         const boton = document.getElementById(@js($id));
+        const normal = boton?.querySelector('[data-normal]');
+        const cargando = boton?.querySelector('[data-cargando]');
 
-        boton?.form?.addEventListener('submit', () => {
-            boton.disabled = true;
-            boton.querySelector('[data-normal]')?.classList.add('hidden');
-            boton.querySelector('[data-cargando]')?.classList.replace('hidden', 'inline-flex');
+        /*
+         * Se cambian las dos clases de display: si solo se agrega «hidden»,
+         * «inline-flex» sigue ganando y el texto normal no se oculta.
+         */
+        const mostrar = (enCarga) => {
+            if (! boton) {
+                return;
+            }
+
+            boton.disabled = enCarga;
+            normal?.classList.toggle('hidden', enCarga);
+            normal?.classList.toggle('inline-flex', ! enCarga);
+            cargando?.classList.toggle('hidden', ! enCarga);
+            cargando?.classList.toggle('inline-flex', enCarga);
+        };
+
+        boton?.form?.addEventListener('submit', () => mostrar(true));
+
+        // Al volver con «atrás», el navegador puede restaurar el botón en carga.
+        window.addEventListener('pageshow', (evento) => {
+            if (evento.persisted) {
+                mostrar(false);
+            }
         });
     })();
 </script>

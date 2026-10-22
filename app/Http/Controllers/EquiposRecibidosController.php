@@ -13,8 +13,9 @@ use Illuminate\Support\Facades\Gate;
 |--------------------------------------------------------------------------
 |
 | buscar: código escaneado → datos del equipo (para «Abrir aquí»).
-| enviar: agrega el equipo a la bandeja del mismo usuario («Enviar a la
-|         PC»). Requiere permiso de gestionar. Si el código no está en el
+| enviar: agrega el equipo a la bandeja del mismo usuario («Enviar a mi
+|         PC») o de otro usuario con permiso de gestionar (id_destinatario).
+|         Requiere permiso de gestionar. Si el código no está en el
 |         inventario se envía el código (para darlo de alta en la PC).
 |
 */
@@ -52,6 +53,18 @@ class EquiposRecibidosController extends Controller
         ]);
     }
 
+    /*
+     * Usuarios a los que se puede enviar (flecha junto a «Enviar a mi PC»).
+     */
+    public function destinatarios(Request $request, EquiposRecibidosService $recibidos): JsonResponse
+    {
+        Gate::authorize('gestionar');
+
+        return response()->json([
+            'destinatarios' => $recibidos->destinatarios((int) $request->user()->getKey()),
+        ]);
+    }
+
     public function enviar(Request $request, EquiposRecibidosService $recibidos): JsonResponse
     {
         Gate::authorize('gestionar');
@@ -61,20 +74,34 @@ class EquiposRecibidosController extends Controller
         $datos = $request->validate([
             'id_equipo' => ['required_without:codigo', 'nullable', 'integer', 'exists:equipos,id_equipo'],
             'codigo' => ['required_without:id_equipo', 'nullable', 'string', 'max:100'],
+            // Vacío: a la propia cuenta.
+            'id_destinatario' => ['nullable', 'integer'],
         ]);
 
-        $idUsuario = (int) $request->user()->getKey();
+        $idRemitente = (int) $request->user()->getKey();
+        $idUsuario = $idRemitente;
+
+        if (filled($datos['id_destinatario'] ?? null) && (int) $datos['id_destinatario'] !== $idRemitente) {
+            abort_unless(
+                $recibidos->puedeRecibir((int) $datos['id_destinatario'], $idRemitente),
+                422,
+                'Ese usuario no puede recibir equipos.'
+            );
+
+            $idUsuario = (int) $datos['id_destinatario'];
+        }
 
         if (filled($datos['id_equipo'] ?? null)) {
-            $estado = $recibidos->enviar($idUsuario, (int) $datos['id_equipo']);
+            $estado = $recibidos->enviar($idUsuario, (int) $datos['id_equipo'], $idRemitente);
         } else {
             abort_unless($recibidos->admiteCodigos(), 503, 'Falta ejecutar la migración de códigos no registrados.');
 
-            $estado = $recibidos->enviarCodigo($idUsuario, (string) $datos['codigo']);
+            $estado = $recibidos->enviarCodigo($idUsuario, (string) $datos['codigo'], $idRemitente);
         }
 
         return response()->json([
             'estado' => $estado,
+            'propio' => $idUsuario === $idRemitente,
             'pendientes' => $recibidos->contarPendientes($idUsuario),
         ]);
     }

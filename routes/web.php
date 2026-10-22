@@ -73,6 +73,11 @@ Route::middleware([
         [\App\Http\Controllers\EquiposRecibidosController::class, 'enviar']
     )->name('equipos.recibidos.enviar');
 
+    Route::get(
+        '/equipos/recibidos/destinatarios',
+        [\App\Http\Controllers\EquiposRecibidosController::class, 'destinatarios']
+    )->name('equipos.recibidos.destinatarios');
+
     /*
     |--------------------------------------------------------------------------
     | Código de barras de un equipo (SVG)

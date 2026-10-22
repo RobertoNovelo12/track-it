@@ -158,6 +158,143 @@
 
 
     {{-- ====================================================
+        ACCESIBILIDAD
+        ----------------------------------------------------
+        Cada cambio se aplica al instante en esta página como
+        vista previa (atributos de <html>). Se conserva al pulsar
+        «Guardar preferencias»; si sales sin guardar, se descarta.
+    ==================================================== --}}
+    @php
+        $opcionesAccesibilidad = [
+            [
+                'modelo' => 'reducirMovimiento',
+                'atributo' => 'data-movimiento',
+                'activo' => 'reducido',
+                'titulo' => 'Reducir animaciones',
+                'descripcion' => 'Quita transiciones y efectos de movimiento. Útil si las animaciones te distraen o marean.',
+            ],
+            [
+                'modelo' => 'altoContraste',
+                'atributo' => 'data-contraste',
+                'activo' => 'alto',
+                'titulo' => 'Alto contraste',
+                'descripcion' => 'Textos secundarios y bordes más marcados para leer con más facilidad.',
+            ],
+            [
+                'modelo' => 'resaltarFoco',
+                'atributo' => 'data-foco',
+                'activo' => 'resaltado',
+                'titulo' => 'Resaltar el foco del teclado',
+                'descripcion' => 'Muestra un contorno grueso en el elemento seleccionado al navegar con la tecla Tab.',
+            ],
+        ];
+
+        $tamanosTexto = [
+            'normal' => ['muestra' => 'text-sm', 'escala' => '100%'],
+            'grande' => ['muestra' => 'text-base', 'escala' => '112%'],
+            'muy_grande' => ['muestra' => 'text-lg', 'escala' => '125%'],
+        ];
+    @endphp
+
+    <section
+        class="{{ $seccion }}"
+        x-data="{
+            tamanoTexto: $wire.entangle('tamanoTexto'),
+            reducirMovimiento: $wire.entangle('reducirMovimiento'),
+            altoContraste: $wire.entangle('altoContraste'),
+            resaltarFoco: $wire.entangle('resaltarFoco'),
+
+            /* Vista previa inmediata en toda la página. */
+            aplicar() {
+                const html = document.documentElement;
+
+                html.setAttribute('data-texto', this.tamanoTexto);
+                html.setAttribute('data-movimiento', this.reducirMovimiento ? 'reducido' : 'normal');
+                html.setAttribute('data-contraste', this.altoContraste ? 'alto' : 'normal');
+                html.setAttribute('data-foco', this.resaltarFoco ? 'resaltado' : 'normal');
+            },
+        }"
+        x-effect="aplicar()"
+    >
+        <div class="{{ $cabecera }}">
+            <h2 class="text-sm font-semibold text-[var(--theme-text-strong)]">Accesibilidad</h2>
+            <p class="mt-1 text-xs text-[var(--theme-text-muted)]">Ajusta el sistema para leerlo y usarlo con más comodidad. Los cambios se ven al instante.</p>
+        </div>
+
+        @unless ($accesibilidadDisponible)
+            <p class="border-b border-[var(--theme-border)] bg-[var(--theme-warning-soft)] px-4 py-2.5 text-xs text-[var(--theme-text)] sm:px-5">
+                Falta ejecutar la actualización de la base de datos (<code class="font-mono">php artisan migrate</code>) para guardar estas opciones.
+            </p>
+        @endunless
+
+        <div class="divide-y divide-[var(--theme-border)]">
+
+            {{-- Tamaño del texto --}}
+            <div class="{{ $fila }}">
+                <div class="min-w-0">
+                    <p class="text-sm font-medium text-[var(--theme-text)]">Tamaño del texto</p>
+                    <p class="mt-0.5 text-xs text-[var(--theme-text-muted)]">
+                        Agranda textos, botones y espacios en todo el sistema.
+                    </p>
+                </div>
+
+                <div class="grid w-full shrink-0 grid-cols-3 gap-2 md:w-auto" role="radiogroup" aria-label="Tamaño del texto">
+                    @foreach (\App\Services\PreferenciasUsuarioService::TAMANOS_TEXTO as $valor => $nombre)
+                        <label
+                            wire:key="pref-texto-{{ $valor }}"
+                            class="flex cursor-pointer items-center justify-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-colors {{ $tarjeta($tamanoTexto === $valor) }}"
+                            x-bind:class="{{ $tarjetaAlpine('tamanoTexto', $valor) }}"
+                        >
+                            <input type="radio" x-model="tamanoTexto" value="{{ $valor }}" class="sr-only">
+                            <span class="{{ $tamanosTexto[$valor]['muestra'] }} font-semibold leading-none" aria-hidden="true">Aa</span>
+                            <span class="whitespace-nowrap">{{ $nombre }}</span>
+                        </label>
+                    @endforeach
+                </div>
+            </div>
+
+            {{-- Interruptores --}}
+            @foreach ($opcionesAccesibilidad as $opcion)
+                <div class="{{ $fila }}">
+                    <div class="min-w-0">
+                        <p id="pref-{{ $opcion['modelo'] }}-titulo" class="text-sm font-medium text-[var(--theme-text)]">{{ $opcion['titulo'] }}</p>
+                        <p class="mt-0.5 text-xs text-[var(--theme-text-muted)]">{{ $opcion['descripcion'] }}</p>
+                    </div>
+
+                    <div class="flex shrink-0 justify-start md:justify-end">
+                        <button
+                            type="button"
+                            role="switch"
+                            aria-labelledby="pref-{{ $opcion['modelo'] }}-titulo"
+                            aria-checked="{{ $this->{$opcion['modelo']} ? 'true' : 'false' }}"
+                            x-bind:aria-checked="{{ $opcion['modelo'] }} ? 'true' : 'false'"
+                            x-on:click="{{ $opcion['modelo'] }} = ! {{ $opcion['modelo'] }}"
+                            class="inline-flex items-center gap-2.5 rounded-full"
+                        >
+                            <span
+                                class="relative inline-flex h-6 w-11 shrink-0 rounded-full transition-colors duration-150 {{ $this->{$opcion['modelo']} ? 'bg-[var(--theme-primary)]' : 'bg-[var(--theme-border-strong)]' }}"
+                                x-bind:class="{ 'bg-[var(--theme-primary)]': {{ $opcion['modelo'] }}, 'bg-[var(--theme-border-strong)]': ! {{ $opcion['modelo'] }} }"
+                            >
+                                <span
+                                    class="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-150 {{ $this->{$opcion['modelo']} ? 'translate-x-5' : 'translate-x-0' }}"
+                                    x-bind:class="{ 'translate-x-5': {{ $opcion['modelo'] }}, 'translate-x-0': ! {{ $opcion['modelo'] }} }"
+                                ></span>
+                            </span>
+
+                            <span
+                                class="w-[5.5rem] text-left text-xs text-[var(--theme-text-muted)] md:order-first md:text-right"
+                                x-text="{{ $opcion['modelo'] }} ? 'Activado' : 'Desactivado'"
+                            >{{ $this->{$opcion['modelo']} ? 'Activado' : 'Desactivado' }}</span>
+                        </button>
+                    </div>
+                </div>
+            @endforeach
+
+        </div>
+    </section>
+
+
+    {{-- ====================================================
         INICIO Y LISTADOS
     ==================================================== --}}
     <section class="{{ $seccion }}">

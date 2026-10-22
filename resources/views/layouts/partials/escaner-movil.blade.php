@@ -4,9 +4,11 @@
     Se abre con el botón del buscador en móvil ($dispatch('abrir-escaner')).
     Al leer un código pregunta qué hacer:
     - Abrir aquí: ver el equipo en el teléfono.
-    - Enviar a la PC: llega a «Equipos recibidos» de la misma cuenta
-      (bandeja personal en la barra superior de escritorio). La cámara
-      sigue abierta para escanear el siguiente (ráfaga).
+    - Enviar a mi PC: llega a «Equipos recibidos» de la misma cuenta
+      (bandeja personal en la barra superior de escritorio). La flecha
+      junto al botón permite enviarlo a otro usuario; el elegido se
+      recuerda para los siguientes códigos. La cámara sigue abierta
+      para escanear el siguiente (ráfaga).
     Lectura: resources/js/escaner.js (@zxing/browser). Exige HTTPS.
 ============================================================ --}}
 <div
@@ -19,6 +21,14 @@
         equipo: null,
         puedeEnviar: false,
         enviando: false,
+
+        // Destino: null = mi cuenta; { id, nombre, corto } = otro usuario.
+        destino: null,
+        eligiendo: false,
+        destinatarios: null,
+        cargandoDestinatarios: false,
+        errorDestinatarios: false,
+        busqueda: '',
         ultimoCodigo: '',
         ultimoMomento: 0,
         temporizador: null,
@@ -41,6 +51,7 @@
 
         async reanudar() {
             clearTimeout(this.temporizador);
+            this.eligiendo = false;
             this.estado = 'camara';
             this.equipo = null;
             this.codigoNuevo = null;
@@ -71,6 +82,7 @@
 
         cerrar() {
             clearTimeout(this.temporizador);
+            this.eligiendo = false;
             window.trackitEscaner?.detener();
             this.abierto = false;
             document.documentElement.style.overflow = '';
@@ -163,6 +175,58 @@
             }
         },
 
+        /*
+         * Lista de usuarios: se pide una sola vez, al tocar la flecha.
+         */
+        async abrirDestinatarios() {
+            this.busqueda = '';
+            this.eligiendo = true;
+
+            if (this.destinatarios !== null || this.cargandoDestinatarios) {
+                return;
+            }
+
+            this.cargandoDestinatarios = true;
+            this.errorDestinatarios = false;
+
+            try {
+                const respuesta = await fetch(@js(route('equipos.recibidos.destinatarios')), {
+                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                });
+
+                if (! respuesta.ok) {
+                    throw new Error(respuesta.status);
+                }
+
+                const datos = await respuesta.json();
+                this.destinatarios = datos.destinatarios ?? [];
+            } catch (error) {
+                this.errorDestinatarios = true;
+            } finally {
+                this.cargandoDestinatarios = false;
+            }
+        },
+
+        get destinatariosFiltrados() {
+            const texto = this.busqueda.trim().toLowerCase();
+            const lista = this.destinatarios ?? [];
+
+            if (! texto) {
+                return lista;
+            }
+
+            return lista.filter((d) => [d.nombre, d.detalle, d.usuario].join(' ').toLowerCase().includes(texto));
+        },
+
+        /* null = mi cuenta. Envía de inmediato y se recuerda para los siguientes. */
+        elegirDestino(destinatario) {
+            this.destino = destinatario
+                ? { id: destinatario.id, nombre: destinatario.nombre, corto: destinatario.nombre.split(' ')[0] }
+                : null;
+            this.eligiendo = false;
+            this.enviar();
+        },
+
         async enviar() {
             const esNuevo = this.estado === 'nuevo' && this.codigoNuevo;
 
@@ -181,7 +245,10 @@
                         'X-Requested-With': 'XMLHttpRequest',
                         'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ?? '',
                     },
-                    body: JSON.stringify(esNuevo ? { codigo: this.codigoNuevo.codigo } : { id_equipo: this.equipo.id }),
+                    body: JSON.stringify({
+                        ...(esNuevo ? { codigo: this.codigoNuevo.codigo } : { id_equipo: this.equipo.id }),
+                        id_destinatario: this.destino?.id ?? null,
+                    }),
                 });
                 const datos = await respuesta.json().catch(() => ({}));
 
@@ -191,12 +258,15 @@
                     return;
                 }
 
-                const enBandeja = ' (' + datos.pendientes + (datos.pendientes === 1 ? ' pendiente' : ' pendientes') + ' en la bandeja).';
+                const propio = datos.propio !== false;
+                const bandeja = propio ? 'tu bandeja' : 'la bandeja de ' + this.destino.nombre;
+                const enBandeja = ' (' + datos.pendientes + (datos.pendientes === 1 ? ' pendiente' : ' pendientes') + ' en ' + bandeja + ').';
 
                 if (datos.estado === 'duplicado') {
-                    this.mensaje = esNuevo ? 'Este código ya estaba en tu bandeja.' : 'Este equipo ya estaba en tu bandeja.';
+                    this.mensaje = (esNuevo ? 'Este código ya estaba en ' : 'Este equipo ya estaba en ') + bandeja + '.';
                 } else {
-                    this.mensaje = (esNuevo ? 'Código enviado a tu PC para agregarlo' : 'Enviado a tu PC') + enBandeja;
+                    const a = propio ? 'tu PC' : this.destino.nombre;
+                    this.mensaje = (esNuevo ? 'Código enviado a ' + a + ' para agregarlo' : 'Enviado a ' + a) + enBandeja;
                 }
 
                 this.estado = 'enviado';
@@ -211,7 +281,7 @@
         },
     }"
     x-on:abrir-escaner.window="abrir()"
-    x-on:keydown.escape.window="abierto && cerrar()"
+    x-on:keydown.escape.window="abierto && (eligiendo ? (eligiendo = false) : cerrar())"
 >
     <div
         x-show="abierto"
@@ -270,12 +340,12 @@
 
         {{-- Resultado / acciones --}}
         <div
-            x-show="['equipo', 'nuevo', 'enviado', 'error'].includes(estado)"
+            x-show="eligiendo || ['equipo', 'nuevo', 'enviado', 'error'].includes(estado)"
             x-transition.opacity
             class="rounded-t-2xl bg-[var(--theme-surface)] px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 text-[var(--theme-text)]"
         >
             {{-- Equipo encontrado --}}
-            <template x-if="estado === 'equipo' && equipo">
+            <template x-if="estado === 'equipo' && equipo && ! eligiendo">
                 <div>
                     <p class="text-xs text-[var(--theme-text-muted)]" x-text="equipo.codigo"></p>
                     <p class="mt-0.5 text-base font-semibold text-[var(--theme-text-strong)]" x-text="equipo.nombre || equipo.codigo"></p>
@@ -297,16 +367,7 @@
                             Abrir aquí
                         </button>
 
-                        <button
-                            type="button"
-                            x-show="puedeEnviar"
-                            x-on:click="enviar()"
-                            x-bind:disabled="enviando"
-                            class="inline-flex h-11 items-center justify-center gap-2 rounded-[var(--radius-md)] bg-[var(--theme-primary)] text-sm font-medium text-white disabled:opacity-60"
-                        >
-                            <span x-show="enviando"><x-ui.spinner size="sm" /></span>
-                            Enviar a la PC
-                        </button>
+                        @include('layouts.partials.escaner-boton-enviar')
                     </div>
 
                     <button
@@ -320,7 +381,7 @@
             </template>
 
             {{-- Código que no está en el inventario: se puede agregar con ese número de serie --}}
-            <template x-if="estado === 'nuevo' && codigoNuevo">
+            <template x-if="estado === 'nuevo' && codigoNuevo && ! eligiendo">
                 <div>
                     <div class="flex items-start gap-3">
                         <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--theme-warning-soft)] text-[var(--theme-warning)]">
@@ -352,16 +413,7 @@
                             Agregar aquí
                         </button>
 
-                        <button
-                            type="button"
-                            x-show="puedeEnviar"
-                            x-on:click="enviar()"
-                            x-bind:disabled="enviando"
-                            class="inline-flex h-11 items-center justify-center gap-2 rounded-[var(--radius-md)] bg-[var(--theme-primary)] text-sm font-medium text-white disabled:opacity-60"
-                        >
-                            <span x-show="enviando"><x-ui.spinner size="sm" /></span>
-                            Enviar a la PC
-                        </button>
+                        @include('layouts.partials.escaner-boton-enviar')
                     </div>
 
                     <button
@@ -373,6 +425,91 @@
                     </button>
                 </div>
             </template>
+
+            {{-- Elegir a quién enviarlo --}}
+            <div x-show="eligiendo" x-cloak>
+                <div class="flex items-center gap-2">
+                    <button
+                        type="button"
+                        x-on:click="eligiendo = false"
+                        class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[var(--theme-text-muted)] hover:bg-[var(--theme-surface-soft)]"
+                        aria-label="Volver"
+                    >
+                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+                    </button>
+
+                    <p class="text-sm font-semibold text-[var(--theme-text-strong)]">Enviar a…</p>
+                </div>
+
+                <input
+                    type="search"
+                    x-model="busqueda"
+                    placeholder="Buscar usuario…"
+                    autocomplete="off"
+                    class="mt-3 h-10 w-full rounded-[var(--radius-md)] border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)]"
+                >
+
+                <ul class="mt-2 max-h-[45vh] divide-y divide-[var(--theme-border)] overflow-y-auto overscroll-contain" role="listbox" aria-label="Destinatarios">
+                    {{-- Mi cuenta --}}
+                    <li x-show="! busqueda.trim()">
+                        <button
+                            type="button"
+                            x-on:click="elegirDestino(null)"
+                            class="flex w-full items-center gap-3 py-2.5 text-left"
+                            role="option"
+                            x-bind:aria-selected="destino === null ? 'true' : 'false'"
+                        >
+                            <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--theme-primary-soft)] text-[var(--theme-primary)]">
+                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>
+                            </span>
+                            <span class="min-w-0 flex-1">
+                                <span class="block text-sm font-medium text-[var(--theme-text-strong)]">Mi PC</span>
+                                <span class="block text-xs text-[var(--theme-text-muted)]">Tu propia bandeja</span>
+                            </span>
+                            <svg x-show="destino === null" class="h-4 w-4 shrink-0 text-[var(--theme-primary)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>
+                        </button>
+                    </li>
+
+                    <template x-for="persona in destinatariosFiltrados" x-bind:key="persona.id">
+                        <li>
+                            <button
+                                type="button"
+                                x-on:click="elegirDestino(persona)"
+                                class="flex w-full items-center gap-3 py-2.5 text-left"
+                                role="option"
+                                x-bind:aria-selected="destino?.id === persona.id ? 'true' : 'false'"
+                            >
+                                <span
+                                    class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--theme-surface-soft)] text-xs font-semibold text-[var(--theme-text)]"
+                                    x-text="persona.nombre.split(' ').slice(0, 2).map((p) => p.charAt(0)).join('').toUpperCase()"
+                                    aria-hidden="true"
+                                ></span>
+                                <span class="min-w-0 flex-1">
+                                    <span class="block truncate text-sm font-medium text-[var(--theme-text-strong)]" x-text="persona.nombre"></span>
+                                    <span class="block truncate text-xs text-[var(--theme-text-muted)]" x-text="persona.detalle || persona.usuario"></span>
+                                </span>
+                                <svg x-show="destino?.id === persona.id" class="h-4 w-4 shrink-0 text-[var(--theme-primary)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>
+                            </button>
+                        </li>
+                    </template>
+                </ul>
+
+                <div x-show="cargandoDestinatarios" class="flex items-center justify-center gap-2 py-4 text-xs text-[var(--theme-text-muted)]">
+                    <x-ui.spinner size="sm" />
+                    Cargando usuarios…
+                </div>
+
+                <p x-show="errorDestinatarios" class="py-4 text-center text-xs text-[var(--theme-danger)]">
+                    No se pudo cargar la lista de usuarios.
+                    <button type="button" class="font-medium underline" x-on:click="destinatarios = null; abrirDestinatarios()">Reintentar</button>
+                </p>
+
+                <p
+                    x-show="destinatarios !== null && ! cargandoDestinatarios && destinatariosFiltrados.length === 0"
+                    class="py-4 text-center text-xs text-[var(--theme-text-muted)]"
+                    x-text="busqueda.trim() ? 'Ningún usuario coincide con la búsqueda.' : 'No hay otros usuarios que puedan recibir equipos.'"
+                ></p>
+            </div>
 
             {{-- Enviado (vuelve solo a la cámara) --}}
             <div x-show="estado === 'enviado'" class="flex items-center gap-3 py-2">

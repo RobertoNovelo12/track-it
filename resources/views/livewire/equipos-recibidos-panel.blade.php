@@ -67,7 +67,7 @@
         <div class="flex items-center justify-between gap-3 border-b border-[var(--theme-border)] px-4 py-3">
             <div>
                 <p class="text-sm font-semibold text-[var(--theme-text-strong)]">Equipos recibidos</p>
-                <p class="text-[11px] text-[var(--theme-text-muted)]">Enviados desde tu teléfono con el escáner.</p>
+                <p class="text-[11px] text-[var(--theme-text-muted)]">Enviados con el escáner desde tu teléfono o por otros usuarios.</p>
             </div>
 
             @if ($pendientes > 0)
@@ -86,7 +86,7 @@
             <x-ui.empty-state
                 compact
                 title="Sin equipos pendientes"
-                description="Escanea códigos de barras desde tu teléfono y elige «Enviar a la PC». Los códigos que no estén en el inventario llegan aquí para agregarlos."
+                description="Escanea códigos de barras desde tu teléfono y elige «Enviar a mi PC». Los códigos que no estén en el inventario llegan aquí para agregarlos."
             />
         @else
             <ul class="max-h-[60vh] divide-y divide-[var(--theme-border)] overflow-y-auto">
@@ -104,6 +104,12 @@
                                         SN <span class="font-mono text-[var(--theme-text)]">{{ $equipo['codigo_leido'] }}</span>
                                         · {{ \App\Support\Fecha::hora($equipo['recibido_en']) }}
                                     </p>
+                                    @if (! empty($equipo['remitente']))
+                                        <p class="mt-0.5 flex items-center gap-1 text-[11px] text-[var(--theme-primary)]">
+                                            <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                                            Enviado por {{ $equipo['remitente'] }}
+                                        </p>
+                                    @endif
                                 </div>
 
                                 <span class="shrink-0 rounded-full bg-[var(--theme-warning-soft)] px-2 py-0.5 text-[10px] font-medium text-[var(--theme-warning)]">
@@ -145,6 +151,12 @@
                                     @if ($equipo['tipo']) · {{ $equipo['tipo'] }} @endif
                                     · {{ \App\Support\Fecha::hora($equipo['recibido_en']) }}
                                 </p>
+                                @if (! empty($equipo['remitente']))
+                                    <p class="mt-0.5 flex items-center gap-1 text-[11px] text-[var(--theme-primary)]">
+                                        <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                                        Enviado por {{ $equipo['remitente'] }}
+                                    </p>
+                                @endif
                             </div>
 
                             @if ($equipo['estado'])

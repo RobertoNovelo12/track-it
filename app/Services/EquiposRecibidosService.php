@@ -59,6 +59,73 @@ class EquiposRecibidosService
         return $existe;
     }
 
+    /*
+     * ¿Ya se corrió la migración del remitente? Solo se guarda el «sí».
+     */
+    public function admiteRemitente(): bool
+    {
+        if (Cache::get('trackit.equipos_recibidos.remitente.v1') === true) {
+            return true;
+        }
+
+        $existe = $this->disponible() && Schema::hasColumn('equipos_recibidos', 'id_remitente');
+
+        if ($existe) {
+            Cache::forever('trackit.equipos_recibidos.remitente.v1', true);
+        }
+
+        return $existe;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | A quién se puede enviar
+    |--------------------------------------------------------------------------
+    |
+    | Usuarios activos con permiso de gestionar (la bandeja solo se muestra
+    | a ellos), sin incluir a quien envía.
+    |
+    */
+
+    public function destinatarios(int $idUsuarioActual): array
+    {
+        $nivelDisponible = Schema::hasColumn('roles', 'nivel');
+
+        return DB::table('usuarios as u')
+            ->join('estados_usuario as eu', 'eu.id_estado_usuario', '=', 'u.id_estado_usuario')
+            ->leftJoin('roles as r', 'r.id_rol', '=', 'u.id_rol')
+            ->leftJoin('unidades_organizativas as uo', 'uo.id_unidad', '=', 'u.id_unidad')
+            ->where('eu.clave', 'ACTIVO')
+            ->where('u.id_usuario', '<>', $idUsuarioActual)
+            ->when($nivelDisponible, fn ($query) => $query
+                ->where('r.activo', true)
+                ->whereIn('r.nivel', ['admin', 'estandar']))
+            ->orderBy('u.nombres')
+            ->orderBy('u.apellido_paterno')
+            ->get([
+                'u.id_usuario',
+                'u.nombres',
+                'u.apellido_paterno',
+                'u.apellido_materno',
+                'u.username',
+                'r.nombre as rol',
+                'uo.nombre as unidad',
+            ])
+            ->map(fn ($fila): array => [
+                'id' => (int) $fila->id_usuario,
+                'nombre' => trim(implode(' ', array_filter([$fila->nombres, $fila->apellido_paterno, $fila->apellido_materno]))) ?: (string) $fila->username,
+                'detalle' => implode(' · ', array_filter([$fila->rol, $fila->unidad])),
+                'usuario' => (string) $fila->username,
+            ])
+            ->values()
+            ->all();
+    }
+
+    public function puedeRecibir(int $idDestinatario, int $idUsuarioActual): bool
+    {
+        return in_array($idDestinatario, array_column($this->destinatarios($idUsuarioActual), 'id'), true);
+    }
+
     /** Código leído tal como se guardará (sin espacios de más, máx. 100). */
     public function normalizarCodigo(string $leido): string
     {
@@ -152,7 +219,7 @@ class EquiposRecibidosService
     |
     */
 
-    public function enviar(int $idUsuario, int $idEquipo): string
+    public function enviar(int $idUsuario, int $idEquipo, ?int $idRemitente = null): string
     {
         $pendiente = DB::table('equipos_recibidos')
             ->where('id_usuario', $idUsuario)
@@ -169,7 +236,7 @@ class EquiposRecibidosService
                 'id_equipo' => $idEquipo,
                 'id_usuario' => $idUsuario,
                 'recibido_en' => now(),
-            ]);
+            ] + $this->columnaRemitente($idUsuario, $idRemitente));
         } catch (QueryException $e) {
             // Dos envíos simultáneos del mismo equipo: el índice único lo evita.
             if (($e->errorInfo[0] ?? null) === '23505') {
@@ -186,7 +253,7 @@ class EquiposRecibidosService
      * Código que no está en el inventario: se guarda el texto leído para
      * darlo de alta desde la PC (se usará como número de serie).
      */
-    public function enviarCodigo(int $idUsuario, string $codigo): string
+    public function enviarCodigo(int $idUsuario, string $codigo, ?int $idRemitente = null): string
     {
         $codigo = $this->normalizarCodigo($codigo);
 
@@ -207,7 +274,7 @@ class EquiposRecibidosService
                 'codigo' => $codigo,
                 'id_usuario' => $idUsuario,
                 'recibido_en' => now(),
-            ]);
+            ] + $this->columnaRemitente($idUsuario, $idRemitente));
         } catch (QueryException $e) {
             if (($e->errorInfo[0] ?? null) === '23505') {
                 return 'duplicado';
@@ -217,6 +284,16 @@ class EquiposRecibidosService
         }
 
         return 'enviado';
+    }
+
+    /*
+     * Solo se guarda cuando lo envía otra persona (y existe la columna).
+     */
+    private function columnaRemitente(int $idUsuario, ?int $idRemitente): array
+    {
+        return $idRemitente !== null && $idRemitente !== $idUsuario && $this->admiteRemitente()
+            ? ['id_remitente' => $idRemitente]
+            : [];
     }
 
     /*
@@ -251,8 +328,10 @@ class EquiposRecibidosService
         }
 
         $codigos = $this->admiteCodigos();
+        $remitente = $this->admiteRemitente();
 
         return DB::table('equipos_recibidos as r')
+            ->when($remitente, fn ($query) => $query->leftJoin('usuarios as ur', 'ur.id_usuario', '=', 'r.id_remitente'))
             ->leftJoin('equipos as e', 'e.id_equipo', '=', 'r.id_equipo')
             ->leftJoin('tipos_equipo as te', 'te.id_tipo_equipo', '=', 'e.id_tipo_equipo')
             ->leftJoin('estados_equipo as ee', 'ee.id_estado_equipo', '=', 'e.id_estado_activo')
@@ -270,6 +349,9 @@ class EquiposRecibidosService
                 'ee.nombre as estado',
                 'ee.clave as estado_clave',
                 $codigos ? 'r.codigo as codigo_leido' : DB::raw('NULL as codigo_leido'),
+                $remitente
+                    ? DB::raw("TRIM(CONCAT(COALESCE(ur.nombres, ''), ' ', COALESCE(ur.apellido_paterno, ''))) as remitente")
+                    : DB::raw('NULL as remitente'),
             ])
             ->map(fn ($fila): array => [
                 'id' => (int) $fila->id_recibido,
@@ -283,6 +365,8 @@ class EquiposRecibidosService
                 'estado' => (string) ($fila->estado ?? ''),
                 'dado_de_baja' => strtoupper((string) $fila->estado_clave) === 'BAJA',
                 'recibido_en' => $fila->recibido_en,
+                // Quién lo envió (vacío si fue el mismo usuario).
+                'remitente' => trim((string) ($fila->remitente ?? '')),
             ])
             ->all();
     }

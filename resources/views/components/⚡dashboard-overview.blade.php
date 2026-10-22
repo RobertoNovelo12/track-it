@@ -60,6 +60,8 @@ new class extends Component
 
     public array $mantenimientosPorMes = [];
 
+    public array $equiposPorTipo = [];
+
 
     /*
     |--------------------------------------------------------------------------
@@ -152,7 +154,7 @@ new class extends Component
             )
         );
 
-        $claveSecciones = $this->systemCache()->key(self::CACHE_MODULE, 'secciones');
+        $claveSecciones = $this->systemCache()->key(self::CACHE_MODULE, 'secciones-v2');
 
         if (\Illuminate\Support\Facades\Cache::has($claveSecciones)) {
             $this->cargarSecciones();
@@ -172,7 +174,7 @@ new class extends Component
         try {
             $data = $this->systemCache()->rememberSimple(
                 self::CACHE_MODULE,
-                'secciones',
+                'secciones-v2',
                 fn () => $this->buildSeccionesData(),
                 self::CACHE_TTL_HOURS
             );
@@ -188,6 +190,7 @@ new class extends Component
         $this->antiguedadEquipos = $data['antiguedadEquipos'] ?? [];
         $this->estadoMantenimientos = $data['estadoMantenimientos'] ?? [];
         $this->mantenimientosPorMes = $data['mantenimientosPorMes'] ?? [];
+        $this->equiposPorTipo = $data['equiposPorTipo'] ?? [];
         $this->actividadReciente = $data['actividadReciente'] ?? [];
 
         $this->seccionesListas = true;
@@ -1209,7 +1212,50 @@ new class extends Component
                 ->all();
 
 
+        /*
+        |--------------------------------------------------------------------------
+        | EQUIPOS POR TIPO
+        |--------------------------------------------------------------------------
+        |
+        | Los 6 tipos con más equipos; el resto se agrupa en «Otros».
+        | percentage = parte del inventario; bar = largo relativo al mayor.
+        |
+        */
+
+        $tiposRaw = $equiposVigentes()
+            ->leftJoin('tipos_equipo as te', 'te.id_tipo_equipo', '=', 'e.id_tipo_equipo')
+            ->selectRaw('e.id_tipo_equipo as id, te.nombre as nombre, COUNT(*) as total')
+            ->groupBy('e.id_tipo_equipo', 'te.nombre')
+            ->orderByDesc('total')
+            ->get();
+
+        $totalTipos = max((int) $tiposRaw->sum('total'), 1);
+
+        $equiposPorTipo = $tiposRaw
+            ->take(6)
+            ->map(fn ($row) => [
+                'id' => $row->id !== null && filled($row->nombre) ? (int) $row->id : null,
+                'nombre' => filled($row->nombre) ? (string) $row->nombre : 'Sin tipo',
+                'count' => (int) $row->total,
+            ])
+            ->values()
+            ->all();
+
+        $restoTipos = (int) $tiposRaw->slice(6)->sum('total');
+
+        if ($restoTipos > 0) {
+            $equiposPorTipo[] = ['id' => null, 'nombre' => 'Otros tipos', 'count' => $restoTipos];
+        }
+
+        $maxTipo = max(collect($equiposPorTipo)->max('count') ?? 0, 1);
+
+        $equiposPorTipo = array_map(fn (array $tipo) => $tipo + [
+            'percentage' => (int) round($tipo['count'] / $totalTipos * 100),
+            'bar' => (int) round($tipo['count'] / $maxTipo * 100),
+        ], $equiposPorTipo);
+
         return [
+            'equiposPorTipo' => $equiposPorTipo,
             'antiguedadEquipos' => $antiguedadEquipos,
             'estadoMantenimientos' => $estadoMantenimientos,
             'mantenimientosPorMes' => $mantenimientosPorMes,
@@ -1287,31 +1333,21 @@ new class extends Component
             @endfor
         </div>
 
-        {{-- Secciones: dos filas de dos tarjetas --}}
-        @for ($fila = 0; $fila < 2; $fila++)
-            <div class="grid grid-cols-1 gap-3 xl:grid-cols-2">
-                @for ($i = 0; $i < 2; $i++)
-                    <div class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4">
-                        <x-ui.skeleton class="h-4 w-44" />
-                        <x-ui.skeleton class="mt-2 h-3 w-64 max-w-full" />
-
-                        <div class="mt-5 space-y-5">
-                            @for ($barra = 0; $barra < 4; $barra++)
-                                <div>
-                                    <div class="mb-2 flex justify-between">
-                                        <x-ui.skeleton class="h-3 w-24" />
-                                        <x-ui.skeleton class="h-3 w-6" />
-                                    </div>
-                                    <x-ui.skeleton class="h-2 w-full" />
-                                </div>
-                            @endfor
-                        </div>
+        {{-- Secciones: misma rejilla de 3 columnas que la vista real --}}
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+            @foreach (['md:col-span-2 xl:col-span-1', 'md:col-span-2', '', '', 'md:col-span-2 xl:col-span-1'] as $claseSkeleton)
+                <div class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 {{ $claseSkeleton }}">
+                    <x-ui.skeleton class="h-4 w-44" />
+                    <x-ui.skeleton class="mt-2 h-3 w-64 max-w-full" />
+                    <div class="mt-5 space-y-3">
+                        @for ($barra = 0; $barra < 4; $barra++)
+                            <x-ui.skeleton class="h-8 w-full rounded-lg" />
+                        @endfor
                     </div>
-                @endfor
-            </div>
-        @endfor
+                </div>
+            @endforeach
+        </div>
     </div>
-
 @endplaceholder
 
 
@@ -2054,1072 +2090,382 @@ new class extends Component
 
 
     {{-- ============================================================
-        ASIGNACIÓN + ANTIGÜEDAD
+        GRÁFICAS
+        ------------------------------------------------------------
+        Rejilla de 3 columnas (escritorio):
+        · Asignación (1) + Mantenimientos por mes (2)
+        · Equipos por tipo + Estado de mantenimientos + Antigüedad
+        Las alertas y la actividad (abajo) usan la misma rejilla.
     ============================================================ --}}
+    @php
+        /*
+         * Dona en SVG: cada segmento es un círculo con dasharray.
+         * Se deja un pequeño hueco entre segmentos cuando hay varios.
+         */
+        $dona = static function (array $segmentos, float $radio = 46): array {
+            $circunferencia = 2 * M_PI * $radio;
+            $total = array_sum(array_map(fn ($s) => (int) $s['count'], $segmentos));
+            $conValor = count(array_filter($segmentos, fn ($s) => (int) $s['count'] > 0));
+            $hueco = $conValor > 1 ? 2.5 : 0;
+            $acumulado = 0.0;
+            $salida = [];
 
-    <div
-        class="
-            grid
-            grid-cols-1
-            xl:grid-cols-2
-            gap-3
-        "
-    >
+            foreach ($segmentos as $segmento) {
+                $largo = $total > 0 ? ((int) $segmento['count'] / $total) * $circunferencia : 0;
 
+                $salida[] = $segmento + [
+                    'largo' => max($largo - $hueco, 0),
+                    'desfase' => -$acumulado,
+                    'porcentaje' => $total > 0 ? (int) round(((int) $segmento['count'] / $total) * 100) : 0,
+                ];
+
+                $acumulado += $largo;
+            }
+
+            return ['circunferencia' => $circunferencia, 'radio' => $radio, 'total' => $total, 'segmentos' => $salida];
+        };
+
+        $claseTarjeta = 'flex min-w-0 flex-col rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4';
+
+        $donaAsignacion = $dona([
+            ['label' => 'Asignados', 'count' => $equiposAsignados, 'color' => '#3BA5D9', 'situacion' => 'asignados'],
+            ['label' => 'En mantenimiento', 'count' => $enMantenimiento, 'color' => '#D9A441', 'situacion' => 'en_mantenimiento'],
+            ['label' => 'Disponibles', 'count' => $equiposDisponibles, 'color' => '#6BB38E', 'situacion' => 'sin_asignar'],
+        ]);
+
+        // Secciones que dependen de la segunda carga (para error / skeleton).
+        $seccionesDiferidas = [
+            'mensual' => ['titulo' => 'Mantenimientos por mes', 'descripcion' => 'Preventivos y correctivos de los últimos 12 meses.', 'clase' => 'md:col-span-2', 'forma' => 'columnas'],
+            'tipos' => ['titulo' => 'Equipos por tipo', 'descripcion' => 'Inventario vigente agrupado por tipo de equipo.', 'clase' => '', 'forma' => 'barras'],
+            'estados' => ['titulo' => 'Estado de mantenimientos', 'descripcion' => 'Intervenciones registradas según su estado.', 'clase' => '', 'forma' => 'dona'],
+            'antiguedad' => ['titulo' => 'Antigüedad de equipos', 'descripcion' => 'Según la fecha de compra registrada.', 'clase' => 'md:col-span-2 xl:col-span-1', 'forma' => 'columnas'],
+        ];
+    @endphp
+
+    <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
 
         {{-- ========================================================
-            ASIGNACIÓN
+            ASIGNACIÓN (datos de las tarjetas: siempre disponible)
         ======================================================== --}}
+        <section class="{{ $claseTarjeta }} md:col-span-2 xl:col-span-1">
+            <h3 class="text-sm font-semibold text-[var(--theme-text-strong)]">Asignación de equipos</h3>
+            <p class="mt-1 text-xs text-[var(--theme-text-muted)]">Cómo se reparte el inventario vigente.</p>
 
-        <section
-            class="
-                rounded-xl
-
-                border
-                border-[var(--theme-border)]
-
-                bg-[var(--theme-surface)]
-
-                p-4
-            "
-        >
-
-            <div>
-
-                <h3
-                    class="
-                        text-sm
-                        font-semibold
-
-                        text-[var(--theme-text-strong)]
-                    "
-                >
-                    Asignación de equipos
-                </h3>
-
-
-                <p
-                    class="
-                        mt-1
-
-                        text-xs
-
-                        text-[var(--theme-text-muted)]
-                    "
-                >
-                    Equipos actualmente entregados a un responsable.
-                </p>
-
-            </div>
-
-
-            <div
-                class="
-                    mt-4
-
-                    flex
-                    flex-col
-                    gap-5
-
-                    sm:flex-row
-                    sm:items-center
-                "
-            >
-
+            <div class="mt-4 flex flex-1 flex-col items-center gap-5 sm:flex-row xl:flex-col 2xl:flex-row">
                 <div
-                    x-data="
-                        dashboardRing(
-                            {{ $porcentajeAsignados }},
-                            1100
-                        )
-                    "
-
+                    x-data="dashboardBar()"
                     x-init="init()"
-
-                    class="
-                        relative
-
-                        w-28
-                        h-28
-
-                        shrink-0
-                    "
+                    class="relative h-40 w-40 shrink-0 transition duration-700 ease-out"
+                    x-bind:class="ready ? 'opacity-100 scale-100' : 'opacity-0 scale-95'"
                 >
-
-                    <svg
-                        class="
-                            w-28
-                            h-28
-
-                            -rotate-90
-                        "
-
-                        viewBox="0 0 120 120"
-                    >
-
-                        <circle
-                            cx="60"
-                            cy="60"
-                            r="42"
-
-                            fill="none"
-
-                            stroke="rgba(91,91,214,.12)"
-
-                            stroke-width="9"
-                        />
-
-
-                        <circle
-                            cx="60"
-                            cy="60"
-                            r="42"
-
-                            fill="none"
-
-                            stroke="#5B5BD6"
-
-                            stroke-width="9"
-
-                            stroke-linecap="round"
-
-                            stroke-dasharray="264"
-
-                            :stroke-dashoffset="
-                                264
-                                -
-                                (
-                                    264
-                                    *
-                                    progress
-                                    /
-                                    100
-                                )
-                            "
-                        />
-
+                    <svg class="h-40 w-40 -rotate-90" viewBox="0 0 120 120" aria-hidden="true">
+                        <circle cx="60" cy="60" r="{{ $donaAsignacion['radio'] }}" fill="none" stroke="var(--theme-surface-soft)" stroke-width="14"/>
+                        @foreach ($donaAsignacion['segmentos'] as $segmento)
+                            @if ($segmento['largo'] > 0)
+                                <circle
+                                    cx="60" cy="60" r="{{ $donaAsignacion['radio'] }}" fill="none"
+                                    stroke="{{ $segmento['color'] }}" stroke-width="14"
+                                    stroke-dasharray="{{ round($segmento['largo'], 2) }} {{ round($donaAsignacion['circunferencia'], 2) }}"
+                                    stroke-dashoffset="{{ round($segmento['desfase'], 2) }}"
+                                />
+                            @endif
+                        @endforeach
                     </svg>
 
-
-                    <div
-                        class="
-                            absolute
-                            inset-0
-
-                            flex
-                            flex-col
-                            items-center
-                            justify-center
-                        "
-                    >
-
-                        <span
-                            x-text="
-                                progress + '%'
-                            "
-
-                            class="
-                                text-xl
-                                font-semibold
-
-                                text-[var(--theme-text-strong)]
-                            "
-                        ></span>
-
-
-                        <span
-                            class="
-                                mt-1
-
-                                text-[10px]
-
-                                text-[var(--theme-text-muted)]
-                            "
-                        >
-                            asignado
-                        </span>
-
+                    <div class="absolute inset-0 flex flex-col items-center justify-center">
+                        <span class="text-3xl font-semibold leading-none text-[var(--theme-text-strong)]">{{ $porcentajeAsignados }}%</span>
+                        <span class="mt-1.5 text-[11px] text-[var(--theme-text-muted)]">asignado</span>
                     </div>
-
                 </div>
 
-
-                <div class="flex-1">
-
-                    <div
-                        class="
-                            grid
-                            grid-cols-2
-                            gap-2
-                        "
-                    >
-
-                        <div
-                            class="
-                                rounded-lg
-
-                                bg-[var(--theme-surface-soft)]
-
-                                px-3
-                                py-2.5
-                            "
-                        >
-
-                            <p
-                                class="
-                                    text-[10px]
-
-                                    text-[var(--theme-text-muted)]
-                                "
+                <ul class="w-full min-w-0 flex-1 space-y-1.5">
+                    @foreach ($donaAsignacion['segmentos'] as $segmento)
+                        <li>
+                            <a
+                                href="{{ route('equipos.index', ['situacion' => $segmento['situacion']]) }}"
+                                wire:navigate.hover
+                                class="group flex items-center gap-3 rounded-lg bg-[var(--theme-surface-soft)] px-3 py-2.5 transition-colors hover:bg-[color-mix(in_srgb,var(--theme-surface-soft)_70%,var(--theme-text-strong)_6%)]"
                             >
-                                Asignados
-                            </p>
-
-
-                            <p
-                                x-data="
-                                    dashboardCounter(
-                                        {{ $equiposAsignados }}
-                                    )
-                                "
-
-                                x-init="init()"
-
-                                x-text="display"
-
-                                class="
-                                    mt-1
-
-                                    text-lg
-                                    font-semibold
-
-                                    text-[var(--theme-text-strong)]
-                                "
-                            ></p>
-
-                        </div>
-
-
-                        <div
-                            class="
-                                rounded-lg
-
-                                bg-[var(--theme-surface-soft)]
-
-                                px-3
-                                py-2.5
-                            "
-                        >
-
-                            <p
-                                class="
-                                    text-[10px]
-
-                                    text-[var(--theme-text-muted)]
-                                "
-                            >
-                                Disponibles
-                            </p>
-
-
-                            <p
-                                x-data="
-                                    dashboardCounter(
-                                        {{ $equiposDisponibles }}
-                                    )
-                                "
-
-                                x-init="init()"
-
-                                x-text="display"
-
-                                class="
-                                    mt-1
-
-                                    text-lg
-                                    font-semibold
-
-                                    text-[var(--theme-text-strong)]
-                                "
-                            ></p>
-
-                        </div>
-
-                    </div>
-
-
-                    <div class="mt-3">
-
-                        <div
-                            class="
-                                mb-1.5
-
-                                flex
-                                items-center
-                                justify-between
-
-                                text-xs
-                            "
-                        >
-
-                            <span
-                                class="
-                                    text-[var(--theme-text)]
-                                "
-                            >
-                                Progreso
-                            </span>
-
-
-                            <span
-                                class="
-                                    font-medium
-
-                                    text-[var(--theme-text-strong)]
-                                "
-                            >
-                                {{ $porcentajeAsignados }}%
-                            </span>
-
-                        </div>
-
-
-                        <div
-                            x-data="dashboardBar()"
-
-                            x-init="init()"
-
-                            class="
-                                h-2
-
-                                overflow-hidden
-
-                                rounded-full
-
-                                bg-[var(--theme-surface-soft)]
-                            "
-                        >
-
-                            <div
-                                class="
-                                    h-full
-
-                                    rounded-full
-
-                                    bg-[var(--theme-primary)]
-
-                                    transition-[width]
-                                    duration-1000
-                                    ease-out
-                                "
-
-                                :style="{
-                                    width:
-                                        ready
-                                            ? '{{ $porcentajeAsignados }}%'
-                                            : '0%'
-                                }"
-                            ></div>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
+                                <span class="h-2.5 w-2.5 shrink-0 rounded-full" style="background: {{ $segmento['color'] }};"></span>
+                                <span class="min-w-0 flex-1 truncate text-xs text-[var(--theme-text)]">{{ $segmento['label'] }}</span>
+                                <span class="text-sm font-semibold tabular-nums text-[var(--theme-text-strong)]">{{ number_format($segmento['count']) }}</span>
+                                <span class="w-9 text-right text-[11px] tabular-nums text-[var(--theme-text-muted)]">{{ $segmento['porcentaje'] }}%</span>
+                                <svg class="h-3.5 w-3.5 shrink-0 text-[var(--theme-text-muted)] opacity-0 transition-opacity group-hover:opacity-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+                            </a>
+                        </li>
+                    @endforeach
+                </ul>
             </div>
-
         </section>
-
-
-
-        {{-- ========================================================
-            ANTIGÜEDAD
-        ======================================================== --}}
 
         @if ($seccionesListas)
 
-        <section
-            class="
-                rounded-xl
+            {{-- ====================================================
+                MANTENIMIENTOS POR MES
+            ==================================================== --}}
+            @php
+                $preventivosAnio = array_sum(array_column($mantenimientosPorMes, 'preventivo'));
+                $correctivosAnio = array_sum(array_column($mantenimientosPorMes, 'correctivo'));
+                $mesActual = $mantenimientosPorMes === [] ? ['preventivo' => 0, 'correctivo' => 0] : $mantenimientosPorMes[array_key_last($mantenimientosPorMes)];
+                $maximoMes = 0;
 
-                border
-                border-[var(--theme-border)]
+                foreach ($mantenimientosPorMes as $mes) {
+                    $maximoMes = max($maximoMes, (int) $mes['preventivo'], (int) $mes['correctivo']);
+                }
 
-                bg-[var(--theme-surface)]
+                // Escala con 4 divisiones enteras.
+                $escalaMes = $maximoMes <= 4 ? 4 : (int) (ceil($maximoMes / 4) * 4);
+                $altoBarra = fn (int $valor) => $valor > 0 ? max(round($valor / $escalaMes * 100, 2), 3) : 0;
+            @endphp
 
-                p-4
-            "
-        >
-
-            <h3
-                class="
-                    text-sm
-                    font-semibold
-
-                    text-[var(--theme-text-strong)]
-                "
-            >
-                Antigüedad de equipos
-            </h3>
-
-
-            <p
-                class="
-                    mt-1
-
-                    text-xs
-
-                    text-[var(--theme-text-muted)]
-                "
-            >
-                Distribución según la fecha de compra registrada.
-            </p>
-
-
-            <div
-                class="
-                    mt-4
-                    space-y-3
-                "
-            >
-
-                @foreach ($antiguedadEquipos as $item)
-
+            <section class="{{ $claseTarjeta }} md:col-span-2">
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-
-                        <div
-                            class="
-                                mb-1.5
-
-                                flex
-                                items-center
-                                justify-between
-                            "
-                        >
-
-                            <span
-                                class="
-                                    text-xs
-
-                                    text-[var(--theme-text)]
-                                "
-                            >
-                                {{ $item['label'] }}
-                            </span>
-
-
-                            <span
-                                x-data="
-                                    dashboardCounter(
-                                        {{ $item['count'] }},
-                                        700
-                                    )
-                                "
-
-                                x-init="init()"
-
-                                x-text="display"
-
-                                class="
-                                    text-xs
-                                    font-semibold
-
-                                    text-[var(--theme-text-strong)]
-                                "
-                            ></span>
-
-                        </div>
-
-
-                        <div
-                            x-data="dashboardBar()"
-
-                            x-init="init()"
-
-                            class="
-                                h-2
-
-                                overflow-hidden
-
-                                rounded-full
-
-                                bg-[var(--theme-surface-soft)]
-                            "
-                        >
-
-                            <div
-                                class="
-                                    h-full
-
-                                    rounded-full
-
-                                    transition-[width]
-                                    duration-1000
-                                    ease-out
-                                "
-
-                                style="
-                                    background:
-                                    {{ $item['color'] }};
-                                "
-
-                                :style="{
-                                    width:
-                                        ready
-                                            ? '{{ $item['percentage'] }}%'
-                                            : '0%'
-                                }"
-                            ></div>
-
-                        </div>
-
+                        <h3 class="text-sm font-semibold text-[var(--theme-text-strong)]">Mantenimientos por mes</h3>
+                        <p class="mt-1 text-xs text-[var(--theme-text-muted)]">Preventivos y correctivos de los últimos 12 meses.</p>
                     </div>
 
-                @endforeach
-
-            </div>
-
-        </section>
-
-        @elseif ($errorSecciones)
-
-            <section class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4">
-                <h3 class="text-sm font-semibold text-[var(--theme-text-strong)]">Antigüedad de equipos</h3>
-                <p class="mt-1 text-xs text-[var(--theme-text-muted)]">Distribución según la fecha de compra registrada.</p>
-
-                <x-ui.empty-state variant="error" compact retry="reintentarSecciones" />
-            </section>
-
-        @else
-
-            {{-- Skeleton: título real y forma del contenido --}}
-            <section class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4" aria-busy="true">
-                <h3 class="text-sm font-semibold text-[var(--theme-text-strong)]">Antigüedad de equipos</h3>
-                <p class="mt-1 text-xs text-[var(--theme-text-muted)]">Distribución según la fecha de compra registrada.</p>
-                <span class="sr-only">Cargando…</span>
-
-                <div class="mt-5 space-y-5">
-                    @for ($i = 0; $i < 4; $i++)
-                        <div>
-                            <div class="mb-2 flex justify-between">
-                                <x-ui.skeleton class="h-3 w-24" />
-                                <x-ui.skeleton class="h-3 w-6" />
-                            </div>
-                            <x-ui.skeleton class="h-2 w-full" />
+                    <dl class="flex shrink-0 gap-2">
+                        <div class="rounded-lg bg-[var(--theme-surface-soft)] px-3 py-1.5">
+                            <dt class="flex items-center gap-1.5 text-[10px] text-[var(--theme-text-muted)]"><span class="h-2 w-2 rounded-full bg-[#3BA5D9]"></span>Preventivos</dt>
+                            <dd class="text-base font-semibold tabular-nums text-[var(--theme-text-strong)]">{{ number_format($preventivosAnio) }}</dd>
                         </div>
-                    @endfor
+                        <div class="rounded-lg bg-[var(--theme-surface-soft)] px-3 py-1.5">
+                            <dt class="flex items-center gap-1.5 text-[10px] text-[var(--theme-text-muted)]"><span class="h-2 w-2 rounded-full bg-[#6BB38E]"></span>Correctivos</dt>
+                            <dd class="text-base font-semibold tabular-nums text-[var(--theme-text-strong)]">{{ number_format($correctivosAnio) }}</dd>
+                        </div>
+                        <div class="rounded-lg bg-[var(--theme-surface-soft)] px-3 py-1.5">
+                            <dt class="text-[10px] text-[var(--theme-text-muted)]">Este mes</dt>
+                            <dd class="text-base font-semibold tabular-nums text-[var(--theme-text-strong)]">{{ number_format((int) $mesActual['preventivo'] + (int) $mesActual['correctivo']) }}</dd>
+                        </div>
+                    </dl>
+                </div>
+
+                <div class="relative mt-5 flex min-h-[200px] flex-1 gap-2">
+                    {{-- Eje Y --}}
+                    <div class="flex w-6 shrink-0 flex-col justify-between pb-6 text-right text-[10px] tabular-nums text-[var(--theme-text-muted)]" aria-hidden="true">
+                        @for ($marca = 4; $marca >= 0; $marca--)
+                            <span class="-translate-y-1/2 leading-none first:translate-y-0 last:translate-y-0">{{ (int) ($escalaMes / 4 * $marca) }}</span>
+                        @endfor
+                    </div>
+
+                    <div class="relative flex min-w-0 flex-1 flex-col">
+                        {{-- Líneas guía --}}
+                        <div class="pointer-events-none absolute inset-x-0 top-0 bottom-6 flex flex-col justify-between" aria-hidden="true">
+                            @for ($marca = 0; $marca < 5; $marca++)
+                                <span class="block border-t {{ $marca === 4 ? 'border-[var(--theme-border-strong)]' : 'border-dashed border-[var(--theme-border)]' }}"></span>
+                            @endfor
+                        </div>
+
+                        <div class="relative grid flex-1 grid-cols-12 gap-1 sm:gap-2">
+                            @foreach ($mantenimientosPorMes as $mes)
+                                <div class="group relative flex min-w-0 flex-col">
+                                    <div class="flex flex-1 items-end justify-center gap-[3px] rounded-t-md transition-colors group-hover:bg-[var(--theme-surface-soft)]">
+                                        <div
+                                            x-data="dashboardColumn({{ $altoBarra((int) $mes['preventivo']) }})"
+                                            x-init="init()"
+                                            x-bind:style="{ height: height + '%' }"
+                                            class="w-full max-w-[14px] rounded-t-[4px] bg-[#3BA5D9] transition-[height] duration-1000 ease-out"
+                                        ></div>
+                                        <div
+                                            x-data="dashboardColumn({{ $altoBarra((int) $mes['correctivo']) }})"
+                                            x-init="init()"
+                                            x-bind:style="{ height: height + '%' }"
+                                            class="w-full max-w-[14px] rounded-t-[4px] bg-[#6BB38E] transition-[height] duration-1000 ease-out"
+                                        ></div>
+                                    </div>
+
+                                    <span class="mt-2 h-4 truncate text-center text-[10px] text-[var(--theme-text-muted)]">{{ $mes['label'] }}</span>
+
+                                    {{-- Detalle al pasar el cursor --}}
+                                    <div class="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1 hidden -translate-x-1/2 whitespace-nowrap rounded-md border border-[var(--theme-border)] bg-[var(--theme-surface)] px-2.5 py-1.5 text-[11px] theme-shadow-xl group-hover:block">
+                                        <p class="font-semibold text-[var(--theme-text-strong)]">{{ $mes['label'] }}</p>
+                                        <p class="text-[var(--theme-text)]"><span class="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-[#3BA5D9]"></span>{{ $mes['preventivo'] }} preventivo(s)</p>
+                                        <p class="text-[var(--theme-text)]"><span class="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-[#6BB38E]"></span>{{ $mes['correctivo'] }} correctivo(s)</p>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    @if ($preventivosAnio + $correctivosAnio === 0)
+                        <p class="pointer-events-none absolute inset-0 flex items-center justify-center pb-6 text-xs text-[var(--theme-text-muted)]">
+                            Sin mantenimientos en los últimos 12 meses.
+                        </p>
+                    @endif
                 </div>
             </section>
 
-        @endif
+            {{-- ====================================================
+                EQUIPOS POR TIPO
+            ==================================================== --}}
+            <section class="{{ $claseTarjeta }}">
+                <h3 class="text-sm font-semibold text-[var(--theme-text-strong)]">Equipos por tipo</h3>
+                <p class="mt-1 text-xs text-[var(--theme-text-muted)]">Inventario vigente agrupado por tipo de equipo.</p>
 
-    </div>
-
-
-
-    {{-- ============================================================
-        MANTENIMIENTOS
-    ============================================================ --}}
-
-    <div
-        class="
-            grid
-            grid-cols-1
-            xl:grid-cols-2
-            gap-3
-        "
-    >
-
-
-        {{-- ========================================================
-            ESTADOS
-        ======================================================== --}}
-
-        @if ($seccionesListas)
-
-        <section
-            class="
-                rounded-xl
-
-                border
-                border-[var(--theme-border)]
-
-                bg-[var(--theme-surface)]
-
-                p-4
-            "
-        >
-
-            <h3
-                class="
-                    text-sm
-                    font-semibold
-
-                    text-[var(--theme-text-strong)]
-                "
-            >
-                Estado de mantenimientos
-            </h3>
-
-
-            <p
-                class="
-                    mt-1
-
-                    text-xs
-
-                    text-[var(--theme-text-muted)]
-                "
-            >
-                Seguimiento operativo de las intervenciones registradas.
-            </p>
-
-
-            <div
-                class="
-                    mt-4
-                    space-y-3
-                "
-            >
-
-                @foreach ($estadoMantenimientos as $item)
-
-                    <div>
-
-                        <div
-                            class="
-                                mb-1.5
-
-                                flex
-                                items-center
-                                justify-between
-                            "
-                        >
-
-                            <div
-                                class="
-                                    flex
-                                    items-center
-                                    gap-2
-                                "
-                            >
-
-                                <span
-                                    class="
-                                        w-2
-                                        h-2
-
-                                        rounded-full
-                                    "
-
-                                    style="
-                                        background:
-                                        {{ $item['color'] }};
-                                    "
-                                ></span>
-
-
-                                <span
-                                    class="
-                                        text-xs
-
-                                        text-[var(--theme-text)]
-                                    "
+                @if ($equiposPorTipo === [])
+                    <div class="flex flex-1 items-center justify-center py-8 text-xs text-[var(--theme-text-muted)]">Aún no hay equipos registrados.</div>
+                @else
+                    <ul class="mt-4 space-y-2">
+                        @foreach ($equiposPorTipo as $tipo)
+                            @php
+                                $contenidoTipo = $tipo['id'] !== null;
+                            @endphp
+                            <li>
+                                <{{ $contenidoTipo ? 'a' : 'div' }}
+                                    @if ($contenidoTipo)
+                                        href="{{ route('equipos.index', ['tipo_activo' => $tipo['id']]) }}"
+                                        wire:navigate.hover
+                                    @endif
+                                    class="group relative flex h-9 items-center overflow-hidden rounded-lg bg-[var(--theme-surface-soft)] {{ $contenidoTipo ? 'transition-shadow hover:ring-1 hover:ring-[var(--theme-primary-border)]' : '' }}"
+                                    title="{{ $tipo['nombre'] }}: {{ $tipo['count'] }} ({{ $tipo['percentage'] }}%)"
                                 >
-                                    {{ $item['label'] }}
-                                </span>
+                                    <span
+                                        x-data="dashboardBar()"
+                                        x-init="init()"
+                                        class="absolute inset-y-0 left-0 rounded-lg bg-[color-mix(in_srgb,var(--theme-primary)_22%,transparent)] transition-[width] duration-1000 ease-out"
+                                        x-bind:style="{ width: ready ? '{{ max($tipo['bar'], 2) }}%' : '0%' }"
+                                    ></span>
+                                    <span class="relative min-w-0 flex-1 truncate px-3 text-xs font-medium text-[var(--theme-text-strong)]">{{ $tipo['nombre'] }}</span>
+                                    <span class="relative pr-3 text-xs tabular-nums text-[var(--theme-text-muted)]">
+                                        <span class="font-semibold text-[var(--theme-text-strong)]">{{ number_format($tipo['count']) }}</span>
+                                        · {{ $tipo['percentage'] }}%
+                                    </span>
+                                </{{ $contenidoTipo ? 'a' : 'div' }}>
+                            </li>
+                        @endforeach
+                    </ul>
+                @endif
+            </section>
 
+            {{-- ====================================================
+                ESTADO DE MANTENIMIENTOS
+            ==================================================== --}}
+            @php
+                $donaEstados = $dona($estadoMantenimientos);
+            @endphp
+
+            <section class="{{ $claseTarjeta }}">
+                <h3 class="text-sm font-semibold text-[var(--theme-text-strong)]">Estado de mantenimientos</h3>
+                <p class="mt-1 text-xs text-[var(--theme-text-muted)]">Intervenciones registradas según su estado.</p>
+
+                <div class="mt-4 flex flex-1 items-center gap-5">
+                    <div
+                        x-data="dashboardBar()"
+                        x-init="init()"
+                        class="relative h-32 w-32 shrink-0 transition duration-700 ease-out"
+                        x-bind:class="ready ? 'opacity-100 scale-100' : 'opacity-0 scale-95'"
+                    >
+                        <svg class="h-32 w-32 -rotate-90" viewBox="0 0 120 120" aria-hidden="true">
+                            <circle cx="60" cy="60" r="{{ $donaEstados['radio'] }}" fill="none" stroke="var(--theme-surface-soft)" stroke-width="14"/>
+                            @foreach ($donaEstados['segmentos'] as $segmento)
+                                @if ($segmento['largo'] > 0)
+                                    <circle
+                                        cx="60" cy="60" r="{{ $donaEstados['radio'] }}" fill="none"
+                                        stroke="{{ $segmento['color'] }}" stroke-width="14"
+                                        stroke-dasharray="{{ round($segmento['largo'], 2) }} {{ round($donaEstados['circunferencia'], 2) }}"
+                                        stroke-dashoffset="{{ round($segmento['desfase'], 2) }}"
+                                    />
+                                @endif
+                            @endforeach
+                        </svg>
+
+                        <div class="absolute inset-0 flex flex-col items-center justify-center">
+                            <span class="text-2xl font-semibold leading-none text-[var(--theme-text-strong)]">{{ number_format($donaEstados['total']) }}</span>
+                            <span class="mt-1 text-[10px] text-[var(--theme-text-muted)]">registros</span>
+                        </div>
+                    </div>
+
+                    <ul class="min-w-0 flex-1 space-y-2.5">
+                        @foreach ($donaEstados['segmentos'] as $segmento)
+                            <li class="flex items-center gap-2 text-xs">
+                                <span class="h-2.5 w-2.5 shrink-0 rounded-full" style="background: {{ $segmento['color'] }};"></span>
+                                <span class="min-w-0 flex-1 truncate text-[var(--theme-text)]">{{ $segmento['label'] }}</span>
+                                <span class="font-semibold tabular-nums text-[var(--theme-text-strong)]">{{ number_format($segmento['count']) }}</span>
+                                <span class="w-8 text-right text-[11px] tabular-nums text-[var(--theme-text-muted)]">{{ $segmento['porcentaje'] }}%</span>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            </section>
+
+            {{-- ====================================================
+                ANTIGÜEDAD
+            ==================================================== --}}
+            @php
+                $totalAntiguedad = array_sum(array_column($antiguedadEquipos, 'count'));
+            @endphp
+
+            <section class="{{ $claseTarjeta }} md:col-span-2 xl:col-span-1">
+                <h3 class="text-sm font-semibold text-[var(--theme-text-strong)]">Antigüedad de equipos</h3>
+                <p class="mt-1 text-xs text-[var(--theme-text-muted)]">Según la fecha de compra registrada.</p>
+
+                <div class="mt-4 grid min-h-[170px] flex-1 grid-cols-4 gap-3">
+                    @foreach ($antiguedadEquipos as $item)
+                        <div class="flex min-w-0 flex-col items-center" title="{{ $item['label'] }}: {{ $item['count'] }}">
+                            <span class="text-sm font-semibold tabular-nums text-[var(--theme-text-strong)]">{{ number_format($item['count']) }}</span>
+                            <span class="text-[10px] tabular-nums text-[var(--theme-text-muted)]">
+                                {{ $totalAntiguedad > 0 ? (int) round($item['count'] / $totalAntiguedad * 100) : 0 }}%
+                            </span>
+
+                            <div class="mt-1.5 flex w-full flex-1 items-end justify-center rounded-md bg-[var(--theme-surface-soft)]">
+                                <div
+                                    x-data="dashboardColumn({{ $item['count'] > 0 ? max((int) $item['percentage'], 4) : 0 }})"
+                                    x-init="init()"
+                                    x-bind:style="{ height: height + '%' }"
+                                    class="w-full rounded-md transition-[height] duration-1000 ease-out"
+                                    style="background: {{ $item['color'] }};"
+                                ></div>
                             </div>
 
-
-                            <span
-                                x-data="
-                                    dashboardCounter(
-                                        {{ $item['count'] }},
-                                        700
-                                    )
-                                "
-
-                                x-init="init()"
-
-                                x-text="display"
-
-                                class="
-                                    text-xs
-                                    font-semibold
-
-                                    text-[var(--theme-text-strong)]
-                                "
-                            ></span>
-
+                            <span class="mt-2 w-full truncate text-center text-[11px] text-[var(--theme-text)]">{{ $item['label'] }}</span>
                         </div>
-
-
-                        <div
-                            x-data="dashboardBar()"
-
-                            x-init="init()"
-
-                            class="
-                                h-2
-
-                                overflow-hidden
-
-                                rounded-full
-
-                                bg-[var(--theme-surface-soft)]
-                            "
-                        >
-
-                            <div
-                                class="
-                                    h-full
-
-                                    rounded-full
-
-                                    transition-[width]
-                                    duration-1000
-                                    ease-out
-                                "
-
-                                style="
-                                    background:
-                                    {{ $item['color'] }};
-                                "
-
-                                :style="{
-                                    width:
-                                        ready
-                                            ? '{{ $item['percentage'] }}%'
-                                            : '0%'
-                                }"
-                            ></div>
-
-                        </div>
-
-                    </div>
-
-                @endforeach
-
-            </div>
-
-        </section>
-
-        @elseif ($errorSecciones)
-
-            <section class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4">
-                <h3 class="text-sm font-semibold text-[var(--theme-text-strong)]">Estado de mantenimientos</h3>
-                <p class="mt-1 text-xs text-[var(--theme-text-muted)]">Seguimiento operativo de las intervenciones registradas.</p>
-
-                <x-ui.empty-state variant="error" compact retry="reintentarSecciones" />
-            </section>
-
-        @else
-
-            {{-- Skeleton: título real y forma del contenido --}}
-            <section class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4" aria-busy="true">
-                <h3 class="text-sm font-semibold text-[var(--theme-text-strong)]">Estado de mantenimientos</h3>
-                <p class="mt-1 text-xs text-[var(--theme-text-muted)]">Seguimiento operativo de las intervenciones registradas.</p>
-                <span class="sr-only">Cargando…</span>
-
-                <div class="mt-5 space-y-5">
-                    @for ($i = 0; $i < 4; $i++)
-                        <div>
-                            <div class="mb-2 flex justify-between">
-                                <x-ui.skeleton class="h-3 w-24" />
-                                <x-ui.skeleton class="h-3 w-6" />
-                            </div>
-                            <x-ui.skeleton class="h-2 w-full" />
-                        </div>
-                    @endfor
-                </div>
-            </section>
-
-        @endif
-
-
-
-        {{-- ========================================================
-            MANTENIMIENTOS POR MES
-        ======================================================== --}}
-
-        @if ($seccionesListas)
-
-        <section
-            class="
-                rounded-xl
-
-                border
-                border-[var(--theme-border)]
-
-                bg-[var(--theme-surface)]
-
-                p-4
-            "
-        >
-
-            <div
-                class="
-                    flex
-                    items-start
-                    justify-between
-                    gap-3
-                "
-            >
-
-                <div>
-
-                    <h3
-                        class="
-                            text-sm
-                            font-semibold
-
-                            text-[var(--theme-text-strong)]
-                        "
-                    >
-                        Mantenimientos por mes
-                    </h3>
-
-
-                    <p
-                        class="
-                            mt-1
-
-                            text-xs
-
-                            text-[var(--theme-text-muted)]
-                        "
-                    >
-                        Preventivos y correctivos de los últimos 12 meses.
-                    </p>
-
-                </div>
-
-
-                <div
-                    class="
-                        hidden
-
-                        sm:flex
-                        items-center
-                        gap-3
-
-                        text-[10px]
-
-                        text-[var(--theme-text-muted)]
-                    "
-                >
-
-                    <div
-                        class="
-                            flex
-                            items-center
-                            gap-1.5
-                        "
-                    >
-
-                        <span
-                            class="
-                                w-2
-                                h-2
-
-                                rounded-full
-
-                                bg-[#3BA5D9]
-                            "
-                        ></span>
-
-                        Preventivo
-
-                    </div>
-
-
-                    <div
-                        class="
-                            flex
-                            items-center
-                            gap-1.5
-                        "
-                    >
-
-                        <span
-                            class="
-                                w-2
-                                h-2
-
-                                rounded-full
-
-                                bg-[#6BB38E]
-                            "
-                        ></span>
-
-                        Correctivo
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <div
-                class="
-                    mt-4
-
-                    grid
-                    grid-cols-12
-
-                    h-40
-
-                    items-end
-
-                    gap-1
-                    sm:gap-2
-                "
-            >
-
-                @foreach ($mantenimientosPorMes as $item)
-
-                    <div
-                        class="
-                            h-full
-
-                            flex
-                            flex-col
-                            items-center
-                            justify-end
-                        "
-                    >
-
-                        <div
-                            class="
-                                flex
-                                items-end
-                                justify-center
-
-                                h-full
-
-                                gap-[2px]
-                            "
-                        >
-
-                            <div
-                                x-data="
-                                    dashboardColumn(
-                                        {{ $item['preventivo_percentage'] }}
-                                    )
-                                "
-
-                                x-init="init()"
-
-                                :style="{
-                                    height:
-                                        height + '%'
-                                }"
-
-                                class="
-                                    w-2
-
-                                    rounded-t-sm
-
-                                    bg-[#3BA5D9]
-
-                                    transition-[height]
-                                    duration-1000
-                                    ease-out
-                                "
-
-                                title="
-                                    Preventivo:
-                                    {{ $item['preventivo'] }}
-                                "
-                            ></div>
-
-
-                            <div
-                                x-data="
-                                    dashboardColumn(
-                                        {{ $item['correctivo_percentage'] }}
-                                    )
-                                "
-
-                                x-init="init()"
-
-                                :style="{
-                                    height:
-                                        height + '%'
-                                }"
-
-                                class="
-                                    w-2
-
-                                    rounded-t-sm
-
-                                    bg-[#6BB38E]
-
-                                    transition-[height]
-                                    duration-1000
-                                    ease-out
-                                "
-
-                                title="
-                                    Correctivo:
-                                    {{ $item['correctivo'] }}
-                                "
-                            ></div>
-
-                        </div>
-
-
-                        <span
-                            class="
-                                mt-2
-
-                                text-[9px]
-
-                                text-[var(--theme-text-muted)]
-                            "
-                        >
-                            {{ $item['label'] }}
-                        </span>
-
-                    </div>
-
-                @endforeach
-
-            </div>
-
-        </section>
-
-        @elseif ($errorSecciones)
-
-            <section class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4">
-                <h3 class="text-sm font-semibold text-[var(--theme-text-strong)]">Mantenimientos por mes</h3>
-                <p class="mt-1 text-xs text-[var(--theme-text-muted)]">Preventivos y correctivos de los últimos 12 meses.</p>
-
-                <x-ui.empty-state variant="error" compact retry="reintentarSecciones" />
-            </section>
-
-        @else
-
-            {{-- Skeleton: título real y forma del contenido --}}
-            <section class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4" aria-busy="true">
-                <h3 class="text-sm font-semibold text-[var(--theme-text-strong)]">Mantenimientos por mes</h3>
-                <p class="mt-1 text-xs text-[var(--theme-text-muted)]">Preventivos y correctivos de los últimos 12 meses.</p>
-                <span class="sr-only">Cargando…</span>
-
-                <div class="mt-5 flex h-[170px] items-end gap-3">
-                    @foreach ([35, 60, 45, 80, 30, 55, 70, 40, 65, 50, 75, 45] as $alto)
-                        <x-ui.skeleton class="flex-1 w-auto" style="height: {{ $alto }}%;" />
                     @endforeach
                 </div>
             </section>
 
+        @else
+
+            {{-- Error o carga de las secciones diferidas --}}
+            @foreach ($seccionesDiferidas as $seccion)
+                <section class="{{ $claseTarjeta }} {{ $seccion['clase'] }}" @unless ($errorSecciones) aria-busy="true" @endunless>
+                    <h3 class="text-sm font-semibold text-[var(--theme-text-strong)]">{{ $seccion['titulo'] }}</h3>
+                    <p class="mt-1 text-xs text-[var(--theme-text-muted)]">{{ $seccion['descripcion'] }}</p>
+
+                    @if ($errorSecciones)
+                        <x-ui.empty-state variant="error" compact retry="reintentarSecciones" />
+                    @else
+                        <span class="sr-only">Cargando…</span>
+
+                        @if ($seccion['forma'] === 'columnas')
+                            <div class="mt-5 flex h-[170px] items-end gap-2">
+                                @foreach ([35, 60, 45, 80, 30, 55, 70, 40, 65, 50, 75, 45] as $alto)
+                                    <x-ui.skeleton class="flex-1 w-auto" style="height: {{ $alto }}%;" />
+                                @endforeach
+                            </div>
+                        @elseif ($seccion['forma'] === 'dona')
+                            <div class="mt-5 flex items-center gap-5">
+                                <x-ui.skeleton class="h-32 w-32 shrink-0 rounded-full" />
+                                <div class="flex-1 space-y-3">
+                                    @for ($i = 0; $i < 4; $i++)
+                                        <x-ui.skeleton class="h-3 w-full" />
+                                    @endfor
+                                </div>
+                            </div>
+                        @else
+                            <div class="mt-5 space-y-2">
+                                @for ($i = 0; $i < 5; $i++)
+                                    <x-ui.skeleton class="h-9 w-full rounded-lg" />
+                                @endfor
+                            </div>
+                        @endif
+                    @endif
+                </section>
+            @endforeach
+
         @endif
 
     </div>
-
 
 
     {{-- ============================================================
@@ -3131,7 +2477,8 @@ new class extends Component
             grid
             grid-cols-1
 
-            xl:grid-cols-[340px_minmax(0,1fr)]
+            md:grid-cols-2
+            xl:grid-cols-3
 
             gap-3
         "
@@ -3311,6 +2658,8 @@ new class extends Component
         {{-- ========================================================
             ACTIVIDAD RECIENTE
         ======================================================== --}}
+
+        <div class="min-w-0 md:col-span-1 xl:col-span-2">
 
         @if ($seccionesListas)
 
@@ -3647,6 +2996,8 @@ new class extends Component
             </section>
 
         @endif
+
+        </div>
 
     </div>
 

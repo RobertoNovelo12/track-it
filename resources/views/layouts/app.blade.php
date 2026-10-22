@@ -6,7 +6,13 @@
     $preferenciasLayout = app(\App\Services\PreferenciasUsuarioService::class)->obtener();
 @endphp
     <!DOCTYPE html>
-    <html lang="es" data-densidad="{{ $preferenciasLayout['densidad'] }}">
+    <html
+        lang="es"
+        data-densidad="{{ $preferenciasLayout['densidad'] }}"
+        @foreach (app(\App\Services\PreferenciasUsuarioService::class)->atributosAccesibilidad($preferenciasLayout) as $atributo => $valorAtributo)
+            {{ $atributo }}="{{ $valorAtributo }}"
+        @endforeach
+    >
 
     <head>
         <meta charset="UTF-8">
@@ -170,6 +176,11 @@
                             detalle.densidad;
                     }
 
+                    // Accesibilidad: { 'data-texto': 'grande', … }
+                    Object.entries(detalle.accesibilidad ?? {}).forEach(
+                        ([atributo, valor]) => document.documentElement.setAttribute(atributo, valor)
+                    );
+
                     if (detalle.tema) {
                         window.setTrackItTheme(
                             detalle.tema,
@@ -318,6 +329,8 @@ document.addEventListener(
         @include('layouts.partials.sidebar-styles')
 
         @include('layouts.partials.densidad-styles')
+
+        @include('layouts.partials.accesibilidad-styles')
 
         {{-- Sistema de carga y movimiento (components/ui) --}}
         @include('layouts.partials.ui-styles')

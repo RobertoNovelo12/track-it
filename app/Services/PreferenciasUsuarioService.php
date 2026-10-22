@@ -67,6 +67,26 @@ class PreferenciasUsuarioService
         '12' => '12 horas (2:30 p. m.)',
     ];
 
+    /*
+     * Accesibilidad: tamaño del texto (escala de la interfaz).
+     */
+    public const TAMANOS_TEXTO = [
+        'normal' => 'Normal',
+        'grande' => 'Grande',
+        'muy_grande' => 'Muy grande',
+    ];
+
+    /*
+     * Columnas agregadas por la migración de accesibilidad: si aún no
+     * se ejecuta, se usan los valores predeterminados y no se guardan.
+     */
+    public const CLAVES_ACCESIBILIDAD = [
+        'tamano_texto',
+        'reducir_movimiento',
+        'alto_contraste',
+        'resaltar_foco',
+    ];
+
     public const PREDETERMINADAS = [
         'tema' => 'system',
         'densidad' => 'comoda',
@@ -75,11 +95,17 @@ class PreferenciasUsuarioService
         'id_unidad_predeterminada' => null,
         'zona_horaria' => 'America/Mexico_City',
         'formato_hora' => '24',
+        'tamano_texto' => 'normal',
+        'reducir_movimiento' => false,
+        'alto_contraste' => false,
+        'resaltar_foco' => false,
     ];
 
     private array $memoria = [];
 
     private ?bool $tablaDisponible = null;
+
+    private ?bool $accesibilidadDisponible = null;
 
     /*
     |--------------------------------------------------------------------------
@@ -136,9 +162,13 @@ class PreferenciasUsuarioService
 
         $datos = $this->normalizar(array_merge($actuales, $cambios));
 
+        $columnas = $this->accesibilidadDisponible()
+            ? $datos
+            : array_diff_key($datos, array_flip(self::CLAVES_ACCESIBILIDAD));
+
         DB::table('preferencias_usuario')->updateOrInsert(
             ['id_usuario' => $idUsuario],
-            $datos + ['fecha_actualizacion' => now()]
+            $columnas + ['fecha_actualizacion' => now()]
         );
 
         Cache::forget($this->claveCache($idUsuario));
@@ -240,6 +270,14 @@ class PreferenciasUsuarioService
 
         $datos['formato_hora'] = (string) $datos['formato_hora'] === '12' ? '12' : '24';
 
+        if (! array_key_exists((string) $datos['tamano_texto'], self::TAMANOS_TEXTO)) {
+            $datos['tamano_texto'] = self::PREDETERMINADAS['tamano_texto'];
+        }
+
+        foreach (['reducir_movimiento', 'alto_contraste', 'resaltar_foco'] as $clave) {
+            $datos[$clave] = filter_var($datos[$clave], FILTER_VALIDATE_BOOLEAN);
+        }
+
         return $datos;
     }
 
@@ -262,6 +300,43 @@ class PreferenciasUsuarioService
         }
 
         return $this->tablaDisponible = (bool) $existe;
+    }
+
+    public function accesibilidadDisponible(): bool
+    {
+        if ($this->accesibilidadDisponible !== null) {
+            return $this->accesibilidadDisponible;
+        }
+
+        if (! $this->tablaDisponible()) {
+            return $this->accesibilidadDisponible = false;
+        }
+
+        $existe = Cache::get('preferencias_usuario.accesibilidad');
+
+        if ($existe === null) {
+            $existe = Schema::hasColumn('preferencias_usuario', 'tamano_texto');
+
+            Cache::put('preferencias_usuario.accesibilidad', $existe, $existe ? now()->addMinutes(10) : now()->addMinute());
+        }
+
+        return $this->accesibilidadDisponible = (bool) $existe;
+    }
+
+    /*
+     * Atributos de <html> que activan las opciones de accesibilidad
+     * (layouts/partials/accesibilidad-styles).
+     */
+    public function atributosAccesibilidad(?array $preferencias = null): array
+    {
+        $preferencias ??= $this->obtener();
+
+        return [
+            'data-texto' => $preferencias['tamano_texto'],
+            'data-movimiento' => $preferencias['reducir_movimiento'] ? 'reducido' : 'normal',
+            'data-contraste' => $preferencias['alto_contraste'] ? 'alto' : 'normal',
+            'data-foco' => $preferencias['resaltar_foco'] ? 'resaltado' : 'normal',
+        ];
     }
 
     private function claveCache(int $idUsuario): string

@@ -30,6 +30,12 @@ class AjustesPreferencias extends Component
     public string $zonaHoraria = 'America/Mexico_City';
     public string $formatoHora = '24';
 
+    // Accesibilidad
+    public string $tamanoTexto = 'normal';
+    public bool $reducirMovimiento = false;
+    public bool $altoContraste = false;
+    public bool $resaltarFoco = false;
+
     public function mount(PreferenciasUsuarioService $preferencias): void
     {
         $actuales = $preferencias->obtener();
@@ -43,6 +49,11 @@ class AjustesPreferencias extends Component
             : null;
         $this->zonaHoraria = $actuales['zona_horaria'];
         $this->formatoHora = $actuales['formato_hora'];
+
+        $this->tamanoTexto = $actuales['tamano_texto'];
+        $this->reducirMovimiento = (bool) $actuales['reducir_movimiento'];
+        $this->altoContraste = (bool) $actuales['alto_contraste'];
+        $this->resaltarFoco = (bool) $actuales['resaltar_foco'];
     }
 
     public function save(PreferenciasUsuarioService $preferencias): void
@@ -60,6 +71,10 @@ class AjustesPreferencias extends Component
             ],
             'zonaHoraria' => ['required', Rule::in(array_keys(PreferenciasUsuarioService::ZONAS_HORARIAS))],
             'formatoHora' => ['required', Rule::in(array_keys(PreferenciasUsuarioService::FORMATOS_HORA))],
+            'tamanoTexto' => ['required', Rule::in(array_keys(PreferenciasUsuarioService::TAMANOS_TEXTO))],
+            'reducirMovimiento' => ['boolean'],
+            'altoContraste' => ['boolean'],
+            'resaltarFoco' => ['boolean'],
         ], [
             'pantallaInicio.in' => 'Esa pantalla no está disponible para tu rol.',
             'idUnidadPredeterminada.exists' => 'El elemento seleccionado ya no está disponible.',
@@ -73,6 +88,10 @@ class AjustesPreferencias extends Component
             'id_unidad_predeterminada' => $validated['idUnidadPredeterminada'] ?? null,
             'zona_horaria' => $validated['zonaHoraria'],
             'formato_hora' => $validated['formatoHora'],
+            'tamano_texto' => $validated['tamanoTexto'],
+            'reducir_movimiento' => (bool) $validated['reducirMovimiento'],
+            'alto_contraste' => (bool) $validated['altoContraste'],
+            'resaltar_foco' => (bool) $validated['resaltarFoco'],
         ]);
 
         /*
@@ -83,6 +102,7 @@ class AjustesPreferencias extends Component
             'preferencias-actualizadas',
             tema: $guardadas['tema'],
             densidad: $guardadas['densidad'],
+            accesibilidad: $preferencias->atributosAccesibilidad($guardadas),
             message: 'Tus preferencias se guardaron correctamente.'
         );
     }
@@ -108,6 +128,7 @@ class AjustesPreferencias extends Component
             'pantallas' => $this->pantallasDisponibles(),
             'unidades' => $unidades,
             'etiquetas' => $plantilla->etiquetas(),
+            'accesibilidadDisponible' => app(PreferenciasUsuarioService::class)->accesibilidadDisponible(),
         ]);
     }
 }
