@@ -39,6 +39,100 @@ class EquipoCreate extends Component
 
     public int $formKey = 0;
 
+    /*
+     * «Duplicar equipo» (?duplicar=ID): datos comunes de otro equipo
+     * para dar de alta uno parecido. Sin nombre, serie, MAC, host,
+     * IMEI, IP ni teléfono (son propios de cada equipo).
+     */
+    public array $duplicado = [];
+
+    public function mount(?int $duplicar = null): void
+    {
+        if ($duplicar) {
+            $this->duplicado = $this->datosParaDuplicar($duplicar);
+        }
+    }
+
+    /*
+     * Campos propios de cada equipo: no se copian al duplicar ni al
+     * conservar datos para el siguiente (mismo criterio en la vista).
+     */
+    private function esCampoUnico(string $texto): bool
+    {
+        $texto = \Illuminate\Support\Str::of($texto)->lower()->ascii()->toString();
+
+        return (bool) preg_match('/imei|serie|serial|service.?tag|telefon|celular|host|(^|[\s_])mac($|[\s_])|(^|[\s_])ip($|[\s_])/', $texto);
+    }
+
+    private function datosParaDuplicar(int $idEquipo): array
+    {
+        $equipo = DB::table('equipos')->where('id_equipo', $idEquipo)->first();
+
+        if (! $equipo) {
+            return [];
+        }
+
+        $tipoId = (int) $equipo->id_tipo_equipo;
+
+        $base = [
+            'idTipoEquipo' => (string) $tipoId,
+            'idEstadoActivo' => (string) ($equipo->id_estado_activo ?? ''),
+            'idMarca' => (string) ($equipo->id_marca ?? ''),
+            'idModelo' => (string) ($equipo->id_modelo ?? ''),
+            'idProveedor' => (string) ($equipo->id_proveedor ?? ''),
+            'numeroFactura' => (string) ($equipo->numero_factura ?? ''),
+            'fechaCompra' => (string) ($equipo->fecha_compra ?? ''),
+            'fechaFinGarantia' => (string) ($equipo->fecha_fin_garantia ?? ''),
+            'idCondicionActivo' => (string) ($equipo->id_condicion_activo ?? ''),
+            'idHotel' => (string) ($equipo->id_unidad ?? ''),
+            'idDepartamento' => (string) ($equipo->id_departamento ?? ''),
+        ];
+
+        $childData = [];
+
+        try {
+            $definitions = $this->configuredChildFields($tipoId);
+            $physical = $this->childConfig()[$tipoId] ?? null;
+
+            $fila = $physical
+                ? DB::table($physical['table'])->where('id_equipo', $idEquipo)->first()
+                : null;
+
+            $atributos = DB::table('atributos_equipo')
+                ->where('id_equipo', $idEquipo)
+                ->whereNotNull('id_campo')
+                ->pluck('valor', 'id_campo')
+                ->all();
+
+            foreach ($definitions as $key => $field) {
+                if ($this->esCampoUnico($field['etiqueta'] . ' ' . ($field['columna_destino'] ?? ''))) {
+                    continue;
+                }
+
+                $valor = $field['origen_dato'] === 'atributo'
+                    ? ($atributos[$field['id_campo']] ?? null)
+                    : ($fila->{$field['columna_destino']} ?? null);
+
+                if ($valor === null || $valor === '') {
+                    continue;
+                }
+
+                $childData[$key] = in_array($field['tipo_control'], ['boolean', 'checkbox'], true)
+                    ? filter_var($valor, FILTER_VALIDATE_BOOLEAN)
+                    : (string) $valor;
+            }
+        } catch (\Throwable $exception) {
+            // Si la configuración del tipo cambió, se copian solo los datos generales.
+            report($exception);
+        }
+
+        return [
+            'base' => $base,
+            'childData' => $childData,
+            'origen' => trim((string) $equipo->codigo_inventario . ' · ' . (string) $equipo->nombre_equipo, ' ·'),
+        ];
+    }
+
     // Cachés locales de esta petición.
     private array $loadedForms = [];
     private array $loadedOptions = [];
@@ -1079,6 +1173,7 @@ class EquipoCreate extends Component
                 'codigoInventarioPreview' =>
                     $this->codigoInventarioPreview,
             ],
+            'duplicado' => $this->duplicado,
         ];
     }
 

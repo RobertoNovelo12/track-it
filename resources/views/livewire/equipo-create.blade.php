@@ -25,9 +25,24 @@
         </div>
 
         <form
+            data-avisar-cambios
             @submit.prevent="saveOptimistically()"
             class="space-y-5"
         >
+            {{-- Duplicar equipo: de dónde vienen los datos copiados --}}
+            <template x-if="data.duplicado?.origen">
+                <div role="status" class="flex items-start gap-3 rounded-lg border border-[var(--theme-primary-border)] bg-[var(--theme-primary-soft-subtle)] px-4 py-3">
+                    <svg class="mt-0.5 h-4 w-4 shrink-0 text-[var(--theme-primary)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect x="8" y="8" width="12" height="12" rx="2"/>
+                        <path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>
+                    </svg>
+                    <p class="text-xs leading-relaxed text-[var(--theme-text)]">
+                        Copiamos los datos de <strong class="font-semibold text-[var(--theme-text-strong)]" x-text="data.duplicado.origen"></strong>.
+                        Completa el nombre, el número de serie y los datos propios de este equipo.
+                    </p>
+                </div>
+            </template>
+
             {{-- SELECCIÓN DEL TIPO
                 Título y select quedan arriba a la izquierda; el código de
                 barras va en su propia columna y no mueve el título. --}}
@@ -186,11 +201,25 @@
                                             : 'text'"
                                         :step="field.type === 'number' ? 'any' : null"
                                         x-model="values[field.model]"
-                                        :placeholder="field.placeholder || ''"
+                                        :placeholder="field.placeholder || trackitFormatoCampo(field.key + ' ' + (field.label ?? '')).ejemplo || ''"
+                                        :inputmode="field.type === 'text' ? (trackitFormatoCampo(field.key + ' ' + (field.label ?? '')).inputmode ?? null) : null"
+                                        :maxlength="trackitFormatoCampo(field.key + ' ' + (field.label ?? '')).maxlength ?? null"
+                                        :autocapitalize="trackitFormatoCampo(field.key + ' ' + (field.label ?? '')).mayusculas ? 'characters' : null"
+                                        :spellcheck="trackitFormatoCampo(field.key + ' ' + (field.label ?? '')).sinCorrector ? 'false' : null"
+                                        :autocomplete="trackitFormatoCampo(field.key + ' ' + (field.label ?? '')).sinCorrector ? 'off' : null"
+                                        :aria-describedby="trackitFormatoCampo(field.key + ' ' + (field.label ?? '')).ayuda ? 'ayuda-equipment-' + field.key : null"
                                         @input="delete errors[errorKey(field)]"
                                         class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)]"
                                     >
                                 </template>
+
+                                {{-- Formato esperado, visible antes de escribir --}}
+                                <p
+                                    x-show="trackitFormatoCampo(field.key + ' ' + (field.label ?? '')).ayuda && ! errorFor(errorKey(field))"
+                                    :id="'ayuda-equipment-' + field.key"
+                                    x-text="trackitFormatoCampo(field.key + ' ' + (field.label ?? '')).ayuda"
+                                    class="mt-1 text-[11px] text-[var(--theme-text-muted)]"
+                                ></p>
 
                                 <p
                                     x-show="errorFor(errorKey(field))"
@@ -204,7 +233,12 @@
             </template>
 
             {{-- ACCIONES --}}
-            <div class="flex justify-end gap-3">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+                <label class="mr-auto inline-flex cursor-pointer items-center gap-2 text-xs text-[var(--theme-text)]" title="Al guardar se quedan tipo, marca, modelo, factura, hotel y especificaciones; se vacían nombre, serie y datos propios.">
+                    <input type="checkbox" x-model="conservarDatos" data-sin-aviso class="rounded border-[var(--theme-border-strong)] text-[var(--theme-primary)]">
+                    Conservar datos para el siguiente equipo
+                </label>
+
                 <a
                     href="{{ route('equipos.index') }}"
                     class="inline-flex h-11 w-full items-center justify-center rounded-lg border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-5 text-sm font-medium text-[var(--theme-text)] transition-colors hover:bg-[var(--theme-surface-soft)] sm:w-auto"
@@ -231,6 +265,9 @@
             data: data ?? {},
             values: {},
             errors: {},
+
+            // Altas en serie: al guardar se conservan los datos comunes.
+            conservarDatos: false,
 
             message: '',
             failed: false,
@@ -399,6 +436,21 @@
 
                 if (serieInicial !== '') {
                     this.values.numeroSerie = serieInicial.slice(0, 255);
+                }
+
+                /*
+                 * Duplicar equipo (?duplicar=ID): datos comunes de otro
+                 * equipo. Se cargan antes de vigilar tipo/marca/hotel para
+                 * que no se limpien.
+                 */
+                const duplicado = this.data.duplicado ?? null;
+
+                if (duplicado?.base) {
+                    this.values = {
+                        ...this.emptyValues(),
+                        ...duplicado.base,
+                        ...(duplicado.childData ?? {}),
+                    };
                 }
 
                 this.$watch('values.idTipoEquipo', (value, previous) => {
@@ -726,6 +778,40 @@
                 return true;
             },
 
+            /*
+             * Campos propios de cada equipo (mismo criterio que
+             * EquipoCreate::esCampoUnico): no se conservan.
+             */
+            esCampoUnico(clave) {
+                const texto = (String(clave) + ' ' + String(this.data.fieldLabels?.[clave] ?? ''))
+                    .toLowerCase()
+                    .normalize('NFD')
+                    .replace(/[\u0300-\u036f]/g, '');
+
+                return ['nombreEquipo', 'numeroSerie', 'direccionMac', 'host', 'propietario', 'comentarios'].includes(clave)
+                    || /imei|serie|serial|service.?tag|telefon|celular|host|(^|[\s_])mac($|[\s_])|(^|[\s_])ip($|[\s_])/.test(texto);
+            },
+
+            /*
+             * «Conservar datos para el siguiente equipo»: se quedan tipo,
+             * marca, modelo, factura, hotel, especificaciones…; se vacían
+             * nombre, serie y demás datos propios.
+             */
+            prepararSiguiente(payload) {
+                this.restoreSnapshot(payload);
+
+                this.$nextTick(() => {
+                    Object.keys(this.values)
+                        .filter((clave) => this.esCampoUnico(clave))
+                        .forEach((clave) => {
+                            this.values[clave] = typeof this.values[clave] === 'boolean' ? false : '';
+                        });
+
+                    this.errors = {};
+                    document.getElementById('equipment-nombre_equipo')?.focus();
+                });
+            },
+
             clearForm() {
                 this.suspendDependencies = true;
                 this.values = this.emptyValues();
@@ -781,9 +867,10 @@
                 }
 
                 /*
-                 * Mantener la captura inmediata del siguiente equipo.
+                 * Mantener la captura inmediata del siguiente equipo
+                 * (con los datos comunes si se pidió conservarlos).
                  */
-                this.clearForm();
+                this.conservarDatos ? this.prepararSiguiente(payload) : this.clearForm();
 
                 setTimeout(() => {
                     this.savingVisual = false;
@@ -815,7 +902,12 @@
                 } catch (error) {
                     const errors = error?.errors ?? {};
 
-                    if (this.formIsEmpty()) {
+                    // Recuperar lo capturado si el usuario no empezó el siguiente.
+                    const sinEmpezar = this.conservarDatos
+                        ? ! this.values.nombreEquipo && ! this.values.numeroSerie
+                        : this.formIsEmpty();
+
+                    if (sinEmpezar) {
                         this.restoreSnapshot(payload);
                         this.errors = errors;
                     }
@@ -828,7 +920,7 @@
                         Array.isArray(first)
                             ? first[0]
                             : first
-                    ) || 'No fue posible guardar el equipo. Inténtalo nuevamente.';
+                    ) || window.trackitMensajeError(error, 'guardar el equipo');
                 }
             },
         }));

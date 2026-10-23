@@ -6,6 +6,7 @@ use App\Services\EquiposRecibidosService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Locked;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 /*
@@ -55,20 +56,62 @@ class EquiposRecibidosPanel extends Component
 
     public function atender(int $idRecibido, EquiposRecibidosService $recibidos): void
     {
-        $recibidos->atender((int) auth()->id(), $idRecibido);
+        $atendido = $recibidos->atender((int) auth()->id(), $idRecibido);
 
         $this->pendientes = $recibidos->contarPendientes((int) auth()->id());
+
+        if ($atendido) {
+            $this->avisoConDeshacer('Se quitó de la bandeja.', [$idRecibido]);
+        }
     }
 
     public function atenderTodos(EquiposRecibidosService $recibidos): void
     {
+        $ids = $recibidos->idsPendientes((int) auth()->id());
         $atendidos = $recibidos->atenderTodos((int) auth()->id());
 
         $this->pendientes = 0;
 
         if ($atendidos > 0) {
-            $this->dispatch('toast', type: 'success', message: 'La bandeja quedó vacía.');
+            $this->avisoConDeshacer(
+                $atendidos === 1 ? 'Se marcó 1 equipo como atendido.' : 'Se marcaron ' . $atendidos . ' equipos como atendidos.',
+                $ids
+            );
         }
+    }
+
+    /*
+     * Aviso con botón «Deshacer» (toast-region): vuelve a llamar a
+     * deshacerAtendidos con los mismos ids.
+     */
+    private function avisoConDeshacer(string $mensaje, array $ids): void
+    {
+        $this->dispatch(
+            'toast',
+            type: 'success',
+            message: $mensaje,
+            accion: [
+                'texto' => 'Deshacer',
+                'evento' => 'recibidos-deshacer',
+                'datos' => ['ids' => array_values($ids)],
+            ],
+        );
+    }
+
+    #[On('recibidos-deshacer')]
+    public function deshacerAtendidos(array $ids, EquiposRecibidosService $recibidos): void
+    {
+        $restaurados = $recibidos->restaurar((int) auth()->id(), $ids);
+
+        $this->pendientes = $recibidos->contarPendientes((int) auth()->id());
+
+        $this->dispatch(
+            'toast',
+            type: $restaurados > 0 ? 'info' : 'warning',
+            message: $restaurados > 0
+                ? ($restaurados === 1 ? 'El equipo volvió a la bandeja.' : 'Los ' . $restaurados . ' equipos volvieron a la bandeja.')
+                : 'Ya no se puede deshacer (pasaron más de 10 minutos o el equipo volvió a llegar).',
+        );
     }
 
     public function render(EquiposRecibidosService $recibidos): View

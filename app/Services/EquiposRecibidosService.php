@@ -398,6 +398,49 @@ class EquiposRecibidosService
             ->update(['atendido_en' => now(), 'motivo_atencion' => 'manual']) > 0;
     }
 
+    public function idsPendientes(int $idUsuario): array
+    {
+        return DB::table('equipos_recibidos')
+            ->where('id_usuario', $idUsuario)
+            ->whereNull('atendido_en')
+            ->pluck('id_recibido')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+    }
+
+    /*
+     * «Deshacer» del aviso: vuelven a la bandeja los que el usuario marcó
+     * a mano en los últimos 10 minutos. Si mientras tanto llegó otra vez
+     * el mismo equipo (ya está pendiente), ese se omite.
+     */
+    public function restaurar(int $idUsuario, array $ids): int
+    {
+        $ids = array_values(array_filter(array_map('intval', $ids), fn (int $id) => $id > 0));
+
+        if ($ids === []) {
+            return 0;
+        }
+
+        $restaurados = 0;
+
+        foreach (array_slice($ids, 0, 500) as $id) {
+            try {
+                $restaurados += DB::table('equipos_recibidos')
+                    ->where('id_recibido', $id)
+                    ->where('id_usuario', $idUsuario)
+                    ->where('motivo_atencion', 'manual')
+                    ->where('atendido_en', '>=', now()->subMinutes(10))
+                    ->update(['atendido_en' => null, 'motivo_atencion' => null]);
+            } catch (QueryException $e) {
+                if (($e->errorInfo[0] ?? null) !== '23505') {
+                    throw $e;
+                }
+            }
+        }
+
+        return $restaurados;
+    }
+
     public function atenderTodos(int $idUsuario): int
     {
         return DB::table('equipos_recibidos')

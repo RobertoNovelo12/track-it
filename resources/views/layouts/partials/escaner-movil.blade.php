@@ -292,7 +292,7 @@
                 const datos = await respuesta.json().catch(() => ({}));
 
                 if (! respuesta.ok) {
-                    this.mostrarError(datos.message ?? 'No se pudo enviar el equipo. Inténtalo de nuevo.', false);
+                    this.mostrarError(datos.message ?? window.trackitMensajeError({ status: respuesta.status }, 'enviar el equipo'), false);
 
                     return;
                 }

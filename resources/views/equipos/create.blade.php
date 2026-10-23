@@ -5,6 +5,7 @@
 @section('content')
 
 {{-- Formulario Livewire --}}
-<livewire:equipo-create lazy />
+{{-- ?duplicar=ID: copia los datos comunes de otro equipo (ver EquipoCreate). --}}
+<livewire:equipo-create :duplicar="(int) request()->query('duplicar') ?: null" lazy />
 
 @endsection

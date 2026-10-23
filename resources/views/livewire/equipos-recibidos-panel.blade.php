@@ -73,8 +73,7 @@
             @if ($pendientes > 0)
                 <button
                     type="button"
-                    wire:click="atenderTodos"
-                    wire:confirm="¿Marcar todos los equipos recibidos como atendidos?"
+                    x-on:click="$dispatch('confirmar', { titulo: '¿Marcar todos como atendidos?', mensaje: 'Saldrán de tu bandeja de equipos recibidos.', confirmar: 'Marcar todos', peligro: false, accion: () => $wire.atenderTodos() })"
                     class="shrink-0 text-[11px] font-medium text-[var(--theme-text-muted)] hover:text-[var(--theme-primary)]"
                 >
                     Marcar todos
