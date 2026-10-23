@@ -874,8 +874,7 @@ new class extends Component
                     @elseif ($org->logoPersonalizado())
                         <button
                             type="button"
-                            wire:click="restaurarLogo"
-                            wire:confirm="¿Restaurar el logotipo predeterminado?"
+                            x-on:click="$dispatch('confirmar', { titulo: '¿Restaurar el logotipo predeterminado?', mensaje: 'Se quitará el logotipo personalizado de la organización.', confirmar: 'Restaurar', peligro: false, accion: () => $wire.restaurarLogo() })"
                             wire:loading.attr="disabled"
                             class="text-xs text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] hover:underline"
                         >

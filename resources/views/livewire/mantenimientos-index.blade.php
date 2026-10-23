@@ -1,6 +1,9 @@
-
-<div>
-    <section class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-5">
+{{--
+    Filtros en su propia tarjeta y la tabla debajo, fuera de ella
+    (antes la tabla quedaba dentro de la sección de filtros).
+--}}
+<div class="space-y-5">
+    <section class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 sm:p-5">
 
         {{-- ============================================================
             FILTROS DE BÚSQUEDA
@@ -55,38 +58,38 @@
 
             {{-- Equipo --}}
             <div>
-                <label class="mb-1.5 block text-sm font-medium text-[var(--theme-text)]">
+                <label class="mb-1.5 block text-xs text-[var(--theme-text-muted)]">
                     Equipo
                 </label>
                 <input
                     type="text"
                     wire:model="equipo"
                     placeholder="Buscar..."
-                    class="w-full rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface)] px-3 py-2 text-sm text-[var(--theme-text)] outline-none placeholder:text-[var(--theme-text-muted)]"
+                    class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none placeholder:text-[var(--theme-text-muted)] focus:border-[var(--theme-primary)]"
                 >
             </div>
 
             {{-- Fecha desde --}}
             <div>
-                <label class="mb-1.5 block text-sm font-medium text-[var(--theme-text)]">
+                <label class="mb-1.5 block text-xs text-[var(--theme-text-muted)]">
                     Fecha desde
                 </label>
                 <input
                     type="date"
                     wire:model="fechaDesde"
-                    class="w-full rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface)] px-3 py-2 text-sm text-[var(--theme-text)] outline-none"
+                    class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)]"
                 >
             </div>
 
             {{-- Fecha hasta --}}
             <div>
-                <label class="mb-1.5 block text-sm font-medium text-[var(--theme-text)]">
+                <label class="mb-1.5 block text-xs text-[var(--theme-text-muted)]">
                     Fecha hasta
                 </label>
                 <input
                     type="date"
                     wire:model="fechaHasta"
-                    class="w-full rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface)] px-3 py-2 text-sm text-[var(--theme-text)] outline-none"
+                    class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)]"
                 >
             </div>
 
@@ -104,20 +107,20 @@
 
             {{-- Número de serie --}}
             <div>
-                <label class="mb-1.5 block text-sm font-medium text-[var(--theme-text)]">
+                <label class="mb-1.5 block text-xs text-[var(--theme-text-muted)]">
                     Número de serie
                 </label>
                 <input
                     type="text"
                     wire:model="numeroSerie"
                     placeholder="Buscar..."
-                    class="w-full rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface)] px-3 py-2 text-sm text-[var(--theme-text)] outline-none placeholder:text-[var(--theme-text-muted)]"
+                    class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none placeholder:text-[var(--theme-text-muted)] focus:border-[var(--theme-primary)]"
                 >
             </div>
         </div>
 
         {{-- Acciones de filtros --}}
-        <div class="mt-5 flex justify-end gap-3">
+        <div class="mt-5 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
             <button
                 type="button"
                 wire:click="limpiarFiltros"
@@ -138,13 +141,14 @@
                 Aplicar filtros
             </button>
         </div>
+    </section>
 
         {{-- ============================================================
             RESULTADOS
             Componente reutilizable <x-data-table>.
         ============================================================ --}}
+        {{-- «Actualizando…» solo con acciones que cambian la tabla: elegir un filtro no la cambia hasta «Aplicar filtros». --}}
         <x-data-table
-            class="mt-5"
 
             :rows="$mantenimientos"
             row-key="id_mantenimiento"
@@ -158,6 +162,7 @@
             per-page-model="perPage"
             sort-model="sort"
             refresh-action="$refresh"
+            loading-target="aplicarFiltros, limpiarFiltros, sortBy, perPage, sort, gotoPage, nextPage, previousPage, setPage, $refresh"
 
             result-singular="mantenimiento encontrado"
             result-plural="mantenimientos encontrados"
@@ -256,5 +261,4 @@
                 ],
             ]"
         />
-    </section>
 </div>

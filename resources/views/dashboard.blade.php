@@ -13,18 +13,16 @@
     <div
         class="
             flex
-            flex-col
-            gap-4
-
-            sm:flex-row
-            sm:items-center
-            sm:justify-end
+            flex-wrap
+            items-center
+            justify-between
+            gap-2
         "
     >
 
-        {{-- ========================================================
-            TÍTULO
-        ======================================================== --}}
+        {{-- «Volver» a la izquierda; se oculta si no hay pantalla anterior. --}}
+        @include('layouts.partials.boton-volver')
+
 
 
 
@@ -33,12 +31,19 @@
             ACCIONES RÁPIDAS
         ======================================================== --}}
 
+        {{-- Móvil: las tres acciones en una sola fila del mismo ancho. --}}
         <div
             class="
-                flex
-                flex-wrap
+                ml-auto
+                grid
+                w-full
+                grid-cols-3
                 items-center
                 gap-2
+
+                sm:flex
+                sm:w-auto
+                sm:flex-wrap
             "
         >
 
@@ -55,7 +60,9 @@
                         h-9
                         items-center
                         justify-center
-                        gap-2
+                        min-w-0
+                        gap-1.5
+                        sm:gap-2
 
                         rounded-lg
 
@@ -64,7 +71,9 @@
 
                         bg-[var(--theme-surface)]
 
-                        px-3
+                        px-2
+
+                        sm:px-3
 
                         text-xs
                         font-medium
@@ -140,7 +149,9 @@
                         h-9
                         items-center
                         justify-center
-                        gap-2
+                        min-w-0
+                        gap-1.5
+                        sm:gap-2
 
                         rounded-lg
 
@@ -149,7 +160,9 @@
 
                         bg-[var(--theme-surface)]
 
-                        px-3
+                        px-2
+
+                        sm:px-3
 
                         text-xs
                         font-medium
@@ -263,7 +276,9 @@
                     h-9
                     items-center
                     justify-center
-                    gap-2
+                    min-w-0
+                    gap-1.5
+                    sm:gap-2
 
                     rounded-lg
 
@@ -272,7 +287,9 @@
 
                     bg-[var(--theme-surface)]
 
-                    px-3
+                    px-2
+
+                    sm:px-3
 
                     text-xs
                     font-medium
@@ -322,7 +339,8 @@
                 </svg>
 
 
-                <span>
+                {{-- En pantallas muy angostas (<360px) solo queda el icono. --}}
+                <span class="max-[359px]:sr-only">
                     Actualizar
                 </span>
 

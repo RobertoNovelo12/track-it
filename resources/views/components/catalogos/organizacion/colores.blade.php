@@ -181,8 +181,7 @@
             @if ($colorGuardado)
                 <button
                     type="button"
-                    wire:click="restaurarColores"
-                    wire:confirm="¿Restaurar los colores predeterminados del sistema?"
+                    x-on:click="$dispatch('confirmar', { titulo: '¿Restaurar los colores predeterminados?', mensaje: 'El sistema volverá al color principal original.', confirmar: 'Restaurar', peligro: false, accion: () => $wire.restaurarColores() })"
                     wire:loading.attr="disabled"
                     class="text-xs text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] hover:underline"
                 >

@@ -57,14 +57,6 @@ return Application::configure(
                     \App\Http\Middleware\ExigirCambioContrasena::class,
             ]);
 
-            /*
-             * Medición temporal de rendimiento (solo APP_ENV=local).
-             * Quitar esta línea y el archivo al terminar el diagnóstico.
-             */
-            $middleware->append(
-                \App\Http\Middleware\MedirRendimiento::class
-            );
-
         }
     )
 

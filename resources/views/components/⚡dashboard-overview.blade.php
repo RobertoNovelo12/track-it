@@ -1359,732 +1359,137 @@ new class extends Component
 
     {{-- ============================================================
         KPIs PRINCIPALES
+        ------------------------------------------------------------
+        Jerarquía: solo se destaca lo que pide una acción.
+        - Mantenimientos vencidos: rojo y «Requiere atención» (hay
+          que hacer o reprogramar el mantenimiento); en 0, «Al día».
+        - Garantías: una garantía vencida es un dato, no un pendiente
+          (no hay que pagar para «resolverla»), así que la tarjeta es
+          informativa. Solo se marca en ámbar «Por vencer» cuando hay
+          garantías que terminan en 30 días: ahí sí hay una decisión
+          (renovar, pedir revisión al proveedor o dejarla vencer).
+        - Total, asignados y en mantenimiento: neutras.
+        El estado también va en texto, no solo en color.
     ============================================================ --}}
+    @php
+        $porcentajeDe = fn (int $valor) => $totalEquipos > 0 ? (int) round($valor / $totalEquipos * 100) : 0;
 
-    <div
-        class="
-            grid
-            grid-cols-1
+        $estadoGarantias = $garantiasPorVencer > 0 ? 'aviso' : 'info';
 
-            sm:grid-cols-2
+        $tarjetasKpi = [
+            [
+                'valor' => $totalEquipos,
+                'etiqueta' => 'Total de equipos',
+                'detalle' => 'Inventario vigente',
+                'situacion' => 'vigentes',
+                'estado' => 'info',
+                'icono' => '<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>',
+            ],
+            [
+                'valor' => $equiposAsignados,
+                'etiqueta' => 'Equipos asignados',
+                'detalle' => $porcentajeDe($equiposAsignados) . '% del inventario',
+                'situacion' => 'asignados',
+                'estado' => 'info',
+                'icono' => '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+            ],
+            [
+                'valor' => $enMantenimiento,
+                'etiqueta' => 'En mantenimiento',
+                'detalle' => $enMantenimiento > 0 ? $porcentajeDe($enMantenimiento) . '% del inventario' : 'Ninguno en proceso',
+                'situacion' => 'en_mantenimiento',
+                'estado' => 'info',
+                'icono' => '<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/>',
+            ],
+            [
+                'valor' => $mantenimientosVencidos,
+                'etiqueta' => 'Mantenimientos vencidos',
+                'detalle' => $mantenimientosVencidos > 0 ? 'Con seguimiento atrasado' : 'Sin atrasos',
+                'situacion' => 'mantenimiento_vencido',
+                'estado' => $mantenimientosVencidos > 0 ? 'peligro' : 'ok',
+                'icono' => '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+            ],
+            [
+                'valor' => $garantiasVencidas,
+                'etiqueta' => 'Garantías vencidas',
+                'detalle' => $garantiasPorVencer > 0
+                    ? number_format($garantiasPorVencer) . ($garantiasPorVencer === 1 ? ' vence' : ' vencen') . ' en 30 días'
+                    : 'Ninguna vence en 30 días',
+                // Con garantías por vencer, la tarjeta lleva a esas (la decisión pendiente).
+                'situacion' => $garantiasPorVencer > 0 ? 'garantia_por_vencer' : 'garantia_vencida',
+                'estado' => $estadoGarantias,
+                'icono' => '<path d="M12 3l7 3v6c0 4.4-3 8.3-7 9-4-.7-7-4.6-7-9V6z"/>',
+            ],
+        ];
 
-            xl:grid-cols-5
+        $estilosKpi = [
+            'info' => [
+                'tarjeta' => 'border-[var(--theme-border)] bg-[var(--theme-surface)]',
+                'icono' => 'bg-[var(--theme-surface-soft)] text-[var(--theme-text-muted)]',
+                'valor' => 'text-[var(--theme-text-strong)]',
+                'insignia' => null,
+            ],
+            'ok' => [
+                'tarjeta' => 'border-[var(--theme-border)] bg-[var(--theme-surface)]',
+                'icono' => 'bg-[var(--theme-success-soft)] text-[var(--theme-success)]',
+                'valor' => 'text-[var(--theme-text-strong)]',
+                'insignia' => ['Al día', 'text-[var(--theme-success)]'],
+            ],
+            'aviso' => [
+                'tarjeta' => 'border-[var(--theme-warning-border)] bg-[var(--theme-warning-soft)]',
+                'icono' => 'bg-[var(--theme-surface)] text-[var(--theme-warning)]',
+                'valor' => 'text-[var(--theme-warning)]',
+                'insignia' => ['Por vencer', 'bg-[var(--theme-surface)] text-[var(--theme-warning)]'],
+            ],
+            'peligro' => [
+                'tarjeta' => 'border-[color-mix(in_srgb,var(--theme-danger)_40%,transparent)] bg-[var(--theme-danger-soft)]',
+                'icono' => 'bg-[var(--theme-surface)] text-[var(--theme-danger)]',
+                'valor' => 'text-[var(--theme-danger)]',
+                'insignia' => ['Requiere atención', 'bg-[var(--theme-surface)] text-[var(--theme-danger)]'],
+            ],
+        ];
+    @endphp
 
-            gap-3
-        "
-    >
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
+        @foreach ($tarjetasKpi as $kpi)
+            @php
+                $estiloKpi = $estilosKpi[$kpi['estado']];
+                $destacada = in_array($kpi['estado'], ['peligro', 'aviso'], true);
+            @endphp
 
-
-        {{-- ========================================================
-            TOTAL DE EQUIPOS
-        ======================================================== --}}
-
-        <a
-            href="{{ route('equipos.index', ['situacion' => 'vigentes']) }}"
-            wire:navigate
-            title="Ver todos los equipos vigentes"
-            aria-label="Ver todos los equipos vigentes"
-            class="
-                min-h-[104px]
-
-                rounded-xl
-
-                border
-                border-[var(--theme-primary-border)]
-
-                bg-[var(--theme-surface)]
-
-                px-4
-                py-3.5
-
-                flex
-                items-center
-                gap-4
-
-                shadow-sm
-
-                transition-colors
-                hover:bg-[var(--theme-surface-soft)]
-                focus-visible:outline-none
-                focus-visible:ring-2
-                focus-visible:ring-[var(--theme-primary)]
-            "
-        >
-
-            <div
-                class="
-                    w-14
-                    h-14
-
-                    shrink-0
-
-                    rounded-xl
-
-                    flex
-                    items-center
-                    justify-center
-
-                    bg-[var(--theme-primary-soft)]
-                    text-[var(--theme-primary)]
-                "
+            <a
+                href="{{ route('equipos.index', ['situacion' => $kpi['situacion']]) }}"
+                wire:navigate
+                title="Ver: {{ mb_strtolower($kpi['etiqueta']) }}"
+                class="group relative flex min-h-[104px] items-center gap-4 rounded-xl border px-4 py-3.5 transition-colors hover:border-[var(--theme-border-strong)] {{ $estiloKpi['tarjeta'] }} {{ $destacada ? 'shadow-sm' : '' }}"
             >
-
-                <svg
-                    class="
-                        w-6
-                        h-6
-                    "
-
-                    viewBox="0 0 24 24"
-
-                    fill="none"
-
-                    stroke="currentColor"
-
-                    stroke-width="1.5"
-                >
-
-                    <rect
-                        x="3"
-                        y="6"
-                        width="18"
-                        height="11"
-                        rx="1.5"
-                    />
-
-
-                    <path
-                        d="
-                            M8 20
-                            h8
-                        "
-                    />
-
-
-                    <path
-                        d="
-                            M12 17
-                            v3
-                        "
-                    />
-
-                </svg>
-
-            </div>
-
-
-            <div class="min-w-0">
-
-                <p
-                    x-data="
-                        dashboardCounter(
-                            {{ $totalEquipos }}
-                        )
-                    "
-
-                    x-init="init()"
-
-                    x-text="display"
-
-                    class="
-                        text-[28px]
-                        leading-none
-
-                        font-semibold
-                        tracking-tight
-
-                        text-[var(--theme-primary)]
-                    "
-                ></p>
-
-
-                <p
-                    class="
-                        mt-2
-
-                        text-xs
-                        font-medium
-
-                        text-[var(--theme-primary)]
-                    "
-                >
-                    Total de equipos
-                </p>
-
-            </div>
-
-        </a>
-
-
-
-        {{-- ========================================================
-            EQUIPOS ASIGNADOS
-        ======================================================== --}}
-
-        <a
-            href="{{ route('equipos.index', ['situacion' => 'asignados']) }}"
-            wire:navigate
-            title="Ver equipos asignados"
-            aria-label="Ver equipos asignados"
-            class="
-                min-h-[104px]
-
-                rounded-xl
-
-                border
-                border-[var(--theme-warning-border)]
-
-                bg-[var(--theme-surface)]
-
-                px-4
-                py-3.5
-
-                flex
-                items-center
-                gap-4
-
-                shadow-sm
-
-                transition-colors
-                hover:bg-[var(--theme-surface-soft)]
-                focus-visible:outline-none
-                focus-visible:ring-2
-                focus-visible:ring-[var(--theme-primary)]
-            "
-        >
-
-            <div
-                class="
-                    w-14
-                    h-14
-
-                    shrink-0
-
-                    rounded-xl
-
-                    flex
-                    items-center
-                    justify-center
-
-                    bg-[var(--theme-warning-soft)]
-                    text-[var(--theme-warning)]
-                "
-            >
-
-                <svg
-                    class="
-                        w-6
-                        h-6
-                    "
-
-                    viewBox="0 0 24 24"
-
-                    fill="none"
-
-                    stroke="currentColor"
-
-                    stroke-width="1.5"
-                >
-
-                    <circle
-                        cx="12"
-                        cy="8"
-                        r="3"
-                    />
-
-
-                    <path
-                        d="
-                            M5 20
-
-                            c0-4
-                            2-7
-                            7-7
-
-                            s7
-                            3
-                            7
-                            7
-                        "
-                    />
-
-                </svg>
-
-            </div>
-
-
-            <div class="min-w-0">
-
-                <p
-                    x-data="
-                        dashboardCounter(
-                            {{ $equiposAsignados }}
-                        )
-                    "
-
-                    x-init="init()"
-
-                    x-text="display"
-
-                    class="
-                        text-[28px]
-                        leading-none
-
-                        font-semibold
-                        tracking-tight
-
-                        text-[var(--theme-warning)]
-                    "
-                ></p>
-
-
-                <p
-                    class="
-                        mt-2
-
-                        text-xs
-                        font-medium
-
-                        text-[var(--theme-warning)]
-                    "
-                >
-                    Equipos asignados
-                </p>
-
-            </div>
-
-        </a>
-
-
-
-        {{-- ========================================================
-            EN MANTENIMIENTO
-        ======================================================== --}}
-
-        <a
-            href="{{ route('equipos.index', ['situacion' => 'en_mantenimiento']) }}"
-            wire:navigate
-            title="Ver equipos en mantenimiento"
-            aria-label="Ver equipos en mantenimiento"
-            class="
-                min-h-[104px]
-
-                rounded-xl
-
-                border
-                border-[var(--theme-border)]
-
-                bg-[var(--theme-surface)]
-
-                px-4
-                py-3.5
-
-                flex
-                items-center
-                gap-4
-
-                shadow-sm
-
-                transition-colors
-                hover:bg-[var(--theme-surface-soft)]
-                focus-visible:outline-none
-                focus-visible:ring-2
-                focus-visible:ring-[var(--theme-primary)]
-            "
-        >
-
-            <div
-                class="
-                    w-14
-                    h-14
-
-                    shrink-0
-
-                    rounded-xl
-
-                    flex
-                    items-center
-                    justify-center
-
-                    bg-[var(--theme-surface-soft)]
-                    text-[var(--theme-text)]
-                "
-            >
-
-                <svg
-                    class="
-                        w-6
-                        h-6
-                    "
-
-                    viewBox="0 0 24 24"
-
-                    fill="none"
-
-                    stroke="currentColor"
-
-                    stroke-width="1.5"
-                >
-
-                    <path
-                        d="
-                            M14.7 6.3
-
-                            a4 4 0 0 0-5 5
-
-                            L4 17
-
-                            l3 3
-
-                            5.7-5.7
-
-                            a4 4 0 0 0 5-5
-
-                            l-2.4 2.4
-
-                            -3-3z
-                        "
-                    />
-
-                </svg>
-
-            </div>
-
-
-            <div class="min-w-0">
-
-                <p
-                    x-data="
-                        dashboardCounter(
-                            {{ $enMantenimiento }}
-                        )
-                    "
-
-                    x-init="init()"
-
-                    x-text="display"
-
-                    class="
-                        text-[28px]
-                        leading-none
-
-                        font-semibold
-                        tracking-tight
-
-                        text-[var(--theme-text-strong)]
-                    "
-                ></p>
-
-
-                <p
-                    class="
-                        mt-2
-
-                        text-xs
-                        font-medium
-
-                        text-[var(--theme-text-muted)]
-                    "
-                >
-                    En mantenimiento
-                </p>
-
-            </div>
-
-        </a>
-
-
-
-        {{-- ========================================================
-            MANTENIMIENTOS VENCIDOS
-        ======================================================== --}}
-
-        <a
-            href="{{ route('equipos.index', ['situacion' => 'mantenimiento_vencido']) }}"
-            wire:navigate
-            title="Ver equipos con mantenimiento vencido"
-            aria-label="Ver equipos con mantenimiento vencido"
-            class="
-                min-h-[104px]
-
-                rounded-xl
-
-                border
-                border-[var(--theme-warning-border)]
-
-                bg-[var(--theme-surface)]
-
-                px-4
-                py-3.5
-
-                flex
-                items-center
-                gap-4
-
-                shadow-sm
-
-                transition-colors
-                hover:bg-[var(--theme-surface-soft)]
-                focus-visible:outline-none
-                focus-visible:ring-2
-                focus-visible:ring-[var(--theme-primary)]
-            "
-        >
-
-            <div
-                class="
-                    w-14
-                    h-14
-
-                    shrink-0
-
-                    rounded-xl
-
-                    flex
-                    items-center
-                    justify-center
-
-                    bg-[var(--theme-warning-soft)]
-                    text-[var(--theme-warning)]
-                "
-            >
-
-                <svg
-                    class="
-                        w-6
-                        h-6
-                    "
-
-                    viewBox="0 0 24 24"
-
-                    fill="none"
-
-                    stroke="currentColor"
-
-                    stroke-width="1.5"
-                >
-
-                    <circle
-                        cx="12"
-                        cy="12"
-                        r="9"
-                    />
-
-
-                    <path
-                        d="
-                            M12 7
-                            v5
-                        "
-                    />
-
-
-                    <path
-                        d="
-                            M12 16
-                            h.01
-                        "
-                    />
-
-                </svg>
-
-            </div>
-
-
-            <div class="min-w-0">
-
-                <p
-                    x-data="
-                        dashboardCounter(
-                            {{ $mantenimientosVencidos }}
-                        )
-                    "
-
-                    x-init="init()"
-
-                    x-text="display"
-
-                    class="
-                        text-[28px]
-                        leading-none
-
-                        font-semibold
-                        tracking-tight
-
-                        text-[var(--theme-warning)]
-                    "
-                ></p>
-
-
-                <p
-                    class="
-                        mt-2
-
-                        text-xs
-                        font-medium
-
-                        text-[var(--theme-warning)]
-                    "
-                >
-                    Mantenimientos vencidos
-                </p>
-
-            </div>
-
-        </a>
-
-
-
-        {{-- ========================================================
-            GARANTÍAS VENCIDAS
-        ======================================================== --}}
-
-        <a
-            href="{{ route('equipos.index', ['situacion' => 'garantia_vencida']) }}"
-            wire:navigate
-            title="Ver equipos con garantía vencida"
-            aria-label="Ver equipos con garantía vencida"
-            class="
-                min-h-[104px]
-
-                rounded-xl
-
-                border
-                border-[var(--theme-success-border)]
-
-                bg-[var(--theme-surface)]
-
-                px-4
-                py-3.5
-
-                flex
-                items-center
-                gap-4
-
-                shadow-sm
-
-                transition-colors
-                hover:bg-[var(--theme-surface-soft)]
-                focus-visible:outline-none
-                focus-visible:ring-2
-                focus-visible:ring-[var(--theme-primary)]
-            "
-        >
-
-            <div
-                class="
-                    w-14
-                    h-14
-
-                    shrink-0
-
-                    rounded-xl
-
-                    flex
-                    items-center
-                    justify-center
-
-                    bg-[var(--theme-success-soft)]
-                    text-[var(--theme-success)]
-                "
-            >
-
-                <svg
-                    class="
-                        w-6
-                        h-6
-                    "
-
-                    viewBox="0 0 24 24"
-
-                    fill="none"
-
-                    stroke="currentColor"
-
-                    stroke-width="1.5"
-                >
-
-                    <path
-                        d="
-                            M12 3
-
-                            l7 3
-
-                            v5
-
-                            c0 5
-                            -3 8
-                            -7 10
-
-                            c-4-2
-                            -7-5
-                            -7-10
-
-                            V6z
-                        "
-                    />
-
-                </svg>
-
-            </div>
-
-
-            <div class="min-w-0">
-
-                <p
-                    x-data="
-                        dashboardCounter(
-                            {{ $garantiasVencidas }}
-                        )
-                    "
-
-                    x-init="init()"
-
-                    x-text="display"
-
-                    class="
-                        text-[28px]
-                        leading-none
-
-                        font-semibold
-                        tracking-tight
-
-                        text-[var(--theme-success)]
-                    "
-                ></p>
-
-
-                <p
-                    class="
-                        mt-2
-
-                        text-xs
-                        font-medium
-
-                        text-[var(--theme-success)]
-                    "
-                >
-                    Garantías vencidas
-                </p>
-
-
-                <p
-                    class="
-                        mt-1
-
-                        text-[10px]
-
-                        text-[var(--theme-text-muted)]
-                    "
-                >
-                    {{ number_format($garantiasPorVencer) }}
-                    vencen en 30 días
-                </p>
-
-            </div>
-
-        </a>
-
+                <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl {{ $estiloKpi['icono'] }}" aria-hidden="true">
+                    <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">{!! $kpi['icono'] !!}</svg>
+                </span>
+
+                <span class="min-w-0 flex-1">
+                    <span class="flex items-baseline gap-2">
+                        <span class="text-[28px] font-semibold leading-none tracking-tight tabular-nums {{ $estiloKpi['valor'] }}">{{ number_format($kpi['valor']) }}</span>
+
+                        @if ($estiloKpi['insignia'])
+                            <span class="inline-flex items-center gap-1 truncate rounded-full px-2 py-0.5 text-[10px] font-semibold {{ $estiloKpi['insignia'][1] }}">
+                                @if ($kpi['estado'] === 'ok')
+                                    <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>
+                                @else
+                                    <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8v5M12 16.5v.5"/></svg>
+                                @endif
+                                {{ $estiloKpi['insignia'][0] }}
+                            </span>
+                        @endif
+                    </span>
+
+                    <span class="mt-2 block truncate text-xs font-medium {{ $destacada ? 'text-[var(--theme-text-strong)]' : 'text-[var(--theme-text)]' }}">{{ $kpi['etiqueta'] }}</span>
+                    <span class="mt-0.5 block truncate text-[11px] text-[var(--theme-text-muted)]">{{ $kpi['detalle'] }}</span>
+                </span>
+
+                <svg class="h-4 w-4 shrink-0 text-[var(--theme-text-muted)] opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+            </a>
+        @endforeach
     </div>
 
 

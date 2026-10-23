@@ -503,11 +503,11 @@
                                         items-center
                                         justify-end
 
-                                        gap-2
+                                        gap-0.5
                                     "
                                 >
 
-                                    {{-- VER DETALLE --}}
+                                    {{-- VER DETALLE (área táctil de 32 px; el icono no cambia) --}}
                                     @if ($accionesFila['detail'])
                                         <a
                                             href="{{ $accionesFila['detail'] }}"
@@ -515,10 +515,18 @@
                                             wire:navigate.hover
 
                                             class="
+                                                inline-flex
+                                                h-8
+                                                w-8
                                                 shrink-0
+                                                items-center
+                                                justify-center
+
+                                                rounded-md
 
                                                 text-[var(--theme-primary)]
 
+                                                hover:bg-[var(--theme-primary-soft-subtle)]
                                                 hover:text-[var(--theme-primary-hover)]
                                             "
 
@@ -548,10 +556,18 @@
                                             @click.stop="toggleMenu($el)"
 
                                             class="
+                                                inline-flex
+                                                h-8
+                                                w-8
                                                 shrink-0
+                                                items-center
+                                                justify-center
+
+                                                rounded-md
 
                                                 text-[var(--theme-text-muted)]
 
+                                                hover:bg-[var(--theme-surface-soft)]
                                                 hover:text-[var(--theme-text-strong)]
                                             "
 
@@ -606,7 +622,7 @@
                                         </div>
                                     @else
                                         {{-- Reserva el espacio para alinear el icono de detalle --}}
-                                        <span class="w-4 h-4 shrink-0" aria-hidden="true"></span>
+                                        <span class="h-8 w-8 shrink-0" aria-hidden="true"></span>
                                     @endif
 
                                 </div>
