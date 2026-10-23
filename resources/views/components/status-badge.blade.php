@@ -6,11 +6,15 @@
         ->ascii()
         ->toString();
 
+    /*
+     * Colores del tema (no amber/emerald fijos): en modo claro el texto
+     * cumple el contraste mínimo de WCAG AA.
+     */
     $styles = match (true) {
 
         // Movimientos del historial de asignaciones.
         str_contains($normalized, 'reasign')
-                => 'bg-amber-500/15 text-amber-500',
+                => 'bg-[var(--theme-warning-soft)] text-[var(--theme-warning)]',
 
         str_contains($normalized, 'asignacion')
                 => 'bg-[var(--theme-primary-soft)] text-[var(--theme-primary)]',
@@ -21,7 +25,7 @@
 
         str_contains($normalized, 'activo')
             && !str_contains($normalized, 'inactivo')
-                => 'bg-emerald-500/15 text-emerald-500',
+                => 'bg-[var(--theme-success-soft)] text-[var(--theme-success)]',
 
         str_contains($normalized, 'mantenimiento')
                 => 'bg-[var(--theme-surface-soft)] text-[var(--theme-text-muted)]',
@@ -36,7 +40,7 @@
 
         str_contains($normalized, 'asignado')
             || str_contains($normalized, 'prestamo')
-                => 'bg-amber-500/15 text-amber-500',
+                => 'bg-[var(--theme-warning-soft)] text-[var(--theme-warning)]',
 
         default
                 => 'bg-[var(--theme-surface-soft)] text-[var(--theme-text-muted)]',

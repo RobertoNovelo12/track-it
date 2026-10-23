@@ -11,6 +11,19 @@
     */
 
     /*
+     * TEXTOS MUY PEQUEÑOS
+     * 9 y 10 px se leen mal (sobre todo en móvil): suben a 10 y 11 px
+     * en todo el sistema. Las reglas de abajo los escalan desde aquí.
+     */
+    .text-\[9px\] {
+        font-size: 10px;
+    }
+
+    .text-\[10px\] {
+        font-size: 11px;
+    }
+
+    /*
      * TAMAÑO DEL TEXTO
      * Todo lo que usa rem (texto, espacios, botones) crece con el tamaño
      * base. Los textos con tamaño fijo en px se escalan aparte.
@@ -27,12 +40,12 @@
 
     html[data-texto="grande"] .text-\[9px\],
     html[data-texto="muy_grande"] .text-\[9px\] {
-        font-size: calc(9px * var(--escala-texto));
+        font-size: calc(10px * var(--escala-texto));
     }
 
     html[data-texto="grande"] .text-\[10px\],
     html[data-texto="muy_grande"] .text-\[10px\] {
-        font-size: calc(10px * var(--escala-texto));
+        font-size: calc(11px * var(--escala-texto));
     }
 
     html[data-texto="grande"] .text-\[11px\],

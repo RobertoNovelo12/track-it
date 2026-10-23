@@ -1033,8 +1033,7 @@
 
 
             <x-ui.button
-                wire:click="logoutOtherSessions"
-                wire:confirm="Se cerrarán todas tus demás sesiones. ¿Deseas continuar?"
+                x-on:click="$dispatch('confirmar', { titulo: '¿Cerrar las demás sesiones?', mensaje: 'Se cerrará tu cuenta en los otros dispositivos y navegadores. Esta sesión seguirá abierta.', confirmar: 'Cerrar sesiones', peligro: true, accion: () => $wire.logoutOtherSessions() })"
                 target="logoutOtherSessions"
                 variant="secondary"
                 size="compact"

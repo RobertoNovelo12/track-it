@@ -25,7 +25,7 @@
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link
-            href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+            href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
             rel="stylesheet"
         >
 
@@ -330,6 +330,16 @@ document.addEventListener(
 
         @include('layouts.partials.densidad-styles')
 
+        @include('layouts.partials.volver-script')
+
+        @include('layouts.partials.accesibilidad-script')
+
+        @include('layouts.partials.cambios-sin-guardar')
+
+        @include('layouts.partials.formatos-campos')
+
+        @include('layouts.partials.mensajes-error')
+
         @include('layouts.partials.accesibilidad-styles')
 
         {{-- Sistema de carga y movimiento (components/ui) --}}
@@ -368,6 +378,14 @@ document.addEventListener(
     </head>
 
     <body class="theme-bg theme-text font-['Poppins']">
+
+    {{-- Teclado / lector de pantalla: primer elemento al pulsar Tab. --}}
+    <a
+        href="#contenido-principal"
+        class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[300] focus:rounded-lg focus:bg-[var(--theme-primary)] focus:px-4 focus:py-2.5 focus:text-sm focus:font-medium focus:text-white"
+    >
+        Saltar al contenido
+    </a>
 
     <div class="min-h-screen flex">
 
@@ -520,11 +538,12 @@ document.addEventListener(
                         type="search"
                         name="buscar"
                         x-model="query"
-                        placeholder="Buscar equipos..."
+                        placeholder="Buscar equipos"
                         autocomplete="off"
                         enterkeyhint="search"
                         aria-label="Buscar equipos"
-                        class="top-search-input h-full w-full min-w-0 border-0 bg-transparent pl-9 pr-[4.5rem] text-sm text-[var(--theme-text)] placeholder:text-[var(--theme-text-muted)] focus:outline-none focus:ring-0 md:pr-[6.25rem]"
+                        class="top-search-input h-full w-full min-w-0 border-0 bg-transparent pl-8 pr-9 text-sm text-[var(--theme-text)] placeholder:text-[var(--theme-text-muted)] focus:outline-none focus:ring-0 md:pl-9 md:pr-[6.25rem]"
+                        x-bind:class="String(query ?? '') !== '' && 'max-md:pr-[4.5rem]'"
                     >
 
                     {{-- Limpiar (reemplaza la «X» nativa del navegador) --}}
@@ -1538,14 +1557,30 @@ document.addEventListener(
                 {{-- ========================================================
                     CONTENIDO ESPECÍFICO DE CADA PÁGINA
                 ======================================================== --}}
-                <main class="p-6">
+                <main id="contenido-principal" tabindex="-1" class="p-6 outline-none">
 
                     {{-- Aviso fijo si faltan datos para recuperar la contraseña --}}
                     @include('layouts.partials.aviso-cuenta-incompleta')
 
                     @include('layouts.partials.encabezado', ['variante' => 'movil', 'encabezado' => $encabezadoPagina ?? null])
 
-                    @yield('content')
+                    {{--
+                        «Volver» arriba a la izquierda en todas las pantallas.
+                        Si la pantalla ya lo puso en su propia fila de acciones
+                        (layouts/partials/boton-volver), no se repite aquí.
+                        El contenido de la página ya se generó en este punto.
+                    --}}
+                    @php
+                        $contenidoPagina = $__env->yieldContent('content');
+                    @endphp
+
+                    @unless (app()->bound('trackit.volver.incluido') || $__env->hasSection('sin-volver'))
+                        <div class="mb-4 hidden items-center md:flex">
+                            @include('layouts.partials.boton-volver')
+                        </div>
+                    @endunless
+
+                    {!! $contenidoPagina !!}
 
                 </main>
 

@@ -28,8 +28,8 @@
     /* Texto fuerte / títulos */
     --theme-text-strong: #25344A;
 
-    /* Texto secundario */
-    --theme-text-muted: #7A7B79;
+    /* Texto secundario (≥ 4.5:1 sobre blanco y gris suave, WCAG AA) */
+    --theme-text-muted: #686967;
 
     /* Bordes */
     --theme-border: rgba(80, 81, 79, 0.10);
@@ -53,9 +53,9 @@
     --theme-primary-border: rgba(36, 123, 160, 0.30);
     --theme-primary-border-strong: rgba(36, 123, 160, 0.50);
 
-    /* Estados de peligro */
-    --theme-danger: #EF4444;
-    --theme-danger-soft: rgba(239, 68, 68, 0.08);
+    /* Estados de peligro (texto ≥ 4.5:1 también sobre su fondo suave) */
+    --theme-danger: #C62828;
+    --theme-danger-soft: rgba(198, 40, 40, 0.08);
 
     /* Overlay móvil / modal */
     --theme-overlay: rgba(0, 0, 0, 0.40);
@@ -64,13 +64,14 @@
     --theme-shadow: rgba(0, 0, 0, 0.10);
 
     /* Estados informativos */
-    --theme-warning: #CB8B2A;
-    --theme-warning-soft: rgba(203, 139, 42, 0.15);
-    --theme-warning-border: rgba(203, 139, 42, 0.22);
+    /* Tonos oscurecidos para que el texto cumpla WCAG AA (≥ 4.5:1) */
+    --theme-warning: #8F5E0E;
+    --theme-warning-soft: rgba(203, 139, 42, 0.14);
+    --theme-warning-border: rgba(143, 94, 14, 0.24);
 
-    --theme-success: #16A34A;
-    --theme-success-soft: rgba(22, 163, 74, 0.14);
-    --theme-success-border: rgba(22, 163, 74, 0.24);
+    --theme-success: #157A3A;
+    --theme-success-soft: rgba(22, 163, 74, 0.12);
+    --theme-success-border: rgba(21, 122, 58, 0.24);
 }
 
 

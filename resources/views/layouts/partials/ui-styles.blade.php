@@ -319,4 +319,56 @@
         opacity: 1;
         background-color: var(--theme-surface-soft);
     }
+    /*
+    |--------------------------------------------------------------------------
+    | FOCO VISIBLE CON TECLADO (WCAG 2.4.7)
+    |--------------------------------------------------------------------------
+    |
+    | Muchos controles quitan el contorno (outline-none). Con teclado
+    | (:focus-visible) siempre se muestra uno del color principal; con
+    | mouse o toque no aparece. Los campos de texto ya marcan el foco con
+    | su borde, así que solo se refuerza en botones, enlaces y casillas.
+    |
+    */
+    a:focus-visible,
+    button:focus-visible,
+    summary:focus-visible,
+    [role="button"]:focus-visible,
+    [role="switch"]:focus-visible,
+    [role="tab"]:focus-visible,
+    [role="option"]:focus-visible,
+    [tabindex]:not([tabindex="-1"]):focus-visible,
+    input[type="checkbox"]:focus-visible,
+    input[type="radio"]:focus-visible,
+    label:has(> input.sr-only:focus-visible) {
+        outline: 2px solid var(--theme-primary) !important;
+        outline-offset: 2px !important;
+    }
+
+    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus-visible,
+    select:focus-visible,
+    textarea:focus-visible {
+        outline: 2px solid color-mix(in srgb, var(--theme-primary) 45%, transparent) !important;
+        outline-offset: 0 !important;
+    }
+    /*
+    |--------------------------------------------------------------------------
+    | TEXTO DEL COLOR PRINCIPAL SOBRE SU FONDO SUAVE (modo claro)
+    |--------------------------------------------------------------------------
+    |
+    | Pestañas, filtros y opciones seleccionadas usan texto principal
+    | sobre fondo principal suave: con el azul original daba 4.2:1 (WCAG
+    | pide 4.5:1). En modo claro el texto se oscurece un poco (5.7:1).
+    | Se calcula con color-mix, así que también funciona con el color
+    | personalizado de la organización. En modo oscuro ya cumplía.
+    |
+    */
+    html:not(.dark) .bg-\[var\(--theme-primary-soft\)\].text-\[var\(--theme-primary\)\],
+    html:not(.dark) .bg-\[var\(--theme-primary-soft-subtle\)\].text-\[var\(--theme-primary\)\],
+    html:not(.dark) .bg-\[var\(--theme-primary-soft\)\] .text-\[var\(--theme-primary\)\],
+    html:not(.dark) .bg-\[var\(--theme-primary-soft-subtle\)\] .text-\[var\(--theme-primary\)\],
+    html:not(.dark) .hover\:bg-\[var\(--theme-primary-soft\)\].text-\[var\(--theme-primary\)\]:hover,
+    html:not(.dark) .hover\:bg-\[var\(--theme-primary-soft-subtle\)\].text-\[var\(--theme-primary\)\]:hover {
+        color: color-mix(in srgb, var(--theme-primary) 82%, #000000);
+    }
 </style>

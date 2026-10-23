@@ -449,6 +449,7 @@
 
             <a
                 href="{{ $item['url'] }}"
+                @if ($item['active']) aria-current="page" @endif
 
                 wire:navigate.hover
 
@@ -811,6 +812,7 @@
                         @foreach ($item['submenu'] as $sub)
                             <a
                                 href="{{ $sub['url'] }}"
+                                @if ($sub['active']) aria-current="page" @endif
                                 wire:navigate.hover
                                 class="
                                     block

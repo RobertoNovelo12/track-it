@@ -76,6 +76,10 @@
     {{-- ========================================================
         ESCRITORIO
     ======================================================== --}}
+    {{--
+        Igual que la tabla real: si las columnas no caben, la de
+        acciones queda fija a la derecha (sticky) en lugar de cortarse.
+    --}}
     <div class="hidden overflow-hidden lg:block">
         <table
             class="w-full table-fixed text-xs 2xl:text-sm"
@@ -114,7 +118,7 @@
                     @endforeach
 
                     @if ($actions)
-                        <th class="px-2.5 py-3 text-right font-medium text-[var(--theme-text-muted)] 2xl:px-3">
+                        <th class="sticky right-0 bg-[var(--theme-surface)] px-2.5 py-3 text-right font-medium text-[var(--theme-text-muted)] shadow-[-8px_0_8px_-8px_var(--theme-shadow)] 2xl:px-3">
                             Acciones
                         </th>
                     @endif
@@ -141,10 +145,11 @@
                         @endforeach
 
                         @if ($actions)
-                            <td class="px-2.5 py-2.5 2xl:px-3">
-                                <div class="flex justify-end gap-2">
-                                    <x-ui.skeleton class="h-6 w-6" />
-                                    <x-ui.skeleton class="h-6 w-6" />
+                            {{-- Mismo tamaño que los botones reales (32 px) --}}
+                            <td class="sticky right-0 bg-[var(--theme-surface)] px-2.5 py-2.5 shadow-[-8px_0_8px_-8px_var(--theme-shadow)] 2xl:px-3">
+                                <div class="flex items-center justify-end gap-0.5">
+                                    <x-ui.skeleton class="h-8 w-8" />
+                                    <x-ui.skeleton class="h-8 w-8" />
                                 </div>
                             </td>
                         @endif

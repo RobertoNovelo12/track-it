@@ -11,6 +11,11 @@
         window.trackitToast('success', 'Copiado al portapapeles');
         $dispatch('toast', { type: 'info', message: '...' })
 
+    Botón de acción opcional (p. ej. «Deshacer»): al pulsarlo se envía
+    un evento de Livewire y el aviso se cierra.
+        $this->dispatch('toast', type: 'success', message: '…',
+            accion: ['texto' => 'Deshacer', 'evento' => 'mi-evento', 'datos' => [...]]);
+
     Tipos: success | error | warning | info | loading
 
     «loading» (proceso en curso) no se cierra solo y muestra un
@@ -63,8 +68,10 @@
                 tipo,
                 titulo: datos.title ?? this.titulos[tipo],
                 mensaje: datos.message ?? '',
+                accion: datos.accion?.texto && datos.accion?.evento ? datos.accion : null,
                 visible: true,
-                restante: this.duracion(tipo),
+                // Con acción, más tiempo para alcanzar a pulsarla.
+                restante: datos.accion ? 8000 : this.duracion(tipo),
                 timer: null,
                 inicio: 0,
             };
@@ -147,6 +154,16 @@
             aviso.timer = setTimeout(() => this.cerrar(id), Math.max(aviso.restante, 1500));
         },
 
+        ejecutarAccion(aviso) {
+            const accion = aviso.accion;
+
+            this.cerrar(aviso.id);
+
+            if (accion) {
+                window.Livewire?.dispatch(accion.evento, accion.datos ?? {});
+            }
+        },
+
         cerrar(id) {
             const aviso = this.buscar(id);
 
@@ -217,6 +234,14 @@
                     x-text="aviso.mensaje"
                 ></p>
             </div>
+
+            <button
+                type="button"
+                x-show="aviso.accion"
+                @click="ejecutarAccion(aviso)"
+                class="-my-1 shrink-0 self-center rounded-[var(--radius-sm)] px-2.5 py-1.5 text-xs font-semibold text-[var(--theme-primary)] transition-colors hover:bg-[var(--theme-primary-soft)]"
+                x-text="aviso.accion?.texto"
+            ></button>
 
             <button
                 type="button"

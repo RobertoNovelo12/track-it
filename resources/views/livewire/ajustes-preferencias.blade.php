@@ -238,11 +238,12 @@
                     </p>
                 </div>
 
-                <div class="grid w-full shrink-0 grid-cols-3 gap-2 md:w-auto" role="radiogroup" aria-label="Tamaño del texto">
+                {{-- Pantallas angostas: «Aa» arriba y el nombre abajo, para que «Muy grande» quepa. --}}
+                <div class="grid w-full min-w-0 shrink-0 grid-cols-3 gap-2 md:w-auto" role="radiogroup" aria-label="Tamaño del texto">
                     @foreach (\App\Services\PreferenciasUsuarioService::TAMANOS_TEXTO as $valor => $nombre)
                         <label
                             wire:key="pref-texto-{{ $valor }}"
-                            class="flex cursor-pointer items-center justify-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-colors {{ $tarjeta($tamanoTexto === $valor) }}"
+                            class="flex min-w-0 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-lg border px-2 py-2.5 text-center text-xs font-medium transition-colors sm:flex-row sm:gap-2 sm:px-3 sm:py-2 {{ $tarjeta($tamanoTexto === $valor) }}"
                             x-bind:class="{{ $tarjetaAlpine('tamanoTexto', $valor) }}"
                         >
                             <input type="radio" x-model="tamanoTexto" value="{{ $valor }}" class="sr-only">
