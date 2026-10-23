@@ -149,6 +149,9 @@ Route::middleware([
         [EquipoController::class, 'index']
     )->name('equipos.index');
 
+    Route::get('/equipos/baja-multiple', fn () => view('equipos.baja-multiple'))
+        ->name('equipos.baja-multiple')->middleware('can:gestionar');
+
 
     /*
     |--------------------------------------------------------------------------

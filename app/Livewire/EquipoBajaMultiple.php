@@ -1,0 +1,315 @@
+<?php
+
+namespace App\Livewire;
+
+use App\Models\Departamento;
+use App\Models\ReporteGenerado;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
+use Livewire\Attributes\Locked;
+use Livewire\Component;
+use Livewire\WithFileUploads;
+use Livewire\WithPagination;
+use Throwable;
+
+class EquipoBajaMultiple extends Component
+{
+    use WithFileUploads, WithPagination;
+    use \App\Livewire\Concerns\FiltraEquipos;
+
+    public ?string $tipoActivo = null;
+    public ?string $nombreEquipo = null;
+    public ?string $marca = null;
+    public ?string $modelo = null;
+    public ?string $numeroSerie = null;
+    public ?string $numeroFactura = null;
+    public ?string $estado = null;
+    public ?string $area = null;
+    public ?string $situacion = null;
+    public ?string $serviceTag = null;
+    public ?string $direccionIp = null;
+    public array $camposTipo = [];
+
+    public function updatedTipoActivo(): void
+    {
+        $this->camposTipo = [];
+        $this->resetPage();
+    }
+
+    public function updating(string $property): void
+    {
+        if (in_array(explode('.', $property)[0], ['tipoActivo', 'nombreEquipo', 'marca', 'modelo', 'numeroSerie', 'numeroFactura', 'estado', 'area', 'situacion', 'serviceTag', 'direccionIp', 'camposTipo'], true)) {
+            $this->resetPage();
+        }
+    }
+
+    public function resetFilters(): void
+    {
+        $this->reset('tipoActivo', 'nombreEquipo', 'marca', 'modelo', 'numeroSerie', 'numeroFactura', 'estado', 'area', 'situacion', 'serviceTag', 'direccionIp', 'camposTipo', 'buscar', 'filtroHotel');
+        $this->resetPage();
+    }
+
+    #[Locked]
+    public bool $detalles = false;
+    #[Locked]
+    public ?int $reporteId = null;
+    public array $seleccionados = [];
+    public string $buscar = '';
+    public int $perPage = 10;
+    public string $sort = 'asc';
+    public string $sortField = 'equipo';
+    public string $filtroHotel = '';
+    public bool $mostrarFiltros = false;
+    public string $solicitante = '';
+    public string $hotelId = '';
+    public string $departamentoId = '';
+    public string $fechaBaja = '';
+    public string $motivoBaja = '';
+    public string $observaciones = '';
+    public string $autoriza = '';
+    public string $puesto = '';
+    public $fotoFrontal = null;
+    public $fotoTrasera = null;
+
+    public function mount(): void
+    {
+        Gate::authorize('gestionar');
+        $this->fechaBaja = now()->format('Y-m-d');
+    }
+
+    protected function consulta()
+    {
+        return DB::table('equipos as e')
+            ->join('estados_equipo as ee', 'ee.id_estado_equipo', '=', 'e.id_estado_activo')
+            ->leftJoin('marcas as ma', 'ma.id_marca', '=', 'e.id_marca')
+            ->leftJoin('modelos as mo', 'mo.id_modelo', '=', 'e.id_modelo')
+            ->leftJoin('unidades_organizativas as u', 'u.id_unidad', '=', 'e.id_unidad')
+            ->where('ee.clave', 'BAJA')
+            ->whereExists(fn ($q) => $q->selectRaw('1')->from('bajas as b')->whereColumn('b.id_equipo', 'e.id_equipo'))
+            ->select('e.id_equipo', 'e.codigo_inventario', 'e.nombre_equipo', 'e.numero_serie', 'e.id_unidad', 'ma.nombre as marca', 'mo.nombre as modelo', 'u.nombre as hotel', 'ee.nombre as estado');
+    }
+
+    public function updatedBuscar(): void { $this->resetPage(); }
+    public function updatedPerPage(): void { $this->resetPage(); }
+    public function updatedSort(): void { $this->resetPage(); }
+
+    public function sortBy(string $campo): void
+    {
+        if (!array_key_exists($campo, $this->columnasOrden())) { return; }
+        $this->sort = $this->sortField === $campo && $this->sort === 'asc' ? 'desc' : 'asc';
+        $this->sortField = $campo;
+        $this->resetPage();
+    }
+
+    protected function columnasOrden(): array
+    {
+        return ['equipo' => 'e.nombre_equipo', 'marca' => 'ma.nombre', 'hotel' => 'u.nombre', 'estado' => 'ee.nombre'];
+    }
+
+    protected function cantidadPagina(int $cantidad): int
+    {
+        return in_array($cantidad, [10, 25, 50, 100], true) ? $cantidad : 10;
+    }
+    public function updatedFiltroHotel(): void { $this->resetPage(); }
+    public function updatedHotelId(): void { $this->departamentoId = ''; }
+
+    public function updatedSeleccionados(): void
+    {
+        $this->seleccionados = array_values(array_unique($this->seleccionados));
+        if (count($this->seleccionados) > 10) {
+            $this->seleccionados = array_slice($this->seleccionados, 0, 10);
+            $this->addError('seleccionados', 'Puedes seleccionar como máximo 10 equipos.');
+        } else {
+            $this->resetValidation('seleccionados');
+        }
+    }
+
+    protected function listado()
+    {
+        $query = $this->consulta();
+        $this->applyFilters($query);
+        return $query
+            ->when(trim($this->buscar) !== '', function ($q) {
+                $texto = '%'.mb_strtolower(trim($this->buscar)).'%';
+                $q->where(fn ($q) => $q->whereRaw('LOWER(e.codigo_inventario) LIKE ?', [$texto])
+                    ->orWhereRaw('LOWER(e.nombre_equipo) LIKE ?', [$texto])
+                    ->orWhereRaw('LOWER(e.numero_serie) LIKE ?', [$texto]));
+            })
+            ->when($this->filtroHotel !== '', fn ($q) => $q->where('e.id_unidad', $this->filtroHotel))
+            ->orderBy($this->columnasOrden()[$this->sortField] ?? 'e.nombre_equipo', $this->sort === 'desc' ? 'desc' : 'asc')->orderBy('e.id_equipo');
+    }
+
+    public function seleccionarPagina(): void
+    {
+        Gate::authorize('gestionar');
+        $ids = $this->listado()->paginate($this->cantidadPagina($this->perPage))->pluck('id_equipo')->map(fn ($id) => (string) $id)->all();
+        if (array_intersect($ids, $this->seleccionados) !== []) {
+            $this->seleccionados = array_values(array_diff($this->seleccionados, $ids));
+        } else {
+            $this->seleccionados = array_values(array_unique(array_merge($this->seleccionados, $ids)));
+        }
+        $this->updatedSeleccionados();
+    }
+
+    protected function validarSeleccion()
+    {
+        $this->validate(['seleccionados' => ['required', 'array', 'min:1', 'max:10'], 'seleccionados.*' => ['required', 'integer', 'distinct']], [
+            'seleccionados.required' => 'Selecciona al menos un equipo.',
+            'seleccionados.max' => 'Puedes seleccionar como máximo 10 equipos.',
+        ]);
+        $equipos = $this->consulta()->whereIn('e.id_equipo', $this->seleccionados)->orderBy('e.codigo_inventario')->get();
+        if ($equipos->count() !== count($this->seleccionados)) {
+            throw ValidationException::withMessages(['seleccionados' => 'Solo puedes incluir equipos previamente dados de baja. Revisa la selección.']);
+        }
+        return $equipos;
+    }
+
+    public function siguiente(): void
+    {
+        Gate::authorize('gestionar');
+        $equipos = $this->validarSeleccion();
+        if ($this->hotelId === '' && $equipos->pluck('id_unidad')->unique()->count() === 1) {
+            $this->hotelId = (string) $equipos->first()->id_unidad;
+        }
+        $this->detalles = true;
+    }
+
+    public function volver(): void
+    {
+        $this->detalles = false;
+    }
+
+    protected function reglasFoto(): array
+    {
+        return ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'];
+    }
+
+    public function updatedFotoFrontal(): void { $this->validateOnly('fotoFrontal', ['fotoFrontal' => $this->reglasFoto()], $this->mensajesValidacion()); }
+    public function updatedFotoTrasera(): void { $this->validateOnly('fotoTrasera', ['fotoTrasera' => $this->reglasFoto()], $this->mensajesValidacion()); }
+
+    public function eliminarFoto(string $tipo): void
+    {
+        if (in_array($tipo, ['fotoFrontal', 'fotoTrasera'], true)) {
+            $this->{$tipo} = null;
+            $this->resetValidation($tipo);
+        }
+    }
+
+    protected function documento($equipos): array
+    {
+        return [
+            'logo' => app(\App\Services\OrganizacionService::class)->logoUrl(),
+            'organizacion' => app(\App\Services\OrganizacionService::class)->nombre(),
+            'solicitante' => $this->solicitante,
+            'hotel' => DB::table('unidades_organizativas')->where('id_unidad', $this->hotelId ?: 0)->value('nombre') ?? '',
+            'departamento' => DB::table('departamentos')->where('id_departamento', $this->departamentoId ?: 0)->value('nombre') ?? '',
+            'fecha' => $this->fechaBaja, 'motivo' => $this->motivoBaja,
+            'observaciones' => $this->observaciones, 'autoriza' => $this->autoriza, 'puesto' => $this->puesto,
+            'equipos' => $equipos->map(fn ($e) => (array) $e)->all(),
+            'folio' => 'Por asignar', 'fotos' => [],
+        ];
+    }
+
+    public function guardar()
+    {
+        Gate::authorize('gestionar');
+        if ($this->reporteId !== null) { return; }
+        $equipos = $this->validarSeleccion();
+        $departamentos = Departamento::disponiblesParaUnidad((int) $this->hotelId)->pluck('id_departamento')->all();
+        $this->validate([
+            'solicitante' => ['required', 'string', 'max:255'],
+            'hotelId' => ['required', 'integer', Rule::exists('unidades_organizativas', 'id_unidad')->where('activo', true)],
+            'departamentoId' => ['required', 'integer', Rule::in($departamentos)],
+            'fechaBaja' => ['required', 'date_format:Y-m-d'],
+            'motivoBaja' => ['required', 'string', 'max:500'],
+            'observaciones' => ['nullable', 'string', 'max:500'],
+            'autoriza' => ['required', 'string', 'max:255'],
+            'puesto' => ['required', 'string', 'max:255'],
+            'fotoFrontal' => $this->reglasFoto(), 'fotoTrasera' => $this->reglasFoto(),
+        ], $this->mensajesValidacion());
+        $documento = $this->documento($equipos);
+        $logo = app(\App\Services\OrganizacionService::class)->logoContenido();
+        $documento['logo'] = $logo
+            ? 'data:'.$logo['mime'].';base64,'.base64_encode($logo['contenido'])
+            : 'data:image/png;base64,'.base64_encode(file_get_contents(public_path(\App\Services\OrganizacionService::LOGO_PREDETERMINADO)));
+        $documento['folio'] = 'BM-'.now()->format('Ymd').'-'.strtoupper(Str::random(10));
+        $directorio = 'reportes/bajas-multiples/'.Str::uuid();
+        try {
+            $rutas = [];
+            foreach (['fotoFrontal' => 'Vista frontal', 'fotoTrasera' => 'Vista trasera'] as $campo => $titulo) {
+                if ($this->{$campo}) {
+                    $ruta = $this->{$campo}->store($directorio, 'local');
+                    if (!$ruta) { throw new \RuntimeException('No fue posible guardar la fotografía.'); }
+                    $rutas[$campo] = $ruta;
+                    $documento['fotos'][$titulo] = 'data:'.Storage::disk('local')->mimeType($ruta).';base64,'.base64_encode(Storage::disk('local')->get($ruta));
+                }
+            }
+            $nombre = $documento['folio'].'.pdf';
+            $rutaPdf = $directorio.'/'.$nombre;
+            $contenido = Pdf::loadView('reportes.baja-multiple-pdf', compact('documento'))->setPaper('letter')->output();
+            if (!Storage::disk('local')->put($rutaPdf, $contenido)) { throw new \RuntimeException('No fue posible guardar el acta.'); }
+            $registro = DB::transaction(function () use ($documento, $rutas, $nombre, $rutaPdf) {
+                $this->validarSeleccion();
+                $datos = $documento;
+                unset($datos['logo']);
+                $datos['fotos'] = $rutas;
+                return ReporteGenerado::create([
+                    'id_usuario' => auth()->id(), 'tipo_reporte' => 'bajas', 'formato' => 'PDF',
+                    'fecha_desde' => $this->fechaBaja, 'fecha_hasta' => $this->fechaBaja,
+                    'filtros' => ['baja_multiple' => $datos], 'total_registros' => count($this->seleccionados),
+                    'nombre_archivo' => $nombre, 'ruta_archivo' => $rutaPdf,
+                ]);
+            });
+            $this->reporteId = (int) $registro->getKey();
+        } catch (Throwable $exception) {
+            Storage::disk('local')->deleteDirectory($directorio);
+            throw $exception;
+        }
+        session()->flash('descargar_reporte', $this->reporteId);
+        return $this->redirectRoute('equipos.index');
+    }
+
+    protected function mensajesValidacion(): array
+    {
+        return [
+            'required' => 'Este campo es obligatorio.',
+            'integer' => 'Selecciona una opción válida.',
+            'exists' => 'La opción seleccionada ya no está disponible.',
+            'in' => 'Selecciona una opción válida para el hotel.',
+            'date_format' => 'Ingresa una fecha válida.',
+            'max.string' => 'Este campo no debe superar :max caracteres.',
+            'image' => 'Selecciona una fotografía válida.',
+            'mimes' => 'Utiliza una fotografía JPG, PNG o WEBP.',
+            'max.file' => 'La fotografía no debe superar 5 MB.',
+        ];
+    }
+
+    public function render()
+    {
+        Gate::authorize('gestionar');
+        $elegidos = $this->consulta()->whereIn('e.id_equipo', array_slice($this->seleccionados, 0, 10))->orderBy('e.codigo_inventario')->get();
+        $documento = $this->documento($elegidos);
+        foreach (['fotoFrontal' => 'Vista frontal', 'fotoTrasera' => 'Vista trasera'] as $campo => $titulo) {
+            if ($this->{$campo} && !$this->getErrorBag()->has($campo)) {
+                $documento['fotos'][$titulo] = $this->{$campo}->temporaryUrl();
+            }
+        }
+        return view('livewire.equipo-baja-multiple', [
+            'tiposActivo' => $this->getTiposActivo(),
+            'marcas' => $this->getMarcas(),
+            'modelos' => $this->getModelos(),
+            'estados' => $this->getEstados(),
+            'areas' => $this->getAreas(),
+            'camposTipoFiltros' => $this->tipoActivo ? $this->getCamposFiltrables((int) $this->tipoActivo) : [],
+            'situaciones' => collect(EquiposIndex::SITUACIONES)->map(fn ($label, $value) => ['value' => $value, 'label' => $label])->values()->all(),
+            'equipos' => $this->listado()->paginate($this->cantidadPagina($this->perPage)), 'elegidos' => $elegidos, 'documento' => $documento,
+            'hoteles' => DB::table('unidades_organizativas')->where('activo', true)->orderBy('nombre')->get(['id_unidad', 'nombre']),
+            'departamentos' => $this->hotelId ? Departamento::disponiblesParaUnidad((int) $this->hotelId)->orderBy('nombre')->get() : collect(),
+        ]);
+    }
+}

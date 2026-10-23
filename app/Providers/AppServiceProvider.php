@@ -27,6 +27,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // El CSS ya se carga como stylesheet; evitar precargas redundantes al navegar con Livewire.
+        \Illuminate\Support\Facades\Vite::usePreloadTagAttributes(
+            fn ($src, $url): array|false => str_ends_with(parse_url($url, PHP_URL_PATH) ?? '', '.css') ? false : []
+        );
+
         /*
         |--------------------------------------------------------------------------
         | Permisos por rol (roles.nivel)

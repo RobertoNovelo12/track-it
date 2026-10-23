@@ -69,6 +69,11 @@
     'keyPrefix' => 'fila',
 
     'selectable' => false,
+    'selectionModel' => null,
+    'selectedKeys' => [],
+    'selectionLimit' => null,
+    'selectPageAction' => null,
+    'highlightKey' => null,
 
     'sortField' => null,
     'sortDirection' => 'asc',

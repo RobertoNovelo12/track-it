@@ -375,10 +375,11 @@ class MantenimientosIndex extends Component
             }
 
             if ($tipoFiltro === 'departamento' && $id) {
-                $query->where(
-                    'e.id_departamento',
-                    (int) $id
-                );
+                $query->whereIn('e.id_departamento', function ($departamentos) use ($id) {
+                    $departamentos->select('id_departamento')->from('departamentos')
+                        ->where('id_departamento', (int) $id)
+                        ->orWhere('id_departamento_principal', (int) $id);
+                });
             }
         }
 
@@ -404,7 +405,7 @@ class MantenimientosIndex extends Component
 
         $datos = $cache->remember(
             'mantenimientos',
-            'index.listado.v1',
+            'index.listado.v2',
             [
                 'tipo' => $this->filtroTipo,
                 'estado' => $this->filtroEstado,
@@ -514,12 +515,11 @@ class MantenimientosIndex extends Component
 
         $departamentos = $aObjetos($cache->rememberSimple(
             'catalogos',
-            'mantenimientos.filtros.departamentos.v1',
-            fn (): array => DB::table('departamentos')
-                ->where('activo', true)
+            'mantenimientos.filtros.departamentos.v2',
+            fn (): array => \App\Models\Departamento::principales()->activos()
                 ->orderBy('nombre')
                 ->get(['id_departamento', 'nombre'])
-                ->map(fn ($fila): array => (array) $fila)
+                ->map(fn ($fila): array => $fila->toArray())
                 ->all(),
             24
         ));

@@ -40,8 +40,7 @@
     }"
 
     class="
-        hidden
-        md:block
+        {{ ($filtrosTodosLosTamanos ?? false) ? 'block' : 'hidden md:block' }}
 
         bg-[var(--theme-surface)]
 

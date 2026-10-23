@@ -44,7 +44,23 @@
         @endphp
 
         <article
-            x-data="{ selected: false, menuOpen: false }"
+            @if ($selectionModel)
+                x-data="{ menuOpen: false,
+                    get selected() { return $wire.get(@js($selectionModel)).map(String).includes(@js((string) $id)); },
+                    set selected(value) {
+                        let ids = $wire.get(@js($selectionModel)).map(String);
+                        if (value && !ids.includes(@js((string) $id)) && (!@js($selectionLimit) || ids.length < @js($selectionLimit))) ids.push(@js((string) $id));
+                        if (!value) ids = ids.filter(id => id !== @js((string) $id));
+                        $wire.set(@js($selectionModel), ids);
+                    }
+                }"
+            @else
+                x-data="{ selected: false, menuOpen: false }"
+            @endif
+            @if ($highlightKey !== null && (string) $highlightKey === (string) $id)
+                style="box-shadow: inset 3px 0 var(--theme-primary); background-color: var(--theme-primary-soft-subtle);"
+                aria-label="Archivo recién generado"
+            @endif
             @if ($selectable)
                 :data-export-selected="selected ? @js((string) $id) : null"
             @endif
@@ -265,7 +281,9 @@
                             $texto = $valor($row, $columna);
                         @endphp
 
-                        @if ($columna['type'] === 'list')
+                        @if ($columna['type'] === 'download')
+                            @include('components.data-table.partials.download')
+                        @elseif ($columna['type'] === 'list')
                             <div class="text-xs text-[var(--theme-text-muted)]">
                                 <span>{{ $etiqueta }}:</span>
 

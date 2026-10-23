@@ -45,6 +45,10 @@ class Encabezado
             'dashboard' => ['Vista general', []],
 
             // Inventario
+            'equipos.baja-multiple' => ['Inventario', [
+                self::miga('Inventario', 'equipos.index'),
+                self::miga('Nueva baja múltiple'),
+            ]],
             'equipos.index' => ['Inventario', [
                 self::miga('Inventario'),
             ]],

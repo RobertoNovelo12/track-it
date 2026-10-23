@@ -1,0 +1,66 @@
+<div class="space-y-5">
+    @php
+        $panel = 'rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 sm:p-5';
+        $input = 'w-full rounded-lg border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)]';
+    @endphp
+    @if (!$detalles)
+        @include('livewire.equipos.baja-multiple-seleccion')
+    @else
+        <form wire:submit="guardar" class="grid grid-cols-1 items-start gap-5 xl:grid-cols-2">
+            <div class="space-y-4">
+                @if ($errors->any())<div role="alert" class="rounded-lg bg-[var(--theme-danger-soft)] p-4 text-sm text-[var(--theme-danger)]">Revisa los campos indicados antes de guardar.@error('seleccionados')<p>{{ $message }}</p>@enderror</div>@endif
+                <section class="{{ $panel }} space-y-4">
+                    <h2 class="font-semibold text-[var(--theme-text-strong)]">Información general de la baja</h2>
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        <div><label for="bm-solicitante" class="mb-2 block text-xs text-[var(--theme-text)]">Quién solicita la baja <span class="text-[var(--theme-danger)]">*</span></label><input id="bm-solicitante" wire:model.live.debounce.350ms="solicitante" maxlength="255" placeholder="Ingresa el nombre completo" class="{{ $input }}">@error('solicitante')<p class="mt-1 text-xs text-[var(--theme-danger)]">{{ $message }}</p>@enderror</div>
+                        <div><label for="bm-hotel" class="mb-2 block text-xs text-[var(--theme-text)]">Hotel <span class="text-[var(--theme-danger)]">*</span></label><select id="bm-hotel" wire:model.live="hotelId" class="{{ $input }}"><option value="">Selecciona un hotel</option>@foreach ($hoteles as $hotel)<option value="{{ $hotel->id_unidad }}">{{ $hotel->nombre }}</option>@endforeach</select>@error('hotelId')<p class="mt-1 text-xs text-[var(--theme-danger)]">{{ $message }}</p>@enderror</div>
+                        <div><label for="bm-departamento" class="mb-2 block text-xs text-[var(--theme-text)]">Departamento <span class="text-[var(--theme-danger)]">*</span></label><select id="bm-departamento" wire:model.live="departamentoId" class="{{ $input }}" @disabled(!$hotelId)><option value="">Selecciona un departamento</option>@foreach ($departamentos as $departamento)<option value="{{ $departamento->id_departamento }}">{{ $departamento->nombre }}</option>@endforeach</select>@error('departamentoId')<p class="mt-1 text-xs text-[var(--theme-danger)]">{{ $message }}</p>@enderror</div>
+                        <div><label for="bm-fecha" class="mb-2 block text-xs text-[var(--theme-text)]">Fecha de baja <span class="text-[var(--theme-danger)]">*</span></label><input id="bm-fecha" type="date" wire:model.live="fechaBaja" class="{{ $input }}">@error('fechaBaja')<p class="mt-1 text-xs text-[var(--theme-danger)]">{{ $message }}</p>@enderror</div>
+                    </div>
+                    <div><label for="bm-motivo" class="mb-2 block text-xs text-[var(--theme-text)]">Motivo de la baja <span class="text-[var(--theme-danger)]">*</span></label><input id="bm-motivo" wire:model.live.debounce.350ms="motivoBaja" maxlength="500" placeholder="Ingresa el motivo de la baja" class="{{ $input }}">@error('motivoBaja')<p class="mt-1 text-xs text-[var(--theme-danger)]">{{ $message }}</p>@enderror</div>
+                    <div><label for="bm-observaciones" class="mb-2 block text-xs text-[var(--theme-text)]">Observaciones</label><textarea id="bm-observaciones" wire:model.live.debounce.350ms="observaciones" maxlength="500" rows="3" placeholder="Ingresa las observaciones de la baja" class="{{ $input }}"></textarea><p class="mt-1 text-right text-xs text-[var(--theme-text-muted)]">{{ mb_strlen($observaciones) }}/500</p>@error('observaciones')<p class="mt-1 text-xs text-[var(--theme-danger)]">{{ $message }}</p>@enderror</div>
+                </section>
+                <section class="{{ $panel }}">
+                    <h2 class="mb-4 font-semibold text-[var(--theme-text-strong)]">Autorización</h2>
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        @foreach (['autoriza' => 'Quién autoriza', 'puesto' => 'Puesto'] as $campo => $titulo)
+                            <div><label for="bm-{{ $campo }}" class="mb-2 block text-xs text-[var(--theme-text)]">{{ $titulo }} <span class="text-[var(--theme-danger)]">*</span></label><input id="bm-{{ $campo }}" wire:model.live.debounce.350ms="{{ $campo }}" maxlength="255" class="{{ $input }}">@error($campo)<p class="mt-1 text-xs text-[var(--theme-danger)]">{{ $message }}</p>@enderror</div>
+                        @endforeach
+                    </div>
+                </section>
+                <section class="{{ $panel }}">
+                    <h2 class="font-semibold text-[var(--theme-text-strong)]">Evidencia fotográfica</h2>
+                    <p class="mb-4 mt-1 text-xs text-[var(--theme-text-muted)]">Agrega una fotografía frontal y una trasera del conjunto de equipos.</p>
+                    <div class="grid gap-3 sm:grid-cols-2">
+                        @foreach (['fotoFrontal' => 'Vista frontal', 'fotoTrasera' => 'Vista trasera'] as $campo => $titulo)
+                            <div wire:key="bm-{{ $campo }}" class="rounded-lg border border-[var(--theme-border)] p-3">
+                                <div class="mb-3 flex items-center justify-between"><h3 class="text-sm font-medium text-[var(--theme-text-strong)]">{{ $titulo }}</h3>@if ($$campo)<button type="button" wire:click="eliminarFoto('{{ $campo }}')" class="text-xs text-[var(--theme-danger)]">Quitar</button>@endif</div>
+                                @if (isset($documento['fotos'][$titulo]))<img src="{{ $documento['fotos'][$titulo] }}" alt="{{ $titulo }} de los equipos" class="h-36 w-full rounded-lg object-contain">@else
+                                <label class="flex min-h-32 cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-[var(--theme-border-strong)] bg-[var(--theme-surface-soft)] p-3 text-center text-xs text-[var(--theme-text)]">
+                                    <svg class="h-5 w-5 text-[var(--theme-text-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>
+                                    <span>Seleccionar fotografía</span><span class="text-[var(--theme-text-muted)]">JPG, PNG o WEBP · Máx. 5 MB</span>
+                                    <input type="file" wire:model="{{ $campo }}" accept="image/jpeg,image/png,image/webp" class="sr-only">
+                                </label>@endif
+                                <p wire:loading wire:target="{{ $campo }}" class="mt-2 text-xs text-[var(--theme-text-muted)]">Cargando fotografía…</p>
+                                @error($campo)<p role="alert" class="mt-2 text-xs text-[var(--theme-danger)]">{{ $message }}</p>@enderror
+                            </div>
+                        @endforeach
+                    </div>
+                </section>
+                <div class="flex items-center justify-end gap-3">
+                    
+                    <x-ui.button type="submit" variant="secondary" target="guardar" disable-target="guardar,fotoFrontal,fotoTrasera" loading-text="Generando PDF…">
+                        <x-slot:icon><svg class="h-4 w-4 shrink-0 text-[var(--theme-danger)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M14 2H6v20h12V6l-4-4ZM14 2v5h5M9 12h6M9 16h6"/></svg></x-slot:icon>
+                        Generar PDF
+                    </x-ui.button>
+                </div>
+            </div>
+            <section class="{{ $panel }} min-w-0">
+                <div class="mb-4 flex items-center justify-between gap-3"><h2 class="font-semibold text-[var(--theme-text-strong)]">Vista rápida del documento final</h2><span class="rounded border border-[var(--theme-border-strong)] px-2 py-1 text-xs text-[var(--theme-text-muted)]">PDF</span></div>
+                @include('reportes.partials.baja-multiple-documento', ['documento' => $documento])
+                <p class="mt-3 text-center text-xs text-[var(--theme-text-muted)]">Vista preliminar. El folio definitivo se genera al guardar el acta.</p>
+            </section>
+        </form>
+    @endif
+</div>
+

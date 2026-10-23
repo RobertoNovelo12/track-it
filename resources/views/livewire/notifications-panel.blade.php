@@ -107,6 +107,7 @@
             ==================================================== --}}
             <div
                 class="
+                    relative
                     px-4
                     py-3.5
 
@@ -114,12 +115,13 @@
                     border-[var(--theme-border)]
 
                     flex
+                    flex-col
                     items-start
                     justify-between
                     gap-3
                 "
             >
-                <div class="min-w-0">
+                <div class="min-w-0 w-full pr-10">
 
                     <div
                         class="
@@ -188,6 +190,8 @@
                 <div
                     class="
                         flex
+                        flex-wrap
+                        min-w-0
                         items-center
                         gap-1
                     "
@@ -562,6 +566,9 @@
                         onclick="window.closeNotificationsPanelFast()"
 
                         class="
+                            absolute
+                            right-3
+                            top-3
                             w-8
                             h-8
                             shrink-0

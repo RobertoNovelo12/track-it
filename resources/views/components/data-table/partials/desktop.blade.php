@@ -208,7 +208,12 @@
                         <th class="px-4 2xl:px-5 py-3">
                             <input
                                 type="checkbox"
-                                @click="toggleAll($event.target)"
+                                @if ($selectionModel)
+                                    wire:click="{{ $selectPageAction }}"
+                                    @checked($registros->isNotEmpty() && ($registros->every(fn ($row) => in_array((string) $clave($row), $selectedKeys)) || ($selectionLimit && count($selectedKeys) >= $selectionLimit && $registros->contains(fn ($row) => in_array((string) $clave($row), $selectedKeys)))))
+                                @else
+                                    @click="toggleAll($event.target)"
+                                @endif
                                 aria-label="Seleccionar todos"
                                 class="rounded border-[var(--theme-border-strong)]"
                             >
@@ -337,6 +342,10 @@
 
                     <tr
                         wire:key="{{ $keyPrefix }}-{{ $id }}"
+                        @if ($highlightKey !== null && (string) $highlightKey === (string) $id)
+                            style="background-color: var(--theme-primary-soft-subtle); box-shadow: inset 3px 0 var(--theme-primary);"
+                            aria-label="Archivo recién generado"
+                        @endif
 
                         class="
                             group
@@ -362,6 +371,10 @@
                                     type="checkbox"
                                     name="ids[]"
                                     value="{{ $id }}"
+                                    @if ($selectionModel)
+                                        wire:model.live="{{ $selectionModel }}"
+                                        @disabled($selectionLimit && count($selectedKeys) >= $selectionLimit && !in_array((string) $id, $selectedKeys))
+                                    @endif
                                     aria-label="Seleccionar registro"
                                     class="
                                         row-checkbox
@@ -410,7 +423,9 @@
                                         'cursor-pointer hover:bg-[var(--theme-surface-soft)] transition-colors' => $columna['popover'],
                                     ])
                                 >
-                                    @if ($columna['type'] === 'status')
+                                    @if ($columna['type'] === 'download')
+                                        @include('components.data-table.partials.download')
+                                    @elseif ($columna['type'] === 'status')
                                         <x-status-badge :status="$texto" />
                                     @elseif ($columna['type'] === 'list')
                                         @forelse ($lista($row, $columna) as $elemento)

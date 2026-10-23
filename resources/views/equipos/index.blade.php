@@ -5,6 +5,12 @@
 @section('content')
 
 <div>
+    @if (session('descargar_reporte'))
+        <div x-data x-init="window.location.assign(@js(route('reportes.download', session('descargar_reporte'))))" class="mb-4 text-sm text-[var(--theme-text)]" role="status">
+            PDF generado y guardado en Reportes.
+            <a href="{{ route('reportes.download', session('descargar_reporte')) }}" class="text-[var(--theme-primary)] underline" download>Descargar PDF</a>
+        </div>
+    @endif
 
     {{-- Encabezado --}}
     {{-- En pantallas angostas los botones bajan debajo del título
@@ -14,7 +20,7 @@
 
 
 
-        <div class="flex w-full items-center gap-2 sm:w-auto sm:gap-3">
+        <div class="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:gap-3">
 
             {{-- ====================================================
                 EXPORTAR
@@ -217,6 +223,11 @@
                     Añadir
                 </span>
 
+            </a>
+            <a href="{{ route('equipos.baja-multiple') }}" wire:navigate
+                class="flex flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-md bg-[var(--theme-danger-soft)] px-4 py-2 text-sm font-medium text-[var(--theme-danger)] transition-colors hover:opacity-80 sm:flex-none">
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5 9-5Zm-9 9 9 5 9-5M3 16l9 5 9-5"/></svg>
+                Baja múltiple
             </a>
             @endcan
 
