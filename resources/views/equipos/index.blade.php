@@ -9,7 +9,8 @@
     {{-- Encabezado --}}
     {{-- En pantallas angostas los botones bajan debajo del título
          y se reparten el ancho, en lugar de salirse de la pantalla. --}}
-    <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-end">
+    <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-end md:justify-between">
+        @include('layouts.partials.boton-volver')
 
 
 

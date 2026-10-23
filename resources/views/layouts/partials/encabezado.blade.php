@@ -15,13 +15,19 @@
 @endphp
 
 @if ($encabezado)
+    @unless ($esBarra)
+        {{-- Móvil: «Volver» (solo la flecha) a la izquierda del título --}}
+        <div class="mb-5 flex items-center gap-3 md:hidden">
+            @include('layouts.partials.boton-volver', ['variante' => 'movil'])
+    @endunless
+
     <div
         x-data="{ extra: '' }"
         x-on:encabezado-seccion.window="extra = String($event.detail?.miga ?? '')"
         @class([
             'min-w-0',
             'hidden md:block' => $esBarra,
-            'mb-5 md:hidden' => ! $esBarra,
+            'min-w-0 flex-1' => ! $esBarra,
         ])
     >
         <h1
@@ -71,4 +77,8 @@
             </template>
         </nav>
     </div>
+
+    @unless ($esBarra)
+        </div>
+    @endunless
 @endif

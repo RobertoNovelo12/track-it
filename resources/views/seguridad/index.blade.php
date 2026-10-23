@@ -14,10 +14,11 @@
             mb-6
 
             flex
-            items-start
-            justify-end
-            gap-4
+            items-center
+            justify-between
+            gap-2
         ">
+            @include('layouts.partials.boton-volver')
 
 
 

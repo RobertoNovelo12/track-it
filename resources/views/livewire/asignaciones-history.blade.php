@@ -26,47 +26,7 @@
                 </p>
             </div>
 
-            <a
-                href="{{ route('asignaciones.index') }}"
-                wire:navigate.hover
-                class="
-                    h-9
-                    px-4
-
-                    inline-flex
-                    items-center
-                    justify-center
-                    gap-2
-
-                    rounded-md
-
-                    border
-                    border-[var(--theme-border-strong)]
-
-                    bg-[var(--theme-surface)]
-
-                    text-sm
-                    font-medium
-                    text-[var(--theme-text)]
-
-                    hover:bg-[var(--theme-surface-soft)]
-                    hover:border-[var(--theme-primary-border)]
-
-                    transition-colors
-                "
-            >
-                <svg
-                    class="w-4 h-4"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.7"
-                >
-                    <path d="M15 6l-6 6 6 6"/>
-                </svg>
-
-                Volver
-            </a>
+            {{-- «Volver» lo agrega el layout (layouts/partials/boton-volver). --}}
         </div>
     </section>
 
