@@ -327,6 +327,22 @@
                 </a>
             @endunless
 
+            {{-- Duplicar: alta de un equipo parecido con los mismos datos comunes --}}
+            @can('gestionar')
+                <a
+                    href="{{ route('equipos.create', ['duplicar' => $equipoId]) }}"
+                    wire:navigate.hover
+                    class="flex h-10 w-full shrink-0 items-center justify-center gap-2 rounded-lg border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-4 text-sm font-medium text-[var(--theme-text-muted)] transition-colors hover:text-[var(--theme-primary)] sm:w-auto"
+                    title="Dar de alta un equipo parecido: copia tipo, marca, modelo, factura, hotel y especificaciones"
+                >
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect x="8" y="8" width="12" height="12" rx="2"/>
+                        <path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>
+                    </svg>
+                    Duplicar
+                </a>
+            @endcan
+
             {{-- Ficha completa del equipo --}}
             <a
 
@@ -1157,7 +1173,7 @@
 
                         <dt class="text-xs text-[var(--theme-text-muted)]">
 
-                            Área / Departamento
+                            {{ app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['unidad_singular'] }} / Departamento
 
                         </dt>
 
@@ -1250,6 +1266,18 @@
                     </div>
 
                 </dl>
+
+                {{-- Devolver: cierra la asignación; el equipo queda disponible --}}
+                @can('gestionar')
+                    <a
+                        href="{{ route('asignaciones.devolver', ['equipo' => $equipoId]) }}"
+                        wire:navigate.hover
+                        class="mt-4 inline-flex h-9 w-full items-center justify-center gap-2 rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 text-xs font-medium text-[var(--theme-text)] transition-colors hover:bg-[var(--theme-surface-soft)]"
+                    >
+                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg>
+                        Devolver equipo
+                    </a>
+                @endcan
 
             @else
 

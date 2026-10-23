@@ -9,7 +9,7 @@
             flex-col
             xl:flex-row
             xl:items-end
-            xl:justify-end
+            md:flex-row md:items-center md:justify-between
             gap-5
             mb-6
         "
@@ -17,13 +17,15 @@
 
 
         {{-- ========================================================
-            ACCIONES SUPERIORES
+            ACCIONES SUPERIORES («Volver» a la izquierda, en escritorio)
         ======================================================== --}}
+        @include('layouts.partials.boton-volver', ['destino' => url('/')])
+
         <div
             class="
-                {{-- Móvil: los tres botones en una sola fila del mismo ancho --}}
+                {{-- Móvil: los cuatro botones en dos filas del mismo ancho --}}
                 grid
-                grid-cols-3
+                grid-cols-2
                 gap-2
 
                 sm:flex
@@ -119,6 +121,39 @@
                 Reasignar
             </a>
 
+
+            {{-- DEVOLVER (desasignar) --}}
+            <a
+                href="{{ route('asignaciones.devolver') }}"
+                wire:navigate.hover
+                class="
+                    h-9
+                    px-2
+                    sm:px-4
+                    inline-flex
+                    items-center
+                    justify-center
+                    gap-1.5
+                    sm:gap-2
+                    rounded-md
+                    bg-[var(--theme-surface)]
+                    border
+                    border-[var(--theme-border-strong)]
+                    text-sm
+                    font-medium
+                    text-[var(--theme-text)]
+                    hover:bg-[var(--theme-surface-soft)]
+                    hover:border-[var(--theme-primary-border)]
+                    transition-colors
+                "
+            >
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M9 14L4 9l5-5"/>
+                    <path d="M4 9h11a5 5 0 0 1 0 10h-3"/>
+                </svg>
+
+                Devolver
+            </a>
 
             {{-- HISTORIAL --}}
             <a
@@ -482,6 +517,7 @@
         {{-- ========================================================
             EQUIPOS ASIGNADOS POR ÁREA
         ======================================================== --}}
+        <div class="flex min-w-0 flex-col gap-4">
         <section
             class="
                 bg-[var(--theme-surface)]
@@ -714,6 +750,24 @@
 
             </div>
         </section>
+
+        {{-- Disponibles para asignar --}}
+        <section class="flex flex-1 flex-col rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 sm:p-5" aria-hidden="true">
+            <div class="h-4 w-44 animate-pulse rounded bg-[var(--theme-surface-soft)]"></div>
+            <div class="mt-2 h-3 w-56 animate-pulse rounded bg-[var(--theme-surface-soft)]"></div>
+            <div class="mt-5 space-y-4">
+                @for ($i = 0; $i < 5; $i++)
+                    <div class="flex items-center gap-3">
+                        <div class="flex-1 space-y-2">
+                            <div class="h-3 w-2/3 animate-pulse rounded bg-[var(--theme-surface-soft)]"></div>
+                            <div class="h-2.5 w-1/2 animate-pulse rounded bg-[var(--theme-surface-soft)]"></div>
+                        </div>
+                        <div class="h-8 w-20 animate-pulse rounded-md bg-[var(--theme-surface-soft)]"></div>
+                    </div>
+                @endfor
+            </div>
+        </section>
+        </div>
 
 
         {{-- ========================================================

@@ -170,7 +170,7 @@
             xl:flex-row
 
             xl:items-end
-            xl:justify-end
+            md:flex-row md:items-center md:justify-between
 
             gap-5
 
@@ -180,13 +180,15 @@
 
 
         {{-- ========================================================
-            ACCIONES SUPERIORES
+            ACCIONES SUPERIORES («Volver» a la izquierda, en escritorio)
         ======================================================== --}}
+        @include('layouts.partials.boton-volver', ['destino' => url('/')])
+
         <div
             class="
-                {{-- Móvil: los tres botones en una sola fila del mismo ancho --}}
+                {{-- Móvil: los cuatro botones en dos filas del mismo ancho --}}
                 grid
-                grid-cols-3
+                grid-cols-2
                 gap-2
 
                 sm:flex
@@ -287,6 +289,39 @@
                 Reasignar
             </a>
 
+
+            {{-- DEVOLVER (desasignar) --}}
+            <a
+                href="{{ route('asignaciones.devolver') }}"
+                wire:navigate.hover
+                class="
+                    h-9
+                    px-2
+                    sm:px-4
+                    inline-flex
+                    items-center
+                    justify-center
+                    gap-1.5
+                    sm:gap-2
+                    rounded-md
+                    bg-[var(--theme-surface)]
+                    border
+                    border-[var(--theme-border-strong)]
+                    text-sm
+                    font-medium
+                    text-[var(--theme-text)]
+                    hover:bg-[var(--theme-surface-soft)]
+                    hover:border-[var(--theme-primary-border)]
+                    transition-colors
+                "
+            >
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M9 14L4 9l5-5"/>
+                    <path d="M4 9h11a5 5 0 0 1 0 10h-3"/>
+                </svg>
+
+                Devolver
+            </a>
 
             {{-- HISTORIAL --}}
             <a
@@ -395,8 +430,8 @@
 
                     rounded-xl
 
-                    bg-emerald-500/10
-                    text-emerald-500
+                    bg-[var(--theme-surface-soft)]
+                    text-[var(--theme-text-muted)]
 
                     flex
                     items-center
@@ -449,7 +484,7 @@
                         mt-0.5
                         text-2xl
                         font-bold
-                        text-emerald-500
+                        text-[var(--theme-text-strong)]
                         leading-none
                     "
                 >
@@ -498,124 +533,7 @@
                 bg-[var(--theme-surface)]
 
                 border
-                border-red-500/25
-
-                rounded-xl
-
-                px-4
-                sm:px-5
-                py-4
-
-                flex
-                items-center
-                gap-4
-
-                transition-colors
-                hover:bg-[var(--theme-surface-soft)]
-                focus-visible:outline-none
-                focus-visible:ring-2
-                focus-visible:ring-[var(--theme-primary)]
-            "
-        >
-
-            <div
-                class="
-                    shrink-0
-
-                    w-14
-                    h-14
-
-                    rounded-xl
-
-                    bg-red-500/10
-                    text-red-500
-
-                    flex
-                    items-center
-                    justify-center
-                "
-            >
-                <svg
-                    class="w-7 h-7"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.6"
-                >
-                    <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"/>
-                    <path d="M4 7.5l8 4.5 8-4.5"/>
-                    <path d="M12 12v9"/>
-                </svg>
-            </div>
-
-
-            <div class="min-w-0 flex-1">
-
-                <p
-                    class="
-                        text-sm
-                        font-medium
-                        text-[var(--theme-text-muted)]
-                    "
-                >
-                    Equipos No Asignados
-                </p>
-
-                <p
-                    class="
-                        mt-0.5
-                        text-2xl
-                        font-bold
-                        text-red-500
-                        leading-none
-                    "
-                >
-                    {{ number_format($equiposNoAsignados) }}
-                </p>
-
-                <p
-                    class="
-                        mt-1
-                        text-[11px]
-                        text-[var(--theme-text-muted)]
-                    "
-                >
-                    Equipos disponibles
-                </p>
-
-            </div>
-
-
-            <svg
-                class="
-                    shrink-0
-                    w-5
-                    h-5
-                    text-[var(--theme-text-muted)]
-                "
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.7"
-            >
-                <path d="M9 6l6 6-6 6"/>
-            </svg>
-
-        </a>
-
-
-        {{-- ========================================================
-            MOVIMIENTOS
-        ======================================================== --}}
-        <a
-            href="{{ route('asignaciones.history') }}"
-            wire:navigate.hover
-            title="Ver el historial de movimientos"
-            class="
-                bg-[var(--theme-surface)]
-
-                border
-                border-[var(--theme-primary-border)]
+                border-[var(--theme-border)]
 
                 rounded-xl
 
@@ -657,6 +575,123 @@
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
+                    stroke-width="1.6"
+                >
+                    <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"/>
+                    <path d="M4 7.5l8 4.5 8-4.5"/>
+                    <path d="M12 12v9"/>
+                </svg>
+            </div>
+
+
+            <div class="min-w-0 flex-1">
+
+                <p
+                    class="
+                        text-sm
+                        font-medium
+                        text-[var(--theme-text-muted)]
+                    "
+                >
+                    Equipos No Asignados
+                </p>
+
+                <p
+                    class="
+                        mt-0.5
+                        text-2xl
+                        font-bold
+                        text-[var(--theme-text-strong)]
+                        leading-none
+                    "
+                >
+                    {{ number_format($equiposNoAsignados) }}
+                </p>
+
+                <p
+                    class="
+                        mt-1
+                        text-[11px]
+                        text-[var(--theme-text-muted)]
+                    "
+                >
+                    Listos para asignar
+                </p>
+
+            </div>
+
+
+            <svg
+                class="
+                    shrink-0
+                    w-5
+                    h-5
+                    text-[var(--theme-text-muted)]
+                "
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.7"
+            >
+                <path d="M9 6l6 6-6 6"/>
+            </svg>
+
+        </a>
+
+
+        {{-- ========================================================
+            MOVIMIENTOS
+        ======================================================== --}}
+        <a
+            href="{{ route('asignaciones.history') }}"
+            wire:navigate.hover
+            title="Ver el historial de movimientos"
+            class="
+                bg-[var(--theme-surface)]
+
+                border
+                border-[var(--theme-border)]
+
+                rounded-xl
+
+                px-4
+                sm:px-5
+                py-4
+
+                flex
+                items-center
+                gap-4
+
+                transition-colors
+                hover:bg-[var(--theme-surface-soft)]
+                focus-visible:outline-none
+                focus-visible:ring-2
+                focus-visible:ring-[var(--theme-primary)]
+            "
+        >
+
+            <div
+                class="
+                    shrink-0
+
+                    w-14
+                    h-14
+
+                    rounded-xl
+
+                    bg-[var(--theme-surface-soft)]
+                    text-[var(--theme-text-muted)]
+
+                    flex
+                    items-center
+                    justify-center
+                "
+            >
+                <svg
+                    class="w-7 h-7"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
                     stroke-width="1.7"
                 >
                     <path d="M4 7h15"/>
@@ -684,7 +719,7 @@
                         mt-0.5
                         text-2xl
                         font-bold
-                        text-[var(--theme-primary)]
+                        text-[var(--theme-text-strong)]
                         leading-none
                     "
                 >
@@ -736,6 +771,12 @@
             gap-4
         "
     >
+
+        {{--
+            Columna izquierda: gráfica + equipos disponibles. La lista
+            ocupa el alto restante para igualar la columna de actividad.
+        --}}
+        <div class="flex min-w-0 flex-col gap-4">
 
         {{-- ========================================================
             EQUIPOS ASIGNADOS POR ÁREA
@@ -1090,6 +1131,85 @@
 
         </section>
 
+        {{-- ========================================================
+            DISPONIBLES PARA ASIGNAR
+        ======================================================== --}}
+        <section class="flex flex-1 flex-col rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 sm:p-5">
+            <div class="flex items-start justify-between gap-3">
+                <div class="flex items-start gap-3">
+                    <svg class="mt-0.5 h-5 w-5 shrink-0 text-[var(--theme-text-strong)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M21 8l-9-5-9 5 9 5 9-5z"/>
+                        <path d="M3 8v8l9 5 9-5V8"/>
+                        <path d="M12 13v8"/>
+                    </svg>
+
+                    <div>
+                        <h3 class="text-sm font-semibold text-[var(--theme-text-strong)]">Disponibles para asignar</h3>
+                        <p class="mt-1 text-xs text-[var(--theme-text-muted)]">Los que llevan más tiempo sin responsable.</p>
+                    </div>
+                </div>
+
+                @if ($equiposNoAsignados > 0)
+                    <a
+                        href="{{ route('equipos.index', ['situacion' => 'sin_asignar']) }}"
+                        wire:navigate.hover
+                        class="shrink-0 text-xs font-medium text-[var(--theme-primary)] hover:underline"
+                    >
+                        Ver {{ $equiposNoAsignados === 1 ? 'el disponible' : 'los ' . number_format($equiposNoAsignados) }} →
+                    </a>
+                @endif
+            </div>
+
+            @if ($disponiblesParaAsignar === [])
+                <div class="flex flex-1 flex-col items-center justify-center py-8 text-center">
+                    <p class="text-sm font-medium text-[var(--theme-text-strong)]">Todos los equipos tienen responsable</p>
+                    <p class="mt-1 text-xs text-[var(--theme-text-muted)]">Cuando haya equipos sin asignar aparecerán aquí.</p>
+                </div>
+            @else
+                <ul class="mt-4 divide-y divide-[var(--theme-border)]">
+                    @foreach ($disponiblesParaAsignar as $disponible)
+                        @php
+                            $desdeDisponible = $disponible['desde']
+                                ? \Illuminate\Support\Carbon::parse($disponible['desde'])->locale('es')->diffForHumans(['parts' => 1])
+                                : null;
+                        @endphp
+
+                        <li wire:key="disponible-{{ $disponible['id'] }}" class="flex items-center gap-3 py-2.5">
+                            <div class="min-w-0 flex-1">
+                                <a
+                                    href="{{ route('equipos.show', $disponible['id']) }}"
+                                    wire:navigate.hover
+                                    class="block truncate text-sm font-medium text-[var(--theme-text-strong)] hover:text-[var(--theme-primary)]"
+                                >
+                                    {{ $disponible['nombre'] !== '' ? $disponible['nombre'] : $disponible['codigo'] }}
+                                </a>
+
+                                <p class="mt-0.5 truncate text-[11px] text-[var(--theme-text-muted)]">
+                                    {{ implode(' · ', array_filter([$disponible['codigo'], $disponible['tipo'], $disponible['hotel']])) }}
+                                    @if ($desdeDisponible)
+                                        · Disponible desde {{ $desdeDisponible }}
+                                    @endif
+                                </p>
+                            </div>
+
+                            <a
+                                href="{{ route('asignaciones.create', ['equipo' => $disponible['id']]) }}"
+                                wire:navigate.hover
+                                class="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-md border border-[var(--theme-primary-border)] px-3 text-xs font-medium text-[var(--theme-primary)] transition-colors hover:bg-[var(--theme-primary-soft)]"
+                                aria-label="Asignar {{ $disponible['codigo'] }}"
+                            >
+                                <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                                Asignar
+                            </a>
+                        </li>
+                    @endforeach
+                </ul>
+            @endif
+        </section>
+
+        </div>
+
+
 
         {{-- ========================================================
             RESUMEN DE ACTIVIDAD
@@ -1211,7 +1331,8 @@
 
 
                 {{-- ====================================================
-                    MINI MÉTRICAS
+                    MINI MÉTRICAS (neutras: conteos informativos; se distinguen
+        por su icono y su texto, no por colores distintos)
                 ==================================================== --}}
                 <div
                     class="
@@ -1232,9 +1353,9 @@
                             rounded-xl
 
                             border
-                            border-emerald-500/20
+                            border-[var(--theme-border)]
 
-                            bg-emerald-500/10
+                            bg-[var(--theme-surface-soft)]
 
                             p-3
                         "
@@ -1257,8 +1378,8 @@
 
                                     rounded-lg
 
-                                    bg-emerald-500/15
-                                    text-emerald-500
+                                    bg-[var(--theme-surface)]
+                                    text-[var(--theme-text-muted)]
 
                                     flex
                                     items-center
@@ -1282,7 +1403,7 @@
                                 class="
                                     text-xl
                                     font-bold
-                                    text-emerald-500
+                                    text-[var(--theme-text-strong)]
                                 "
                             >
                                 {{ number_format($asignacionesHoy) }}
@@ -1311,9 +1432,9 @@
                             rounded-xl
 
                             border
-                            border-[var(--theme-primary-border)]
+                            border-[var(--theme-border)]
 
-                            bg-[var(--theme-primary-soft-subtle)]
+                            bg-[var(--theme-surface-soft)]
 
                             p-3
                         "
@@ -1336,8 +1457,8 @@
 
                                     rounded-lg
 
-                                    bg-[var(--theme-primary-soft)]
-                                    text-[var(--theme-primary)]
+                                    bg-[var(--theme-surface)]
+                                    text-[var(--theme-text-muted)]
 
                                     flex
                                     items-center
@@ -1362,7 +1483,7 @@
                                 class="
                                     text-xl
                                     font-bold
-                                    text-[var(--theme-primary)]
+                                    text-[var(--theme-text-strong)]
                                 "
                             >
                                 {{ number_format($reasignacionesHoy) }}
@@ -1391,9 +1512,9 @@
                             rounded-xl
 
                             border
-                            border-amber-500/20
+                            border-[var(--theme-border)]
 
-                            bg-amber-500/10
+                            bg-[var(--theme-surface-soft)]
 
                             p-3
                         "
@@ -1416,8 +1537,8 @@
 
                                     rounded-lg
 
-                                    bg-amber-500/15
-                                    text-amber-500
+                                    bg-[var(--theme-surface)]
+                                    text-[var(--theme-text-muted)]
 
                                     flex
                                     items-center
@@ -1440,7 +1561,7 @@
                                 class="
                                     text-xl
                                     font-bold
-                                    text-amber-500
+                                    text-[var(--theme-text-strong)]
                                 "
                             >
                                 {{ number_format($asignacionesMes) }}
@@ -1469,9 +1590,9 @@
                             rounded-xl
 
                             border
-                            border-violet-500/20
+                            border-[var(--theme-border)]
 
-                            bg-violet-500/10
+                            bg-[var(--theme-surface-soft)]
 
                             p-3
                         "
@@ -1494,8 +1615,8 @@
 
                                     rounded-lg
 
-                                    bg-violet-500/15
-                                    text-violet-500
+                                    bg-[var(--theme-surface)]
+                                    text-[var(--theme-text-muted)]
 
                                     flex
                                     items-center
@@ -1519,7 +1640,7 @@
                                 class="
                                     text-xl
                                     font-bold
-                                    text-violet-500
+                                    text-[var(--theme-text-strong)]
                                 "
                             >
                                 {{ number_format($reasignacionesMes) }}
@@ -1725,14 +1846,22 @@
                                     items-center
                                     justify-center
 
-                                    {{ $item->tipo === 'asignacion'
-                                        ? 'bg-emerald-500/15 text-emerald-500'
-                                        : 'bg-[var(--theme-primary-soft)] text-[var(--theme-primary)]'
-                                    }}
+                                    {{ match ($item->tipo) {
+                                        'asignacion' => 'bg-[var(--theme-success-soft)] text-[var(--theme-success)]',
+                                        'devolucion' => 'bg-[var(--theme-surface-soft)] text-[var(--theme-text-muted)]',
+                                        default => 'bg-[var(--theme-primary-soft)] text-[var(--theme-primary)]',
+                                    } }}
                                 "
                             >
 
-                                @if ($item->tipo === 'asignacion')
+                                @if ($item->tipo === 'devolucion')
+
+                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <path d="M9 14L4 9l5-5"/>
+                                        <path d="M4 9h11a5 5 0 0 1 0 10h-3"/>
+                                    </svg>
+
+                                @elseif ($item->tipo === 'asignacion')
 
                                     <svg
                                         class="w-4 h-4"
@@ -1787,6 +1916,10 @@
 
                                     Se reasignó el equipo
 
+                                @elseif ($item->tipo === 'devolucion')
+
+                                    Se devolvió el equipo
+
                                 @else
 
                                     Se registró movimiento del equipo
@@ -1807,7 +1940,7 @@
                                 @if (!empty($item->nombre_colaborador))
 
                                     <span class="hidden md:inline">
-                                        a
+                                        {{ $item->tipo === 'devolucion' ? 'que tenía' : 'a' }}
                                         {{ $item->nombre_colaborador }}
                                     </span>
 

@@ -480,30 +480,6 @@ class EquipoShow extends Component
 
             )
 
-            ->leftJoin(
-
-                'areas as area_dep',
-
-                'area_dep.id_area',
-
-                '=',
-
-                'dep.id_area'
-
-            )
-
-            ->leftJoin(
-
-                'areas as area_directa',
-
-                'area_directa.id_area',
-
-                '=',
-
-                'e.id_area'
-
-            )
-
             ->where(
 
                 'e.id_equipo',
@@ -562,10 +538,6 @@ class EquipoShow extends Component
 
                 'dep.nombre as departamento',
 
-                'area_dep.nombre as area_departamento',
-
-                'area_directa.nombre as area_directa',
-
             ])
 
             ->first();
@@ -574,37 +546,14 @@ class EquipoShow extends Component
 
         $data = (array) $equipo;
 
-        if (!empty($data['departamento'])) {
+        /*
+         * Ubicación: Hotel / Departamento (las áreas ya no se usan).
+         */
+        $data['ubicacion'] = implode(' / ', array_filter([
+            $data['hotel'] ?? null,
+            $data['departamento'] ?? null,
+        ])) ?: '—';
 
-            $data['ubicacion'] =
-
-                !empty($data['area_departamento'])
-
-                    ? $data['area_departamento']
-
-                        . ' / '
-
-                        . $data['departamento']
-
-                    : $data['departamento'];
-
-        } elseif (!empty($data['area_directa'])) {
-
-            $data['ubicacion'] =
-
-                $data['area_directa'];
-
-        } else {
-
-            $data['ubicacion'] = '—';
-
-        }
-
-        if (!empty($data['hotel'])) {
-            $data['ubicacion'] = $data['hotel'] . (
-                $data['ubicacion'] !== '—' ? ' / ' . $data['ubicacion'] : ''
-            );
-        }
 
         $data['estado'] =
 
@@ -882,17 +831,7 @@ class EquipoShow extends Component
 
         )
 
-            ->leftJoin(
-
-                'areas as a',
-
-                'a.id_area',
-
-                '=',
-
-                'asi.id_area'
-
-            )
+            ->leftJoin('unidades_organizativas as hotel_asig', 'hotel_asig.id_unidad', '=', 'asi.id_unidad')
 
             ->leftJoin(
 
@@ -940,13 +879,15 @@ class EquipoShow extends Component
 
                 'asi.fecha_asignacion',
 
-                'asi.id_area',
+                'asi.id_unidad',
 
                 'asi.id_departamento',
 
+                'asi.fecha_fin',
+
                 'asi.id_tipo_asignacion',
 
-                'a.nombre as area_nombre',
+                'hotel_asig.nombre as hotel_nombre',
 
                 'dep.nombre as departamento_nombre',
 
@@ -964,37 +905,11 @@ class EquipoShow extends Component
 
                     (array) $row;
 
-                if (
-
-                    !empty(
-
-                        $row['departamento_nombre']
-
-                    )
-
-                ) {
-
-                    $ubicacion =
-
-                        !empty($row['area_nombre'])
-
-                            ? $row['area_nombre']
-
-                                . ' / '
-
-                                . $row['departamento_nombre']
-
-                            : $row['departamento_nombre'];
-
-                } else {
-
-                    $ubicacion =
-
-                        $row['area_nombre']
-
-                        ?? '—';
-
-                }
+                // Hotel / Departamento (las áreas ya no se usan).
+                $ubicacion = implode(' / ', array_filter([
+                    $row['hotel_nombre'] ?? null,
+                    $row['departamento_nombre'] ?? null,
+                ])) ?: '—';
 
                 return [
 
@@ -1019,6 +934,10 @@ class EquipoShow extends Component
                     'ubicacion' =>
 
                         $ubicacion,
+
+                    // Con fecha de fin: asignación cerrada (reasignada o devuelta).
+                    'fecha_fin' =>
+                        $row['fecha_fin'] ?? null,
 
                 ];
 
@@ -1062,11 +981,9 @@ class EquipoShow extends Component
 
             $this->cargarAsignaciones();
 
-        $asignacionActual =
-
-            $asignaciones[0]
-
-            ?? null;
+        // Solo la vigente: si se devolvió, el equipo no tiene responsable.
+        $asignacionActual = collect($asignaciones)
+            ->first(fn (array $asignacion) => empty($asignacion['fecha_fin']));
 
         $movimientos =
 

@@ -1422,6 +1422,118 @@ class SeguridadIndex extends Component
         ];
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Dar de baja / reactivar una cuenta
+    |--------------------------------------------------------------------------
+    |
+    | Al dar de baja, los equipos asignados a esa cuenta se devuelven
+    | automáticamente (motivo «Baja del colaborador») y quedan
+    | disponibles; también se cierran sus sesiones abiertas.
+    |
+    */
+
+    public function darDeBajaUsuario(mixed $idUsuario): array
+    {
+        \Illuminate\Support\Facades\Gate::authorize('administrar');
+
+        $id = (int) $idUsuario;
+
+        if ($id <= 0 || $id === (int) auth()->id()) {
+            return ['ok' => false, 'mensaje' => 'No puedes dar de baja tu propia cuenta.'];
+        }
+
+        $idBaja = DB::table('estados_usuario')->where('clave', 'BAJA')->value('id_estado_usuario');
+
+        if (! $idBaja) {
+            return ['ok' => false, 'mensaje' => 'No existe el estado BAJA en el catálogo de estados de usuario.'];
+        }
+
+        $usuario = DB::table('usuarios')->where('id_usuario', $id)->first(['nombres', 'apellido_paterno', 'correo']);
+
+        if (! $usuario) {
+            return ['ok' => false, 'mensaje' => 'La cuenta ya no existe.'];
+        }
+
+        $nombre = trim($usuario->nombres . ' ' . $usuario->apellido_paterno);
+
+        DB::table('usuarios')->where('id_usuario', $id)->update(['id_estado_usuario' => $idBaja]);
+
+        $devueltos = app(\App\Services\DevolucionService::class)->devolverTodosDeUsuario(
+            $id,
+            \App\Services\DevolucionService::MOTIVOS['baja_colaborador'],
+            'Devolución automática al dar de baja la cuenta de ' . $nombre . '.'
+        );
+
+        // Cerrar sesiones abiertas de esa cuenta (sesiones en base de datos).
+        if (\Illuminate\Support\Facades\Schema::hasTable('sessions')) {
+            DB::table('sessions')->where('user_id', $id)->delete();
+        }
+
+        DB::table('bitacora_auditoria')->insert([
+            'id_usuario' => auth()->id(),
+            'accion' => 'USUARIO_DADO_DE_BAJA',
+            'modulo' => 'SEGURIDAD',
+            'descripcion' => 'Se dio de baja la cuenta de ' . $nombre . ' (' . $usuario->correo . ').'
+                . ($devueltos !== [] ? ' Equipos devueltos: ' . implode(', ', $devueltos) . '.' : ''),
+            'fecha_hora' => now(),
+        ]);
+
+        if ($devueltos !== []) {
+            $notificaciones = app(\App\Services\NotificacionService::class);
+            $notificaciones->notificar(
+                'asignaciones',
+                'Equipos devueltos por baja',
+                $notificaciones->nombreActor() . ' dio de baja la cuenta de ' . $nombre . '; se devolvieron ' . count($devueltos) . ' equipo(s): ' . implode(', ', $devueltos) . '.',
+                route('asignaciones.index', [], false)
+            );
+            $this->dispatch('notificaciones-actualizadas');
+        }
+
+        $this->dispatch(
+            'toast',
+            type: 'success',
+            title: 'Cuenta dada de baja',
+            message: $devueltos === []
+                ? $nombre . ' ya no puede entrar al sistema. No tenía equipos asignados.'
+                : $nombre . ' ya no puede entrar al sistema. Se devolvieron ' . count($devueltos) . ' equipo(s): ' . implode(', ', $devueltos) . '.',
+        );
+
+        return ['ok' => true, 'devueltos' => $devueltos];
+    }
+
+    public function reactivarUsuario(mixed $idUsuario): array
+    {
+        \Illuminate\Support\Facades\Gate::authorize('administrar');
+
+        $id = (int) $idUsuario;
+        $idActivo = DB::table('estados_usuario')->where('clave', 'ACTIVO')->value('id_estado_usuario');
+
+        if ($id <= 0 || ! $idActivo) {
+            return ['ok' => false, 'mensaje' => 'No se pudo reactivar la cuenta.'];
+        }
+
+        $usuario = DB::table('usuarios')->where('id_usuario', $id)->first(['nombres', 'apellido_paterno', 'correo']);
+
+        if (! $usuario) {
+            return ['ok' => false, 'mensaje' => 'La cuenta ya no existe.'];
+        }
+
+        DB::table('usuarios')->where('id_usuario', $id)->update(['id_estado_usuario' => $idActivo]);
+
+        DB::table('bitacora_auditoria')->insert([
+            'id_usuario' => auth()->id(),
+            'accion' => 'USUARIO_REACTIVADO',
+            'modulo' => 'SEGURIDAD',
+            'descripcion' => 'Se reactivó la cuenta de ' . trim($usuario->nombres . ' ' . $usuario->apellido_paterno) . ' (' . $usuario->correo . ').',
+            'fecha_hora' => now(),
+        ]);
+
+        $this->dispatch('toast', type: 'success', message: 'La cuenta se reactivó. Sus equipos devueltos no se reasignan solos.');
+
+        return ['ok' => true];
+    }
+
     public function vincularColaborador(string $clave, mixed $idUsuario): void
     {
         \Illuminate\Support\Facades\Gate::authorize('administrar');

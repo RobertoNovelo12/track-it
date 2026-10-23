@@ -308,6 +308,25 @@ Route::middleware([
 
     /*
     |--------------------------------------------------------------------------
+    | Devolver equipo (desasignar) y su acta
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/asignaciones/devolver',
+        fn () => view('asignaciones.devolver')
+    )->name('asignaciones.devolver')->middleware('can:gestionar');
+
+    Route::get(
+        '/asignaciones/devoluciones/{movimiento}/acta',
+        [\App\Http\Controllers\DevolucionController::class, 'acta']
+    )
+        ->whereNumber('movimiento')
+        ->name('asignaciones.devoluciones.acta')
+        ->middleware('can:gestionar');
+
+    /*
+    |--------------------------------------------------------------------------
     | Historial de asignaciones y movimientos
     |--------------------------------------------------------------------------
     */

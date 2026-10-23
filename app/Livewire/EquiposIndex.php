@@ -868,6 +868,10 @@ class EquiposIndex extends Component
             ->selectRaw("
                 CASE WHEN ee.clave = 'BAJA' OR EXISTS (SELECT 1 FROM bajas b WHERE b.id_equipo = e.id_equipo) THEN 1 ELSE 0 END as dado_de_baja
             ")
+            // Con responsable (asignación sin fecha de fin): menú «Devolver».
+            ->selectRaw("
+                CASE WHEN EXISTS (SELECT 1 FROM asignaciones a_vigente WHERE a_vigente.id_equipo = e.id_equipo AND a_vigente.fecha_fin IS NULL) THEN 1 ELSE 0 END as tiene_responsable
+            ")
             ->selectRaw("
                 COALESCE(
                     CASE

@@ -80,6 +80,10 @@ class Encabezado
                 self::miga('Asignación y movimientos', 'asignaciones.index'),
                 self::miga('Reasignar'),
             ]],
+            'asignaciones.devolver' => ['Asignación y movimientos', [
+                self::miga('Asignación y movimientos', 'asignaciones.index'),
+                self::miga('Devolver'),
+            ]],
             'asignaciones.history' => ['Asignación y movimientos', [
                 self::miga('Asignación y movimientos', 'asignaciones.index'),
                 self::miga('Historial'),

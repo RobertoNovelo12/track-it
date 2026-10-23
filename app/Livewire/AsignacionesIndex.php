@@ -1315,7 +1315,7 @@ class AsignacionesIndex extends Component
             $cache->remember(
                 self::CACHE_MODULE,
 
-                'index.actividad.v2',
+                'index.actividad.v3',
 
                 [
                     'equipos_version' =>
@@ -1415,6 +1415,14 @@ class AsignacionesIndex extends Component
                                 'm.id_asignacion_nueva'
                             )
 
+                            // Devolución: no hay asignación nueva; se muestra quién lo tenía.
+                            ->leftJoin(
+                                'asignaciones as anterior_act',
+                                'anterior_act.id_asignacion',
+                                '=',
+                                'm.id_asignacion_anterior'
+                            )
+
                             ->select([
                                 'm.id_movimiento as id',
                                 'm.fecha_hora as fecha',
@@ -1423,8 +1431,11 @@ class AsignacionesIndex extends Component
                                 'e.id_equipo',
                                 'e.codigo_inventario',
                                 'e.nombre_equipo',
-                                'nueva.nombre_colaborador',
                             ])
+
+                            ->selectRaw(
+                                'COALESCE(nueva.nombre_colaborador, anterior_act.nombre_colaborador) as nombre_colaborador'
+                            )
 
                             ->selectRaw("
                                 CASE
@@ -1440,6 +1451,12 @@ class AsignacionesIndex extends Component
 
                                     THEN
                                         'reasignacion'
+
+                                    WHEN
+                                        m.id_asignacion_anterior IS NOT NULL
+                                        AND m.id_asignacion_nueva IS NULL
+                                    THEN
+                                        'devolucion'
 
                                     ELSE
                                         'movimiento'
@@ -1650,6 +1667,82 @@ class AsignacionesIndex extends Component
     | Equipos disponibles para asignar
     |--------------------------------------------------------------------------
     */
+
+    /*
+    |--------------------------------------------------------------------------
+    | Disponibles para asignar (tarjeta bajo la gráfica)
+    |--------------------------------------------------------------------------
+    |
+    | Los 5 equipos vigentes sin asignación activa que llevan más tiempo
+    | disponibles: desde que terminó su última asignación o, si nunca se
+    | asignaron, desde su registro. Mismo criterio que «Sin asignar» en
+    | Inventario (sin baja ni estado BAJA).
+    |
+    */
+
+    private function getDisponiblesParaAsignar(): array
+    {
+        $cache = $this->systemCache();
+
+        return $cache->remember(
+            self::CACHE_MODULE,
+            'index.disponibles_para_asignar',
+            [
+                'equipos_version' => $cache->moduleVersion('equipos'),
+            ],
+            function (): array {
+                // Fecha de alta del equipo, si la tabla la registra.
+                $fechaAlta = \Illuminate\Support\Facades\Schema::hasColumn('equipos', 'fecha_registro')
+                    ? 'e.fecha_registro'
+                    : 'NULL';
+
+                return DB::table('equipos as e')
+                    ->leftJoin('tipos_equipo as te', 'te.id_tipo_equipo', '=', 'e.id_tipo_equipo')
+                    ->leftJoin('unidades_organizativas as u', 'u.id_unidad', '=', 'e.id_unidad')
+                    ->leftJoin('estados_equipo as ee', 'ee.id_estado_equipo', '=', 'e.id_estado_activo')
+                    ->where(function ($query) {
+                        $query->whereNull('ee.clave')->orWhere('ee.clave', '<>', 'BAJA');
+                    })
+                    ->whereNotExists(function ($query) {
+                        $query->selectRaw('1')
+                            ->from('bajas as b')
+                            ->whereColumn('b.id_equipo', 'e.id_equipo');
+                    })
+                    ->whereNotExists(function ($query) {
+                        $query->selectRaw('1')
+                            ->from('asignaciones as a')
+                            ->whereColumn('a.id_equipo', 'e.id_equipo')
+                            ->whereNull('a.fecha_fin');
+                    })
+                    ->selectRaw("
+                        e.id_equipo,
+                        e.codigo_inventario,
+                        e.nombre_equipo,
+                        te.nombre as tipo,
+                        u.nombre as hotel,
+                        COALESCE(
+                            (SELECT MAX(a2.fecha_fin) FROM asignaciones a2 WHERE a2.id_equipo = e.id_equipo),
+                            {$fechaAlta}
+                        ) as disponible_desde
+                    ")
+                    ->orderByRaw('disponible_desde ASC NULLS LAST')
+                    ->orderBy('e.codigo_inventario')
+                    ->limit(5)
+                    ->get()
+                    ->map(fn ($equipo): array => [
+                        'id' => (int) $equipo->id_equipo,
+                        'codigo' => (string) $equipo->codigo_inventario,
+                        'nombre' => (string) ($equipo->nombre_equipo ?? ''),
+                        'tipo' => (string) ($equipo->tipo ?? ''),
+                        'hotel' => (string) ($equipo->hotel ?? ''),
+                        'desde' => $equipo->disponible_desde ? (string) $equipo->disponible_desde : null,
+                    ])
+                    ->values()
+                    ->all();
+            },
+            self::CACHE_TTL_HOURS
+        );
+    }
 
     private function getEquiposDisponibles(): array
     {
@@ -2081,6 +2174,9 @@ class AsignacionesIndex extends Component
                 'actividad' =>
                     $this->getActividad(),
 
+                'disponiblesParaAsignar' =>
+                    $this->getDisponiblesParaAsignar(),
+
 
                 /*
                  * Modal de asignación
@@ -2103,4 +2199,4 @@ class AsignacionesIndex extends Component
             ]
         );
     }
-}
+}

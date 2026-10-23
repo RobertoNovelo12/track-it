@@ -144,6 +144,11 @@
                     'label' => 'Editar',
                     'href' => route('equipos.edit', $equipo->id_equipo),
                 ],
+                // Devolver: solo si tiene responsable.
+                $puedeGestionar && (int) ($equipo->tiene_responsable ?? 0) === 1 ? [
+                    'label' => 'Devolver',
+                    'href' => route('asignaciones.devolver', ['equipo' => $equipo->id_equipo]),
+                ] : null,
                 $puedeGestionar ? [
                     'label' => 'Dar de baja',
                     'href' => route('equipos.baja', ['equipo' => $equipo->id_equipo]),

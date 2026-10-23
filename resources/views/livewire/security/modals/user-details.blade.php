@@ -13,8 +13,16 @@
         $solicitudesRestablecimientoDetalle = [];
     }
 
+    // Equipos asignados por cuenta (aviso al dar de baja).
+    try {
+        $equiposPorUsuarioDetalle = app(\App\Services\DevolucionService::class)
+            ->conteoPorUsuario($usuarios->getCollection()->pluck('id_usuario')->map(fn ($id) => (int) $id)->all());
+    } catch (\Throwable $e) {
+        $equiposPorUsuarioDetalle = [];
+    }
+
     $userDetailsData = $usuarios->getCollection()
-        ->mapWithKeys(function ($usuario) use ($solicitudesRestablecimientoDetalle) {
+        ->mapWithKeys(function ($usuario) use ($solicitudesRestablecimientoDetalle, $equiposPorUsuarioDetalle) {
             $solicitudReset = $solicitudesRestablecimientoDetalle[(int) $usuario->id_usuario] ?? null;
 
             $nombreCompleto = trim(
@@ -48,6 +56,9 @@
                         ? \App\Support\Fecha::conHora($solicitudReset)
                         : null,
                     'isSelf' => (int) $usuario->id_usuario === (int) auth()->id(),
+                    // Dar de baja / reactivar.
+                    'statusKey' => strtoupper((string) ($usuario->estado_clave ?? '')),
+                    'assignedCount' => (int) ($equiposPorUsuarioDetalle[(int) $usuario->id_usuario] ?? 0),
                 ],
             ];
         });
@@ -254,6 +265,38 @@
                 </div>
             </div>
 
+            {{-- Cuenta: dar de baja (devuelve sus equipos) o reactivar --}}
+            <div id="user-details-account-section" class="hidden">
+                <p class="mb-2 text-[10px] font-semibold uppercase tracking-wider text-[var(--theme-text-muted)]">
+                    Cuenta
+                </p>
+
+                <div class="rounded-lg border border-[var(--theme-border)] px-3 py-3">
+                    <p id="user-details-account-text" class="text-xs leading-relaxed text-[var(--theme-text-muted)]">—</p>
+
+                    <button
+                        id="user-details-deactivate-button"
+                        type="button"
+                        onclick="window.darDeBajaDesdeDetalles()"
+                        class="mt-3 hidden h-9 items-center justify-center gap-2 rounded-md border border-transparent bg-[var(--theme-danger-soft)] px-3 text-xs font-medium text-[var(--theme-danger)] transition-opacity hover:opacity-80"
+                    >
+                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0M17 8h5"/>
+                        </svg>
+                        Dar de baja la cuenta
+                    </button>
+
+                    <button
+                        id="user-details-reactivate-button"
+                        type="button"
+                        onclick="window.reactivarDesdeDetalles()"
+                        class="mt-3 hidden h-9 items-center justify-center gap-2 rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 text-xs font-medium text-[var(--theme-text)] transition-colors hover:bg-[var(--theme-surface-soft)]"
+                    >
+                        Reactivar cuenta
+                    </button>
+                </div>
+            </div>
+
             {{-- Organización --}}
             <div>
                 <p
@@ -399,6 +442,27 @@
         resetButton?.classList.toggle('hidden', ! (user.resetRequestedAt && ! user.isSelf));
         resetButton?.classList.toggle('inline-flex', !! (user.resetRequestedAt && ! user.isSelf));
 
+        // Cuenta: dar de baja (con devolución de equipos) o reactivar.
+        const cuenta = document.getElementById('user-details-account-section');
+        const bajaBoton = document.getElementById('user-details-deactivate-button');
+        const reactivarBoton = document.getElementById('user-details-reactivate-button');
+        const estado = String(user.statusKey ?? '');
+        const activa = estado === 'ACTIVO';
+        const deBaja = estado === 'BAJA' || estado === 'INACTIVO';
+        const equipos = Number(user.assignedCount ?? 0);
+
+        cuenta?.classList.toggle('hidden', user.isSelf || ! (activa || deBaja));
+        bajaBoton?.classList.toggle('hidden', ! activa);
+        bajaBoton?.classList.toggle('inline-flex', activa);
+        reactivarBoton?.classList.toggle('hidden', ! deBaja);
+        reactivarBoton?.classList.toggle('inline-flex', deBaja);
+
+        setText('user-details-account-text', deBaja
+            ? 'Esta cuenta está dada de baja: no puede entrar al sistema.'
+            : equipos > 0
+                ? 'Tiene ' + equipos + (equipos === 1 ? ' equipo asignado' : ' equipos asignados') + '. Al dar de baja la cuenta se devolverán automáticamente y quedarán disponibles.'
+                : 'No tiene equipos asignados a su cuenta.');
+
         if (window.__userDetailsCloseTimer) {
             clearTimeout(window.__userDetailsCloseTimer);
             window.__userDetailsCloseTimer = null;
@@ -433,6 +497,43 @@
                     ?.focus({ preventScroll: true });
             });
         });
+    };
+
+    window.darDeBajaDesdeDetalles = () => {
+        const user = window.__userDetailsActual;
+        if (!user) return;
+
+        const equipos = Number(user.assignedCount ?? 0);
+        window.closeUserDetailsModalFast();
+
+        window.dispatchEvent(new CustomEvent('confirmar', {
+            detail: {
+                titulo: '¿Dar de baja la cuenta de ' + user.name + '?',
+                mensaje: (equipos > 0
+                    ? 'Se devolverán automáticamente sus ' + equipos + (equipos === 1 ? ' equipo' : ' equipos') + ' y quedarán disponibles para asignarse. '
+                    : '')
+                    + 'Ya no podrá entrar al sistema y se cerrarán sus sesiones. Puedes reactivarla después.',
+                confirmar: 'Dar de baja',
+                peligro: true,
+                accion: () => $wire.darDeBajaUsuario(user.id),
+            },
+        }));
+    };
+
+    window.reactivarDesdeDetalles = () => {
+        const user = window.__userDetailsActual;
+        if (!user) return;
+
+        window.closeUserDetailsModalFast();
+
+        window.dispatchEvent(new CustomEvent('confirmar', {
+            detail: {
+                titulo: '¿Reactivar la cuenta de ' + user.name + '?',
+                mensaje: 'Podrá volver a entrar al sistema con su contraseña. Los equipos que se devolvieron no se reasignan solos.',
+                confirmar: 'Reactivar',
+                accion: () => $wire.reactivarUsuario(user.id),
+            },
+        }));
     };
 
     window.openResetPasswordFromDetails = () => {
