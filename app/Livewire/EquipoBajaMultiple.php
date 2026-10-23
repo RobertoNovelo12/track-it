@@ -76,10 +76,88 @@ class EquipoBajaMultiple extends Component
     public $fotoFrontal = null;
     public $fotoTrasera = null;
 
-    public function mount(): void
+    /*
+     * true cuando se llega desde la selección de Inventario
+     * (?equipos=1,2,3): no se muestra el listado para elegir.
+     */
+    #[Locked]
+    public bool $desdeInventario = false;
+
+    /*
+     * Modo con equipos activos desde Inventario:
+     * ''         acta de equipos ya dados de baja (flujo original).
+     * 'elegir'   pantalla para escoger «una por una» o «en un documento».
+     * 'conjunta' un solo formulario da de baja a todos y genera el acta.
+     */
+    #[Locked]
+    public string $modo = '';
+
+    public function mount()
     {
         Gate::authorize('gestionar');
         $this->fechaBaja = now()->format('Y-m-d');
+
+        return $this->cargarDesdeInventario((string) request()->query('equipos', ''));
+    }
+
+    /**
+     * ?equipos=1,2,3 (selección de Inventario, máximo 10):
+     * - Si alguno sigue activo, primero se da de baja uno por uno
+     *   (equipos.baja con ?cola=) y al terminar se vuelve aquí.
+     * - Si todos ya están dados de baja, se abre directo el acta.
+     */
+    protected function cargarDesdeInventario(string $equipos)
+    {
+        $ids = collect(explode(',', $equipos))
+            ->map(fn ($id) => (int) trim($id))
+            ->filter(fn (int $id) => $id > 0)
+            ->unique()
+            ->take(10)
+            ->values()
+            ->all();
+
+        if ($ids === []) {
+            return null;
+        }
+
+        $dadosDeBaja = $this->consulta()
+            ->whereIn('e.id_equipo', $ids)
+            ->pluck('e.id_equipo')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        $existentes = DB::table('equipos')->whereIn('id_equipo', $ids)->pluck('id_equipo')->map(fn ($id) => (int) $id)->all();
+
+        $activos = array_values(array_diff($existentes, $dadosDeBaja));
+
+        // Un solo equipo activo: la baja normal.
+        if ($activos !== [] && count($existentes) === 1) {
+            return $this->redirectRoute('equipos.baja', ['equipo' => $activos[0]], navigate: true);
+        }
+
+        // Varios con alguno activo: elegir «una por una» o «en un documento».
+        if ($activos !== []) {
+            $this->seleccionados = array_map('strval', $existentes);
+            $this->desdeInventario = true;
+            $this->modo = 'elegir';
+
+            // Elegido en el menú de «Baja múltiple» de Inventario.
+            return match ((string) request()->query('modo', '')) {
+                'lote' => $this->unaPorUna(),
+                'conjunta' => $this->todasEnUnDocumento(),
+                default => null,
+            };
+        }
+
+        if ($dadosDeBaja === []) {
+            return null;
+        }
+
+        $this->seleccionados = array_map('strval', $dadosDeBaja);
+        $this->desdeInventario = true;
+        $this->siguiente();
+
+        return null;
     }
 
     protected function consulta()
@@ -162,7 +240,9 @@ class EquipoBajaMultiple extends Component
             'seleccionados.required' => 'Selecciona al menos un equipo.',
             'seleccionados.max' => 'Puedes seleccionar como máximo 10 equipos.',
         ]);
-        $equipos = $this->consulta()->whereIn('e.id_equipo', $this->seleccionados)->orderBy('e.codigo_inventario')->get();
+        // Documento conjunto: también acepta equipos activos (se dan de baja al guardar).
+        $equipos = ($this->modo === 'conjunta' ? $this->consultaSeleccion() : $this->consulta())
+            ->whereIn('e.id_equipo', $this->seleccionados)->orderBy('e.codigo_inventario')->get();
         if ($equipos->count() !== count($this->seleccionados)) {
             throw ValidationException::withMessages(['seleccionados' => 'Solo puedes incluir equipos previamente dados de baja. Revisa la selección.']);
         }
@@ -179,8 +259,79 @@ class EquipoBajaMultiple extends Component
         $this->detalles = true;
     }
 
+    /**
+     * Equipos de la selección (activos o de baja), con su tipo.
+     */
+    protected function consultaSeleccion()
+    {
+        return DB::table('equipos as e')
+            ->leftJoin('estados_equipo as ee', 'ee.id_estado_equipo', '=', 'e.id_estado_activo')
+            ->leftJoin('tipos_equipo as te', 'te.id_tipo_equipo', '=', 'e.id_tipo_equipo')
+            ->leftJoin('marcas as ma', 'ma.id_marca', '=', 'e.id_marca')
+            ->leftJoin('modelos as mo', 'mo.id_modelo', '=', 'e.id_modelo')
+            ->leftJoin('unidades_organizativas as u', 'u.id_unidad', '=', 'e.id_unidad')
+            ->select(
+                'e.id_equipo', 'e.codigo_inventario', 'e.nombre_equipo', 'e.numero_serie', 'e.id_unidad',
+                'e.id_tipo_equipo', 'te.nombre as tipo', 'ma.nombre as marca', 'mo.nombre as modelo',
+                'u.nombre as hotel', 'ee.nombre as estado'
+            )
+            ->selectRaw("CASE WHEN ee.clave = 'BAJA' OR EXISTS (SELECT 1 FROM bajas b WHERE b.id_equipo = e.id_equipo) THEN 1 ELSE 0 END AS es_baja");
+    }
+
+    /** Una por una: formulario de baja de cada equipo y al final el acta. */
+    public function unaPorUna()
+    {
+        Gate::authorize('gestionar');
+
+        if ($this->modo !== 'elegir') {
+            return null;
+        }
+
+        $ids = array_map('intval', $this->seleccionados);
+
+        $primero = $this->consultaSeleccion()
+            ->whereIn('e.id_equipo', $ids)
+            ->get()
+            ->first(fn ($equipo) => (int) $equipo->es_baja === 0);
+
+        if (! $primero) {
+            return null;
+        }
+
+        return $this->redirectRoute('equipos.baja', [
+            'equipo' => (int) $primero->id_equipo,
+            'cola' => implode(',', $ids),
+        ], navigate: true);
+    }
+
+    /** Todas en un documento: un formulario da de baja a todos y genera el acta. */
+    public function todasEnUnDocumento(): void
+    {
+        Gate::authorize('gestionar');
+
+        if ($this->modo !== 'elegir') {
+            return;
+        }
+
+        $this->modo = 'conjunta';
+        $this->siguiente();
+    }
+
     public function volver(): void
     {
+        // Documento conjunto: regresar a elegir el modo.
+        if ($this->modo === 'conjunta') {
+            $this->modo = 'elegir';
+            $this->detalles = false;
+
+            return;
+        }
+
+        // Desde Inventario no hay listado al que volver.
+        if ($this->desdeInventario) {
+            return;
+        }
+
         $this->detalles = false;
     }
 
@@ -253,8 +404,33 @@ class EquipoBajaMultiple extends Component
             $rutaPdf = $directorio.'/'.$nombre;
             $contenido = Pdf::loadView('reportes.baja-multiple-pdf', compact('documento'))->setPaper('letter')->output();
             if (!Storage::disk('local')->put($rutaPdf, $contenido)) { throw new \RuntimeException('No fue posible guardar el acta.'); }
-            $registro = DB::transaction(function () use ($documento, $rutas, $nombre, $rutaPdf) {
-                $this->validarSeleccion();
+            $idsDadosDeBaja = [];
+            $registro = DB::transaction(function () use ($documento, $rutas, $nombre, $rutaPdf, &$idsDadosDeBaja) {
+                $seleccion = $this->validarSeleccion();
+
+                // Documento conjunto: dar de baja a los que siguen activos.
+                if ($this->modo === 'conjunta') {
+                    $bajas = app(\App\Services\BajaEquipoService::class);
+
+                    foreach ($seleccion as $equipo) {
+                        if ((int) ($equipo->es_baja ?? 0) === 1) {
+                            continue;
+                        }
+
+                        $bajas->darDeBaja(
+                            (int) $equipo->id_equipo,
+                            $this->motivoBaja,
+                            $this->fechaBaja,
+                            $this->observaciones,
+                            $this->autoriza,
+                            (int) auth()->id(),
+                            $documento['folio']
+                        );
+
+                        $idsDadosDeBaja[] = (int) $equipo->id_equipo;
+                    }
+                }
+
                 $datos = $documento;
                 unset($datos['logo']);
                 $datos['fotos'] = $rutas;
@@ -266,11 +442,15 @@ class EquipoBajaMultiple extends Component
                 ]);
             });
             $this->reporteId = (int) $registro->getKey();
+            app(\App\Services\BajaEquipoService::class)->despuesDeBajas($idsDadosDeBaja);
         } catch (Throwable $exception) {
             Storage::disk('local')->deleteDirectory($directorio);
             throw $exception;
         }
         session()->flash('descargar_reporte', $this->reporteId);
+        if ($this->modo === 'conjunta') {
+            session()->flash('toast', ['type' => 'success', 'message' => 'Se dieron de baja los equipos y se generó el acta de baja múltiple.']);
+        }
         return $this->redirectRoute('equipos.index');
     }
 
@@ -292,7 +472,11 @@ class EquipoBajaMultiple extends Component
     public function render()
     {
         Gate::authorize('gestionar');
-        $elegidos = $this->consulta()->whereIn('e.id_equipo', array_slice($this->seleccionados, 0, 10))->orderBy('e.codigo_inventario')->get();
+        $elegidos = ($this->desdeInventario ? $this->consultaSeleccion() : $this->consulta())
+            ->whereIn('e.id_equipo', array_slice($this->seleccionados, 0, 10))->orderBy('e.codigo_inventario')->get();
+
+        // Aviso: equipos de distinto tipo en la misma baja.
+        $tiposSeleccion = $elegidos->pluck('tipo')->map(fn ($tipo) => $tipo ?: 'Sin tipo')->unique()->values();
         $documento = $this->documento($elegidos);
         foreach (['fotoFrontal' => 'Vista frontal', 'fotoTrasera' => 'Vista trasera'] as $campo => $titulo) {
             if ($this->{$campo} && !$this->getErrorBag()->has($campo)) {
@@ -308,6 +492,8 @@ class EquipoBajaMultiple extends Component
             'camposTipoFiltros' => $this->tipoActivo ? $this->getCamposFiltrables((int) $this->tipoActivo) : [],
             'situaciones' => collect(EquiposIndex::SITUACIONES)->map(fn ($label, $value) => ['value' => $value, 'label' => $label])->values()->all(),
             'equipos' => $this->listado()->paginate($this->cantidadPagina($this->perPage)), 'elegidos' => $elegidos, 'documento' => $documento,
+            'tiposSeleccion' => $tiposSeleccion,
+            'activosSeleccion' => $elegidos->filter(fn ($e) => (int) ($e->es_baja ?? 1) === 0)->count(),
             'hoteles' => DB::table('unidades_organizativas')->where('activo', true)->orderBy('nombre')->get(['id_unidad', 'nombre']),
             'departamentos' => $this->hotelId ? Departamento::disponiblesParaUnidad((int) $this->hotelId)->orderBy('nombre')->get() : collect(),
         ]);

@@ -798,42 +798,6 @@
 
                             >
 
-                                <span
-
-                                    x-bind:class="
-
-                                        activo === @js($valor)
-
-                                            ? 'border-[var(--theme-primary)] bg-[var(--theme-primary)] text-white'
-
-                                            : 'border-[var(--theme-border-strong)] text-transparent'
-
-                                    "
-
-                                    class="flex h-5 w-5 shrink-0 items-center justify-center rounded border"
-
-                                >
-
-                                    <svg
-
-                                        class="h-3.5 w-3.5"
-
-                                        viewBox="0 0 24 24"
-
-                                        fill="none"
-
-                                        stroke="currentColor"
-
-                                        stroke-width="2.5"
-
-                                    >
-
-                                        <path d="m5 12 4 4L19 6"/>
-
-                                    </svg>
-
-                                </span>
-
                                 <span class="min-w-0">
 
                                     <span class="block text-sm font-semibold text-[var(--theme-text-strong)]">

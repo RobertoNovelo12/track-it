@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Throwable;
@@ -29,11 +30,178 @@ class EquipoBaja extends Component
     public $fotoLateral1 = null;
     public $fotoLateral2 = null;
 
-    public function mount(int $equipoId): void
+    /*
+    |--------------------------------------------------------------------------
+    | Baja en lote (?cola=1,2,3 desde Inventario)
+    |--------------------------------------------------------------------------
+    |
+    | Al confirmar una baja se carga el siguiente equipo de la cola sin
+    | volver a Inventario. Se conservan motivo, fecha y quién autoriza;
+    | fotos y comentarios son de cada equipo. Al terminar se abre el acta
+    | de baja múltiple con todos los equipos de la cola.
+    |
+    */
+    public const MAXIMO_COLA = 10;
+
+    #[Locked]
+    public array $cola = [];
+
+    #[Locked]
+    public array $pendientes = [];
+
+    #[Locked]
+    public array $hechos = [];
+
+    #[Locked]
+    public array $codigosCola = [];
+
+    /** Tipos de equipo del lote (aviso si son distintos). */
+    #[Locked]
+    public array $tiposCola = [];
+
+    /*
+     * El parámetro se llama $lote (no $cola): Livewire asigna los
+     * parámetros de mount a la propiedad pública del mismo nombre, y
+     * $cola es un arreglo.
+     */
+    public function mount(int $equipoId, ?string $lote = null): void
     {
         $this->equipoId = $equipoId;
         $this->fechaBaja = now()->format('Y-m-d');
+        $this->prepararCola($lote);
         $this->cargarEquipo();
+    }
+
+    /**
+     * Ids de la cola: enteros, sin repetir, máximo 10 y con el equipo actual.
+     */
+    protected function prepararCola(?string $cola): void
+    {
+        $ids = collect(explode(',', (string) $cola))
+            ->map(fn ($id) => (int) trim($id))
+            ->filter(fn (int $id) => $id > 0)
+            ->unique()
+            ->take(self::MAXIMO_COLA)
+            ->values()
+            ->all();
+
+        if (count($ids) < 2 || ! in_array($this->equipoId, $ids, true)) {
+            return;
+        }
+
+        $this->cola = $ids;
+
+        $this->codigosCola = DB::table('equipos')
+            ->whereIn('id_equipo', $ids)
+            ->pluck('codigo_inventario', 'id_equipo')
+            ->map(fn ($codigo) => (string) ($codigo ?: 'Sin código'))
+            ->all();
+
+        $this->tiposCola = DB::table('equipos as e')
+            ->leftJoin('tipos_equipo as te', 'te.id_tipo_equipo', '=', 'e.id_tipo_equipo')
+            ->whereIn('e.id_equipo', $ids)
+            ->pluck('te.nombre')
+            ->map(fn ($tipo) => (string) ($tipo ?: 'Sin tipo'))
+            ->unique()
+            ->values()
+            ->all();
+
+        // Los que ya estaban dados de baja no entran a la cola de bajas.
+        $yaDeBaja = $this->idsDadosDeBaja($ids);
+
+        $this->pendientes = array_values(array_diff($ids, $yaDeBaja));
+    }
+
+    protected function idsDadosDeBaja(array $ids): array
+    {
+        return DB::table('equipos as e')
+            ->leftJoin('estados_equipo as ee', 'ee.id_estado_equipo', '=', 'e.id_estado_activo')
+            ->whereIn('e.id_equipo', $ids)
+            ->where(function ($query): void {
+                $query->where('ee.clave', 'BAJA')
+                    ->orWhereExists(fn ($sub) => $sub->selectRaw('1')
+                        ->from('bajas as b')
+                        ->whereColumn('b.id_equipo', 'e.id_equipo'));
+            })
+            ->pluck('e.id_equipo')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+    }
+
+    public function enCola(): bool
+    {
+        return $this->cola !== [];
+    }
+
+    /**
+     * Pasa al siguiente equipo pendiente o, si ya no hay, abre el acta.
+     */
+    protected function avanzarCola(?string $avisoHecho)
+    {
+        $this->pendientes = array_values(array_filter(
+            $this->pendientes,
+            fn (int $id) => $id !== $this->equipoId
+        ));
+
+        // Por si otro usuario dio de baja alguno mientras tanto.
+        $this->pendientes = array_values(array_diff(
+            $this->pendientes,
+            $this->idsDadosDeBaja($this->pendientes)
+        ));
+
+        if ($this->pendientes === []) {
+            session()->flash('toast', [
+                'type' => 'success',
+                'message' => count($this->hechos) === 1
+                    ? 'Se dio de baja 1 equipo. Ahora puedes generar el acta de baja múltiple.'
+                    : 'Se dieron de baja ' . count($this->hechos) . ' equipos. Ahora puedes generar el acta de baja múltiple.',
+            ]);
+
+            return $this->redirectRoute(
+                'equipos.baja-multiple',
+                ['equipos' => implode(',', $this->cola)],
+                navigate: true
+            );
+        }
+
+        $this->equipoId = $this->pendientes[0];
+
+        // Datos de cada equipo; motivo, fecha y quién autoriza se conservan.
+        $this->reset('comentariosBaja', 'fotoFrontal', 'fotoTrasera', 'fotoLateral1', 'fotoLateral2');
+        $this->resetValidation();
+        $this->cargarEquipo();
+
+        // La dirección refleja el equipo actual (recargar no pierde el lote).
+        $url = route('equipos.baja', ['equipo' => $this->equipoId, 'cola' => implode(',', $this->cola)]);
+        $this->js('history.replaceState(history.state, "", ' . json_encode($url, JSON_UNESCAPED_SLASHES) . '); window.scrollTo({ top: 0, behavior: "smooth" });');
+
+        $siguiente = 'Sigue ' . ($this->equipo['codigo_inventario'] ?: 'el siguiente equipo') . '.';
+
+        $this->dispatch('toast', type: 'success', message: trim(($avisoHecho ?? '') . ' ' . $siguiente));
+
+        return null;
+    }
+
+    /**
+     * Saltar el equipo actual sin darlo de baja (queda fuera del lote).
+     */
+    public function omitir()
+    {
+        if (! $this->enCola()) {
+            return null;
+        }
+
+        $codigo = $this->equipo['codigo_inventario'] ?? 'El equipo';
+
+        $this->cola = array_values(array_filter($this->cola, fn (int $id) => $id !== $this->equipoId));
+
+        if ($this->hechos === [] && count($this->pendientes) <= 1) {
+            session()->flash('toast', ['type' => 'info', 'message' => 'No se dio de baja ningún equipo.']);
+
+            return $this->redirectRoute('equipos.index', navigate: true);
+        }
+
+        return $this->avanzarCola($codigo . ' se omitió.');
     }
 
     protected function cargarEquipo(): void
@@ -508,6 +676,15 @@ class EquipoBaja extends Component
         );
 
         $this->dispatch('notificaciones-actualizadas');
+
+        // Baja en lote: siguiente equipo sin volver a Inventario.
+        if ($this->enCola()) {
+            $this->hechos[] = $this->equipoId;
+
+            return $this->avanzarCola(
+                ($this->equipo['codigo_inventario'] ?: 'El equipo') . ' se dio de baja.'
+            );
+        }
 
         session()->flash(
             'success',

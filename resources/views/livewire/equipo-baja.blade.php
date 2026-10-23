@@ -276,12 +276,80 @@
         </button>
     </div>
 
+    {{-- BAJA EN LOTE: progreso de los equipos seleccionados en Inventario --}}
+    @if ($this->enCola())
+        @php
+            $totalLote = count($hechos) + count($pendientes);
+            $posicionLote = count($hechos) + 1;
+        @endphp
+
+        <section
+            wire:key="baja-lote-{{ $equipoId }}"
+            aria-label="Progreso de la baja en lote"
+            class="mb-4 rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] px-4 py-3 sm:px-5"
+        >
+            <div class="flex flex-wrap items-center justify-between gap-2">
+                <p class="text-sm font-semibold text-[var(--theme-text-strong)]">
+                    Baja en lote · equipo {{ $posicionLote }} de {{ $totalLote }}
+                </p>
+                <p class="text-xs text-[var(--theme-text-muted)]">
+                    Al confirmar se carga el siguiente. Motivo, fecha y quién autoriza se conservan.
+                </p>
+            </div>
+
+            @if (count($tiposCola) > 1)
+                <p role="alert" class="mt-2 flex items-start gap-2 rounded-lg border border-[var(--theme-warning)] bg-[var(--theme-warning-soft)] px-3 py-2 text-xs text-[var(--theme-text)]">
+                    <svg class="mt-0.5 h-4 w-4 shrink-0 text-[var(--theme-warning)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17h.01"/></svg>
+                    <span><span class="font-semibold">Estás dando de baja equipos de diferente tipo:</span> {{ collect($tiposCola)->join(', ', ' y ') }}.</span>
+                </p>
+            @endif
+
+            <ol class="mt-3 flex flex-wrap gap-1.5">
+                @foreach ($cola as $idLote)
+                    @php
+                        $estadoLote = in_array($idLote, $hechos, true)
+                            ? 'hecho'
+                            : ($idLote === $equipoId ? 'actual' : (in_array($idLote, $pendientes, true) ? 'pendiente' : 'previo'));
+                    @endphp
+                    <li
+                        @class([
+                            'inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[11px] font-medium',
+                            'border-[var(--theme-primary-border-strong)] bg-[var(--theme-primary-soft)] text-[var(--theme-primary)]' => $estadoLote === 'actual',
+                            'border-[var(--theme-border)] text-[var(--theme-text-muted)] line-through' => $estadoLote === 'hecho',
+                            'border-[var(--theme-border)] text-[var(--theme-text)]' => $estadoLote === 'pendiente',
+                            'border-dashed border-[var(--theme-border)] text-[var(--theme-text-muted)]' => $estadoLote === 'previo',
+                        ])
+                        @if ($estadoLote === 'actual') aria-current="step" @endif
+                        title="{{ match ($estadoLote) { 'hecho' => 'Dado de baja', 'actual' => 'Equipo actual', 'pendiente' => 'Pendiente', default => 'Ya estaba dado de baja (solo va en el acta)' } }}"
+                    >
+                        @if ($estadoLote === 'hecho')
+                            <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M5 12l4 4L19 7"/></svg>
+                        @endif
+                        {{ $codigosCola[$idLote] ?? $idLote }}
+                    </li>
+                @endforeach
+            </ol>
+        </section>
+    @endif
+
     {{-- ENCABEZADO --}}
     <div class="mb-5 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-end">
+        <div class="flex flex-wrap items-center gap-3">
+            @if ($this->enCola())
+                <button
+                    type="button"
+                    wire:click="omitir"
+                    wire:loading.attr="disabled"
+                    data-guardar
+                    class="inline-flex h-10 items-center justify-center rounded-lg border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-5 text-sm font-medium text-[var(--theme-text)] transition-colors hover:bg-[var(--theme-surface-soft)]"
+                    title="Sacar este equipo del lote sin darlo de baja"
+                >
+                    Omitir este equipo
+                </button>
+            @endif
 
-        <div class="flex items-center gap-3">
             <a
-                href="{{ route('equipos.edit', $equipoId) }}"
+                href="{{ $this->enCola() ? route('equipos.index') : route('equipos.edit', $equipoId) }}"
                 class="inline-flex h-10 items-center justify-center rounded-lg border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-5 text-sm font-medium text-[var(--theme-text-muted)] transition-colors hover:bg-[var(--theme-surface-soft)]"
             >
                 Cancelar

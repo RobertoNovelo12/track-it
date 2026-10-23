@@ -47,12 +47,15 @@ class ReporteController extends Controller
     private function validarArchivo(
         ReporteGenerado $reporte
     ): void {
+        /*
+         * El historial está en la base de datos compartida, pero el
+         * archivo vive en el disco local (en Render se borra en cada
+         * despliegue). Si falta, se regenera con los filtros guardados.
+         */
         abort_unless(
-            $reporte->ruta_archivo
-                && Storage::disk('local')
-                    ->exists($reporte->ruta_archivo),
+            app(\App\Services\ReporteArchivoService::class)->asegurar($reporte),
             404,
-            'El archivo del reporte no está disponible.'
+            'El archivo del reporte no está disponible y no se pudo volver a generar.'
         );
     }
 

@@ -241,8 +241,8 @@
                     w-14
                     h-14
                     rounded-xl
-                    bg-emerald-500/10
-                    text-emerald-500
+                    bg-[var(--theme-surface-soft)]
+                    text-[var(--theme-text-muted)]
                     flex
                     items-center
                     justify-center
@@ -320,7 +320,7 @@
             class="
                 bg-[var(--theme-surface)]
                 border
-                border-red-500/25
+                border-[var(--theme-border)]
                 rounded-xl
                 px-4
                 sm:px-5
@@ -336,8 +336,8 @@
                     w-14
                     h-14
                     rounded-xl
-                    bg-red-500/10
-                    text-red-500
+                    bg-[var(--theme-primary-soft)]
+                    text-[var(--theme-primary)]
                     flex
                     items-center
                     justify-center
@@ -413,7 +413,7 @@
             class="
                 bg-[var(--theme-surface)]
                 border
-                border-[var(--theme-primary-border)]
+                border-[var(--theme-border)]
                 rounded-xl
                 px-4
                 sm:px-5
@@ -429,8 +429,8 @@
                     w-14
                     h-14
                     rounded-xl
-                    bg-[var(--theme-primary-soft)]
-                    text-[var(--theme-primary)]
+                    bg-[var(--theme-surface-soft)]
+                    text-[var(--theme-text-muted)]
                     flex
                     items-center
                     justify-center
@@ -889,13 +889,14 @@
                     "
                 >
 
+                    {{-- Mini métricas neutras, igual que la vista cargada --}}
                     {{-- Asignaciones hoy --}}
                     <div
                         class="
                             rounded-xl
                             border
-                            border-emerald-500/20
-                            bg-emerald-500/10
+                            border-[var(--theme-border)]
+                            bg-[var(--theme-surface-soft)]
                             p-3
                         "
                     >
@@ -912,8 +913,8 @@
                                     w-7
                                     h-7
                                     rounded-lg
-                                    bg-emerald-500/15
-                                    text-emerald-500
+                                    bg-[var(--theme-surface)]
+                                    text-[var(--theme-text-muted)]
                                     flex
                                     items-center
                                     justify-center
@@ -938,7 +939,7 @@
                                         h-5
                                         w-8
                                         rounded
-                                        bg-emerald-500/20
+                                        bg-[var(--theme-border)]
                                     "
                                 ></div>
                             </div>
@@ -962,8 +963,8 @@
                         class="
                             rounded-xl
                             border
-                            border-[var(--theme-primary-border)]
-                            bg-[var(--theme-primary-soft-subtle)]
+                            border-[var(--theme-border)]
+                            bg-[var(--theme-surface-soft)]
                             p-3
                         "
                     >
@@ -980,8 +981,8 @@
                                     w-7
                                     h-7
                                     rounded-lg
-                                    bg-[var(--theme-primary-soft)]
-                                    text-[var(--theme-primary)]
+                                    bg-[var(--theme-surface)]
+                                    text-[var(--theme-text-muted)]
                                     flex
                                     items-center
                                     justify-center
@@ -1007,7 +1008,7 @@
                                         h-5
                                         w-8
                                         rounded
-                                        bg-[var(--theme-primary-soft)]
+                                        bg-[var(--theme-border)]
                                     "
                                 ></div>
                             </div>
@@ -1031,8 +1032,8 @@
                         class="
                             rounded-xl
                             border
-                            border-amber-500/20
-                            bg-amber-500/10
+                            border-[var(--theme-border)]
+                            bg-[var(--theme-surface-soft)]
                             p-3
                         "
                     >
@@ -1049,8 +1050,8 @@
                                     w-7
                                     h-7
                                     rounded-lg
-                                    bg-amber-500/15
-                                    text-amber-500
+                                    bg-[var(--theme-surface)]
+                                    text-[var(--theme-text-muted)]
                                     flex
                                     items-center
                                     justify-center
@@ -1074,7 +1075,7 @@
                                         h-5
                                         w-8
                                         rounded
-                                        bg-amber-500/20
+                                        bg-[var(--theme-border)]
                                     "
                                 ></div>
                             </div>
@@ -1098,8 +1099,8 @@
                         class="
                             rounded-xl
                             border
-                            border-violet-500/20
-                            bg-violet-500/10
+                            border-[var(--theme-border)]
+                            bg-[var(--theme-surface-soft)]
                             p-3
                         "
                     >
@@ -1116,8 +1117,8 @@
                                     w-7
                                     h-7
                                     rounded-lg
-                                    bg-violet-500/15
-                                    text-violet-500
+                                    bg-[var(--theme-surface)]
+                                    text-[var(--theme-text-muted)]
                                     flex
                                     items-center
                                     justify-center
@@ -1142,7 +1143,7 @@
                                         h-5
                                         w-8
                                         rounded
-                                        bg-violet-500/20
+                                        bg-[var(--theme-border)]
                                     "
                                 ></div>
                             </div>
