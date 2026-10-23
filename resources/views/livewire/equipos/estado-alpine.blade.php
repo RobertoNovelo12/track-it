@@ -32,7 +32,7 @@
                     this.avisoExportacion = this.avisar('success', 'La descarga comenzó.', nombre + ' listo');
                 }
             } catch (error) {
-                this.avisoExportacion = this.avisar('error', 'No se pudo generar el documento. Intenta nuevamente.', 'Error al exportar');
+                this.avisoExportacion = this.avisar('error', window.trackitMensajeError(error, 'generar el documento'), 'Error al exportar');
             } finally {
                 this.exportando = false;
             }

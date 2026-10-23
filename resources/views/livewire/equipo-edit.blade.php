@@ -224,18 +224,7 @@
             Volver a la izquierda; exportar y dar de baja a la derecha.
         ============================================================ --}}
         <div class="mb-4 flex items-center gap-2 sm:gap-3">
-            <a
-                href="{{ route('equipos.index') }}"
-                wire:navigate.hover
-                class="flex h-10 shrink-0 items-center justify-center gap-2 rounded-lg border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 text-sm font-medium text-[var(--theme-text-muted)] transition-colors hover:border-[var(--theme-primary-border)] hover:bg-[var(--theme-surface-soft)] hover:text-[var(--theme-text)] sm:px-4"
-                aria-label="Volver al inventario"
-            >
-                <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
-                    <path d="M15 6l-6 6 6 6"/>
-                </svg>
-
-                <span class="hidden sm:inline">Volver</span>
-            </a>
+            @include('layouts.partials.boton-volver', ['destino' => route('equipos.show', $equipoId)])
 
             <div class="flex min-w-0 flex-1 items-center justify-end gap-2 sm:gap-3">
             <a
@@ -327,6 +316,7 @@
             FORMULARIO
         ============================================================ --}}
         <form
+            data-avisar-cambios
             @submit.prevent="{{ $soloLectura ? '' : 'saveOptimistically()' }}"
             class="relative"
         >
@@ -510,11 +500,25 @@
                                         :step="field.type === 'number' ? 'any' : null"
                                         x-model="fieldValues(field)[field.model]"
                                         x-bind:readonly="!field.child && field.model === 'propietario'"
-                                        :placeholder="field.placeholder || ''"
+                                        :placeholder="field.placeholder || trackitFormatoCampo(field.key + ' ' + (field.label ?? '')).ejemplo || ''"
+                                        :inputmode="field.type === 'text' ? (trackitFormatoCampo(field.key + ' ' + (field.label ?? '')).inputmode ?? null) : null"
+                                        :maxlength="trackitFormatoCampo(field.key + ' ' + (field.label ?? '')).maxlength ?? null"
+                                        :autocapitalize="trackitFormatoCampo(field.key + ' ' + (field.label ?? '')).mayusculas ? 'characters' : null"
+                                        :spellcheck="trackitFormatoCampo(field.key + ' ' + (field.label ?? '')).sinCorrector ? 'false' : null"
+                                        :autocomplete="trackitFormatoCampo(field.key + ' ' + (field.label ?? '')).sinCorrector ? 'off' : null"
+                                        :aria-describedby="trackitFormatoCampo(field.key + ' ' + (field.label ?? '')).ayuda ? 'ayuda-equipment-' + field.key : null"
                                         @input="clearValidationError(errorKey(field))"
                                         class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)]"
                                     >
                                 </template>
+
+                                {{-- Formato esperado, visible antes de escribir --}}
+                                <p
+                                    x-show="trackitFormatoCampo(field.key + ' ' + (field.label ?? '')).ayuda && ! fieldError(errorKey(field))"
+                                    :id="'ayuda-equipment-' + field.key"
+                                    x-text="trackitFormatoCampo(field.key + ' ' + (field.label ?? '')).ayuda"
+                                    class="mt-1 text-[11px] text-[var(--theme-text-muted)]"
+                                ></p>
 
                                 <p
                                     x-show="fieldError(errorKey(field))"
@@ -1913,7 +1917,7 @@
 
                             this.showError(
                                 validationMessage
-                                || 'No fue posible guardar los cambios. Inténtalo nuevamente.'
+                                || window.trackitMensajeError(error, 'guardar los cambios')
                             );
 
                         } finally {

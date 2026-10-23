@@ -14,7 +14,8 @@
 @endphp
 
 <div>
-    <form wire:submit="save" class="space-y-5">
+    <form
+            data-avisar-cambios wire:submit="save" class="space-y-5">
 
         {{-- Cuenta para un colaborador sin cuenta (desde Seguridad y roles) --}}
         @if ($colaboradorNombre !== '')

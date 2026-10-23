@@ -535,7 +535,7 @@
 
                     this.showError(
                         this.firstError(error)
-                        || 'No fue posible guardar la reasignación. Inténtalo nuevamente.'
+                        || window.trackitMensajeError(error, 'guardar la reasignación')
                     );
 
                 } finally {
@@ -667,6 +667,7 @@
 
 
         <form
+            data-avisar-cambios
             @submit.prevent="saveReassignment()"
             class="space-y-5"
         >

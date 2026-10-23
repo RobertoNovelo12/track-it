@@ -14,6 +14,12 @@
 
     «accion» puede devolver una promesa: el botón muestra
     «Procesando…» hasta que termine y luego se cierra.
+
+    Desde JavaScript, como reemplazo directo de confirm():
+        if (! await window.trackitConfirmar({ titulo: '…', peligro: true })) return;
+
+    El foco queda dentro de la ventana mientras está abierta (Tab no
+    se escapa) y al cerrarla vuelve al botón que la abrió.
 ============================================================ --}}
 <div
     x-data="{
@@ -25,6 +31,17 @@
         textoCancelar: 'Cancelar',
         peligro: false,
         accion: null,
+        alCancelar: null,
+
+        init() {
+            window.trackitConfirmar = (datos = {}) => new Promise((resolve) => {
+                this.abrir({
+                    ...datos,
+                    accion: () => resolve(true),
+                    alCancelar: () => resolve(false),
+                });
+            });
+        },
 
         abrir(datos = {}) {
             this.titulo = datos.titulo ?? '¿Confirmar acción?';
@@ -33,6 +50,7 @@
             this.textoCancelar = datos.cancelar ?? 'Cancelar';
             this.peligro = Boolean(datos.peligro);
             this.accion = typeof datos.accion === 'function' ? datos.accion : null;
+            this.alCancelar = typeof datos.alCancelar === 'function' ? datos.alCancelar : null;
             this.procesando = false;
             this.abierto = true;
 
@@ -43,10 +61,14 @@
             if (this.procesando) return;
             this.abierto = false;
             this.accion = null;
+            this.alCancelar?.();
+            this.alCancelar = null;
         },
 
         async aceptar() {
             if (this.procesando) return;
+
+            this.alCancelar = null;
 
             if (! this.accion) {
                 this.abierto = false;
@@ -91,6 +113,7 @@
             x-transition:leave="transition ease-in duration-100"
             x-transition:leave-start="opacity-100"
             x-transition:leave-end="opacity-0"
+            x-trap.noscroll="abierto"
             class="relative z-10 w-full max-w-sm overflow-hidden rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] theme-shadow-xl"
         >
             <div class="flex items-start gap-3 px-5 pt-5">

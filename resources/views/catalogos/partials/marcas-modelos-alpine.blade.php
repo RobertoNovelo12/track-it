@@ -1111,9 +1111,12 @@ window.brandsModelsCatalog = (data) => ({
                                 if (
                                     marca.activo
                                     &&
-                                    !window.confirm(
-                                        `¿Desactivar la marca ${marca.nombre}? Los registros existentes conservarán su relación.`
-                                    )
+                                    !(await window.trackitConfirmar({
+                                        titulo: `¿Desactivar la marca ${marca.nombre}?`,
+                                        mensaje: 'Ya no se ofrecerá en equipos nuevos. Los registros existentes conservarán su relación.',
+                                        confirmar: 'Desactivar',
+                                        peligro: true,
+                                    }))
                                 ) {
                                     return;
                                 }
@@ -1183,9 +1186,12 @@ window.brandsModelsCatalog = (data) => ({
                                 if (
                                     modelo.activo
                                     &&
-                                    !window.confirm(
-                                        `¿Desactivar el modelo ${modelo.nombre}? Los equipos existentes conservarán su relación.`
-                                    )
+                                    !(await window.trackitConfirmar({
+                                        titulo: `¿Desactivar el modelo ${modelo.nombre}?`,
+                                        mensaje: 'Ya no se ofrecerá en equipos nuevos. Los equipos existentes conservarán su relación.',
+                                        confirmar: 'Desactivar',
+                                        peligro: true,
+                                    }))
                                 ) {
                                     return;
                                 }

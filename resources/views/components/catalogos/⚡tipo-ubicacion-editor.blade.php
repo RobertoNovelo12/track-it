@@ -89,7 +89,8 @@ new class extends Component
 ?>
 
 <div>
-    <form wire:submit="save" class="space-y-5">
+    <form
+            data-avisar-cambios wire:submit="save" class="space-y-5">
         <section class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 sm:p-6">
             <h2 class="text-sm font-semibold text-[var(--theme-text-strong)]">
                 Información del tipo

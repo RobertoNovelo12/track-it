@@ -1,6 +1,7 @@
 <div class="space-y-5">
 
     <form
+            data-avisar-cambios
         wire:submit="guardar"
         class="space-y-5"
     >

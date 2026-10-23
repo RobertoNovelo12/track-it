@@ -1,4 +1,4 @@
-<div class="space-y-5">
+<div class="space-y-5" data-avisar-cambios>
 
     {{-- ============================================================
         INFORMACIÓN GENERAL
@@ -857,6 +857,7 @@
         {{-- Guardar cambios --}}
         <x-ui.button
             wire:click="guardar"
+            data-guardar
             target="guardar"
             size="lg"
             loading-text="Guardando…"

@@ -603,7 +603,7 @@
 
                     this.showError(
                         this.firstError(error)
-                        || 'No fue posible guardar la asignación. Inténtalo nuevamente.'
+                        || window.trackitMensajeError(error, 'guardar la asignación')
                     );
 
                 } finally {
@@ -795,6 +795,7 @@
             FORMULARIO
         ============================================================ --}}
         <form
+            data-avisar-cambios
             @submit.prevent="saveAssignment()"
             class="space-y-5"
         >

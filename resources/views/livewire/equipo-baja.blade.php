@@ -1,5 +1,6 @@
 
 <div
+    data-avisar-cambios
     x-data="{
         successVisible: false,
         successMessage: '',
@@ -288,6 +289,7 @@
 
             <x-ui.button
                 wire:click="confirmar"
+                data-guardar
                 target="confirmar"
                 variant="danger"
                 loading-text="Dando de baja…"

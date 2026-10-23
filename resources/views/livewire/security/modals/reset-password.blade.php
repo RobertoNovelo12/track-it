@@ -48,7 +48,7 @@
                     this.error = respuesta?.mensaje || 'No se pudo restablecer la contraseña.';
                 }
             } catch (e) {
-                this.error = 'No se pudo restablecer la contraseña. Inténtalo de nuevo.';
+                this.error = window.trackitMensajeError(e, 'restablecer la contraseña');
             } finally {
                 this.cargando = false;
             }

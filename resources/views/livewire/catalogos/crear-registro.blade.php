@@ -89,6 +89,7 @@
             CABECERA
         ============================================================ --}}
         <x-form.page-header
+            :volver="false"
             title="Nueva marca o modelo"
             :crumbs="[
                 ['label' => 'Administración', 'href' => route('catalogos.index')],
@@ -100,7 +101,8 @@
         {{-- ============================================================
             FORMULARIO
         ============================================================ --}}
-        <form @submit.prevent="saveRecord()" class="relative">
+        <form
+            data-avisar-cambios @submit.prevent="saveRecord()" class="relative">
             <fieldset class="space-y-5">
 
                 {{-- ====================================================
@@ -1411,7 +1413,7 @@
 
                         this.showError(
                             validationMessage
-                                || 'No fue posible guardar el registro. Inténtalo nuevamente.'
+                                || window.trackitMensajeError(error, 'guardar el registro')
                         );
                     }
                 },

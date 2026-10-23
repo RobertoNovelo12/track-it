@@ -161,6 +161,7 @@
         CABECERA (mismo diseño que Nueva Alta de equipo)
     ============================================================ --}}
     <x-form.page-header
+        :volver="false"
         :title="$tipo === 'marca' ? 'Editar marca' : 'Editar modelo'"
         :crumbs="[
             ['label' => 'Administración', 'href' => route('catalogos.index')],
@@ -177,6 +178,7 @@
         ESTE FORMULARIO DEBE ESTAR FUERA DEL @if ($successMessage)
     ============================================================ --}}
     <form
+            data-avisar-cambios
         wire:submit.prevent="save"
 
         class="relative"

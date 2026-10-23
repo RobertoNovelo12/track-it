@@ -343,7 +343,8 @@ new class extends Component
         </div>
     @endif
 
-    <form wire:submit="save" class="space-y-5">
+    <form
+            data-avisar-cambios wire:submit="save" class="space-y-5">
         {{-- DATOS DEL DEPARTAMENTO --}}
         <section class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 sm:p-6">
             <h2 class="mb-5 text-sm font-semibold text-[var(--theme-text-strong)]">

@@ -225,6 +225,7 @@ new class extends Component
     @endphp
 
     <form
+            data-avisar-cambios
         wire:submit="save"
         class="space-y-5"
         x-data="{ hotel: $wire.entangle('hotel'), tipo: $wire.entangle('tipo') }"
