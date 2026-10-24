@@ -394,6 +394,15 @@
                     sectionKey: 'adicional',
                 },
 
+                // Solo en los tipos que agregaron «Ubicación» en Campos disponibles.
+                id_ubicacion: {
+                    model: 'idUbicacion',
+                    label: 'Ubicación',
+                    type: 'select',
+                    options: 'ubicaciones',
+                    sectionKey: 'adicional',
+                },
+
                 fecha_fin_garantia: {
                     model: 'fechaFinGarantia',
                     label: 'Vigencia de garantía',
@@ -509,6 +518,21 @@
                         && String(value) !== String(previous)
                     ) {
                         this.values.idDepartamento = '';
+                        this.values.idUbicacion = '';
+                    }
+                });
+
+                // La ubicación depende del departamento (si tiene departamentos).
+                this.$watch('values.idDepartamento', (value, previous) => {
+                    if (
+                        !this.suspendDependencies
+                        && String(value) !== String(previous)
+                        && this.values.idUbicacion
+                        && !this.optionsFor({ options: 'ubicaciones' }).some(
+                            opcion => String(opcion.value) === String(this.values.idUbicacion)
+                        )
+                    ) {
+                        this.values.idUbicacion = '';
                     }
                 });
             },
@@ -743,6 +767,29 @@
                     );
                 }
 
+                /*
+                 * Ubicaciones del hotel (o sin hotel) y, si ya hay
+                 * departamento, las que no tienen departamentos o lo incluyen.
+                 */
+                if (field.options === 'ubicaciones') {
+                    const hotel = String(this.values.idHotel ?? '');
+                    const departamento = String(this.values.idDepartamento ?? '');
+
+                    if (!hotel) {
+                        return [];
+                    }
+
+                    return (this.data.ubicaciones ?? []).filter(
+                        ubicacion =>
+                            (!ubicacion.unidad || String(ubicacion.unidad) === hotel)
+                            && (
+                                !departamento
+                                || (ubicacion.departamentos ?? []).length === 0
+                                || ubicacion.departamentos.some(id => String(id) === departamento)
+                            )
+                    );
+                }
+
                 return this.data[field.options] ?? [];
             },
 
@@ -755,7 +802,7 @@
                     field.options === 'modelos'
                     && (!this.values.idMarca || !this.typeId)
                 ) || (
-                    field.options === 'departamentos'
+                    ['departamentos', 'ubicaciones'].includes(field.options)
                     && !this.values.idHotel
                 );
             },
@@ -949,7 +996,10 @@
                     const result = await request;
 
                     if (!result || result.ok !== true) {
-                        throw new Error('Respuesta no válida');
+                        // Falla inesperada en el servidor: detalle en la consola.
+                        const fallo = new Error(result?.message || 'Respuesta no válida');
+                        fallo.debug = result?.debug ?? result;
+                        throw fallo;
                     }
 
                     if (result.nextCode) {
@@ -971,6 +1021,20 @@
                 } catch (error) {
                     const errors = error?.errors ?? {};
 
+                    // Diagnóstico: error exacto en la consola del navegador.
+                    console.error('[Track-it] Error al guardar el equipo', {
+                        estado: error?.status ?? null,
+                        mensaje: error?.message ?? null,
+                        detalle: error?.debug ?? null,
+                        respuesta: error?.body ?? error?.json ?? error?.response ?? null,
+                        errores: errors,
+                        error,
+                    });
+
+                    if (error?.debug?.mensaje) {
+                        console.error('[Track-it] ' + error.debug.clase + ': ' + error.debug.mensaje + '\n' + error.debug.archivo + ':' + error.debug.linea + (error.debug.sql ? '\nSQL: ' + error.debug.sql : ''));
+                    }
+
                     // Recuperar lo capturado si el usuario no empezó el siguiente.
                     const sinEmpezar = this.conservarDatos
                         ? ! this.values.nombreEquipo && ! this.values.numeroSerie
@@ -989,7 +1053,7 @@
                         Array.isArray(first)
                             ? first[0]
                             : first
-                    ) || window.trackitMensajeError(error, 'guardar el equipo');
+                    ) || (error?.debug ? error.message : '') || window.trackitMensajeError(error, 'guardar el equipo');
                 }
             },
         }));

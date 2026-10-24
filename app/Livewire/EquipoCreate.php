@@ -31,6 +31,7 @@ class EquipoCreate extends Component
     public string $idCondicionActivo = '';
     public string $idHotel = '';
     public string $idDepartamento = '';
+    public string $idUbicacion = '';
     public string $fechaFinGarantia = '';
     public string $comentarios = '';
 
@@ -86,6 +87,7 @@ class EquipoCreate extends Component
             'idCondicionActivo' => (string) ($equipo->id_condicion_activo ?? ''),
             'idHotel' => (string) ($equipo->id_unidad ?? ''),
             'idDepartamento' => (string) ($equipo->id_departamento ?? ''),
+            'idUbicacion' => (string) ($equipo->id_ubicacion ?? ''),
         ];
 
         $childData = [];
@@ -214,14 +216,25 @@ class EquipoCreate extends Component
             }
         }
 
+        /*
+         * Ubicación (opcional; sólo si el tipo agregó el campo
+         * «Ubicación»): del hotel y, si hay, del departamento.
+         */
+        $ubicacionId = app(\App\Services\UbicacionOrganizacionalService::class)
+            ->validarUbicacionEquipo(
+                $payload['idUbicacion'] ?? null,
+                (int) $hotel->id_unidad,
+                $departamentoId,
+                'idUbicacion'
+            );
+
         return [
             'id_unidad' => (int) $hotel->id_unidad,
             'id_departamento' => $departamentoId,
+            'id_ubicacion' => $ubicacionId,
 
-            // Compatibilidad temporal con módulos que aún usan áreas.
-            'id_area' => $hotel->id_area_origen === null
-                ? null
-                : (int) $hotel->id_area_origen,
+            // El área ya no se usa: la organización es hotel + departamento.
+            'id_area' => null,
         ];
     }
 
@@ -773,6 +786,7 @@ class EquipoCreate extends Component
     public function updatedIdHotel(): void
     {
         $this->idDepartamento = '';
+        $this->idUbicacion = '';
     }
 
     /*
@@ -1159,6 +1173,9 @@ class EquipoCreate extends Component
                 $this->getAllDepartamentos()
             ),
 
+            // [{ value, label, unidad, departamentos }] (filtro en el navegador).
+            'ubicaciones' => app(\App\Services\UbicacionOrganizacionalService::class)->ubicaciones(),
+
             'childFieldsByType' => $childFieldsByType,
 
             'childFieldMetaByType' => $childFieldMetaByType,
@@ -1303,6 +1320,65 @@ class EquipoCreate extends Component
 
     #[Json]
     public function save(array $payload): array
+    {
+        try {
+            return $this->guardarEquipo($payload);
+        } catch (\Illuminate\Validation\ValidationException $esperada) {
+            throw $esperada;
+        } catch (\Illuminate\Auth\Access\AuthorizationException $sinPermiso) {
+            // Livewire lo convertiría en un 500 genérico sin decir por qué.
+            return [
+                'ok' => false,
+                'message' => 'Tu rol no tiene permiso para agregar equipos. Pide acceso a un administrador.',
+                'debug' => ['clase' => $sinPermiso::class, 'mensaje' => $sinPermiso->getMessage(), 'archivo' => 'Gate gestionar', 'linea' => 0, 'sql' => null],
+            ];
+        } catch (\Throwable $error) {
+            return $this->errorInesperado($error, $payload);
+        }
+    }
+
+    /*
+     * Diagnóstico: cualquier falla inesperada al guardar se escribe en
+     * storage/logs/equipos-guardar.log (aunque el log de Laravel no
+     * funcione) y se envía al navegador para mostrarla en la consola.
+     */
+    private function errorInesperado(\Throwable $error, array $payload): array
+    {
+        $detalle = [
+            'clase' => $error::class,
+            'mensaje' => $error->getMessage(),
+            'archivo' => str_replace(base_path() . DIRECTORY_SEPARATOR, '', $error->getFile()),
+            'linea' => $error->getLine(),
+            'sql' => $error instanceof \Illuminate\Database\QueryException ? $error->getSql() : null,
+            'tipo' => $payload['idTipoEquipo'] ?? null,
+            'traza' => array_slice(explode("\n", $error->getTraceAsString()), 0, 15),
+        ];
+
+        try {
+            report($error);
+        } catch (\Throwable) {
+            // El log de Laravel no es imprescindible para el diagnóstico.
+        }
+
+        try {
+            @file_put_contents(
+                storage_path('logs/equipos-guardar.log'),
+                '[' . now()->toDateTimeString() . '] '
+                    . json_encode($detalle, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT)
+                    . PHP_EOL,
+                FILE_APPEND
+            );
+        } catch (\Throwable) {
+        }
+
+        return [
+            'ok' => false,
+            'message' => 'No se pudo guardar el equipo: ' . $error->getMessage(),
+            'debug' => $detalle,
+        ];
+    }
+
+    private function guardarEquipo(array $payload): array
     {
         // Permiso por rol (ver AppServiceProvider).
         \Illuminate\Support\Facades\Gate::authorize('gestionar');
@@ -1457,6 +1533,9 @@ class EquipoCreate extends Component
                             'id_unidad' => $organizacion['id_unidad'],
                             'id_area' => $organizacion['id_area'],
                             'id_departamento' => $organizacion['id_departamento'],
+                            ...(\App\Services\UbicacionOrganizacionalService::equiposTienenUbicacion()
+                                ? ['id_ubicacion' => $organizacion['id_ubicacion']]
+                                : []),
                             'fecha_fin_garantia' => $this->nullableString(
                                 $payload['fechaFinGarantia']
                             ),
@@ -1592,6 +1671,8 @@ class EquipoCreate extends Component
 
                             'id_departamento' => $organizacion['id_departamento'],
 
+                            'id_ubicacion' => $organizacion['id_ubicacion'],
+
                             'id_tipo_asignacion' =>
                                 $idTipoAsignacion,
 
@@ -1680,6 +1761,7 @@ class EquipoCreate extends Component
                 'idCondicionActivo' => '',
                 'idHotel' => '',
                 'idDepartamento' => '',
+                'idUbicacion' => '',
                 'fechaFinGarantia' => '',
                 'comentarios' => '',
                 'childData' => [],

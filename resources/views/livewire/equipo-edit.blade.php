@@ -779,6 +779,13 @@
                             ?? ''
                         ),
 
+                    idUbicacion:
+                        String(
+                            data?.initial
+                                ?.idUbicacion
+                            ?? ''
+                        ),
+
                     fechaFinGarantia:
                         String(
                             data?.initial
@@ -910,6 +917,15 @@
                     label: 'Departamento',
                     type: 'select',
                     options: 'departamentos',
+                    sectionKey: 'adicional',
+                },
+
+                // Solo en los tipos que agregaron «Ubicación» (o si ya tiene dato).
+                id_ubicacion: {
+                    model: 'idUbicacion',
+                    label: 'Ubicación',
+                    type: 'select',
+                    options: 'ubicaciones',
                     sectionKey: 'adicional',
                 },
 
@@ -1172,6 +1188,29 @@
                     );
                 }
 
+                /*
+                 * Ubicaciones del hotel (o sin hotel) y, si ya hay
+                 * departamento, las que no tienen departamentos o lo incluyen.
+                 */
+                if (field.options === 'ubicaciones') {
+                    const hotel = String(this.idHotel ?? '');
+                    const departamento = String(this.idDepartamento ?? '');
+
+                    if (!hotel) {
+                        return [];
+                    }
+
+                    return (this.data.ubicaciones ?? []).filter(
+                        ubicacion =>
+                            (!ubicacion.unidad || String(ubicacion.unidad) === hotel)
+                            && (
+                                !departamento
+                                || (ubicacion.departamentos ?? []).length === 0
+                                || ubicacion.departamentos.some(id => String(id) === departamento)
+                            )
+                    );
+                }
+
                 return this.data[field.options] ?? [];
             },
 
@@ -1184,7 +1223,7 @@
                     field.options === 'modelos'
                     && (!this.idMarca || !this.typeId)
                 ) || (
-                    field.options === 'departamentos'
+                    ['departamentos', 'ubicaciones'].includes(field.options)
                     && !this.idHotel
                 );
             },
@@ -1302,10 +1341,33 @@
                                 }
 
                                 this.idDepartamento = '';
+                                this.idUbicacion = '';
 
                                 this.clearValidationError(
                                     'idHotel'
                                 );
+                            }
+                        );
+
+                        // La ubicación depende del departamento (si tiene departamentos).
+                        this.$watch(
+                            'idDepartamento',
+                            (value, previous) => {
+                                if (
+                                    this.suspendDependencies
+                                    || String(value ?? '') === String(previous ?? '')
+                                    || !this.idUbicacion
+                                ) {
+                                    return;
+                                }
+
+                                const sigue = this.optionsFor({ options: 'ubicaciones' }).some(
+                                    opcion => String(opcion.value) === String(this.idUbicacion)
+                                );
+
+                                if (!sigue) {
+                                    this.idUbicacion = '';
+                                }
                             }
                         );
 
@@ -1751,6 +1813,12 @@
                             idDepartamento:
                                 String(
                                     this.idDepartamento
+                                    ?? ''
+                                ),
+
+                            idUbicacion:
+                                String(
+                                    this.idUbicacion
                                     ?? ''
                                 ),
 

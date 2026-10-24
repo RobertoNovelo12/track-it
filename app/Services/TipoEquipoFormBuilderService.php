@@ -17,6 +17,22 @@ class TipoEquipoFormBuilderService
     ];
 
 
+    /*
+     * Campos de sistema cuyo destino no depende de que otro tipo ya los
+     * use: al agregarlos desde «Campos disponibles» se guardan aquí.
+     */
+    private const DESTINOS_SISTEMA = [
+        'id_ubicacion' => [
+            'origen_dato' => 'equipos',
+            'tabla_destino' => 'equipos',
+            'columna_destino' => 'id_ubicacion',
+            'fuente_opciones' => 'ubicaciones',
+            'id_catalogo' => null,
+            'seccion' => 'adicional',
+        ],
+    ];
+
+
     private const CONTROL_TYPES = [
         'text',
         'textarea',
@@ -315,7 +331,8 @@ class TipoEquipoFormBuilderService
                             ];
                         } else {
                             $metadata =
-                                $this->normalizeReferenceMetadata(
+                                self::DESTINOS_SISTEMA[(string) $row->clave]
+                                ?? $this->normalizeReferenceMetadata(
                                     $metadataByField[
                                         $idCampo
                                     ]
@@ -1301,7 +1318,8 @@ class TipoEquipoFormBuilderService
                         ];
                     } else {
                         $metadata =
-                            $this->normalizeReferenceMetadata(
+                            self::DESTINOS_SISTEMA[(string) $master->clave]
+                            ?? $this->normalizeReferenceMetadata(
                                 $metadataByField[
                                     $idCampo
                                 ]

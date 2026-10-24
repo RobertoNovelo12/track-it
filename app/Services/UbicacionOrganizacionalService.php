@@ -30,6 +30,17 @@ class UbicacionOrganizacionalService
 {
     private ?bool $estructuraNueva = null;
 
+    private static ?bool $equiposConUbicacion = null;
+
+    /*
+     * ¿Ya existe equipos.id_ubicacion? (migración 2026_10_24_000400).
+     * Mientras no, los equipos se guardan sin ubicación en vez de fallar.
+     */
+    public static function equiposTienenUbicacion(): bool
+    {
+        return self::$equiposConUbicacion ??= Schema::hasColumn('equipos', 'id_ubicacion');
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Datos para el navegador
@@ -207,7 +218,33 @@ class UbicacionOrganizacionalService
         ];
     }
 
-    private function ubicacionPermitida(int $ubicacionId, int $unidadId, int $departamentoId): bool
+    /*
+     * Ubicación del equipo (campo «Ubicación» de Campos disponibles).
+     * Es opcional y el departamento también: sin departamento sólo se
+     * revisa que la ubicación sea del hotel. Devuelve el id o null.
+     */
+    public function validarUbicacionEquipo(
+        int|string|null $idUbicacion,
+        int $unidadId,
+        ?int $departamentoId,
+        string $campo
+    ): ?int {
+        if (! filled($idUbicacion)) {
+            return null;
+        }
+
+        $ubicacionId = (int) $idUbicacion;
+
+        if ($ubicacionId < 1 || ! $this->ubicacionPermitida($ubicacionId, $unidadId, $departamentoId)) {
+            throw ValidationException::withMessages([
+                $campo => 'La ubicación no corresponde a la unidad o al departamento seleccionado.',
+            ]);
+        }
+
+        return $ubicacionId;
+    }
+
+    private function ubicacionPermitida(int $ubicacionId, int $unidadId, ?int $departamentoId): bool
     {
         if (! $this->tieneEstructuraNueva()) {
             return DB::table('ubicaciones')
@@ -223,7 +260,7 @@ class UbicacionOrganizacionalService
                 $query->whereNull('ub.id_unidad')
                     ->orWhere('ub.id_unidad', $unidadId);
             })
-            ->where(function ($query) use ($departamentoId) {
+            ->when($departamentoId !== null, fn ($consulta) => $consulta->where(function ($query) use ($departamentoId) {
                 $query
                     ->whereNotExists(function ($sub) {
                         $sub->selectRaw('1')
@@ -236,7 +273,7 @@ class UbicacionOrganizacionalService
                             ->whereColumn('dub.id_ubicacion', 'ub.id_ubicacion')
                             ->where('dub.id_departamento', $departamentoId);
                     });
-            })
+            }))
             ->exists();
     }
 

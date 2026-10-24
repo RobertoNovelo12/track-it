@@ -61,6 +61,7 @@ class EquipoEdit extends Component
     public string $idArea = '';
 
     public string $idDepartamento = '';
+    public string $idUbicacion = '';
 
     public string $fechaFinGarantia = '';
 
@@ -216,19 +217,28 @@ class EquipoEdit extends Component
 
         }
 
+        /*
+         * Ubicación (opcional; campo «Ubicación» del tipo): del hotel y,
+         * si hay, del departamento.
+         */
+        $ubicacionId = app(\App\Services\UbicacionOrganizacionalService::class)
+            ->validarUbicacionEquipo(
+                $payload['idUbicacion'] ?? null,
+                (int) $hotel->id_unidad,
+                $departamentoId,
+                'idUbicacion'
+            );
+
         return [
 
             'id_unidad' => (int) $hotel->id_unidad,
 
             'id_departamento' => $departamentoId,
 
-            // Compatibilidad temporal con módulos que aún usan áreas.*
+            'id_ubicacion' => $ubicacionId,
 
-            'id_area' => $departamentoId !== null || $hotel->id_area_origen === null
-
-                ? null
-
-                : (int) $hotel->id_area_origen,
+            // El área ya no se usa: la organización es hotel + departamento.
+            'id_area' => null,
 
         ];
 
@@ -369,6 +379,8 @@ class EquipoEdit extends Component
         }
 
         $this->idHotel = (string) ($data['id_unidad'] ?? '');
+
+        $this->idUbicacion = (string) ($data['id_ubicacion'] ?? '');
 
         $this->idDepartamento = (string) (
 
@@ -1702,6 +1714,47 @@ class EquipoEdit extends Component
 
     }
 
+    private ?array $baseFieldsCache = null;
+
+    /*
+     * Campos comunes visibles por tipo: [tipo => [clave => meta]].
+     */
+    private function configuredBaseFields(): array
+    {
+        if ($this->baseFieldsCache !== null) {
+            return $this->baseFieldsCache;
+        }
+
+        $result = [];
+
+        $rows = DB::table('tipo_equipo_campos as tec')
+            ->join('campos_equipo as ce', 'ce.id_campo', '=', 'tec.id_campo')
+            ->where('ce.activo', true)
+            ->where('tec.visible', true)
+            ->whereIn('tec.origen_dato', ['equipos', 'asignacion'])
+            ->orderBy('tec.orden')
+            ->get([
+                'tec.id_tipo_equipo',
+                'ce.clave',
+                'ce.nombre',
+                'tec.etiqueta',
+                'tec.id_seccion',
+                'tec.obligatorio',
+                'tec.orden',
+            ]);
+
+        foreach ($rows as $row) {
+            $result[(int) $row->id_tipo_equipo][(string) $row->clave] = [
+                'etiqueta' => $row->etiqueta ?: $row->nombre,
+                'id_seccion' => $row->id_seccion !== null ? (int) $row->id_seccion : null,
+                'obligatorio' => (bool) $row->obligatorio,
+                'orden' => (int) $row->orden,
+            ];
+        }
+
+        return $this->baseFieldsCache = $result;
+    }
+
     private function getAllDepartamentos(): array
 
     {
@@ -1929,18 +1982,12 @@ class EquipoEdit extends Component
         ) {
 
             $form = $this->configuredForm($tipoId);
-            $baseFieldsByType[$tipoId] = [];
-            foreach ($form['fields'] as $field) {
-                if (! $field['visible'] || ! in_array($field['origen_dato'], ['equipos', 'asignacion'], true)) {
-                    continue;
-                }
-                $baseFieldsByType[$tipoId][$field['clave']] = [
-                    'etiqueta' => $field['etiqueta'],
-                    'id_seccion' => $field['id_seccion'],
-                    'obligatorio' => (bool) $field['obligatorio'],
-                    'orden' => (int) $field['orden'],
-                ];
-            }
+
+            /*
+             * configuredForm solo trae campos específicos; los comunes
+             * (Departamento, Ubicación…) se leen aparte, como en el alta.
+             */
+            $baseFieldsByType[$tipoId] = $this->configuredBaseFields()[$tipoId] ?? [];
 
 
             $childFieldsByType[$tipoId] = [];
@@ -2061,6 +2108,8 @@ class EquipoEdit extends Component
 
             'idDepartamento',
 
+            'idUbicacion',
+
             'fechaFinGarantia',
 
             'comentarios',
@@ -2140,6 +2189,9 @@ class EquipoEdit extends Component
                 'id_area'
 
             ),
+
+            // [{ value, label, unidad, departamentos }] (filtro en el navegador).
+            'ubicaciones' => app(\App\Services\UbicacionOrganizacionalService::class)->ubicaciones(),
 
             'departamentos' => array_map(
 
@@ -2642,6 +2694,10 @@ class EquipoEdit extends Component
 
                         'id_departamento' => $organizacion['id_departamento'],
 
+                        ...(\App\Services\UbicacionOrganizacionalService::equiposTienenUbicacion()
+                            ? ['id_ubicacion' => $organizacion['id_ubicacion']]
+                            : []),
+
                         'fecha_fin_garantia' => $this->nullableString(
 
                             $payload['fechaFinGarantia']
@@ -2941,6 +2997,8 @@ class EquipoEdit extends Component
                 'idArea' => '',
 
                 'idDepartamento' => '',
+
+                'idUbicacion' => '',
 
                 'fechaFinGarantia' => '',
 

@@ -480,6 +480,7 @@ class EquipoShow extends Component
 
             )
 
+
             ->where(
 
                 'e.id_equipo',
@@ -540,6 +541,14 @@ class EquipoShow extends Component
 
             ])
 
+            // Ubicación del equipo (campo «Ubicación» del tipo).
+            ->when(
+                \App\Services\UbicacionOrganizacionalService::equiposTienenUbicacion(),
+                fn ($consulta) => $consulta
+                    ->leftJoin('ubicaciones as ub_equipo', 'ub_equipo.id_ubicacion', '=', 'e.id_ubicacion')
+                    ->addSelect('ub_equipo.nombre as ubicacion_equipo')
+            )
+
             ->first();
 
         abort_unless($equipo, 404);
@@ -552,6 +561,7 @@ class EquipoShow extends Component
         $data['ubicacion'] = implode(' / ', array_filter([
             $data['hotel'] ?? null,
             $data['departamento'] ?? null,
+            $data['ubicacion_equipo'] ?? null,
         ])) ?: '—';
 
 
