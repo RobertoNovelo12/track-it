@@ -110,18 +110,6 @@
             class="
                 mt-1
 
-                text-xs
-                text-[var(--theme-text-muted)]
-            "
-        >
-            Diseña los campos que se mostrarán al registrar o editar este tipo de equipo.
-        </p>
-
-
-        <p
-            class="
-                mt-1
-
                 text-[10px]
                 text-[var(--theme-text-muted)]
             "
