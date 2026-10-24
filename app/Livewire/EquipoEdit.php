@@ -2172,6 +2172,21 @@ class EquipoEdit extends Component
 
             'initial' => $initial,
 
+            /*
+             * Programas: catálogo (incluye los ya instalados aunque estén
+             * inactivos), configuración por tipo y los del equipo.
+             */
+            'programas' => (function (): array {
+                $servicio = app(\App\Services\ProgramasService::class);
+                $instalados = $servicio->idsDelEquipo($this->equipoId);
+
+                return [
+                    'opciones' => $servicio->opciones($instalados),
+                    'porTipo' => $servicio->porTipo(),
+                    'seleccion' => $instalados,
+                ];
+            })(),
+
         ];
 
     }
@@ -2452,6 +2467,10 @@ class EquipoEdit extends Component
 
         );
 
+        // Programas (solo si el tipo «Incluye programas»; null = no tocar).
+        $programas = app(\App\Services\ProgramasService::class)
+            ->validarSeleccion($payload['programas'] ?? null, $tipoNuevo, $this->equipoId);
+
         $estadoAnterior = (int) DB::table('equipos')
             ->where('id_equipo', $this->equipoId)
             ->value('id_estado_activo');
@@ -2475,7 +2494,9 @@ class EquipoEdit extends Component
 
                 $values,
 
-                $organizacion
+                $organizacion,
+
+                $programas
 
             ): array {
 
@@ -2800,6 +2821,10 @@ class EquipoEdit extends Component
 
                         );
 
+                }
+
+                if ($programas !== null) {
+                    app(\App\Services\ProgramasService::class)->sincronizarEquipo($this->equipoId, $programas);
                 }
 
                 return [

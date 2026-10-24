@@ -124,10 +124,22 @@ class ReporteAltasActaService
             ->unique('id_equipo')
             ->keyBy('id_equipo');
 
+        // Programas instalados (Administración › Programas), por equipo.
+        $programas = app(ProgramasService::class)->disponible()
+            ? \Illuminate\Support\Facades\DB::table('equipo_programa as ep')
+                ->join('programas as p', 'p.id_programa', '=', 'ep.id_programa')
+                ->whereIn('ep.id_equipo', $ids->all())
+                ->orderBy('p.nombre')
+                ->get(['ep.id_equipo', 'p.nombre', 'p.version'])
+                ->groupBy('id_equipo')
+                ->map(fn ($grupo) => $grupo->map(fn ($p) => trim($p->nombre . (filled($p->version) ? ' v' . ltrim((string) $p->version, 'vV') : '')))->all())
+            : collect();
+
         return $ids
             ->map(function (int $id) use (
                 $equipos,
-                $responsables
+                $responsables,
+                $programas
             ) {
                 $equipo = $equipos->get($id);
 
@@ -178,6 +190,7 @@ class ReporteAltasActaService
 
                     'departamento' => $equipo->departamento,
                     'comentarios' => $equipo->comentarios,
+                    'programas' => $programas->get($id, []),
                 ];
             })
             ->filter()

@@ -183,6 +183,16 @@ class Encabezado
                 self::miga('Tipos de ubicación', 'catalogos.tipos-ubicacion.index'),
                 self::miga('Editar'),
             ]],
+            'catalogos.programas.create' => ['Administración', [
+                self::miga('Administración', 'catalogos.index'),
+                self::miga('Programas', 'catalogos.index', ['section' => 'programas']),
+                self::miga('Nuevo'),
+            ]],
+            'catalogos.programas.edit' => ['Administración', [
+                self::miga('Administración', 'catalogos.index'),
+                self::miga('Programas', 'catalogos.index', ['section' => 'programas']),
+                self::miga('Editar'),
+            ]],
             'catalogos.departamentos.create' => ['Administración', [
                 self::miga('Administración', 'catalogos.index'),
                 self::miga('Departamentos', 'catalogos.index', ['section' => 'departamentos']),

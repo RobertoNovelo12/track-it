@@ -42,6 +42,11 @@ new class extends Component
                 ->load(
                     $this->tipoEquipoId
                 );
+
+        // Sección «Programas» (Incluye programas + predeterminados).
+        $this->initialData['programas'] =
+            app(\App\Services\ProgramasService::class)
+                ->configuracionTipo($this->tipoEquipoId);
     }
 
 
@@ -52,13 +57,34 @@ new class extends Component
     */
 
     public function saveConfiguration(
-        array $fields
+        array $fields,
+        ?array $programas = null
     ): array {
-        return $this->builder()
+        $resultado = $this->builder()
             ->save(
                 $this->tipoEquipoId,
                 $fields
             );
+
+        /*
+         * Programas del tipo: se guardan con el mismo botón
+         * «Guardar configuración».
+         */
+        $servicio = app(\App\Services\ProgramasService::class);
+
+        if ($programas !== null && $servicio->disponible()) {
+            \Illuminate\Support\Facades\Gate::authorize('gestionar');
+
+            $servicio->guardarConfiguracionTipo(
+                $this->tipoEquipoId,
+                (bool) ($programas['incluye'] ?? false),
+                (array) ($programas['seleccion'] ?? [])
+            );
+        }
+
+        $resultado['programas'] = $servicio->configuracionTipo($this->tipoEquipoId);
+
+        return $resultado;
     }
 
 
@@ -451,8 +477,13 @@ new class extends Component
                 items-start
             "
         >
-            {{-- PALETA --}}
-            @include('components.catalogos.tipo-equipo-editor.palette')
+            {{-- PALETA + PROGRAMAS (columna izquierda) --}}
+            <div class="min-w-0 space-y-4">
+                @include('components.catalogos.tipo-equipo-editor.palette')
+
+                {{-- Incluye programas + predeterminados --}}
+                @include('components.catalogos.tipo-equipo-editor.programas')
+            </div>
 
             {{-- FORMULARIO --}}
             @include('components.catalogos.tipo-equipo-editor.builder')

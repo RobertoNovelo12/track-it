@@ -49,6 +49,12 @@ class InventarioEquiposExport extends \PhpOffice\PhpSpreadsheet\Cell\StringValue
             foreach ($e['especificaciones'] as $campo => $valor) {
                 $filas[] = [(string) $campo, (string) $valor];
             }
+            if (($e['programas'] ?? []) !== []) {
+                $filas[] = ['PROGRAMAS INSTALADOS', ''];
+                foreach ($e['programas'] as $programa) {
+                    $filas[] = [$programa['nombre'], $programa['detalle'] ?: '—'];
+                }
+            }
             $filas[] = ['HISTORIAL COMPLETO', ''];
             foreach ($e['historial'] as $evento) {
                 $filas[] = [$evento['fecha'].' · '.$evento['tipo'], $evento['detalle']];
@@ -69,7 +75,7 @@ class InventarioEquiposExport extends \PhpOffice\PhpSpreadsheet\Cell\StringValue
             'Estado', 'Situación', 'Responsable actual', 'Último responsable',
             'Hotel', 'Departamento', 'Área', 'Ubicación', 'Condición',
             'Host', 'IP', 'MAC', 'Proveedor', 'Factura', 'Compra', 'Garantía',
-            'Fecha de registro', 'Fecha de baja', 'Motivo de baja', 'Observaciones de baja', 'Descripción', 'Historial completo', ...$campos,
+            'Fecha de registro', 'Fecha de baja', 'Motivo de baja', 'Observaciones de baja', 'Descripción', 'Programas', 'Historial completo', ...$campos,
         ]];
 
         foreach ($this->equipos as $e) {
@@ -81,6 +87,7 @@ class InventarioEquiposExport extends \PhpOffice\PhpSpreadsheet\Cell\StringValue
                 $e['host'], $e['ip'], $e['mac'], $e['proveedor'],
                 $e['factura'], $e['fecha_compra'], $e['fecha_garantia'],
                 $e['fecha_registro'], $e['fecha_baja'], $e['motivo_baja'], $e['comentarios_baja'], $e['descripcion'],
+                ($e['programas'] ?? []) !== [] ? implode(', ', array_column($e['programas'], 'nombre')) : '—',
                 implode("\n", array_map(fn ($evento) => $evento['fecha'].' | '.$evento['tipo'].' | '.$evento['detalle'], $e['historial'])),
             ];
             foreach ($campos as $campo) {

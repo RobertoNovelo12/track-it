@@ -232,6 +232,9 @@
                 </section>
             </template>
 
+            {{-- PROGRAMAS (si el tipo «Incluye programas») --}}
+            @include('livewire.equipos.partials.programas')
+
             {{-- ACCIONES --}}
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
                 <label class="mr-auto inline-flex cursor-pointer items-center gap-2 text-xs text-[var(--theme-text)]" title="Al guardar se quedan tipo, marca, modelo, factura, hotel y especificaciones; se vacían nombre, serie y datos propios.">
@@ -268,6 +271,10 @@
 
             // Altas en serie: al guardar se conservan los datos comunes.
             conservarDatos: false,
+
+            // Programas elegidos (ids) y búsqueda de la sección Programas.
+            programas: [],
+            programasBuscar: '',
 
             message: '',
             failed: false,
@@ -453,6 +460,11 @@
                     };
                 }
 
+                // Programas: los del equipo duplicado o los predeterminados del tipo.
+                this.programas = Array.isArray(duplicado?.programas)
+                    ? duplicado.programas.map(String)
+                    : this.programasPredeterminados();
+
                 this.$watch('values.idTipoEquipo', (value, previous) => {
                     if (
                         this.suspendDependencies
@@ -477,6 +489,9 @@
 
                     this.values = next;
                     this.errors = {};
+
+                    // Al cambiar de tipo vienen marcados sus predeterminados.
+                    this.programas = this.programasPredeterminados(value);
                 });
 
                 this.$watch('values.idMarca', (value, previous) => {
@@ -500,6 +515,50 @@
 
             get typeId() {
                 return String(this.values.idTipoEquipo ?? '');
+            },
+
+            /*
+            |--------------------------------------------------------------------------
+            | Programas (partials/programas)
+            |--------------------------------------------------------------------------
+            */
+
+            get tipoIncluyeProgramas() {
+                return Boolean(this.data.programas?.porTipo?.[this.typeId]?.incluye);
+            },
+
+            programasPredeterminados(tipo = this.typeId) {
+                return (this.data.programas?.porTipo?.[String(tipo)]?.predeterminados ?? []).map(String);
+            },
+
+            marcarPredeterminados() {
+                this.programas = [...new Set([...this.programas, ...this.programasPredeterminados()])];
+            },
+
+            programaElegido(id) {
+                return this.programas.includes(String(id));
+            },
+
+            alternarPrograma(id) {
+                const clave = String(id);
+
+                this.programas = this.programaElegido(clave)
+                    ? this.programas.filter(valor => valor !== clave)
+                    : [...this.programas, clave];
+            },
+
+            programasFiltrados() {
+                const normalizar = texto => String(texto ?? '')
+                    .toLowerCase()
+                    .normalize('NFD')
+                    .replace(/[\u0300-\u036f]/g, '');
+
+                const buscar = normalizar(this.programasBuscar).trim();
+                const opciones = this.data.programas?.opciones ?? [];
+
+                return buscar === ''
+                    ? opciones
+                    : opciones.filter(opcion => normalizar(opcion.label + ' ' + opcion.detalle + ' ' + opcion.categoria).includes(buscar));
             },
 
             get displayFields() {
@@ -736,6 +795,9 @@
                     }
                 });
 
+                // Programas: solo si el tipo los incluye (null = no tocar).
+                payload.programas = this.tipoIncluyeProgramas ? [...this.programas] : null;
+
                 return JSON.parse(JSON.stringify(payload));
             },
 
@@ -815,6 +877,8 @@
             clearForm() {
                 this.suspendDependencies = true;
                 this.values = this.emptyValues();
+                this.programas = [];
+                this.programasBuscar = '';
                 this.errors = {};
 
                 this.$nextTick(() => {
@@ -825,13 +889,18 @@
             restoreSnapshot(payload) {
                 this.suspendDependencies = true;
 
-                const { childData, ...base } = payload;
+                const { childData, programas, ...base } = payload;
 
                 this.values = {
                     ...this.emptyValues(),
                     ...base,
                     ...(childData ?? {}),
                 };
+
+                // Conservar datos / error al guardar: se recuperan los programas.
+                this.programas = Array.isArray(programas)
+                    ? programas.map(String)
+                    : this.programasPredeterminados(base.idTipoEquipo);
 
                 this.$nextTick(() => {
                     this.suspendDependencies = false;

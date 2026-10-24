@@ -449,6 +449,19 @@ Route::middleware([
         fn (int $tipo) => view('catalogos.ubicaciones.tipos.edit', ['tipoId' => $tipo])
     )->whereNumber('tipo')->name('catalogos.tipos-ubicacion.edit')->middleware('can:administrar');
 
+    /*
+     * Programas (software): alta y edición en página aparte.
+     */
+    Route::get(
+        '/catalogos/programas/nuevo',
+        fn () => view('catalogos.programas.create')
+    )->name('catalogos.programas.create')->middleware('can:gestionar');
+
+    Route::get(
+        '/catalogos/programas/{programa}/editar',
+        fn (int $programa) => view('catalogos.programas.edit', ['programaId' => $programa])
+    )->whereNumber('programa')->name('catalogos.programas.edit')->middleware('can:gestionar');
+
     Route::get(
         '/catalogos/departamentos/nuevo',
         fn () => view('catalogos.departamentos.create')

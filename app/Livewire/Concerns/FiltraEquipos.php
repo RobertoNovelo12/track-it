@@ -17,6 +17,7 @@ trait FiltraEquipos
         Builder $query
     ): void {
         $this->applySituacion($query);
+        $this->applyPrograma($query);
 
         /*
          * Tanto null como '' significan:
@@ -745,5 +746,26 @@ trait FiltraEquipos
         'general',
         'adicional',
     ];
-}
 
+    /*
+     * Programa instalado (?programa=ID). Solo en los componentes que
+     * tienen la propiedad (Inventario); la baja múltiple no la usa.
+     */
+    private function applyPrograma(Builder $query): void
+    {
+        if (! property_exists($this, 'programa')) {
+            return;
+        }
+
+        $programa = (string) ($this->programa ?? '');
+
+        if (! ctype_digit($programa) || ! app(\App\Services\ProgramasService::class)->disponible()) {
+            return;
+        }
+
+        $query->whereExists(fn ($sub) => $sub->selectRaw('1')
+            ->from('equipo_programa as ep_filtro')
+            ->whereColumn('ep_filtro.id_equipo', 'e.id_equipo')
+            ->where('ep_filtro.id_programa', (int) $programa));
+    }
+}

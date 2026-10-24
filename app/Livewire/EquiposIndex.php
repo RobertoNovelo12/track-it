@@ -177,6 +177,13 @@ class EquiposIndex extends Component
     #[Url]
     public ?string $situacion = null;
 
+    /*
+     * Programa instalado (Administración › Programas): solo los
+     * equipos que lo tienen registrado.
+     */
+    #[Url]
+    public ?string $programa = null;
+
 
     /*
     |--------------------------------------------------------------------------
@@ -226,6 +233,7 @@ class EquiposIndex extends Component
                     'estado',
                     'area',
                     'situacion',
+                    'programa',
                     'camposTipo',
                 ],
                 true
@@ -379,6 +387,7 @@ class EquiposIndex extends Component
         $this->estado = null;
         $this->area = null;
         $this->situacion = null;
+        $this->programa = null;
 
         $this->resetPage();
     }
@@ -513,6 +522,8 @@ class EquiposIndex extends Component
                 array_key_exists((string) $this->situacion, self::SITUACIONES)
                     ? (string) $this->situacion
                     : '',
+
+            'programa' => ctype_digit((string) $this->programa) ? (string) $this->programa : '',
 
             /*
              * Vencimientos dependen del día: la caché de un filtro
@@ -899,142 +910,28 @@ class EquiposIndex extends Component
     private function applySearch(
         Builder $query
     ): void {
-        $search =
-            trim(
-                (string) (
-                    $this->search
-                    ?? ''
-                )
-            );
-
-
-        if ($search === '') {
-            return;
-        }
-
-
-        $terms = preg_split(
-            '/\s+/',
-            $search,
-            -1,
-            PREG_SPLIT_NO_EMPTY
+        /*
+         * Búsqueda tolerante (App\Support\BusquedaTolerante): sin acentos
+         * («movil» = «Móvil»), ignora signos tecleados por accidente
+         * («laptop{») y compara códigos y series también sin guiones.
+         */
+        \App\Support\BusquedaTolerante::aplicar(
+            $query,
+            (string) ($this->search ?? ''),
+            [
+                'e.nombre_equipo',
+                'e.id_equipo',
+                'e.codigo_inventario',
+                'e.numero_serie',
+                'te.nombre',
+                'ma.nombre',
+                'mo.nombre',
+            ],
+            [
+                'e.codigo_inventario',
+                'e.numero_serie',
+            ]
         );
-
-
-        if (
-            ! is_array($terms)
-            ||
-            $terms === []
-        ) {
-            return;
-        }
-
-
-        foreach (
-            $terms
-            as $term
-        ) {
-            $like =
-                '%'
-                . $term
-                . '%';
-
-
-            $query->where(
-                function (
-                    Builder $sub
-                ) use (
-                    $like
-                ): void {
-                    $sub
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | Nombre del equipo
-                        |--------------------------------------------------------------------------
-                        */
-
-                        ->where(
-                            'e.nombre_equipo',
-                            'ilike',
-                            $like
-                        )
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | ID interno
-                        |--------------------------------------------------------------------------
-                        */
-
-                        ->orWhereRaw(
-                            'CAST(e.id_equipo AS TEXT) ILIKE ?',
-                            [
-                                $like,
-                            ]
-                        )
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | Código de inventario
-                        |--------------------------------------------------------------------------
-                        */
-
-                        ->orWhere(
-                            'e.codigo_inventario',
-                            'ilike',
-                            $like
-                        )
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | Número de serie
-                        |--------------------------------------------------------------------------
-                        */
-
-                        ->orWhere(
-                            'e.numero_serie',
-                            'ilike',
-                            $like
-                        )
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | Tipo
-                        |--------------------------------------------------------------------------
-                        */
-
-                        ->orWhere(
-                            'te.nombre',
-                            'ilike',
-                            $like
-                        )
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | Marca
-                        |--------------------------------------------------------------------------
-                        */
-
-                        ->orWhere(
-                            'ma.nombre',
-                            'ilike',
-                            $like
-                        )
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | Modelo
-                        |--------------------------------------------------------------------------
-                        */
-
-                        ->orWhere(
-                            'mo.nombre',
-                            'ilike',
-                            $like
-                        );
-                }
-            );
-        }
     }
 
 
@@ -1459,6 +1356,11 @@ class EquiposIndex extends Component
                     trim((string) ($this->tipoActivo ?? '')) !== ''
                         ? $this->getCamposFiltrables((int) $this->tipoActivo)
                         : [],
+                // Filtro «Programa instalado» (vacío si no hay programas).
+                'programasFiltro' =>
+                    app(\App\Services\ProgramasService::class)->opciones(
+                        ctype_digit((string) $this->programa) ? [(int) $this->programa] : []
+                    ),
                 'situaciones' =>
                     collect(self::SITUACIONES)
                         ->map(fn (string $label, string $value): array => [

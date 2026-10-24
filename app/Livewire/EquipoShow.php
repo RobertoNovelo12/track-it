@@ -1058,6 +1058,15 @@ class EquipoShow extends Component
             })
             ->exists();
 
+        /*
+         * Programas instalados: la sección aparece si el tipo «Incluye
+         * programas» o si el equipo ya tiene alguno registrado.
+         */
+        $servicioProgramas = app(\App\Services\ProgramasService::class);
+        $programas = $servicioProgramas->delEquipo($this->equipoId);
+        $muestraProgramas = $servicioProgramas->disponible()
+            && ($programas !== [] || $servicioProgramas->tipoIncluye((int) ($equipo['id_tipo_equipo'] ?? 0)));
+
         return view(
             'livewire.equipo-show',
             compact(
@@ -1066,7 +1075,9 @@ class EquipoShow extends Component
                 'asignacionActual',
                 'movimientos',
                 'mantenimientos',
-                'dadoDeBaja'
+                'dadoDeBaja',
+                'programas',
+                'muestraProgramas'
             )
         );
 

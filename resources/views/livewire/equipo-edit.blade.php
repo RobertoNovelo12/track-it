@@ -549,6 +549,9 @@
             </template>
 
 
+                {{-- PROGRAMAS (si el tipo «Incluye programas») --}}
+                @include('livewire.equipos.partials.programas')
+
                 {{-- ====================================================
                     ACCIONES
                 ==================================================== --}}
@@ -799,6 +802,10 @@
                             )
                         ),
 
+                    // Programas instalados (ids) y búsqueda de la sección Programas.
+                    programas: (data?.programas?.seleccion ?? []).map(String),
+                    programasBuscar: '',
+
             base: {
                 nombre_equipo: {
                     model: 'nombreEquipo',
@@ -923,6 +930,58 @@
 
             get typeId() {
                 return String(this.idTipoEquipo ?? '');
+            },
+
+            /*
+            |--------------------------------------------------------------------------
+            | Programas (livewire/equipos/partials/programas)
+            |--------------------------------------------------------------------------
+            */
+
+            get tipoIncluyeProgramas() {
+                return Boolean(this.data.programas?.porTipo?.[this.typeId]?.incluye);
+            },
+
+            programasPredeterminados(tipo = this.typeId) {
+                return (this.data.programas?.porTipo?.[String(tipo)]?.predeterminados ?? []).map(String);
+            },
+
+            marcarPredeterminados() {
+                this.programas = [...new Set([...this.programas, ...this.programasPredeterminados()])];
+            },
+
+            programaElegido(id) {
+                return this.programas.includes(String(id));
+            },
+
+            alternarPrograma(id) {
+                const clave = String(id);
+
+                this.programas = this.programaElegido(clave)
+                    ? this.programas.filter(valor => valor !== clave)
+                    : [...this.programas, clave];
+
+                this.clearValidationError?.('programas');
+            },
+
+            programasFiltrados() {
+                const normalizar = texto => String(texto ?? '')
+                    .toLowerCase()
+                    .normalize('NFD')
+                    .replace(/[\u0300-\u036f]/g, '');
+
+                const buscar = normalizar(this.programasBuscar).trim();
+                const opciones = this.data.programas?.opciones ?? [];
+
+                return buscar === ''
+                    ? opciones
+                    : opciones.filter(opcion => normalizar(opcion.label + ' ' + opcion.detalle + ' ' + opcion.categoria).includes(buscar));
+            },
+
+            errorFor(key) {
+                const error = this.validationErrors?.[key];
+
+                return Array.isArray(error) ? error[0] : (error || '');
             },
 
             get displayFields() {
@@ -1180,6 +1239,11 @@
                                  */
                                 this.idModelo = '';
                                 this.childData = {};
+
+                                // Tipo nuevo sin programas elegidos: sus predeterminados.
+                                if (this.programas.length === 0) {
+                                    this.programas = this.programasPredeterminados(value);
+                                }
 
                                 this.clearValidationError(
                                     'idTipoEquipo'
@@ -1706,6 +1770,11 @@
                                 this.clone(
                                     this.childData
                                 ),
+
+                            // null = el tipo no incluye programas (no se tocan).
+                            programas: this.tipoIncluyeProgramas
+                                ? [...this.programas]
+                                : null,
                         };
                     },
 

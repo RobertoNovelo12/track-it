@@ -128,6 +128,8 @@ class EquipoCreate extends Component
 
         return [
             'base' => $base,
+            // Programas del equipo original (se copian al duplicar).
+            'programas' => app(\App\Services\ProgramasService::class)->idsDelEquipo($idEquipo),
             'childData' => $childData,
             'origen' => trim((string) $equipo->codigo_inventario . ' · ' . (string) $equipo->nombre_equipo, ' ·'),
         ];
@@ -1174,6 +1176,15 @@ class EquipoCreate extends Component
                     $this->codigoInventarioPreview,
             ],
             'duplicado' => $this->duplicado,
+
+            /*
+             * Programas: opciones del catálogo y, por tipo, si incluye
+             * programas y cuáles vienen marcados por defecto.
+             */
+            'programas' => [
+                'opciones' => app(\App\Services\ProgramasService::class)->opciones(),
+                'porTipo' => app(\App\Services\ProgramasService::class)->porTipo(),
+            ],
         ];
     }
 
@@ -1364,6 +1375,10 @@ class EquipoCreate extends Component
         $physical = $this->childConfig()[$tipoId]
             ?? null;
 
+        // Programas (solo si el tipo «Incluye programas»).
+        $programas = app(\App\Services\ProgramasService::class)
+            ->validarSeleccion($payload['programas'] ?? null, $tipoId);
+
         $codigoInventario =
             $this->generarCodigoInventario();
 
@@ -1389,7 +1404,8 @@ class EquipoCreate extends Component
                 $values,
                 $physical,
                 $codigoInventario,
-                $organizacion
+                $organizacion,
+                $programas
             ) {
                 $idEquipo = DB::table('equipos')
                     ->insertGetId(
@@ -1584,6 +1600,10 @@ class EquipoCreate extends Component
                             'asignado_por' => Auth::id(),
                         ]);
                     }
+                }
+
+                if ($programas !== null) {
+                    app(\App\Services\ProgramasService::class)->sincronizarEquipo((int) $idEquipo, $programas);
                 }
 
                 return (int) $idEquipo;

@@ -125,6 +125,15 @@
             'label' => $item['label'] ?? 'Situación',
         ];
     }
+
+    if (filled($programa ?? null)) {
+        $item = collect($programasFiltro ?? [])->firstWhere('value', (string) $programa);
+
+        $activeFilters[] = [
+            'property' => 'programa',
+            'label' => 'Con ' . ($item['label'] ?? 'programa'),
+        ];
+    }
 @endphp
 
 

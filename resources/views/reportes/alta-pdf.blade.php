@@ -798,6 +798,16 @@
 
             </tr>
 
+            {{-- Programas instalados (solo si tiene) --}}
+            @if (! empty($alta['programas'] ?? []))
+                <tr>
+                    <td>
+                        <span class="etiqueta">Programas instalados</span>
+                        <span class="valor valor-texto">{{ implode(', ', $alta['programas']) }}</span>
+                    </td>
+                </tr>
+            @endif
+
         </table>
 
 

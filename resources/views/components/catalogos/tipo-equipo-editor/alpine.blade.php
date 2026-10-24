@@ -19,6 +19,15 @@
             initialFields: [],
 
             /*
+             * Programas del tipo (partials/programas): casilla «Incluye
+             * programas» y predeterminados. Se guardan con «Guardar
+             * configuración».
+             */
+            programas: { disponible: false, incluye: false, seleccion: [], opciones: [] },
+            initialProgramas: { disponible: false, incluye: false, seleccion: [], opciones: [] },
+            programasBuscar: '',
+
+            /*
             |--------------------------------------------------------------------------
             | Estado general
             |--------------------------------------------------------------------------
@@ -120,6 +129,19 @@
 
             replaceData(data) {
                 this.tipo = this.clone(data?.tipo ?? {});
+
+                if (data?.programas) {
+                    this.programas = this.clone({
+                        disponible: Boolean(data.programas.disponible),
+                        incluye: Boolean(data.programas.incluye),
+                        seleccion: (data.programas.seleccion ?? []).map(String),
+                        opciones: data.programas.opciones ?? [],
+                        url_catalogo: data.programas.url_catalogo ?? '#',
+                        url_nuevo: data.programas.url_nuevo ?? '#',
+                    });
+
+                    this.initialProgramas = this.clone(this.programas);
+                }
 
                 /*
                 |--------------------------------------------------------------------------
@@ -1222,6 +1244,9 @@
             resetChanges() {
                 this.fields = this.clone(this.initialFields);
 
+                this.programas = this.clone(this.initialProgramas);
+                this.programasBuscar = '';
+
                 this.hasChanges = false;
 
                 this.cancelFieldDrag();
@@ -1254,7 +1279,10 @@
 
                     const result = await this.$wire.$call(
                         'saveConfiguration',
-                        payload
+                        payload,
+                        this.programas.disponible
+                            ? { incluye: this.programas.incluye, seleccion: this.programas.seleccion }
+                            : null
                     );
 
                     console.log('Diagnóstico del guardado:', JSON.stringify({
@@ -1314,6 +1342,48 @@
 
             markChanged() {
                 this.hasChanges = true;
+            },
+
+            /*
+            |--------------------------------------------------------------------------
+            | Programas del tipo
+            |--------------------------------------------------------------------------
+            */
+
+            alternarIncluyeProgramas() {
+                this.programas.incluye = ! this.programas.incluye;
+                this.markChanged();
+            },
+
+            programaElegido(id) {
+                return this.programas.seleccion.includes(String(id));
+            },
+
+            alternarPrograma(id) {
+                const clave = String(id);
+
+                this.programas.seleccion = this.programaElegido(clave)
+                    ? this.programas.seleccion.filter(valor => valor !== clave)
+                    : [...this.programas.seleccion, clave];
+
+                this.markChanged();
+            },
+
+            programasFiltrados() {
+                const normalizar = texto => String(texto ?? '')
+                    .toLowerCase()
+                    .normalize('NFD')
+                    .replace(/[\u0300-\u036f]/g, '');
+
+                const buscar = normalizar(this.programasBuscar).trim();
+
+                if (buscar === '') {
+                    return this.programas.opciones;
+                }
+
+                return this.programas.opciones.filter(opcion =>
+                    normalizar(opcion.label + ' ' + opcion.detalle + ' ' + opcion.categoria).includes(buscar)
+                );
             },
 
             /*

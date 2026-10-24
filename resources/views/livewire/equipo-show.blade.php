@@ -1369,6 +1369,93 @@
 
     </div>
 
+    {{-- ============================================================
+        PROGRAMAS INSTALADOS (tipos con «Incluye programas»)
+    ============================================================ --}}
+    @if ($muestraProgramas)
+        <section class="mb-4 rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 sm:mb-6 sm:p-5" aria-labelledby="equipo-programas-titulo">
+            <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
+                <div class="flex items-center gap-2">
+                    <svg class="h-5 w-5 text-[var(--theme-text)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect x="3" y="4" width="18" height="14" rx="1.5"/>
+                        <path d="M3 8h18M7 12h4M7 15h6"/>
+                    </svg>
+                    <h3 id="equipo-programas-titulo" class="text-sm font-semibold text-[var(--theme-text-strong)] sm:text-base">
+                        Programas instalados
+                    </h3>
+                    @if ($programas !== [])
+                        <span class="rounded-md bg-[var(--theme-surface-soft)] px-2 py-0.5 text-xs font-medium text-[var(--theme-text-muted)]">{{ count($programas) }}</span>
+                    @endif
+                </div>
+
+                @can('gestionar')
+                    @unless ($dadoDeBaja)
+                        <a href="{{ route('equipos.edit', $this->equipoId) }}" wire:navigate.hover class="text-xs font-medium text-[var(--theme-primary)] hover:underline">
+                            {{ $programas === [] ? 'Agregar programas' : 'Cambiar programas' }}
+                        </a>
+                    @endunless
+                @endcan
+            </div>
+
+            @if ($programas === [])
+                <p class="rounded-lg border border-dashed border-[var(--theme-border-strong)] px-4 py-5 text-center text-sm text-[var(--theme-text-muted)]">
+                    Sin programas registrados.
+                </p>
+            @else
+                <ul class="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-3">
+                    @foreach ($programas as $programa)
+                        <li wire:key="equipo-programa-{{ $programa['id'] }}" class="flex items-start justify-between gap-3 rounded-lg border border-[var(--theme-border)] px-3 py-2.5">
+                            <div class="min-w-0">
+                                <p class="truncate text-sm font-medium text-[var(--theme-text)]" title="{{ $programa['nombre'] }}">{{ $programa['nombre'] }}</p>
+
+                                @php
+                                    $detallePrograma = trim(implode(' · ', array_filter([
+                                        $programa['empresa'],
+                                        $programa['version'] !== '' ? 'v' . ltrim($programa['version'], 'vV') : null,
+                                        $programa['plataforma'],
+                                        $programa['peso'],
+                                    ])));
+                                @endphp
+
+                                @if ($detallePrograma !== '')
+                                    <p class="truncate text-xs text-[var(--theme-text-muted)]" title="{{ $detallePrograma }}">{{ $detallePrograma }}</p>
+                                @endif
+
+                                <div class="mt-1.5 flex flex-wrap gap-1">
+                                    @if ($programa['categoria'] !== '')
+                                        <span class="rounded-md border border-[var(--theme-border)] px-1.5 py-0.5 text-[10px] text-[var(--theme-text-muted)]">{{ $programa['categoria'] }}</span>
+                                    @endif
+                                    @if ($programa['licencia'] !== 'Gratuita')
+                                        <span class="rounded-md bg-[var(--theme-warning-soft)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--theme-warning)]">{{ $programa['licencia'] }}</span>
+                                    @endif
+                                    @if ($programa['requiere_clave'])
+                                        <span class="rounded-md bg-[var(--theme-surface-soft)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--theme-text)]">Requiere clave</span>
+                                    @endif
+                                    @unless ($programa['activo'])
+                                        <span class="rounded-md bg-[var(--theme-surface-soft)] px-1.5 py-0.5 text-[10px] text-[var(--theme-text-muted)]">Inactivo</span>
+                                    @endunless
+                                </div>
+                            </div>
+
+                            @if ($programa['enlace'] !== '')
+                                <a
+                                    href="{{ $programa['enlace'] }}"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-md border border-[var(--theme-border-strong)] px-2.5 text-xs font-medium text-[var(--theme-text)] transition-colors hover:bg-[var(--theme-surface-soft)]"
+                                    title="Abrir el enlace de descarga de {{ $programa['nombre'] }}"
+                                >
+                                    <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>
+                                    Descargar
+                                </a>
+                            @endif
+                        </li>
+                    @endforeach
+                </ul>
+            @endif
+        </section>
+    @endif
+
     {{-- ============================================================*
 
 *        HISTORIALES*

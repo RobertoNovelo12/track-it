@@ -75,7 +75,7 @@
 
             bg-[var(--theme-surface)]
 
-            rounded-t-[24px]
+            rounded-t-2xl
 
             shadow-2xl
 
@@ -185,6 +185,7 @@
             FORMULARIO
         ==================================================== --}}
         <form
+            data-filtros {{-- Filtros: no cambian con «Columnas de los formularios» --}}
             wire:submit.prevent="$refresh"
 
             @submit="
@@ -218,7 +219,7 @@
                 <div class="space-y-5">
 
                     @php
-                        $claseInputMovil = 'w-full px-3 py-2 text-sm text-[var(--theme-text)] bg-[var(--theme-surface)] border border-[var(--theme-border-strong)] rounded-md placeholder:text-[var(--theme-text-muted)] focus:ring-1 focus:ring-[var(--theme-primary)] focus:border-[var(--theme-primary)] outline-none';
+                        $claseInputMovil = 'h-10 w-full px-3 text-sm text-[var(--theme-text)] bg-[var(--theme-surface)] border border-[var(--theme-border-strong)] rounded-md placeholder:text-[var(--theme-text-muted)] focus:ring-1 focus:ring-[var(--theme-primary)] focus:border-[var(--theme-primary)] outline-none';
 
                         $tipoNombre = data_get(
                             collect($tiposActivo)->first(fn ($t) => (string) data_get($t, 'id_tipo_equipo') === (string) $tipoActivo),
@@ -353,6 +354,16 @@
                         :options="$situaciones"
                         placeholder="Seleccionar situación..."
                     />
+
+                    {{-- PROGRAMA INSTALADO --}}
+                    @if (! empty($programasFiltro ?? []))
+                        <x-searchable-select
+                            label="Programa instalado"
+                            wire-model="programa"
+                            :options="collect($programasFiltro)->map(fn ($p) => ['value' => $p['value'], 'label' => $p['label']])->all()"
+                            placeholder="Seleccionar programa..."
+                        />
+                    @endif
 
                     {{-- FILTROS ESPECÍFICOS DEL TIPO SELECCIONADO --}}
                     @include('livewire.equipos.filters.campos-tipo', ['variante' => 'movil'])

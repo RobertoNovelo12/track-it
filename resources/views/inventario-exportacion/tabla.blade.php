@@ -66,6 +66,9 @@
                         @if($e['motivo_baja'] !== '—')
                             <div><strong>Baja:</strong> {{ $e['motivo_baja'] }} ({{ $e['fecha_baja'] }})</div>
                         @endif
+                        @if(($e['programas'] ?? []) !== [])
+                            <div><strong>Programas:</strong> {{ implode(', ', array_column($e['programas'], 'nombre')) }}</div>
+                        @endif
                         @if($e['descripcion'] !== '—')
                             <div><strong>Descripción:</strong> {{ $e['descripcion'] }}</div>
                         @endif

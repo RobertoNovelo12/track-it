@@ -37,3 +37,12 @@
         <tr><th>{{ $campo }}</th><td>{{ $valor }}</td></tr>
         @endforeach
     </table>
+
+    @if (($equipo['programas'] ?? []) !== [])
+        <h2>03 · Programas instalados</h2>
+        <table>
+            @foreach ($equipo['programas'] as $programa)
+                <tr><th>{{ $programa['nombre'] }}</th><td>{{ $programa['detalle'] ?: '—' }}</td></tr>
+            @endforeach
+        </table>
+    @endif

@@ -8,12 +8,13 @@
      */
     $filtrosActivosEscritorio = collect([
         $tipoActivo, $nombreEquipo, $marca, $modelo, $numeroSerie,
-        $numeroFactura, $estado, $area, $situacion, $serviceTag, $direccionIp,
+        $numeroFactura, $estado, $area, $situacion, $serviceTag, $direccionIp, $programa ?? null,
     ])->filter(fn ($valor) => filled($valor))->count()
         + collect($camposTipo ?? [])->filter(fn ($valor) => filled($valor) && ! is_array($valor))->count();
 @endphp
 
 <form
+    data-filtros {{-- Filtros: no cambian con «Columnas de los formularios» --}}
     wire:submit.prevent="$refresh"
 
     {{-- Plegable: el estado se recuerda en el navegador --}}
@@ -110,6 +111,7 @@
                 estado,
                 area,
                 situacion,
+                programa,
                 resetFilters
             "
 
@@ -155,7 +157,7 @@
                 x-show="! abierto"
                 x-transition.opacity
                 x-cloak
-                class="rounded-full bg-[var(--theme-primary-soft)] px-2 py-0.5 text-[11px] font-medium text-[var(--theme-primary)]"
+                class="rounded-md bg-[var(--theme-primary-soft)] px-2 py-0.5 text-[11px] font-medium text-[var(--theme-primary)]"
             >
                 {{ $filtrosActivosEscritorio }} {{ $filtrosActivosEscritorio === 1 ? 'activo' : 'activos' }}
             </span>
@@ -203,7 +205,7 @@
 
 
     @php
-        $claseInputFiltro = 'w-full px-3 py-2 text-sm text-[var(--theme-text)] bg-[var(--theme-surface)] border border-[var(--theme-border-strong)] rounded-md placeholder:text-[var(--theme-text-muted)] focus:ring-1 focus:ring-[var(--theme-primary)] focus:border-[var(--theme-primary)] outline-none transition-colors';
+        $claseInputFiltro = 'h-10 w-full px-3 text-sm text-[var(--theme-text)] bg-[var(--theme-surface)] border border-[var(--theme-border-strong)] rounded-md placeholder:text-[var(--theme-text-muted)] focus:ring-1 focus:ring-[var(--theme-primary)] focus:border-[var(--theme-primary)] outline-none transition-colors';
 
         $tipoNombre = data_get(
             collect($tiposActivo)->first(fn ($t) => (string) data_get($t, 'id_tipo_equipo') === (string) $tipoActivo),
@@ -365,6 +367,16 @@
         />
 
 
+        {{-- PROGRAMA INSTALADO (Administración › Programas) --}}
+        @if (! empty($programasFiltro ?? []))
+            <x-searchable-select
+                label="Programa instalado"
+                wire-model="programa"
+                :options="collect($programasFiltro)->map(fn ($p) => ['value' => $p['value'], 'label' => $p['label']])->all()"
+                placeholder="Buscar programa..."
+            />
+        @endif
+
         {{-- ====================================================
             BOTONES
 
@@ -380,7 +392,7 @@
                 gap-3
 
                 sm:col-span-1
-                lg:col-span-3
+                {{ ! empty($programasFiltro ?? []) ? 'lg:col-span-2' : 'lg:col-span-3' }}
             "
         >
 

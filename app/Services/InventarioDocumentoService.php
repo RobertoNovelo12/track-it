@@ -136,9 +136,10 @@ class InventarioDocumentoService
         })->pluck('id_equipo')->map(fn ($id) => (int) $id)->flip();
 
         $especificaciones = $this->cargarEspecificaciones($equipos);
+        $programas = $this->cargarProgramas($ids);
 
         // Mantener exactamente el orden que devolvió la tabla con sus filtros.
-        return $filas->map(function ($fila) use ($porId, $asignaciones, $bajas, $reasignaciones, $especificaciones, $todasBajas, $bitacora) {
+        return $filas->map(function ($fila) use ($porId, $asignaciones, $bajas, $reasignaciones, $especificaciones, $todasBajas, $bitacora, $programas) {
             $e = $porId->get((int) $fila->id_equipo);
             if (!$e) {
                 return null;
@@ -200,6 +201,8 @@ class InventarioDocumentoService
                 'proveedor' => $this->texto($e->proveedor_nombre),
                 'descripcion' => $this->texto($e->comentarios),
                 'especificaciones' => $especificaciones[$id] ?? [],
+                // Programas instalados: [['nombre' => 'Office v2021', 'detalle' => 'Microsoft · De pago']].
+                'programas' => $programas[$id] ?? [],
             ];
         })->filter()->values()->all();
     }
@@ -346,6 +349,42 @@ class InventarioDocumentoService
             }
 
             $resultado[$id] = $specs;
+        }
+
+        return $resultado;
+    }
+
+    /**
+     * Programas instalados por equipo (Administración › Programas).
+     */
+    private function cargarProgramas(array $ids): array
+    {
+        if ($ids === [] || ! app(ProgramasService::class)->disponible()) {
+            return [];
+        }
+
+        $licencias = ProgramasService::LICENCIAS;
+        $resultado = [];
+
+        foreach (array_chunk($ids, 400) as $lote) {
+            DB::table('equipo_programa as ep')
+                ->join('programas as p', 'p.id_programa', '=', 'ep.id_programa')
+                ->whereIn('ep.id_equipo', $lote)
+                ->orderBy('p.nombre')
+                ->get(['ep.id_equipo', 'p.nombre', 'p.version', 'p.empresa', 'p.plataforma', 'p.licencia', 'p.requiere_clave'])
+                ->each(function ($programa) use (&$resultado, $licencias): void {
+                    $version = trim((string) ($programa->version ?? ''));
+
+                    $resultado[(int) $programa->id_equipo][] = [
+                        'nombre' => trim($programa->nombre . ($version !== '' ? ' v' . ltrim($version, 'vV') : '')),
+                        'detalle' => $this->unir([
+                            $programa->empresa,
+                            $programa->plataforma,
+                            ($programa->licencia ?? 'gratuita') !== 'gratuita' ? ($licencias[$programa->licencia] ?? null) : null,
+                            $programa->requiere_clave ? 'Requiere clave' : null,
+                        ]),
+                    ];
+                });
         }
 
         return $resultado;

@@ -40,6 +40,12 @@
             'label' => 'Modelos',
         ],
         [
+            // Software que se instala en los equipos (tipos con «Incluye programas»).
+            'key' => 'programas',
+            'crumb' => 'Programas',
+            'label' => 'Programas',
+        ],
+        [
             'key' => 'hoteles',
             'crumb' => app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['unidad_plural'],
             'label' => app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['unidad_plural'],
@@ -607,6 +613,17 @@
                 vista="modelos"
                 :key="'administracion-modelos'"
                 :lazy="$diferir('modelos')"
+            />
+        </div>
+
+
+        {{-- ========================================================
+            PROGRAMAS (software)
+        ======================================================== --}}
+        <div x-show="section === 'programas'" x-cloak>
+            <livewire:catalogos.programas
+                :key="'administracion-programas'"
+                :lazy="$diferir('programas')"
             />
         </div>
 
