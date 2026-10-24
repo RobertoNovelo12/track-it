@@ -201,130 +201,30 @@ class EquipoSearch extends Component
         |
         */
 
-        $search = trim($this->search);
+        /*
+         * Búsqueda tolerante: sin acentos, ignora signos tecleados por
+         * accidente y compara códigos y series sin guiones. Si no queda
+         * ningún término útil, no se muestran los equipos automáticamente.
+         */
+        $hayTerminos = \App\Support\BusquedaTolerante::aplicar(
+            $query,
+            (string) $this->search,
+            [
+                'e.nombre_equipo',
+                'e.id_equipo',
+                'e.codigo_inventario',
+                'e.numero_serie',
+                'te.nombre',
+                'ma.nombre',
+                'mo.nombre',
+            ],
+            [
+                'e.codigo_inventario',
+                'e.numero_serie',
+            ]
+        );
 
-
-        if ($search !== '') {
-
-            $terms = preg_split(
-                '/\s+/',
-                $search,
-                -1,
-                PREG_SPLIT_NO_EMPTY
-            );
-
-
-            foreach ($terms as $term) {
-
-                $like = '%' . $term . '%';
-
-
-                $query->where(
-                    function ($sub) use ($like) {
-
-                        $sub
-
-                            /*
-                            |--------------------------------------------------------------------------
-                            | Nombre del equipo
-                            |--------------------------------------------------------------------------
-                            */
-
-                            ->where(
-                                'e.nombre_equipo',
-                                'ilike',
-                                $like
-                            )
-
-
-                            /*
-                            |--------------------------------------------------------------------------
-                            | ID interno
-                            |--------------------------------------------------------------------------
-                            */
-
-                            ->orWhereRaw(
-                                'CAST(e.id_equipo AS TEXT) ILIKE ?',
-                                [$like]
-                            )
-
-
-                            /*
-                            |--------------------------------------------------------------------------
-                            | Código de inventario
-                            |--------------------------------------------------------------------------
-                            */
-
-                            ->orWhere(
-                                'e.codigo_inventario',
-                                'ilike',
-                                $like
-                            )
-
-
-                            /*
-                            |--------------------------------------------------------------------------
-                            | Número de serie
-                            |--------------------------------------------------------------------------
-                            */
-
-                            ->orWhere(
-                                'e.numero_serie',
-                                'ilike',
-                                $like
-                            )
-
-
-                            /*
-                            |--------------------------------------------------------------------------
-                            | Tipo
-                            |--------------------------------------------------------------------------
-                            */
-
-                            ->orWhere(
-                                'te.nombre',
-                                'ilike',
-                                $like
-                            )
-
-
-                            /*
-                            |--------------------------------------------------------------------------
-                            | Marca
-                            |--------------------------------------------------------------------------
-                            */
-
-                            ->orWhere(
-                                'ma.nombre',
-                                'ilike',
-                                $like
-                            )
-
-
-                            /*
-                            |--------------------------------------------------------------------------
-                            | Modelo
-                            |--------------------------------------------------------------------------
-                            */
-
-                            ->orWhere(
-                                'mo.nombre',
-                                'ilike',
-                                $like
-                            );
-
-                    }
-                );
-            }
-
-        } else {
-
-            /*
-            |--------------------------------------------------------------------------
-            | Si no hay texto, no mostramos los 60+ equipos automáticamente.
-            |--------------------------------------------------------------------------
-            */
-
+        if (! $hayTerminos) {
             $query->whereRaw('1 = 0');
         }
 
