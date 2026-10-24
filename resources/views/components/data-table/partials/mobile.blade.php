@@ -27,6 +27,7 @@
 
         @php
             $id = $clave($row);
+            $puedeSeleccionar = $selectable && !($rowSelectable instanceof \Closure && !$rowSelectable($row));
             $accionesFila = $acciones($row);
 
             $opcionesMovil = $accionesFila['menu'];
@@ -62,11 +63,11 @@
                 aria-label="Archivo recién generado"
             @endif
             @if ($selectable)
-                :data-export-selected="selected ? @js((string) $id) : null"
+                :data-export-selected="@js($puedeSeleccionar) && selected ? @js((string) $id) : null"
             @endif
             @data-table-menu-open.window="if ($event.detail !== $el) menuOpen = false"
 
-            @click="selected = ! selected"
+            @click="if (@js($puedeSeleccionar)) selected = ! selected"
 
             wire:key="{{ $keyPrefix }}-card-{{ $id }}"
 
@@ -104,7 +105,8 @@
                     <button
                         type="button"
 
-                        @click.stop="selected = ! selected"
+                        @disabled(!$puedeSeleccionar)
+                        @click.stop="if (@js($puedeSeleccionar)) selected = ! selected"
 
                         class="
                             shrink-0

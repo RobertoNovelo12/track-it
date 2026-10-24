@@ -30,7 +30,6 @@
             'Responsable actual' => $equipo['responsable'],
             'Hotel' => $equipo['hotel'],
             'Departamento' => $equipo['departamento'],
-            'Área' => $equipo['area'],
             'Ubicación registrada' => $equipo['ubicacion'],
             'Fecha de asignación vigente' => $equipo['fecha_asignacion'],
         ] as $campo => $valor)
@@ -38,11 +37,20 @@
         @endforeach
     </table>
 
+    <h2>03 · Identificación del usuario</h2>
+    <table>
+        <tr><th>Nombre completo</th><td>{{ $equipo['responsable'] ?: 'Sin asignación vigente' }}</td></tr>
+        <tr><th>Nombre de usuario</th><td>{{ $equipo['usuario_nombre'] ?? '—' }}</td></tr>
+        <tr><th>Correo</th><td>{{ $equipo['usuario_correo'] ?? '—' }}</td></tr>
+    </table>
+
+    <h2>04 · Software instalado</h2>
     @if (($equipo['programas'] ?? []) !== [])
-        <h2>03 · Programas instalados</h2>
         <table>
             @foreach ($equipo['programas'] as $programa)
                 <tr><th>{{ $programa['nombre'] }}</th><td>{{ $programa['detalle'] ?: '—' }}</td></tr>
             @endforeach
         </table>
+    @else
+        <p>Sin programas registrados.</p>
     @endif

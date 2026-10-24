@@ -18,6 +18,7 @@
     row-key="id_equipo"
     key-prefix="equipo"
     selectable
+    :row-selectable="fn ($equipo) => !$equipoDadoDeBaja($equipo)"
 
     :sort-field="$sortField"
     :sort-direction="$sort"

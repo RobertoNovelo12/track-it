@@ -1,3 +1,4 @@
+
 @extends('layouts.app')
 
 @section('title', 'Inventario')
@@ -5,11 +6,14 @@
 @section('content')
 
 <div>
+    {{-- Descargar el PDF sin mostrar un mensaje sobre el botón Volver. --}}
     @if (session('descargar_reporte'))
-        <div x-data x-init="window.location.assign(@js(route('reportes.download', session('descargar_reporte'))))" class="mb-4 text-sm text-[var(--theme-text)]" role="status">
-            PDF generado y guardado en Reportes.
-            <a href="{{ route('reportes.download', session('descargar_reporte')) }}" class="text-[var(--theme-primary)] underline" download>Descargar PDF</a>
-        </div>
+        <span
+            x-data
+            x-init="window.location.assign(@js(route('reportes.download', session('descargar_reporte'))))"
+            hidden
+            aria-hidden="true"
+        ></span>
     @endif
 
     {{-- Encabezado --}}
@@ -18,15 +22,10 @@
     <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-end md:justify-between">
         @include('layouts.partials.boton-volver')
 
-
-
         <div class="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:gap-3">
 
-            {{-- ====================================================
-                EXPORTAR
-            ==================================================== --}}
+            {{-- EXPORTAR --}}
             <div class="relative flex-1 sm:flex-none">
-
                 <button
                     type="button"
                     onclick="
@@ -43,29 +42,21 @@
                         sm:w-auto
                         items-center
                         gap-2
-
                         border
                         border-[var(--theme-border-strong)]
-
                         rounded-md
-
                         px-4
                         py-2
-
                         bg-[var(--theme-surface)]
-
                         text-sm
                         font-medium
                         text-[var(--theme-text-muted)]
-
                         hover:bg-[var(--theme-surface-soft)]
                         hover:text-[var(--theme-text)]
                         hover:border-[var(--theme-primary-border)]
-
                         transition-colors
                     "
                 >
-
                     <svg
                         class="w-4 h-4"
                         viewBox="0 0 24 24"
@@ -78,12 +69,8 @@
                         <path d="M4 21h16"/>
                     </svg>
 
-                    <span>
-                        Exportar
-                    </span>
-
+                    <span>Exportar</span>
                 </button>
-
 
                 {{-- Menú exportar --}}
                 <div
@@ -91,86 +78,64 @@
                     onclick="event.stopPropagation()"
                     class="
                         hidden
-
                         absolute
                         left-0
                         sm:left-auto
                         sm:right-0
                         top-full
-
                         mt-2
-
                         w-40
-
                         bg-[var(--theme-surface)]
-
                         border
                         border-[var(--theme-border)]
-
                         rounded-md
-
                         shadow-lg
                         shadow-[var(--theme-shadow)]
-
                         z-20
-
                         text-left
-
                         overflow-hidden
                     "
                 >
-
                     <a
-                        href="#" onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('exportar-inventario', {detail: {formato: 'pdf'}}))"
+                        href="#"
+                        onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('exportar-inventario', {detail: {formato: 'pdf'}}))"
                         class="
                             block
-
                             px-4
                             py-2.5
-
                             text-sm
                             text-[var(--theme-text)]
-
                             hover:bg-[var(--theme-surface-soft)]
                             hover:text-[var(--theme-primary)]
-
                             transition-colors
                         "
                     >
                         Exportar a PDF
                     </a>
 
-
                     <a
-                        href="#" onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('exportar-inventario', {detail: {formato: 'xlsx'}}))"
+                        href="#"
+                        onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('exportar-inventario', {detail: {formato: 'xlsx'}}))"
                         class="
                             block
-
                             px-4
                             py-2.5
-
                             text-sm
                             text-[var(--theme-text)]
-
                             hover:bg-[var(--theme-surface-soft)]
                             hover:text-[var(--theme-primary)]
-
                             transition-colors
                         "
                     >
                         Exportar a Excel
                     </a>
-
                 </div>
-
             </div>
 
-
             @can('gestionar')
-            {{-- ====================================================
-                AÑADIR
-            ==================================================== --}}
-            {{-- Si hay un tipo filtrado (?tipo_activo=), el alta abre con ese tipo (?tipo=). --}}
+
+            {{-- AÑADIR --}}
+            {{-- Si hay un tipo filtrado, el alta abre con ese tipo. --}}
             <a
                 href="{{ Route::has('equipos.create')
                     ? route('equipos.create')
@@ -191,23 +156,17 @@
                     sm:flex-none
                     items-center
                     gap-2
-
                     bg-[var(--theme-primary)]
                     hover:bg-[var(--theme-primary-hover)]
-
                     rounded-md
-
                     px-4
                     py-2
-
                     text-sm
                     font-medium
                     text-white
-
                     transition-colors
                 "
             >
-
                 <svg
                     class="w-4 h-4"
                     viewBox="0 0 24 24"
@@ -219,63 +178,118 @@
                     <path d="M5 12h14"/>
                 </svg>
 
-                <span>
-                    Añadir
-                </span>
-
+                <span>Añadir</span>
             </a>
+
             {{--
-                DAR DE BAJA / BAJA MÚLTIPLE según los equipos marcados en la tabla:
-                0 = deshabilitado, 1 = «Dar de baja» (abre la baja de ese equipo),
-                2 a 10 = «Baja múltiple (N)» con flecha y menú, igual que Exportar:
-                «Todas en un documento» o «Una por una».
+                DAR DE BAJA / BAJA MÚLTIPLE:
+                0 seleccionados = deshabilitado.
+                1 seleccionado = baja individual.
+                2 a 10 = menú de baja múltiple.
             --}}
             <div
                 class="relative flex-1 sm:flex-none"
                 x-data="{
                     ids: [],
                     menu: false,
+
                     contar() {
-                        const escritorio = [...document.querySelectorAll('.row-checkbox:checked')]
-                            .filter(el => el.getClientRects().length).map(el => el.value);
+                        const escritorio = [...document.querySelectorAll('.row-checkbox:checked:not(:disabled)')]
+                            .filter(el => el.getClientRects().length)
+                            .map(el => el.value);
+
                         const movil = [...document.querySelectorAll('[data-export-selected]')]
-                            .filter(el => el.getClientRects().length).map(el => el.dataset.exportSelected);
+                            .filter(el => el.getClientRects().length)
+                            .map(el => el.dataset.exportSelected);
+
                         this.ids = [...new Set([...escritorio, ...movil])].filter(Boolean);
-                        if (this.ids.length < 2) this.menu = false;
+
+                        if (this.ids.length < 2) {
+                            this.menu = false;
+                        }
                     },
+
                     pulsar() {
                         this.contar();
-                        if (this.ids.length === 0) return;
-                        if (this.ids.length > 10) {
-                            window.trackitToast?.('warning', 'Puedes dar de baja hasta 10 equipos a la vez. Desmarca ' + (this.ids.length - 10) + '.', 'Demasiados equipos');
+
+                        if (this.ids.length === 0) {
                             return;
                         }
+
+                        if (this.ids.length > 10) {
+                            window.trackitToast?.(
+                                'warning',
+                                'Puedes dar de baja hasta 10 equipos a la vez. Desmarca ' + (this.ids.length - 10) + '.',
+                                'Demasiados equipos'
+                            );
+                            return;
+                        }
+
                         if (this.ids.length === 1) {
                             this.ir(null);
                             return;
                         }
-                        this.menu = ! this.menu;
+
+                        this.menu = !this.menu;
                     },
+
                     ir(modo) {
                         this.menu = false;
-                        const destino = new URL(@js(route('equipos.baja-multiple')), window.location.origin);
-                        destino.searchParams.set('equipos', this.ids.join(','));
-                        if (modo) destino.searchParams.set('modo', modo);
-                        window.Livewire?.navigate ? Livewire.navigate(destino.toString()) : (window.location.href = destino.toString());
-                    },
-                    init() {
-                        /* Con wire:navigate la página se reconstruye: se quita el oyente anterior. */
-                        if (window.__recontarBaja) {
-                            document.removeEventListener('change', window.__recontarBaja);
-                            document.removeEventListener('click', window.__recontarBaja);
-                        }
-                        window.__recontarBaja = () => setTimeout(() => this.$el.isConnected && this.contar(), 0);
-                        document.addEventListener('change', window.__recontarBaja);
-                        document.addEventListener('click', window.__recontarBaja);
 
-                        if (! window.__recontarBajaHook) {
+                        const destino = new URL(
+                            @js(route('equipos.baja-multiple')),
+                            window.location.origin
+                        );
+
+                        destino.searchParams.set('equipos', this.ids.join(','));
+
+                        if (modo) {
+                            destino.searchParams.set('modo', modo);
+                        }
+
+                        window.Livewire?.navigate
+                            ? Livewire.navigate(destino.toString())
+                            : (window.location.href = destino.toString());
+                    },
+
+                    init() {
+                        /* Limpiar oyentes anteriores al navegar con Livewire. */
+                        if (window.__recontarBaja) {
+                            document.removeEventListener(
+                                'change',
+                                window.__recontarBaja
+                            );
+
+                            document.removeEventListener(
+                                'click',
+                                window.__recontarBaja
+                            );
+                        }
+
+                        window.__recontarBaja = () =>
+                            setTimeout(
+                                () => this.$el.isConnected && this.contar(),
+                                0
+                            );
+
+                        document.addEventListener(
+                            'change',
+                            window.__recontarBaja
+                        );
+
+                        document.addEventListener(
+                            'click',
+                            window.__recontarBaja
+                        );
+
+                        if (!window.__recontarBajaHook) {
                             window.__recontarBajaHook = true;
-                            window.Livewire?.hook?.('commit', ({ succeed }) => succeed(() => window.__recontarBaja?.()));
+
+                            window.Livewire?.hook?.(
+                                'commit',
+                                ({ succeed }) =>
+                                    succeed(() => window.__recontarBaja?.())
+                            );
                         }
                     },
                 }"
@@ -292,18 +306,39 @@
                     class="flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-[var(--theme-danger-soft)] px-4 py-2 text-sm font-medium text-[var(--theme-danger)] transition-opacity hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:opacity-50 sm:w-auto"
                     disabled
                 >
-                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5 9-5Zm-9 9 9 5 9-5M3 16l9 5 9-5"/></svg>
-                    <span x-text="ids.length > 1 ? 'Baja múltiple (' + ids.length + ')' : 'Dar de baja'">Dar de baja</span>
+                    <svg
+                        class="h-4 w-4"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                        aria-hidden="true"
+                    >
+                        <path d="m12 3 9 5-9 5-9-5 9-5Zm-9 9 9 5 9-5M3 16l9 5-9-5"/>
+                    </svg>
+
+                    <span x-text="ids.length > 1 ? 'Baja múltiple (' + ids.length + ')' : 'Dar de baja'">
+                        Dar de baja
+                    </span>
+
                     <svg
                         x-show="ids.length > 1"
                         x-cloak
                         class="h-4 w-4 transition-transform"
                         x-bind:class="menu && 'rotate-180'"
-                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
-                    ><path d="m6 9 6 6 6-6"/></svg>
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.7"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                    >
+                        <path d="m6 9 6 6 6-6"/>
+                    </svg>
                 </button>
 
-                {{-- Menú baja múltiple (mismo estilo que Exportar) --}}
+                {{-- Menú baja múltiple --}}
                 <div
                     x-show="menu"
                     x-cloak
@@ -318,7 +353,10 @@
                         class="block w-full px-4 py-2.5 text-left text-sm text-[var(--theme-text)] transition-colors hover:bg-[var(--theme-surface-soft)] hover:text-[var(--theme-primary)]"
                     >
                         Dar de baja a todos
-                        <span class="block text-xs text-[var(--theme-text-muted)]">Un solo formulario y una acta</span>
+
+                        <span class="block text-xs text-[var(--theme-text-muted)]">
+                            Un solo formulario y una acta
+                        </span>
                     </button>
 
                     <button
@@ -328,26 +366,21 @@
                         class="block w-full px-4 py-2.5 text-left text-sm text-[var(--theme-text)] transition-colors hover:bg-[var(--theme-surface-soft)] hover:text-[var(--theme-primary)]"
                     >
                         Baja uno por uno
-                        <span class="block text-xs text-[var(--theme-text-muted)]">Pasa al siguiente al confirmar</span>
+
+                        <span class="block text-xs text-[var(--theme-text-muted)]">
+                            Pasa al siguiente al confirmar
+                        </span>
                     </button>
                 </div>
             </div>
+
             @endcan
 
         </div>
-
     </div>
 
-
-    {{-- ============================================================
-        FILTROS, TABLA Y PAGINACIÓN
-        Todo vive dentro del componente Livewire.
-    ============================================================ --}}
-    {{--
-        Hotel predeterminado (Ajustes › Preferencias): solo cuando la
-        página se abre sin filtros, para no pisar enlaces como los de la
-        Vista general.
-    --}}
+    {{-- FILTROS, TABLA Y PAGINACIÓN --}}
+    {{-- El componente Livewire administra el inventario. --}}
     <livewire:equipos-index
         defer
         :unidad-predeterminada="request()->query() === []
@@ -357,18 +390,16 @@
 
 </div>
 
-
 @push('scripts')
 
 <script>
     function toggleAllRows(source) {
         document
-            .querySelectorAll('.row-checkbox')
+            .querySelectorAll('.row-checkbox:not(:disabled)')
             .forEach(cb => {
                 cb.checked = source.checked;
             });
     }
-
 
     function toggleRowMenu(event, menuId) {
         event.stopPropagation();
@@ -388,7 +419,6 @@
         }
     }
 
-
     function confirmarBaja(equipoId) {
         if (
             confirm(
@@ -402,13 +432,11 @@
         }
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | Cerrar menús al hacer clic fuera
     |--------------------------------------------------------------------------
     */
-
     document.addEventListener('click', function () {
 
         document
@@ -416,7 +444,6 @@
             .forEach(menu => {
                 menu.classList.add('hidden');
             });
-
 
         const exportMenu =
             document.getElementById('exportarMenu');

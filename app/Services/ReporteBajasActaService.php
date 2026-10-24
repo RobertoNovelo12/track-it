@@ -72,6 +72,7 @@ class ReporteBajasActaService
                 'b.motivo_baja',
                 'b.comentarios',
                 'b.autoriza',
+                'b.firmas',
                 'e.codigo_inventario',
                 'e.nombre_equipo',
                 'e.numero_serie',
@@ -126,6 +127,7 @@ class ReporteBajasActaService
                     'motivo' => $baja->motivo_baja,
                     'comentarios' => $baja->comentarios,
                     'autoriza' => $baja->autoriza,
+                    'firmas' => json_decode($baja->firmas ?? '{}', true) ?: [],
 
                     'equipo' => [
                         'codigo' => $baja->codigo_inventario,

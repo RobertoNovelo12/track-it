@@ -31,7 +31,8 @@ class BajaEquipoService
         ?string $comentarios,
         string $autoriza,
         int $usuarioId,
-        ?string $referencia = null
+        ?string $referencia = null,
+        array $firmas = []
     ): string {
         $equipo = DB::table('equipos')
             ->where('id_equipo', $idEquipo)
@@ -80,6 +81,7 @@ class BajaEquipoService
             'comentarios' => $comentarios !== '' ? $comentarios : null,
             'realizado_por' => $usuarioId,
             'autoriza' => trim($autoriza),
+            'firmas' => json_encode($firmas, JSON_UNESCAPED_UNICODE),
             'ruta_pdf' => null,
             'fecha_registro' => now(),
         ]);

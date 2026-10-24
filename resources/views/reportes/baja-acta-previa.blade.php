@@ -141,7 +141,7 @@
 
         padding: 6px 8px;
 
-        background: #ffffff;
+        background: #eff1f3;
 
         color: #2b435b;
 
@@ -183,7 +183,7 @@
 
         padding: 6px;
 
-        border: 1px solid #d6dfe7;
+        border: 1px solid #d1d5db;
 
     }
 
@@ -245,7 +245,7 @@
 
     .preview-baja .firma {
 
-        border: 1px solid #d6dfe7;
+        border: 1px solid #d1d5db;
 
         padding: 6px;
 
@@ -267,7 +267,7 @@
 
         height: 38px;
 
-        border-bottom: 1px solid #8797a6;
+        border-bottom: 1px solid #d1d5db;
 
     }
 
@@ -301,7 +301,7 @@
 
         min-width: 0;
 
-        border: 1px solid #d6dfe7;
+        border: 1px solid #d1d5db;
 
     }
 
@@ -311,7 +311,7 @@
 
         padding: 6px;
 
-        background: #ffffff;
+        background: #eff1f3;
 
         font-weight: bold;
 
@@ -391,10 +391,10 @@
 
         {{-- ENCABEZADO --}}
 
-        <img class="logo-palladium-izquierda" src="{{ asset('images/logo-grand-palladium.png') }}" alt="Palladium Hotel Group">
+        <img class="logo-palladium-izquierda" src="{{ app(\App\Services\OrganizacionService::class)->logoUrl() }}" alt="Palladium Hotel Group">
         <div class="institucion">
 
-            GRAND PALLADIUM RIVIERA MAYA | CONTROL DE ACTIVOS TI
+            {{ app(\App\Services\OrganizacionService::class)->nombre() }} | CONTROL DE ACTIVOS TI
 
         </div>
 
@@ -654,67 +654,7 @@
 
 
 
-        <div class="campo">
-
-            <span class="etiqueta">Persona que autoriza</span>
-
-            <span class="valor">
-
-                {{ $dato($baja['autoriza'] ?? null) }}
-
-            </span>
-
-        </div>
-
-
-
-        <div class="firmas">
-
-            <div class="firma">
-
-                <div class="firma-titulo">
-
-                    Entregó · Departamento de Sistemas
-
-                </div>
-
-                <div class="linea"></div>
-
-                <div class="firma-pie">
-
-                    Nombre y firma
-
-                    <div>Fecha: ____ / ____ / ______</div>
-
-                </div>
-
-            </div>
-
-
-
-            <div class="firma">
-
-                <div class="firma-titulo">
-
-                    Autorizó · Responsable de la baja
-
-                </div>
-
-                <div class="linea"></div>
-
-                <div class="firma-pie">
-
-                    {{ $dato($baja['autoriza'] ?? null) }}
-
-                    <div>Fecha: ____ / ____ / ______</div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-
+        @include('reportes.partials.firmas-baja', ['firmasDocumento' => $baja['firmas'] ?? [], 'fechaDocumento' => $baja['fecha'] ?? ''])
 
         <div class="pie">
 
@@ -725,14 +665,6 @@
 
 
         {{-- SEGUNDA PÁGINA, VISTA PREVIA --}}
-
-        <div class="seccion">
-
-            EVIDENCIAS FOTOGRÁFICAS · PÁGINA 2
-
-        </div>
-
-
 
         <div class="fotografias">
 
@@ -776,11 +708,7 @@
 
 
 
-        <div class="pie">
 
-            Departamento de Sistemas · Página 2 de 2
-
-        </div>
 
     </article>
 

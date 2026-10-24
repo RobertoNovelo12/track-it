@@ -22,7 +22,7 @@
 
         toggleAll(source) {
             this.$root
-                .querySelectorAll('.row-checkbox')
+                .querySelectorAll('.row-checkbox:not(:disabled)')
                 .forEach(checkbox => {
                     checkbox.checked = source.checked;
                 });
@@ -370,6 +370,7 @@
                                 <input
                                     type="checkbox"
                                     name="ids[]"
+                                    @disabled($rowSelectable instanceof \Closure && !$rowSelectable($row))
                                     value="{{ $id }}"
                                     @if ($selectionModel)
                                         wire:model.live="{{ $selectionModel }}"
@@ -377,7 +378,7 @@
                                     @endif
                                     aria-label="Seleccionar registro"
                                     class="
-                                        row-checkbox
+                                        row-checkbox disabled:cursor-not-allowed disabled:opacity-40
 
                                         rounded
 

@@ -2,10 +2,12 @@
 
 namespace App\Livewire;
 
+use App\Services\ActaBajaIndividualService;
 use App\Services\SystemCacheService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Locked;
@@ -15,7 +17,10 @@ use Throwable;
 
 class EquipoBaja extends Component
 {
+    use \App\Livewire\Concerns\RecogeFirmasBaja;
     use WithFileUploads;
+
+    public const MAXIMO_COLA = 10;
 
     public int $equipoId;
     public array $equipo = [];
@@ -30,19 +35,6 @@ class EquipoBaja extends Component
     public $fotoLateral1 = null;
     public $fotoLateral2 = null;
 
-    /*
-    |--------------------------------------------------------------------------
-    | Baja en lote (?cola=1,2,3 desde Inventario)
-    |--------------------------------------------------------------------------
-    |
-    | Al confirmar una baja se carga el siguiente equipo de la cola sin
-    | volver a Inventario. Se conservan motivo, fecha y quién autoriza;
-    | fotos y comentarios son de cada equipo. Al terminar se abre el acta
-    | de baja múltiple con todos los equipos de la cola.
-    |
-    */
-    public const MAXIMO_COLA = 10;
-
     #[Locked]
     public array $cola = [];
 
@@ -55,37 +47,107 @@ class EquipoBaja extends Component
     #[Locked]
     public array $codigosCola = [];
 
-    /** Tipos de equipo del lote (aviso si son distintos). */
     #[Locked]
     public array $tiposCola = [];
 
     /*
-     * El parámetro se llama $lote (no $cola): Livewire asigna los
-     * parámetros de mount a la propiedad pública del mismo nombre, y
-     * $cola es un arreglo.
-     */
+    |--------------------------------------------------------------------------
+    | INICIALIZACIÓN
+    |--------------------------------------------------------------------------
+    */
+
     public function mount(int $equipoId, ?string $lote = null): void
     {
+        Gate::authorize('gestionar');
+
         $this->equipoId = $equipoId;
-        $this->fechaBaja = now()->format('Y-m-d');
+
+        // Conservar la fecha del equipo anterior.
+        $fechaAnterior = ($lote !== null && $lote !== '')
+            ? session('baja_lote_fecha')
+            : null;
+
+        $this->fechaBaja = is_string($fechaAnterior)
+            && preg_match(
+                '/^\d{4}-\d{2}-\d{2}$/',
+                $fechaAnterior
+            )
+                ? $fechaAnterior
+                : now('America/Cancun')->format('Y-m-d');
+
+        // Limpiar todos los campos capturables.
+        $this->limpiarFormularioDeBaja();
+
+        // Preparar equipos seleccionados.
         $this->prepararCola($lote);
+
+        // Cargar información real del equipo actual.
         $this->cargarEquipo();
     }
 
-    /**
-     * Ids de la cola: enteros, sin repetir, máximo 10 y con el equipo actual.
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | LIMPIAR FORMULARIO
+    |--------------------------------------------------------------------------
+    */
+
+    protected function limpiarFormularioDeBaja(): void
+    {
+        // Limpiar motivo, comentarios y autorización.
+        $this->motivoBaja = '';
+        $this->comentariosBaja = '';
+        $this->autoriza = '';
+
+        // Quitar fotografías anteriores.
+        $this->fotoFrontal = null;
+        $this->fotoTrasera = null;
+        $this->fotoLateral1 = null;
+        $this->fotoLateral2 = null;
+
+        // Limpiar los cinco responsables.
+        $this->firmas = array_fill_keys(
+            array_keys(self::FIRMANTES),
+            ''
+        );
+
+        // Eliminar mensajes de validación.
+        $this->resetValidation();
+
+        // No limpiar fechaBaja.
+        // No limpiar equipoId.
+        // No limpiar información general del equipo.
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | PREPARAR COLA DE EQUIPOS
+    |--------------------------------------------------------------------------
+    */
+
     protected function prepararCola(?string $cola): void
     {
-        $ids = collect(explode(',', (string) $cola))
-            ->map(fn ($id) => (int) trim($id))
-            ->filter(fn (int $id) => $id > 0)
+        $ids = collect(
+            explode(',', (string) $cola)
+        )
+            ->map(
+                fn ($id) => (int) trim($id)
+            )
+            ->filter(
+                fn (int $id) => $id > 0
+            )
             ->unique()
             ->take(self::MAXIMO_COLA)
             ->values()
             ->all();
 
-        if (count($ids) < 2 || ! in_array($this->equipoId, $ids, true)) {
+        if (
+            count($ids) < 2 ||
+            !in_array(
+                $this->equipoId,
+                $ids,
+                true
+            )
+        ) {
             return;
         }
 
@@ -93,35 +155,79 @@ class EquipoBaja extends Component
 
         $this->codigosCola = DB::table('equipos')
             ->whereIn('id_equipo', $ids)
-            ->pluck('codigo_inventario', 'id_equipo')
-            ->map(fn ($codigo) => (string) ($codigo ?: 'Sin código'))
+            ->pluck(
+                'codigo_inventario',
+                'id_equipo'
+            )
+            ->map(
+                fn ($codigo) =>
+                    (string) ($codigo ?: 'Sin código')
+            )
             ->all();
 
         $this->tiposCola = DB::table('equipos as e')
-            ->leftJoin('tipos_equipo as te', 'te.id_tipo_equipo', '=', 'e.id_tipo_equipo')
+            ->leftJoin(
+                'tipos_equipo as te',
+                'te.id_tipo_equipo',
+                '=',
+                'e.id_tipo_equipo'
+            )
             ->whereIn('e.id_equipo', $ids)
             ->pluck('te.nombre')
-            ->map(fn ($tipo) => (string) ($tipo ?: 'Sin tipo'))
+            ->map(
+                fn ($tipo) =>
+                    (string) ($tipo ?: 'Sin tipo')
+            )
             ->unique()
             ->values()
             ->all();
 
-        // Los que ya estaban dados de baja no entran a la cola de bajas.
+        // Identificar equipos ya dados de baja.
         $yaDeBaja = $this->idsDadosDeBaja($ids);
 
-        $this->pendientes = array_values(array_diff($ids, $yaDeBaja));
+        // Equipos pendientes.
+        $this->pendientes = array_values(
+            array_diff($ids, $yaDeBaja)
+        );
+
+        // Equipos procesados anteriormente.
+        $this->hechos = array_values(
+            array_intersect($ids, $yaDeBaja)
+        );
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | CONSULTAR ESTADO DE LAS BAJAS
+    |--------------------------------------------------------------------------
+    */
 
     protected function idsDadosDeBaja(array $ids): array
     {
+        if ($ids === []) {
+            return [];
+        }
+
         return DB::table('equipos as e')
-            ->leftJoin('estados_equipo as ee', 'ee.id_estado_equipo', '=', 'e.id_estado_activo')
+            ->leftJoin(
+                'estados_equipo as ee',
+                'ee.id_estado_equipo',
+                '=',
+                'e.id_estado_activo'
+            )
             ->whereIn('e.id_equipo', $ids)
             ->where(function ($query): void {
-                $query->where('ee.clave', 'BAJA')
-                    ->orWhereExists(fn ($sub) => $sub->selectRaw('1')
-                        ->from('bajas as b')
-                        ->whereColumn('b.id_equipo', 'e.id_equipo'));
+                $query
+                    ->where('ee.clave', 'BAJA')
+                    ->orWhereExists(
+                        fn ($sub) => $sub
+                            ->selectRaw('1')
+                            ->from('bajas as b')
+                            ->whereColumn(
+                                'b.id_equipo',
+                                'e.id_equipo'
+                            )
+                    );
             })
             ->pluck('e.id_equipo')
             ->map(fn ($id) => (int) $id)
@@ -133,76 +239,103 @@ class EquipoBaja extends Component
         return $this->cola !== [];
     }
 
-    /**
-     * Pasa al siguiente equipo pendiente o, si ya no hay, abre el acta.
-     */
-    protected function avanzarCola(?string $avisoHecho)
-    {
-        $this->pendientes = array_values(array_filter(
-            $this->pendientes,
-            fn (int $id) => $id !== $this->equipoId
-        ));
+    /*
+    |--------------------------------------------------------------------------
+    | AVANZAR A LA SIGUIENTE BAJA
+    |--------------------------------------------------------------------------
+    */
 
-        // Por si otro usuario dio de baja alguno mientras tanto.
-        $this->pendientes = array_values(array_diff(
-            $this->pendientes,
-            $this->idsDadosDeBaja($this->pendientes)
-        ));
+    protected function avanzarCola(
+        ?string $avisoHecho,
+        int $reporteId
+    ) {
+        $finalizadas = $this->idsDadosDeBaja(
+            $this->cola
+        );
 
-        if ($this->pendientes === []) {
+        $pendientes = array_values(
+            array_diff(
+                $this->cola,
+                $finalizadas
+            )
+        );
+
+        // Preparar descarga del PDF actual.
+        session()->flash(
+            'descargar_reporte',
+            $reporteId
+        );
+
+        /*
+         * Si no quedan equipos, volver a Inventario.
+         */
+        if ($pendientes === []) {
             session()->flash('toast', [
                 'type' => 'success',
-                'message' => count($this->hechos) === 1
-                    ? 'Se dio de baja 1 equipo. Ahora puedes generar el acta de baja múltiple.'
-                    : 'Se dieron de baja ' . count($this->hechos) . ' equipos. Ahora puedes generar el acta de baja múltiple.',
+                'message' =>
+                    'Bajas terminadas. Las actas individuales están disponibles en Reportes.',
             ]);
 
             return $this->redirectRoute(
-                'equipos.baja-multiple',
-                ['equipos' => implode(',', $this->cola)],
+                'equipos.index',
                 navigate: true
             );
         }
 
-        $this->equipoId = $this->pendientes[0];
+        /*
+         * Hay otro equipo pendiente.
+         */
+        $siguienteId = (int) $pendientes[0];
 
-        // Datos de cada equipo; motivo, fecha y quién autoriza se conservan.
-        $this->reset('comentariosBaja', 'fotoFrontal', 'fotoTrasera', 'fotoLateral1', 'fotoLateral2');
-        $this->resetValidation();
-        $this->cargarEquipo();
+        // La fecha es el único dato del formulario
+        // anterior que se conserva.
+        session()->flash(
+            'baja_lote_fecha',
+            $this->fechaBaja
+        );
 
-        // La dirección refleja el equipo actual (recargar no pierde el lote).
-        $url = route('equipos.baja', ['equipo' => $this->equipoId, 'cola' => implode(',', $this->cola)]);
-        $this->js('history.replaceState(history.state, "", ' . json_encode($url, JSON_UNESCAPED_SLASHES) . '); window.scrollTo({ top: 0, behavior: "smooth" });');
+        session()->flash('toast', [
+            'type' => 'success',
+            'message' => trim(
+                ($avisoHecho ?? 'Acta generada.')
+                .' Continúa con el siguiente equipo.'
+            ),
+        ]);
 
-        $siguiente = 'Sigue ' . ($this->equipo['codigo_inventario'] ?: 'el siguiente equipo') . '.';
-
-        $this->dispatch('toast', type: 'success', message: trim(($avisoHecho ?? '') . ' ' . $siguiente));
-
-        return null;
+        /*
+         * Redirigir a un formulario nuevo.
+         */
+        return $this->redirectRoute(
+            'equipos.baja',
+            [
+                'equipo' => $siguienteId,
+                'cola' => implode(',', $this->cola),
+            ],
+            navigate: true
+        );
     }
 
-    /**
-     * Saltar el equipo actual sin darlo de baja (queda fuera del lote).
-     */
-    public function omitir()
+    /*
+    |--------------------------------------------------------------------------
+    | NO OMITIR EQUIPOS
+    |--------------------------------------------------------------------------
+    */
+
+    public function omitir(): void
     {
-        if (! $this->enCola()) {
-            return null;
-        }
+        Gate::authorize('gestionar');
 
-        $codigo = $this->equipo['codigo_inventario'] ?? 'El equipo';
-
-        $this->cola = array_values(array_filter($this->cola, fn (int $id) => $id !== $this->equipoId));
-
-        if ($this->hechos === [] && count($this->pendientes) <= 1) {
-            session()->flash('toast', ['type' => 'info', 'message' => 'No se dio de baja ningún equipo.']);
-
-            return $this->redirectRoute('equipos.index', navigate: true);
-        }
-
-        return $this->avanzarCola($codigo . ' se omitió.');
+        throw ValidationException::withMessages([
+            'motivoBaja' =>
+                'Debes completar la baja y generar su acta antes de avanzar.',
+        ]);
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | CARGAR INFORMACIÓN GENERAL DEL EQUIPO
+    |--------------------------------------------------------------------------
+    */
 
     protected function cargarEquipo(): void
     {
@@ -237,7 +370,10 @@ class EquipoBaja extends Component
                 '=',
                 'e.id_proveedor'
             )
-            ->where('e.id_equipo', $this->equipoId)
+            ->where(
+                'e.id_equipo',
+                $this->equipoId
+            )
             ->select([
                 'e.id_equipo',
                 'e.codigo_inventario',
@@ -259,81 +395,120 @@ class EquipoBaja extends Component
         abort_unless($equipo, 404);
 
         $bajaExistente = DB::table('bajas')
-            ->where('id_equipo', $this->equipoId)
+            ->where(
+                'id_equipo',
+                $this->equipoId
+            )
             ->exists();
 
         abort_if(
-            $bajaExistente || $equipo->estado_clave === 'BAJA',
+            $bajaExistente ||
+            $equipo->estado_clave === 'BAJA',
             404
         );
 
         $this->equipo = [
-            'id_equipo' => (int) $equipo->id_equipo,
-            'codigo_inventario' => (string) (
-                $equipo->codigo_inventario ?? ''
-            ),
-            'nombre_equipo' => (string) (
-                $equipo->nombre_equipo ?? ''
-            ),
-            'numero_serie' => (string) (
-                $equipo->numero_serie ?? ''
-            ),
-            'numero_factura' => (string) (
-                $equipo->numero_factura ?? ''
-            ),
-            'tipo_equipo' => (string) (
-                $equipo->tipo_equipo ?? ''
-            ),
-            'marca' => (string) (
-                $equipo->marca ?? ''
-            ),
-            'modelo' => (string) (
-                $equipo->modelo ?? ''
-            ),
-            'estado' => (string) (
-                $equipo->estado ?? ''
-            ),
-            'proveedor' => (string) (
-                $equipo->proveedor ?? ''
-            ),
-            'fecha_compra' => $this->formatearFecha(
-                $equipo->fecha_compra ?? null
-            ),
-            'fecha_fin_garantia' => $this->formatearFecha(
-                $equipo->fecha_fin_garantia ?? null
-            ),
-            'fecha_registro' => $this->formatearFecha(
-                $equipo->fecha_registro ?? null
-            ),
+            'id_equipo' =>
+                (int) $equipo->id_equipo,
+
+            'codigo_inventario' =>
+                (string) (
+                    $equipo->codigo_inventario ?? ''
+                ),
+
+            'nombre_equipo' =>
+                (string) (
+                    $equipo->nombre_equipo ?? ''
+                ),
+
+            'numero_serie' =>
+                (string) (
+                    $equipo->numero_serie ?? ''
+                ),
+
+            'numero_factura' =>
+                (string) (
+                    $equipo->numero_factura ?? ''
+                ),
+
+            'tipo_equipo' =>
+                (string) (
+                    $equipo->tipo_equipo ?? ''
+                ),
+
+            'marca' =>
+                (string) (
+                    $equipo->marca ?? ''
+                ),
+
+            'modelo' =>
+                (string) (
+                    $equipo->modelo ?? ''
+                ),
+
+            'estado' =>
+                (string) (
+                    $equipo->estado ?? ''
+                ),
+
+            'proveedor' =>
+                (string) (
+                    $equipo->proveedor ?? ''
+                ),
+
+            'fecha_compra' =>
+                $this->formatearFecha(
+                    $equipo->fecha_compra ?? null
+                ),
+
+            'fecha_fin_garantia' =>
+                $this->formatearFecha(
+                    $equipo->fecha_fin_garantia ?? null
+                ),
+
+            'fecha_registro' =>
+                $this->formatearFecha(
+                    $equipo->fecha_registro ?? null
+                ),
         ];
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | VALIDAR FOTOGRAFÍAS
+    |--------------------------------------------------------------------------
+    */
+
     public function updatedFotoFrontal(): void
     {
-        $this->validateOnly('fotoFrontal', [
-            'fotoFrontal' => $this->photoRules(),
-        ]);
+        $this->validateOnly(
+            'fotoFrontal',
+            ['fotoFrontal' => $this->photoRules()]
+        );
     }
 
     public function updatedFotoTrasera(): void
     {
-        $this->validateOnly('fotoTrasera', [
-            'fotoTrasera' => $this->photoRules(),
-        ]);
+        $this->validateOnly(
+            'fotoTrasera',
+            ['fotoTrasera' => $this->photoRules()]
+        );
     }
 
     public function updatedFotoLateral1(): void
     {
-        $this->validateOnly('fotoLateral1', [
-            'fotoLateral1' => $this->photoRules(),
-        ]);
+        $this->validateOnly(
+            'fotoLateral1',
+            ['fotoLateral1' => $this->photoRules()]
+        );
     }
 
     public function updatedFotoLateral2(): void
     {
-        $this->validateOnly('fotoLateral2', [
-            'fotoLateral2' => $this->photoRules(),
-        ]);
+        $this->validateOnly(
+            'fotoLateral2',
+            ['fotoLateral2' => $this->photoRules()]
+        );
     }
 
     public function eliminarFoto(string $tipo): void
@@ -354,10 +529,15 @@ class EquipoBaja extends Component
         $this->resetValidation($propiedad);
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | CONFIRMAR BAJA
+    |--------------------------------------------------------------------------
+    */
+
     public function confirmar()
     {
-        // Permiso por rol (ver AppServiceProvider).
-        \Illuminate\Support\Facades\Gate::authorize('gestionar');
+        Gate::authorize('gestionar');
 
         $validated = $this->validate([
             'motivoBaja' => [
@@ -383,6 +563,7 @@ class EquipoBaja extends Component
             'fotoTrasera' => $this->photoRules(),
             'fotoLateral1' => $this->photoRules(),
             'fotoLateral2' => $this->photoRules(),
+            ...$this->reglasFirmas(),
         ], [
             'motivoBaja.required' =>
                 'Ingresa el motivo de la baja.',
@@ -420,15 +601,25 @@ class EquipoBaja extends Component
         }
 
         $archivosGuardados = [];
+        $rutaPdf = null;
+        $reporteId = null;
 
         try {
             DB::transaction(function () use (
                 $validated,
                 $usuarioId,
-                &$archivosGuardados
+                &$archivosGuardados,
+                &$rutaPdf,
+                &$reporteId
             ): void {
+                /*
+                 * Evitar dos bajas simultáneas.
+                 */
                 $equipo = DB::table('equipos')
-                    ->where('id_equipo', $this->equipoId)
+                    ->where(
+                        'id_equipo',
+                        $this->equipoId
+                    )
                     ->lockForUpdate()
                     ->first([
                         'id_equipo',
@@ -445,7 +636,10 @@ class EquipoBaja extends Component
                 }
 
                 $bajaExistente = DB::table('bajas')
-                    ->where('id_equipo', $this->equipoId)
+                    ->where(
+                        'id_equipo',
+                        $this->equipoId
+                    )
                     ->exists();
 
                 if ($bajaExistente) {
@@ -455,6 +649,9 @@ class EquipoBaja extends Component
                     ]);
                 }
 
+                /*
+                 * Catálogo del motivo de baja.
+                 */
                 $idMotivoOtro = DB::table(
                     'catalogo_valores as cv'
                 )
@@ -476,7 +673,10 @@ class EquipoBaja extends Component
                     ]);
                 }
 
-                $idEstadoBajaCompletada = DB::table(
+                /*
+                 * Estado COMPLETADA para la baja.
+                 */
+                $idEstadoCompletada = DB::table(
                     'catalogo_valores as cv'
                 )
                     ->join(
@@ -490,14 +690,19 @@ class EquipoBaja extends Component
                     ->where('cv.activo', true)
                     ->value('cv.id_valor');
 
-                if ($idEstadoBajaCompletada === null) {
+                if ($idEstadoCompletada === null) {
                     throw ValidationException::withMessages([
                         'motivoBaja' =>
                             'No se encontró el estado COMPLETADA para la baja.',
                     ]);
                 }
 
-                $idEstadoEquipoBaja = DB::table('estados_equipo')
+                /*
+                 * Estado BAJA del equipo.
+                 */
+                $idEstadoEquipoBaja = DB::table(
+                    'estados_equipo'
+                )
                     ->where('clave', 'BAJA')
                     ->where('activo', true)
                     ->value('id_estado_equipo');
@@ -510,8 +715,8 @@ class EquipoBaja extends Component
                 }
 
                 if (
-                    (int) $equipo->id_estado_activo ===
-                    (int) $idEstadoEquipoBaja
+                    (int) $equipo->id_estado_activo
+                    === (int) $idEstadoEquipoBaja
                 ) {
                     throw ValidationException::withMessages([
                         'motivoBaja' =>
@@ -519,50 +724,90 @@ class EquipoBaja extends Component
                     ]);
                 }
 
+                /*
+                 * Generar folio individual.
+                 */
                 $ultimoId = DB::table('bajas')
                     ->orderByDesc('id_baja')
                     ->lockForUpdate()
                     ->value('id_baja');
 
-                $consecutivo = ((int) ($ultimoId ?? 0)) + 1;
-
                 $folio = sprintf(
                     'BAJA-%s-%02d',
-                    now()->format('YmdHisv'),
-                    $consecutivo
+                    now('America/Cancun')->format('YmdHisv'),
+                    ((int) ($ultimoId ?? 0)) + 1
                 );
 
+                /*
+                 * Registrar baja.
+                 */
                 $idBaja = DB::table('bajas')
                     ->insertGetId([
                         'folio' => $folio,
-                        'id_equipo' => $this->equipoId,
-                        'id_motivo_baja' => (int) $idMotivoOtro,
-                        'motivo_baja' => trim(
-                            (string) $validated['motivoBaja']
-                        ),
+
+                        'id_equipo' =>
+                            $this->equipoId,
+
+                        'id_motivo_baja' =>
+                            (int) $idMotivoOtro,
+
+                        'motivo_baja' =>
+                            trim(
+                                (string) $validated['motivoBaja']
+                            ),
+
                         'id_estado_baja' =>
-                            (int) $idEstadoBajaCompletada,
-                        'fecha_baja' => $validated['fechaBaja'],
-                        'comentarios' => trim((string) (
-                            $validated['comentariosBaja'] ?? ''
-                        )) !== ''
-                            ? trim((string) (
-                                $validated['comentariosBaja'] ?? ''
-                            ))
-                            : null,
-                        'realizado_por' => (int) $usuarioId,
-                        'autoriza' => trim(
-                            (string) $validated['autoriza']
-                        ),
+                            (int) $idEstadoCompletada,
+
+                        'fecha_baja' =>
+                            $validated['fechaBaja'],
+
+                        'comentarios' =>
+                            trim(
+                                (string) (
+                                    $validated['comentariosBaja'] ?? ''
+                                )
+                            ) !== ''
+                                ? trim(
+                                    (string) (
+                                        $validated['comentariosBaja'] ?? ''
+                                    )
+                                )
+                                : null,
+
+                        'realizado_por' =>
+                            (int) $usuarioId,
+
+                        'autoriza' =>
+                            trim(
+                                (string) $validated['autoriza']
+                            ),
+
                         'ruta_pdf' => null,
+
+                        'firmas' => json_encode(
+                            $this->nombresFirmas(),
+                            JSON_UNESCAPED_UNICODE
+                        ),
+
                         'fecha_registro' => now(),
                     ], 'id_baja');
 
+                /*
+                 * Fotografías de la baja.
+                 */
                 $fotografias = [
-                    'foto_frontal' => $this->fotoFrontal,
-                    'foto_trasera' => $this->fotoTrasera,
-                    'foto_lateral_1' => $this->fotoLateral1,
-                    'foto_lateral_2' => $this->fotoLateral2,
+                    'foto_frontal' =>
+                        $this->fotoFrontal,
+
+                    'foto_trasera' =>
+                        $this->fotoTrasera,
+
+                    'foto_lateral_1' =>
+                        $this->fotoLateral1,
+
+                    'foto_lateral_2' =>
+                        $this->fotoLateral2,
                 ];
 
                 $rutas = [
@@ -581,14 +826,17 @@ class EquipoBaja extends Component
                     }
 
                     $ruta = $foto->store(
-                        'bajas/' . $idBaja,
+                        'bajas/'.$idBaja,
                         'local'
                     );
 
-                    if (!is_string($ruta) || $ruta === '') {
+                    if (
+                        !is_string($ruta) ||
+                        $ruta === ''
+                    ) {
                         throw new \RuntimeException(
-                            'No fue posible guardar la fotografía: ' .
-                            $columna
+                            'No fue posible guardar la fotografía: '
+                            .$columna
                         );
                     }
 
@@ -602,100 +850,203 @@ class EquipoBaja extends Component
                         ->insert($rutas);
                 }
 
+                /*
+                 * Actualizar el estado del equipo.
+                 */
                 DB::table('equipos')
-                    ->where('id_equipo', $this->equipoId)
+                    ->where(
+                        'id_equipo',
+                        $this->equipoId
+                    )
                     ->update([
                         'id_estado_activo' =>
                             (int) $idEstadoEquipoBaja,
                     ]);
 
+                /*
+                 * Cerrar asignaciones activas.
+                 */
                 DB::table('asignaciones')
-                    ->where('id_equipo', $this->equipoId)
+                    ->where(
+                        'id_equipo',
+                        $this->equipoId
+                    )
                     ->whereNull('fecha_fin')
                     ->update([
                         'fecha_fin' => now(),
                     ]);
 
+                /*
+                 * Crear el PDF antes de confirmar
+                 * la transacción.
+                 */
+                $acta = app(
+                    ActaBajaIndividualService::class
+                )->generar(
+                    (int) $idBaja,
+                    $folio,
+                    $this->equipo,
+                    $validated,
+                    $this->nombresFirmas(),
+                    $rutas,
+                    (int) $usuarioId
+                );
+
+                $reporteId = $acta['reporte_id'];
+                $rutaPdf = $acta['ruta_pdf'];
+
+                /*
+                 * Guardar la acción en bitácora.
+                 */
                 DB::table('bitacora_auditoria')
                     ->insert([
-                        'id_usuario' => (int) $usuarioId,
-                        'accion' => 'EQUIPO_DADO_DE_BAJA',
-                        'modulo' => 'EQUIPOS',
+                        'id_usuario' =>
+                            (int) $usuarioId,
+
+                        'accion' =>
+                            'EQUIPO_DADO_DE_BAJA',
+
+                        'modulo' =>
+                            'EQUIPOS',
+
                         'descripcion' => sprintf(
                             'Se dio de baja el equipo %s. Folio: %s. Motivo: %s',
-                            $equipo->codigo_inventario ?: 'Sin código',
+                            $equipo->codigo_inventario
+                                ?: 'Sin código',
                             $folio,
-                            trim((string) $validated['motivoBaja'])
+                            trim(
+                                (string) $validated['motivoBaja']
+                            )
                         ),
+
                         'fecha_hora' => now(),
                     ]);
             });
+
         } catch (Throwable $exception) {
             if ($archivosGuardados !== []) {
                 Storage::disk('local')
                     ->delete($archivosGuardados);
             }
 
-            throw $exception;
+            if ($rutaPdf) {
+                Storage::disk('local')
+                    ->delete($rutaPdf);
+            }
+
+            if ($exception instanceof ValidationException) {
+                throw $exception;
+            }
+
+            report($exception);
+
+            $this->addError(
+                'motivoBaja',
+                'No se completó la baja ni se generó el PDF. Consulta storage/logs/laravel.log.'
+            );
+
+            return;
         }
 
         /*
-         * Invalidar estadísticas y listados solo después
-         * de una baja confirmada exitosamente.
+         * Actualizar notificaciones y caché.
+         * Una falla aquí no elimina la baja guardada.
          */
-        $systemCache = app(SystemCacheService::class);
+        try {
+            $cache = app(
+                SystemCacheService::class
+            );
 
-        $systemCache->refreshModule('dashboard');
-        $systemCache->refreshModule('equipos');
+            $cache->refreshModule('dashboard');
+            $cache->refreshModule('equipos');
 
-        // Equipos recibidos desde el teléfono: la baja lo saca de las bandejas.
-        app(\App\Services\EquiposRecibidosService::class)->atenderPorBaja((int) $this->equipoId);
+            app(
+                \App\Services\EquiposRecibidosService::class
+            )->atenderPorBaja(
+                (int) $this->equipoId
+            );
 
-        Cache::forget('equipos.edit.base.' . $this->equipoId);
+            Cache::forget(
+                'equipos.edit.base.'.$this->equipoId
+            );
 
-        $version = (int) Cache::get(
-            'equipos.index.version',
-            1
-        );
+            Cache::forever(
+                'equipos.index.version',
+                (int) Cache::get(
+                    'equipos.index.version',
+                    1
+                ) + 1
+            );
 
-        Cache::forever(
-            'equipos.index.version',
-            $version + 1
-        );
+            $notificaciones = app(
+                \App\Services\NotificacionService::class
+            );
 
-        $notificaciones = app(\App\Services\NotificacionService::class);
+            $notificaciones->notificar(
+                'equipos',
+                'Equipo dado de baja',
+                $notificaciones->nombreActor()
+                    .' dio de baja el equipo '
+                    .$notificaciones->etiquetaEquipo(
+                        $this->equipoId
+                    )
+                    .'.',
+                route(
+                    'equipos.show',
+                    $this->equipoId,
+                    false
+                )
+            );
 
-        $notificaciones->notificar(
-            'equipos',
-            'Equipo dado de baja',
-            $notificaciones->nombreActor()
-                . ' dio de baja el equipo '
-                . $notificaciones->etiquetaEquipo($this->equipoId)
-                . '.',
-            route('equipos.show', $this->equipoId, false)
-        );
+            $this->dispatch(
+                'notificaciones-actualizadas'
+            );
 
-        $this->dispatch('notificaciones-actualizadas');
+        } catch (Throwable $exception) {
+            report($exception);
+        }
 
-        // Baja en lote: siguiente equipo sin volver a Inventario.
+        /*
+         * Avanzar si hay más equipos seleccionados.
+         */
         if ($this->enCola()) {
             $this->hechos[] = $this->equipoId;
 
             return $this->avanzarCola(
-                ($this->equipo['codigo_inventario'] ?: 'El equipo') . ' se dio de baja.'
+                (
+                    $this->equipo['codigo_inventario']
+                        ?: 'El equipo'
+                ).' tiene su acta PDF.',
+                (int) $reporteId
             );
         }
 
+        /*
+         * Baja individual sin cola:
+         * regresar a Inventario.
+         */
         session()->flash(
-            'success',
-            'El equipo fue dado de baja correctamente.'
+            'descargar_reporte',
+            $reporteId
         );
+
+        session()->flash('toast', [
+            'type' => 'success',
+            'message' =>
+                'Se registró la baja y su PDF individual está disponible en Reportes.',
+        ]);
 
         return $this->redirectRoute(
             'equipos.index',
             navigate: true
         );
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | REGLAS Y UTILIDADES
+    |--------------------------------------------------------------------------
+    */
 
     private function photoRules(): array
     {
@@ -715,6 +1066,7 @@ class EquipoBaja extends Component
         try {
             return Carbon::parse($fecha)
                 ->format('d/m/Y');
+
         } catch (Throwable) {
             return (string) $fecha;
         }

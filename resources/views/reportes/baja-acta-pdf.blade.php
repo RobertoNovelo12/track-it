@@ -84,9 +84,9 @@
 
             margin-right: 0;
 
-            padding-top: 12mm;
+            padding-top: 10mm;
 
-            padding-bottom: 10mm;
+            padding-bottom: 6mm;
 
             page-break-after: always;
 
@@ -207,13 +207,13 @@
 
         .seccion {
 
-            margin-top: 10px;
+            margin-top: 6px;
 
-            margin-bottom: 5px;
+            margin-bottom: 3px;
 
-            padding: 7px 9px;
+            padding: 4px 6px;
 
-            background: #ffffff;
+            background: #eff1f3;
 
             color: #2b435b;
 
@@ -265,9 +265,9 @@
 
         .tabla-datos td {
 
-            padding: 8px;
+            padding: 5px;
 
-            border: 1px solid #d6dfe7;
+            border: 1px solid #d1d5db;
 
             vertical-align: top;
 
@@ -281,7 +281,7 @@
 
             display: block;
 
-            margin-bottom: 5px;
+            margin-bottom: 3px;
 
             color: #617b91;
 
@@ -316,6 +316,8 @@
         .texto-largo {
 
             white-space: pre-line;
+            font-size: 7px;
+            line-height: 1.25;
 
             font-weight: normal;
 
@@ -357,7 +359,7 @@
 
             padding: 9px;
 
-            border: 1px solid #d6dfe7;
+            border: 1px solid #d1d5db;
 
             vertical-align: top;
 
@@ -381,7 +383,7 @@
 
             margin-top: 52px;
 
-            border-bottom: 1px solid #8797a6;
+            border-bottom: 1px solid #d1d5db;
 
         }
 
@@ -475,11 +477,11 @@
 
         .foto-titulo {
 
-            padding: 8px;
+            padding: 5px;
 
-            border: 1px solid #d6dfe7;
+            border: 1px solid #d1d5db;
 
-            background: #ffffff;
+            background: #eff1f3;
 
             color: #2b435b;
 
@@ -493,11 +495,11 @@
 
         .foto-contenedor {
 
-            height: 205px;
+            height: 340px;
 
             padding: 6px;
 
-            border: 1px solid #d6dfe7;
+            border: 1px solid #d1d5db;
 
             border-top: 0;
 
@@ -513,7 +515,7 @@
 
             max-width: 100%;
 
-            max-height: 190px;
+            max-height: 325px;
 
             width: auto;
 
@@ -525,7 +527,7 @@
 
         .sin-foto {
 
-            padding-top: 88px;
+            padding-top: 150px;
 
             color: #8694a2;
 
@@ -564,10 +566,13 @@
 
 <body>
 @php
+    $logoOrganizacion = app(\App\Services\OrganizacionService::class)->logoContenido();
     $rutaLogoReporte = public_path('images/logo-grand-palladium.png');
-    $logoPalladiumPdf = is_file($rutaLogoReporte)
+    $logoPalladiumPdf = $logoOrganizacion
+        ? 'data:'.$logoOrganizacion['mime'].';base64,'.base64_encode($logoOrganizacion['contenido'])
+        : (is_file($rutaLogoReporte)
         ? 'data:image/png;base64,' . base64_encode(file_get_contents($rutaLogoReporte))
-        : null;
+        : null);
 @endphp
 
 
@@ -654,7 +659,7 @@
             @endif
             <div class="institucion">
 
-                GRAND PALLADIUM RIVIERA MAYA | CONTROL DE ACTIVOS TI
+                {{ app(\App\Services\OrganizacionService::class)->nombre() }} | CONTROL DE ACTIVOS TI
 
             </div>
 
@@ -954,11 +959,7 @@
 
                         </span>
 
-                        <span class="valor texto-largo">
-
-                            {{ $dato($baja['motivo'] ?? null) }}
-
-                        </span>
+                        <span class="valor texto-largo">{{ $dato($baja['motivo'] ?? null) }}</span>
 
                     </td>
 
@@ -976,11 +977,7 @@
 
                         </span>
 
-                        <span class="valor texto-largo">
-
-                            {{ $dato($baja['comentarios'] ?? null) }}
-
-                        </span>
+                        <span class="valor texto-largo">{{ $dato($baja['comentarios'] ?? null) }}</span>
 
                     </td>
 
@@ -1004,123 +1001,7 @@
 
 
 
-        <table class="tabla-datos">
-
-            <tbody>
-
-                <tr>
-
-                    <td>
-
-                        <span class="etiqueta">
-
-                            Persona que autoriza
-
-                        </span>
-
-                        <span class="valor">
-
-                            {{ $dato($baja['autoriza'] ?? null) }}
-
-                        </span>
-
-                    </td>
-
-                </tr>
-
-            </tbody>
-
-        </table>
-
-
-
-        <table class="tabla-firmas">
-
-            <tbody>
-
-                <tr>
-
-                    <td width="50%">
-
-                        <div class="firma-titulo">
-
-                            Entregó · Departamento de Sistemas
-
-                        </div>
-
-
-
-                        <div class="linea-firma"></div>
-
-
-
-                        <div class="firma-pie">
-
-                            Nombre y firma
-
-                            <div>
-
-                                Fecha: ____ / ____ / ______
-
-                            </div>
-
-                        </div>
-
-                    </td>
-
-
-
-                    <td width="50%">
-
-                        <div class="firma-titulo">
-
-                            Autorizó · Responsable de la baja
-
-                        </div>
-
-
-
-                        <div class="linea-firma"></div>
-
-
-
-                        <div class="firma-pie">
-
-                            {{ $dato($baja['autoriza'] ?? null) }}
-
-                            <div>
-
-                                Fecha: ____ / ____ / ______
-
-                            </div>
-
-                        </div>
-
-                    </td>
-
-                </tr>
-
-            </tbody>
-
-        </table>
-
-
-
-        <div class="pie">
-
-            Departamento de Sistemas · Control de Activos TI
-
-
-
-            <span class="pie-numero">
-
-                PÁGINA 1 DE 2
-
-            </span>
-
-        </div>
-
-
+        @include('reportes.partials.firmas-baja', ['firmasDocumento' => $baja['firmas'] ?? [], 'fechaDocumento' => $baja['fecha'] ?? ''])
 
     </div>
 
@@ -1129,93 +1010,6 @@
     {{-- PÁGINA 2: EVIDENCIAS FOTOGRÁFICAS --}}
 
     <div class="pagina {{ $loop->last ? 'pagina-ultima' : '' }}">
-
-
-
-        <div class="encabezado">
-
-            @if ($logoPalladiumPdf)
-                <img class="logo-palladium-izquierda" src="{{ $logoPalladiumPdf }}" alt="Palladium Hotel Group">
-            @endif
-            <div class="institucion">
-
-                GRAND PALLADIUM RIVIERA MAYA | CONTROL DE ACTIVOS TI
-
-            </div>
-
-        </div>
-
-
-
-        <div class="titulo">
-
-            EVIDENCIAS FOTOGRÁFICAS
-
-        </div>
-
-
-
-        <div class="subtitulo">
-
-            Anexo de respaldo documental de la baja del equipo
-
-        </div>
-
-
-
-        <table class="tabla-datos">
-
-            <tbody>
-
-                <tr>
-
-                    <td width="50%">
-
-                        <span class="etiqueta">
-
-                            Código de inventario
-
-                        </span>
-
-                        <span class="valor">
-
-                            {{ $dato($equipo['codigo'] ?? null) }}
-
-                        </span>
-
-                    </td>
-
-
-
-                    <td width="50%">
-
-                        <span class="etiqueta">
-
-                            Folio de baja
-
-                        </span>
-
-                        <span class="valor">
-
-                            {{ $dato($baja['folio'] ?? null) }}
-
-                        </span>
-
-                    </td>
-
-                </tr>
-
-            </tbody>
-
-        </table>
-
-
-
-        <div class="seccion">
-
-            REGISTRO FOTOGRÁFICO DEL EQUIPO
-
-        </div>
 
 
 
@@ -1276,32 +1070,6 @@
             </tbody>
 
         </table>
-
-
-
-        <div class="nota-fotos">
-
-            Las fotografías corresponden a las condiciones
-
-            del equipo al momento de registrar su baja.
-
-        </div>
-
-
-
-        <div class="pie">
-
-            Departamento de Sistemas · Control de Activos TI
-
-
-
-            <span class="pie-numero">
-
-                PÁGINA 2 DE 2
-
-            </span>
-
-        </div>
 
 
 

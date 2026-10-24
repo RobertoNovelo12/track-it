@@ -1,13 +1,19 @@
 
 <div
     data-avisar-cambios
+    wire:key="formulario-baja-{{ $equipoId }}"
     x-data="{
         successVisible: false,
         successMessage: '',
         successTimer: null,
+
         showSuccess(message) {
             this.successMessage = message;
-            window.trackitToast?.('success', this.successMessage); /* aviso global */
+
+            window.trackitToast?.(
+                'success',
+                this.successMessage
+            );
 
             if (this.successTimer) {
                 clearTimeout(this.successTimer);
@@ -19,28 +25,64 @@
         }
     }"
     @baja-formulario-validado.window="showSuccess($event.detail.message)"
+    @descargar-acta-baja.window="
+        const enlace = document.createElement('a');
+        enlace.href = $event.detail.url;
+        enlace.style.display = 'none';
+        document.body.appendChild(enlace);
+        enlace.click();
+        enlace.remove();
+    "
 >
     @php
         $dato = static fn ($valor) =>
-            filled($valor) ? trim((string) $valor) : '—';
+            filled($valor)
+                ? trim((string) $valor)
+                : '—';
 
-        $marcaModelo = trim(implode(' ', array_filter([
-            $equipo['marca'] ?? null,
-            $equipo['modelo'] ?? null,
-        ])));
+        $marcaModelo = trim(
+            implode(
+                ' ',
+                array_filter([
+                    $equipo['marca'] ?? null,
+                    $equipo['modelo'] ?? null,
+                ])
+            )
+        );
 
         $datosEquipo = [
-            'Nombre del activo' => $equipo['nombre_equipo'] ?? null,
-            'Número de serie' => $equipo['numero_serie'] ?? null,
-            'Fecha de registro' => $equipo['fecha_registro'] ?? null,
-            'Tipo' => $equipo['tipo_equipo'] ?? null,
-            'Código de inventario' => $equipo['codigo_inventario'] ?? null,
-            'Factura' => $equipo['numero_factura'] ?? null,
-            'Marca' => $equipo['marca'] ?? null,
-            'Estado' => $equipo['estado'] ?? null,
-            'Garantía' => $equipo['fecha_fin_garantia'] ?? null,
-            'Modelo' => $equipo['modelo'] ?? null,
-            'Proveedor' => $equipo['proveedor'] ?? null,
+            'Nombre del activo' =>
+                $equipo['nombre_equipo'] ?? null,
+
+            'Número de serie' =>
+                $equipo['numero_serie'] ?? null,
+
+            'Fecha de registro' =>
+                $equipo['fecha_registro'] ?? null,
+
+            'Tipo' =>
+                $equipo['tipo_equipo'] ?? null,
+
+            'Código de inventario' =>
+                $equipo['codigo_inventario'] ?? null,
+
+            'Factura' =>
+                $equipo['numero_factura'] ?? null,
+
+            'Marca' =>
+                $equipo['marca'] ?? null,
+
+            'Estado' =>
+                $equipo['estado'] ?? null,
+
+            'Garantía' =>
+                $equipo['fecha_fin_garantia'] ?? null,
+
+            'Modelo' =>
+                $equipo['modelo'] ?? null,
+
+            'Proveedor' =>
+                $equipo['proveedor'] ?? null,
         ];
 
         $fotografias = [
@@ -132,17 +174,19 @@
 
         .baja-documento .campos {
             display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+            grid-template-columns:
+                repeat(2, minmax(0, 1fr));
         }
 
         .baja-documento .campos.tres {
-            grid-template-columns: repeat(3, minmax(0, 1fr));
+            grid-template-columns:
+                repeat(3, minmax(0, 1fr));
         }
 
         .baja-documento .campo {
             min-width: 0;
             padding: 7px;
-            border: 1px solid #d6dfe7;
+            border: 1px solid #d1d5db;
         }
 
         .baja-documento .campo.ancho {
@@ -168,12 +212,13 @@
 
         .baja-documento .firmas {
             display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+            grid-template-columns:
+                repeat(2, minmax(0, 1fr));
             gap: 6px;
         }
 
         .baja-documento .firma {
-            border: 1px solid #d6dfe7;
+            border: 1px solid #d1d5db;
             padding: 7px;
         }
 
@@ -195,13 +240,14 @@
 
         .baja-documento .fotografias {
             display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+            grid-template-columns:
+                repeat(2, minmax(0, 1fr));
             gap: 6px;
         }
 
         .baja-documento .fotografia {
             min-width: 0;
-            border: 1px solid #d6dfe7;
+            border: 1px solid #d1d5db;
         }
 
         .baja-documento .foto-titulo {
@@ -239,7 +285,8 @@
         }
     </style>
 
-    {{-- NOTIFICACIÓN --}}
+    {{-- NOTIFICACIÓN DE ÉXITO --}}
+
     <div
         x-show="successVisible"
         x-cloak
@@ -247,8 +294,13 @@
         class="fixed top-20 left-4 right-4 z-[150] flex items-start gap-3 rounded-xl border border-emerald-500/30 bg-[var(--theme-surface)] px-4 py-3 shadow-lg sm:left-auto sm:right-6 sm:w-96"
     >
         <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-500">
-            <svg class="h-5 w-5" viewBox="0 0 24 24"
-                 fill="none" stroke="currentColor" stroke-width="2">
+            <svg
+                class="h-5 w-5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+            >
                 <path d="M5 12l4 4L19 7"/>
             </svg>
         </div>
@@ -257,6 +309,7 @@
             <p class="text-sm font-semibold text-[var(--theme-text-strong)]">
                 Información completa
             </p>
+
             <p
                 class="mt-0.5 text-xs text-[var(--theme-text)]"
                 x-text="successMessage"
@@ -269,15 +322,22 @@
             class="text-[var(--theme-text-muted)] hover:text-[var(--theme-text)]"
             aria-label="Cerrar notificación"
         >
-            <svg class="h-4 w-4" viewBox="0 0 24 24"
-                 fill="none" stroke="currentColor" stroke-width="2">
+            <svg
+                class="h-4 w-4"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+            >
                 <path d="M6 6l12 12M18 6L6 18"/>
             </svg>
         </button>
     </div>
 
-    {{-- BAJA EN LOTE: progreso de los equipos seleccionados en Inventario --}}
+    {{-- PROGRESO DE BAJAS INDIVIDUALES --}}
+
     @if ($this->enCola())
+
         @php
             $totalLote = count($hechos) + count($pendientes);
             $posicionLote = count($hechos) + 1;
@@ -289,28 +349,76 @@
             class="mb-4 rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] px-4 py-3 sm:px-5"
         >
             <div class="flex flex-wrap items-center justify-between gap-2">
+
                 <p class="text-sm font-semibold text-[var(--theme-text-strong)]">
-                    Baja en lote · equipo {{ $posicionLote }} de {{ $totalLote }}
+                    Baja en lote · equipo
+                    {{ $posicionLote }}
+                    de
+                    {{ $totalLote }}
                 </p>
+
                 <p class="text-xs text-[var(--theme-text-muted)]">
-                    Al confirmar se carga el siguiente. Motivo, fecha y quién autoriza se conservan.
+                    Al confirmar se genera el PDF.
+                    Para el siguiente equipo solo se conserva la fecha.
                 </p>
+
             </div>
 
             @if (count($tiposCola) > 1)
-                <p role="alert" class="mt-2 flex items-start gap-2 rounded-lg border border-[var(--theme-warning)] bg-[var(--theme-warning-soft)] px-3 py-2 text-xs text-[var(--theme-text)]">
-                    <svg class="mt-0.5 h-4 w-4 shrink-0 text-[var(--theme-warning)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17h.01"/></svg>
-                    <span><span class="font-semibold">Estás dando de baja equipos de diferente tipo:</span> {{ collect($tiposCola)->join(', ', ' y ') }}.</span>
+
+                <p
+                    role="alert"
+                    class="mt-2 flex items-start gap-2 rounded-lg border border-[var(--theme-warning)] bg-[var(--theme-warning-soft)] px-3 py-2 text-xs text-[var(--theme-text)]"
+                >
+                    <svg
+                        class="mt-0.5 h-4 w-4 shrink-0 text-[var(--theme-warning)]"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        aria-hidden="true"
+                    >
+                        <path d="M12 3 2 20h20L12 3Z"/>
+                        <path d="M12 10v4M12 17h.01"/>
+                    </svg>
+
+                    <span>
+                        <span class="font-semibold">
+                            Estás dando de baja equipos de diferente tipo:
+                        </span>
+
+                        {{ collect($tiposCola)->join(', ', ' y ') }}.
+                    </span>
                 </p>
+
             @endif
 
             <ol class="mt-3 flex flex-wrap gap-1.5">
+
                 @foreach ($cola as $idLote)
+
                     @php
-                        $estadoLote = in_array($idLote, $hechos, true)
+                        $estadoLote = in_array(
+                            $idLote,
+                            $hechos,
+                            true
+                        )
                             ? 'hecho'
-                            : ($idLote === $equipoId ? 'actual' : (in_array($idLote, $pendientes, true) ? 'pendiente' : 'previo'));
+                            : (
+                                $idLote === $equipoId
+                                    ? 'actual'
+                                    : (
+                                        in_array(
+                                            $idLote,
+                                            $pendientes,
+                                            true
+                                        )
+                                            ? 'pendiente'
+                                            : 'previo'
+                                    )
+                            );
                     @endphp
+
                     <li
                         @class([
                             'inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[11px] font-medium',
@@ -319,63 +427,174 @@
                             'border-[var(--theme-border)] text-[var(--theme-text)]' => $estadoLote === 'pendiente',
                             'border-dashed border-[var(--theme-border)] text-[var(--theme-text-muted)]' => $estadoLote === 'previo',
                         ])
-                        @if ($estadoLote === 'actual') aria-current="step" @endif
-                        title="{{ match ($estadoLote) { 'hecho' => 'Dado de baja', 'actual' => 'Equipo actual', 'pendiente' => 'Pendiente', default => 'Ya estaba dado de baja (solo va en el acta)' } }}"
+
+                        @if ($estadoLote === 'actual')
+                            aria-current="step"
+                        @endif
+
+                        title="{{ match ($estadoLote) {
+                            'hecho' => 'Dado de baja',
+                            'actual' => 'Equipo actual',
+                            'pendiente' => 'Pendiente',
+                            default => 'Ya estaba dado de baja: consulta sus actas anteriores en Reportes'
+                        } }}"
                     >
                         @if ($estadoLote === 'hecho')
-                            <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M5 12l4 4L19 7"/></svg>
+                            <svg
+                                class="h-3 w-3"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2.5"
+                                aria-hidden="true"
+                            >
+                                <path d="M5 12l4 4L19 7"/>
+                            </svg>
                         @endif
+
                         {{ $codigosCola[$idLote] ?? $idLote }}
                     </li>
+
                 @endforeach
+
             </ol>
         </section>
+
     @endif
 
-    {{-- ENCABEZADO --}}
+    {{--
+    |--------------------------------------------------------------------------
+    | BOTONES SUPERIORES
+    |--------------------------------------------------------------------------
+    | Se aplicó el mismo estilo del botón
+    | Dar de baja del módulo Inventario.
+    --}}
+
     <div class="mb-5 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-end">
+
         <div class="flex flex-wrap items-center gap-3">
-            @if ($this->enCola())
-                <button
-                    type="button"
-                    wire:click="omitir"
-                    wire:loading.attr="disabled"
-                    data-guardar
-                    class="inline-flex h-10 items-center justify-center rounded-lg border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-5 text-sm font-medium text-[var(--theme-text)] transition-colors hover:bg-[var(--theme-surface-soft)]"
-                    title="Sacar este equipo del lote sin darlo de baja"
-                >
-                    Omitir este equipo
-                </button>
-            @endif
+
+            {{-- CANCELAR --}}
 
             <a
-                href="{{ $this->enCola() ? route('equipos.index') : route('equipos.edit', $equipoId) }}"
+                href="{{ $this->enCola()
+                    ? route('equipos.index')
+                    : route('equipos.edit', $equipoId)
+                }}"
                 class="inline-flex h-10 items-center justify-center rounded-lg border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-5 text-sm font-medium text-[var(--theme-text-muted)] transition-colors hover:bg-[var(--theme-surface-soft)]"
             >
                 Cancelar
             </a>
 
-            <x-ui.button
+            {{-- DAR DE BAJA Y GENERAR PDF --}}
+
+            <button
+                type="button"
                 wire:click="confirmar"
+                wire:loading.attr="disabled"
+                wire:target="confirmar"
                 data-guardar
-                target="confirmar"
-                variant="danger"
-                loading-text="Dando de baja…"
+                class="
+                    inline-flex
+                    h-10
+                    items-center
+                    justify-center
+                    gap-2
+                    rounded-md
+                    bg-[var(--theme-danger-soft)]
+                    px-5
+                    text-sm
+                    font-medium
+                    text-[var(--theme-danger)]
+                    transition-all
+                    duration-200
+                    hover:opacity-80
+                    disabled:cursor-not-allowed
+                    disabled:opacity-50
+                "
             >
-                Confirmar baja
-            </x-ui.button>
+                {{-- ICONO NORMAL --}}
+
+                <svg
+                    wire:loading.remove
+                    wire:target="confirmar"
+                    class="h-4 w-4 shrink-0"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.7"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                >
+                    <path d="m12 3 9 5-9 5-9-5 9-5Z"/>
+                    <path d="m3 12 9 5 9-5"/>
+                    <path d="m3 16 9 5 9-5"/>
+                </svg>
+
+                {{-- ICONO CARGANDO --}}
+
+                <svg
+                    wire:loading
+                    wire:target="confirmar"
+                    class="h-4 w-4 animate-spin"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    aria-hidden="true"
+                >
+                    <circle
+                        cx="12"
+                        cy="12"
+                        r="9"
+                        stroke-opacity=".25"
+                    />
+
+                    <path d="M21 12a9 9 0 0 0-9-9"/>
+                </svg>
+
+                {{-- TEXTO NORMAL --}}
+
+                <span
+                    wire:loading.remove
+                    wire:target="confirmar"
+                >
+                    Dar de baja y generar PDF
+                </span>
+
+                {{-- TEXTO CARGANDO --}}
+
+                <span
+                    wire:loading
+                    wire:target="confirmar"
+                >
+                    Generando PDF...
+                </span>
+
+            </button>
+
         </div>
     </div>
 
-    {{-- CONTENIDO --}}
+    {{--
+    |--------------------------------------------------------------------------
+    | CONTENIDO PRINCIPAL
+    |--------------------------------------------------------------------------
+    --}}
+
     <div class="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.55fr)_minmax(340px,0.95fr)]">
 
         {{-- COLUMNA IZQUIERDA --}}
+
         <div class="space-y-4">
 
             {{-- INFORMACIÓN GENERAL --}}
+
             <section class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 sm:p-5">
+
                 <div class="mb-5 flex items-center gap-2">
+
                     <svg
                         class="h-5 w-5 text-[var(--theme-text-muted)]"
                         viewBox="0 0 24 24"
@@ -390,29 +609,41 @@
                     <h2 class="text-base font-semibold text-[var(--theme-text-strong)]">
                         Información general
                     </h2>
+
                 </div>
 
                 <div class="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2 lg:grid-cols-3">
+
                     @foreach ($datosEquipo as $etiqueta => $valor)
+
                         <div>
                             <p class="text-xs font-medium text-[var(--theme-text)]">
                                 {{ $etiqueta }}
                             </p>
+
                             <p class="mt-1 break-words text-sm text-[var(--theme-text-muted)]">
                                 {{ $dato($valor) }}
                             </p>
                         </div>
+
                     @endforeach
+
                 </div>
+
             </section>
 
             {{-- INFORMACIÓN DE BAJA --}}
+
             <section class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 sm:p-5">
+
                 <h2 class="mb-4 text-base font-semibold text-[var(--theme-text-strong)]">
                     Información de baja
                 </h2>
 
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+
+                    {{-- MOTIVO --}}
+
                     <div>
                         <label
                             for="motivo-baja"
@@ -438,6 +669,8 @@
                         @enderror
                     </div>
 
+                    {{-- FECHA --}}
+
                     <div>
                         <label
                             for="fecha-baja"
@@ -460,9 +693,13 @@
                             </p>
                         @enderror
                     </div>
+
                 </div>
 
+                {{-- COMENTARIOS --}}
+
                 <div class="mt-4">
+
                     <label
                         for="comentarios-baja"
                         class="mb-1.5 block text-xs font-medium text-[var(--theme-text)]"
@@ -484,12 +721,17 @@
                             {{ $message }}
                         </p>
                     @enderror
+
                 </div>
+
             </section>
 
-            {{-- EVIDENCIAS --}}
+            {{-- EVIDENCIAS FOTOGRÁFICAS --}}
+
             <section class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 sm:p-5">
+
                 <div class="mb-4">
+
                     <h2 class="text-base font-semibold text-[var(--theme-text-strong)]">
                         Evidencias de baja
                     </h2>
@@ -498,15 +740,20 @@
                         Agrega las cuatro fotografías que se utilizarán
                         en el formato oficial de baja.
                     </p>
+
                 </div>
 
                 <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+
                     @foreach ($fotografias as $fotografia)
+
                         <div
-                            wire:key="baja-foto-{{ $fotografia['tipo'] }}"
+                            wire:key="baja-foto-{{ $equipoId }}-{{ $fotografia['tipo'] }}"
                             class="rounded-lg border border-[var(--theme-border)] p-3"
                         >
+
                             <div class="mb-3 flex items-center justify-between gap-2">
+
                                 <span class="text-sm font-medium text-[var(--theme-text-strong)]">
                                     {{ $fotografia['titulo'] }}
                                 </span>
@@ -516,26 +763,30 @@
                                         type="button"
                                         wire:click="eliminarFoto('{{ $fotografia['tipo'] }}')"
                                         wire:loading.attr="disabled"
-                                        wire:target="eliminarFoto('{{ $fotografia['tipo'] }}')"
                                         class="text-xs text-[var(--theme-danger)] hover:underline"
                                     >
                                         Quitar
                                     </button>
                                 @endif
+
                             </div>
 
                             @if ($fotografia['foto'])
+
                                 <div class="overflow-hidden rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface-soft)]">
+
                                     <img
                                         src="{{ $fotografia['foto']->temporaryUrl() }}"
                                         alt="{{ $fotografia['titulo'] }}"
                                         class="h-36 w-full object-contain"
                                     >
+
                                 </div>
+
                             @else
-                                <label
-                                    class="flex h-36 cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-[var(--theme-border-strong)] bg-[var(--theme-surface-soft)] px-3 text-center transition-colors hover:border-[var(--theme-primary)]"
-                                >
+
+                                <label class="flex h-36 cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-[var(--theme-border-strong)] bg-[var(--theme-surface-soft)] px-3 text-center transition-colors hover:border-[var(--theme-primary)]">
+
                                     <svg
                                         class="mb-2 h-5 w-5 text-[var(--theme-text-muted)]"
                                         viewBox="0 0 24 24"
@@ -549,6 +800,7 @@
                                     <span class="text-xs text-[var(--theme-text)]">
                                         Seleccionar fotografía
                                     </span>
+
                                     <span class="mt-1 text-[11px] text-[var(--theme-text-muted)]">
                                         JPG, PNG o WEBP
                                     </span>
@@ -556,10 +808,13 @@
                                     <input
                                         type="file"
                                         wire:model="{{ $fotografia['modelo'] }}"
+                                        wire:key="baja-archivo-{{ $equipoId }}-{{ $fotografia['tipo'] }}"
                                         accept="image/jpeg,image/png,image/webp"
                                         class="hidden"
                                     >
+
                                 </label>
+
                             @endif
 
                             <div
@@ -575,12 +830,19 @@
                                     {{ $message }}
                                 </p>
                             @enderror
+
                         </div>
+
                     @endforeach
+
                 </div>
+
             </section>
 
+            {{-- INFORMACIÓN --}}
+
             <div class="flex items-start gap-3 rounded-xl border border-sky-500/20 bg-sky-500/10 px-4 py-3">
+
                 <svg
                     class="mt-0.5 h-4 w-4 shrink-0 text-sky-500"
                     viewBox="0 0 24 24"
@@ -593,24 +855,33 @@
                 </svg>
 
                 <div>
+
                     <p class="text-xs font-semibold text-sky-500">
                         Información
                     </p>
+
                     <p class="mt-0.5 text-xs text-[var(--theme-text)]">
                         Para procesar la baja se requiere el motivo
                         y la autorización. Las fotografías que adjuntes
                         se guardarán como evidencias del equipo.
                     </p>
+
                 </div>
+
             </div>
+
         </div>
 
         {{-- COLUMNA DERECHA --}}
+
         <div class="space-y-4">
 
-            {{-- VISTA RÁPIDA: FORMATO OFICIAL --}}
+            {{-- VISTA RÁPIDA DEL DOCUMENTO --}}
+
             <section class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4">
+
                 <div class="mb-4 flex items-center justify-between gap-3">
+
                     <h2 class="text-base font-semibold text-[var(--theme-text-strong)]">
                         Vista rápida del documento final
                     </h2>
@@ -618,228 +889,299 @@
                     <span class="rounded border border-[var(--theme-border-strong)] px-2 py-0.5 text-[10px] font-medium text-[var(--theme-text-muted)]">
                         PDF
                     </span>
+
                 </div>
 
-                <div class="mx-auto w-full max-w-[480px] overflow-hidden border border-[var(--theme-border)] bg-white shadow-md">
+                <div class="h-[600px] min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain pr-1 [scrollbar-width:thin] [scrollbar-color:#64748b_transparent] mx-auto w-full border border-[var(--theme-border)] bg-white shadow-md">
+
                     <article class="baja-documento p-[5%]">
 
-                        <div class="marca">PALLADIUM</div>
-                        <div class="grupo">HOTEL GROUP</div>
+                        {{-- LOGO --}}
+
+                        <img
+                            src="{{ app(\App\Services\OrganizacionService::class)->logoUrl() }}"
+                            alt="{{ app(\App\Services\OrganizacionService::class)->nombre() }}"
+                            style="max-width:150px; max-height:45px; margin-bottom:8px;"
+                        >
 
                         <div class="institucion">
-                            GRAND PALLADIUM RIVIERA MAYA |
-                            CONTROL DE ACTIVOS TI
+                            {{ app(\App\Services\OrganizacionService::class)->nombre() }}
+                            | CONTROL DE ACTIVOS TI
                         </div>
 
                         <h2>ORDEN DE DECOMISO DE ACTIVOS</h2>
 
                         <div class="subtitulo">
-                            Baja de equipo tecnológico · Control documental y autorización
+                            Baja de equipo tecnológico ·
+                            Control documental y autorización
                         </div>
 
-                        {{-- 01 --}}
+                        {{-- 01 DATOS DE LA BAJA --}}
+
                         <div class="seccion">
                             <span class="numero">01</span>
                             DATOS DE LA BAJA
                         </div>
 
                         <div class="campos tres">
+
                             <div class="campo">
-                                <span class="etiqueta">Fecha de baja</span>
-                                <span class="valor">
-                                    {{ $fechaBaja ? \Carbon\Carbon::parse($fechaBaja)->format('d/m/Y') : '—' }}
+
+                                <span class="etiqueta">
+                                    Fecha de baja
                                 </span>
+
+                                <span class="valor">
+                                    {{ $fechaBaja
+                                        ? \Carbon\Carbon::parse($fechaBaja)->format('d/m/Y')
+                                        : '—'
+                                    }}
+                                </span>
+
                             </div>
 
                             <div class="campo">
-                                <span class="etiqueta">Folio de baja</span>
+
+                                <span class="etiqueta">
+                                    Folio de baja
+                                </span>
+
                                 <span class="valor">
                                     Pendiente de generar
                                 </span>
+
                             </div>
 
                             <div class="campo">
-                                <span class="etiqueta">Código de inventario</span>
+
+                                <span class="etiqueta">
+                                    Código de inventario
+                                </span>
+
                                 <span class="valor">
                                     {{ $dato($equipo['codigo_inventario'] ?? null) }}
                                 </span>
+
                             </div>
+
                         </div>
 
-                        {{-- 02 --}}
+                        {{-- 02 INFORMACIÓN GENERAL --}}
+
                         <div class="seccion">
                             <span class="numero">02</span>
                             INFORMACIÓN GENERAL DEL EQUIPO
                         </div>
 
                         <div class="campos">
+
                             <div class="campo">
-                                <span class="etiqueta">Nombre del activo</span>
+
+                                <span class="etiqueta">
+                                    Nombre del activo
+                                </span>
+
                                 <span class="valor">
                                     {{ $dato($equipo['nombre_equipo'] ?? null) }}
                                 </span>
+
                             </div>
 
                             <div class="campo">
-                                <span class="etiqueta">Número de serie</span>
+
+                                <span class="etiqueta">
+                                    Número de serie
+                                </span>
+
                                 <span class="valor">
                                     {{ $dato($equipo['numero_serie'] ?? null) }}
                                 </span>
+
                             </div>
 
                             <div class="campo">
-                                <span class="etiqueta">Tipo de equipo</span>
+
+                                <span class="etiqueta">
+                                    Tipo de equipo
+                                </span>
+
                                 <span class="valor">
                                     {{ $dato($equipo['tipo_equipo'] ?? null) }}
                                 </span>
+
                             </div>
 
                             <div class="campo">
-                                <span class="etiqueta">Marca / Modelo</span>
+
+                                <span class="etiqueta">
+                                    Marca / Modelo
+                                </span>
+
                                 <span class="valor">
                                     {{ $dato($marcaModelo) }}
                                 </span>
+
                             </div>
 
                             <div class="campo">
-                                <span class="etiqueta">Fecha de registro</span>
+
+                                <span class="etiqueta">
+                                    Fecha de registro
+                                </span>
+
                                 <span class="valor">
                                     {{ $dato($equipo['fecha_registro'] ?? null) }}
                                 </span>
+
                             </div>
 
                             <div class="campo">
-                                <span class="etiqueta">Factura</span>
+
+                                <span class="etiqueta">
+                                    Factura
+                                </span>
+
                                 <span class="valor">
                                     {{ $dato($equipo['numero_factura'] ?? null) }}
                                 </span>
+
                             </div>
 
                             <div class="campo">
-                                <span class="etiqueta">Proveedor</span>
+
+                                <span class="etiqueta">
+                                    Proveedor
+                                </span>
+
                                 <span class="valor">
                                     {{ $dato($equipo['proveedor'] ?? null) }}
                                 </span>
+
                             </div>
 
                             <div class="campo">
-                                <span class="etiqueta">Garantía</span>
+
+                                <span class="etiqueta">
+                                    Garantía
+                                </span>
+
                                 <span class="valor">
                                     {{ $dato($equipo['fecha_fin_garantia'] ?? null) }}
                                 </span>
+
                             </div>
+
                         </div>
 
-                        {{-- 03 --}}
+                        {{-- 03 JUSTIFICACIÓN --}}
+
                         <div class="seccion">
                             <span class="numero">03</span>
                             JUSTIFICACIÓN DE LA BAJA
                         </div>
 
                         <div class="campos">
+
                             <div class="campo ancho">
-                                <span class="etiqueta">Motivo de baja</span>
+
+                                <span class="etiqueta">
+                                    Motivo de baja
+                                </span>
+
                                 <span class="valor">
                                     {{ $dato($motivoBaja) }}
                                 </span>
+
                             </div>
 
                             <div class="campo ancho">
+
                                 <span class="etiqueta">
                                     Comentarios y detalles adicionales
                                 </span>
+
                                 <span class="valor">
                                     {{ $dato($comentariosBaja) }}
                                 </span>
+
                             </div>
+
                         </div>
 
-                        {{-- 04 --}}
+                        {{-- 04 FIRMAS --}}
+
                         <div class="seccion">
                             <span class="numero">04</span>
                             AUTORIZACIÓN Y FIRMAS DE BAJA
                         </div>
 
-                        <div class="campo">
-                            <span class="etiqueta">Persona que autoriza</span>
-                            <span class="valor">
-                                {{ $dato($autoriza) }}
-                            </span>
-                        </div>
-
-                        <div class="firmas">
-                            <div class="firma">
-                                <div class="firma-titulo">
-                                    Entregó · Departamento de Sistemas
-                                </div>
-
-                                <div class="linea"></div>
-
-                                <div class="firma-pie">
-                                    Nombre y firma
-                                    <div>Fecha: ____ / ____ / ______</div>
-                                </div>
-                            </div>
-
-                            <div class="firma">
-                                <div class="firma-titulo">
-                                    Autorizó · Responsable de la baja
-                                </div>
-
-                                <div class="linea"></div>
-
-                                <div class="firma-pie">
-                                    {{ $dato($autoriza) }}
-                                    <div>Fecha: ____ / ____ / ______</div>
-                                </div>
-                            </div>
-                        </div>
+                        @include('reportes.partials.firmas-baja', [
+                            'firmasDocumento' => $firmas,
+                            'fechaDocumento' => $fechaBaja,
+                        ])
 
                         <div class="pie">
                             Departamento de Sistemas · Página 1 de 2
                         </div>
 
-                        {{-- PÁGINA 2: EVIDENCIAS --}}
+                        {{-- EVIDENCIAS --}}
+
                         <div class="pagina-evidencias">
-                            <div class="seccion">
-                                EVIDENCIAS FOTOGRÁFICAS · PÁGINA 2
-                            </div>
 
                             <div class="fotografias">
+
                                 @foreach ($fotografias as $fotografia)
+
                                     <div class="fotografia">
+
                                         <div class="foto-titulo">
                                             {{ $fotografia['titulo'] }}
                                         </div>
 
                                         <div class="foto-cuerpo">
+
                                             @if ($fotografia['foto'])
+
                                                 <img
                                                     src="{{ $fotografia['foto']->temporaryUrl() }}"
                                                     alt="{{ $fotografia['titulo'] }}"
                                                 >
+
                                             @else
+
                                                 Evidencia fotográfica no registrada
+
                                             @endif
+
                                         </div>
+
                                     </div>
+
                                 @endforeach
+
                             </div>
 
-                            <div class="pie">
-                                Departamento de Sistemas · Página 2 de 2
-                            </div>
                         </div>
+
                     </article>
+
                 </div>
 
                 <p class="mt-3 text-center text-[11px] text-[var(--theme-text-muted)]">
-                    Vista preliminar. El folio definitivo se genera al confirmar la baja.
+                    Vista preliminar. El folio definitivo
+                    se genera al confirmar la baja.
                 </p>
+
             </section>
 
+            {{-- FIRMAS DE BAJA --}}
+
+            @include('livewire.equipos.firmas-baja')
+
             {{-- AUTORIZACIÓN --}}
+
             <section class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4">
+
                 <label
                     for="autoriza"
                     class="mb-1.5 block text-xs font-medium text-[var(--theme-text)]"
@@ -854,7 +1196,7 @@
                     wire:model.live.debounce.350ms="autoriza"
                     maxlength="255"
                     placeholder="Nombre completo de la persona que autoriza la baja"
-                    class="h-10 w-full rounded-lg border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)]"
+                    class="h-10 w-full rounded-lg border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 text-sm text-[var(--theme-text)] outline-none placeholder:text-[var(--theme-text-muted)] focus:border-[var(--theme-primary)]"
                 >
 
                 @error('autoriza')
@@ -862,8 +1204,10 @@
                         {{ $message }}
                     </p>
                 @enderror
+
             </section>
 
         </div>
+
     </div>
 </div>

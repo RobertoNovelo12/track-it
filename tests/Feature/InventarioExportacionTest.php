@@ -30,11 +30,13 @@ class InventarioExportacionTest extends TestCase
 
     public function test_individual_pdf_only_contains_identification_and_location(): void
     {
-        $equipo = array_replace($this->equipo(), ['codigo' => 'ACT-001']);
+        $equipo = array_replace($this->equipo(), ['codigo' => 'ACT-001', 'usuario_nombre' => 'ana.prueba', 'usuario_correo' => 'ana@example.test', 'programas' => [['nombre' => 'Office', 'detalle' => '2021']]]);
         $html = view('inventario-exportacion.ficha', ['equipo' => $equipo, 'generadoEn' => now()])->render();
         foreach (['Identificación del equipo', 'Responsable y ubicación'] as $text) {
             $this->assertStringContainsString($text, $html);
         }
+        foreach (['Identificación del usuario', 'ana.prueba', 'ana@example.test', 'Software instalado', 'Office'] as $texto) { $this->assertStringContainsString($texto, $html); }
+        $this->assertStringNotContainsString('<th>Área</th>', $html);
         $this->assertStringNotContainsString('Historial completo', $html);
         $this->assertStringNotContainsString('Información técnica y administrativa', $html);
         $this->assertStringContainsString('data:image/png;base64,', $html);

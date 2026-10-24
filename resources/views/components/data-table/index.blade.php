@@ -69,6 +69,7 @@
     'keyPrefix' => 'fila',
 
     'selectable' => false,
+    'rowSelectable' => null,
     'selectionModel' => null,
     'selectedKeys' => [],
     'selectionLimit' => null,

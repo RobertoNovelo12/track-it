@@ -29,6 +29,12 @@ class InventarioDocumentoService
             );
         }
 
+        if (count($equipos) === 1 && ($equipos[0]['estado'] ?? '') === 'Baja') {
+            $id = (int) ($equipos[0]['id'] ?? 0);
+            $baja = DB::table('bajas')->where('id_equipo', $id)->orderByDesc('id_baja')->first();
+            return app(DescargaActaBajaService::class)->descargar($id, $baja);
+        }
+
         if (count($equipos) === 1) {
             $pdf = Pdf::loadView('inventario-exportacion.ficha', [
                 'equipo' => $equipos[0],
@@ -96,11 +102,15 @@ class InventarioDocumentoService
                     ->leftJoin('departamentos as d', 'd.id_departamento', '=', 'a.id_departamento')
                     ->leftJoin('areas as ar', 'ar.id_area', '=', 'a.id_area')
                     ->leftJoin('ubicaciones as ub', 'ub.id_ubicacion', '=', 'a.id_ubicacion')
+                    ->when(Schema::hasColumn('asignaciones', 'id_usuario'), function ($consulta) {
+                        $consulta->leftJoin('usuarios as usuario_asignado', 'usuario_asignado.id_usuario', '=', 'a.id_usuario');
+                    })
                     ->leftJoin('catalogo_valores as ta', 'ta.id_valor', '=', 'a.id_tipo_asignacion')
                     ->whereIn('a.id_equipo', $lote)
                     ->orderByDesc('a.fecha_asignacion')
                     ->orderByDesc('a.id_asignacion')
                     ->get([
+                        ... (Schema::hasColumn('asignaciones', 'id_usuario') ? ['usuario_asignado.username as usuario_nombre', 'usuario_asignado.correo as usuario_correo'] : []),
                         'ta.nombre as tipo_asignacion', 'a.observaciones', 'a.id_equipo', 'a.nombre_colaborador', 'a.numero_colaborador',
                         'a.fecha_asignacion', 'a.fecha_fin', 'a.id_asignacion',
                         'u.nombre as hotel_nombre', 'd.nombre as departamento_nombre',
@@ -158,12 +168,11 @@ class InventarioDocumentoService
 
             // Mientras está en baja, el último responsable es histórico, NO el actual.
             $responsable = !$deBaja && $actual ? $actual->nombre_colaborador : null;
-            $ubicacionBase = $this->unir([$e->hotel_nombre, $e->departamento_nombre, $e->area_nombre, $e->ubicacion_nombre]);
+            $ubicacionBase = $this->unir([$e->hotel_nombre, $e->departamento_nombre, $e->ubicacion_nombre]);
             $ubicacionActual = $actual && !$deBaja
                 ? $this->unir([
                     $actual->hotel_nombre ?: $e->hotel_nombre,
                     $actual->departamento_nombre ?: $e->departamento_nombre,
-                    $actual->area_nombre ?: $e->area_nombre,
                     $actual->ubicacion_nombre ?: $e->ubicacion_nombre,
                 ])
                 : $ubicacionBase;
@@ -184,6 +193,8 @@ class InventarioDocumentoService
                 'estado' => $deBaja ? 'Baja' : $this->texto($e->estado_nombre),
                 'situacion' => $situacion,
                 'condicion' => $this->texto($e->condicion_nombre),
+                'usuario_nombre' => $this->texto(!$deBaja && $actual ? ($actual->usuario_nombre ?? $actual->nombre_colaborador) : null),
+                'usuario_correo' => $this->texto(!$deBaja && $actual ? ($actual->usuario_correo ?? null) : null),
                 'responsable' => trim((string) ($responsable ?? '')),
                 'ultimo_responsable' => $this->texto($ultima?->nombre_colaborador),
                 'hotel' => $this->texto($actual && !$deBaja ? ($actual->hotel_nombre ?: $e->hotel_nombre) : $e->hotel_nombre),

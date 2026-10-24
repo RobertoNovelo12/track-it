@@ -107,6 +107,24 @@ class ReporteArchivoService
      */
     private function pdf(ReporteGenerado $reporte, array $tipos, array $filtros): ?string
     {
+        // El acta conjunta conserva su selección, firmas y fotografías originales.
+        if (isset($filtros['baja_multiple'])) {
+            $documento = $filtros['baja_multiple'];
+            $logo = app(OrganizacionService::class)->logoContenido();
+            $documento['logo'] = $logo
+                ? 'data:'.$logo['mime'].';base64,'.base64_encode($logo['contenido'])
+                : 'data:image/png;base64,'.base64_encode(file_get_contents(public_path(OrganizacionService::LOGO_PREDETERMINADO)));
+            $rutas = $documento['fotos'] ?? [];
+            $documento['fotos'] = [];
+            foreach (['fotoFrontal' => 'Vista frontal', 'fotoTrasera' => 'Vista trasera', 'fotoLateral1' => 'Vista lateral 1', 'fotoLateral2' => 'Vista lateral 2'] as $campo => $titulo) {
+                $ruta = $rutas[$campo] ?? null;
+                if ($ruta && Storage::disk('local')->exists($ruta)) {
+                    $documento['fotos'][$titulo] = 'data:'.Storage::disk('local')->mimeType($ruta).';base64,'.base64_encode(Storage::disk('local')->get($ruta));
+                }
+            }
+            return Pdf::loadView('reportes.baja-multiple-pdf', compact('documento'))->setPaper('letter')->output();
+        }
+
         $reportes = app(ReporteDataService::class);
 
         $esUnSoloTipo = count($tipos) === 1;
