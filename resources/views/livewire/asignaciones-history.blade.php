@@ -35,6 +35,7 @@
         FILTROS
     ============================================================ --}}
     <form
+        data-filtros {{-- Filtros: no cambian con «Columnas de los formularios» --}}
         wire:submit="buscar"
         class="
             bg-[var(--theme-surface)]

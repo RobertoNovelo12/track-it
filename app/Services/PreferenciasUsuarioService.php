@@ -87,6 +87,15 @@ class PreferenciasUsuarioService
         'resaltar_foco',
     ];
 
+    /*
+     * Columnas de los formularios en pantallas grandes (alta de
+     * equipos, mantenimientos, catálogos…). En móvil siempre es una.
+     */
+    public const COLUMNAS_FORMULARIO = [
+        '3' => 'Tres columnas',
+        '2' => 'Dos columnas',
+    ];
+
     public const PREDETERMINADAS = [
         'tema' => 'system',
         'densidad' => 'comoda',
@@ -99,6 +108,7 @@ class PreferenciasUsuarioService
         'reducir_movimiento' => false,
         'alto_contraste' => false,
         'resaltar_foco' => false,
+        'columnas_formulario' => '3',
     ];
 
     private array $memoria = [];
@@ -106,6 +116,8 @@ class PreferenciasUsuarioService
     private ?bool $tablaDisponible = null;
 
     private ?bool $accesibilidadDisponible = null;
+
+    private ?bool $columnasDisponible = null;
 
     /*
     |--------------------------------------------------------------------------
@@ -165,6 +177,11 @@ class PreferenciasUsuarioService
         $columnas = $this->accesibilidadDisponible()
             ? $datos
             : array_diff_key($datos, array_flip(self::CLAVES_ACCESIBILIDAD));
+
+        // Sin la migración 2026_10_24_000200 todavía: no se guarda.
+        if (! $this->columnasFormularioDisponible()) {
+            unset($columnas['columnas_formulario']);
+        }
 
         DB::table('preferencias_usuario')->updateOrInsert(
             ['id_usuario' => $idUsuario],
@@ -278,6 +295,8 @@ class PreferenciasUsuarioService
             $datos[$clave] = filter_var($datos[$clave], FILTER_VALIDATE_BOOLEAN);
         }
 
+        $datos['columnas_formulario'] = (string) $datos['columnas_formulario'] === '2' ? '2' : '3';
+
         return $datos;
     }
 
@@ -323,6 +342,27 @@ class PreferenciasUsuarioService
         return $this->accesibilidadDisponible = (bool) $existe;
     }
 
+    public function columnasFormularioDisponible(): bool
+    {
+        if ($this->columnasDisponible !== null) {
+            return $this->columnasDisponible;
+        }
+
+        if (! $this->tablaDisponible()) {
+            return $this->columnasDisponible = false;
+        }
+
+        $existe = Cache::get('preferencias_usuario.columnas_formulario');
+
+        if ($existe === null) {
+            $existe = Schema::hasColumn('preferencias_usuario', 'columnas_formulario');
+
+            Cache::put('preferencias_usuario.columnas_formulario', $existe, $existe ? now()->addMinutes(10) : now()->addMinute());
+        }
+
+        return $this->columnasDisponible = (bool) $existe;
+    }
+
     /*
      * Atributos de <html> que activan las opciones de accesibilidad
      * (layouts/partials/accesibilidad-styles).
@@ -336,6 +376,8 @@ class PreferenciasUsuarioService
             'data-movimiento' => $preferencias['reducir_movimiento'] ? 'reducido' : 'normal',
             'data-contraste' => $preferencias['alto_contraste'] ? 'alto' : 'normal',
             'data-foco' => $preferencias['resaltar_foco'] ? 'resaltado' : 'normal',
+            // Formularios a 2 columnas (accesibilidad-styles).
+            'data-formulario' => $preferencias['columnas_formulario'] ?? '3',
         ];
     }
 

@@ -108,4 +108,35 @@
         outline-offset: 2px !important;
         box-shadow: 0 0 0 6px color-mix(in srgb, var(--theme-primary) 22%, transparent) !important;
     }
+
+    /*
+     * FORMULARIOS A DOS COLUMNAS (Preferencias › Columnas de los formularios)
+     * En pantallas grandes, las rejillas de 3 (o 4) columnas de los
+     * formularios pasan a 2; los campos que ocupaban toda la fila la
+     * siguen ocupando. Solo dentro de <form>: tablas y tarjetas no cambian,
+     * y los filtros (form con data-filtros) conservan su diseño.
+     */
+    @media (min-width: 64rem) {
+        html[data-formulario="2"] form:not([data-filtros]) .lg\:grid-cols-3,
+        html[data-formulario="2"] form:not([data-filtros]) .lg\:grid-cols-4 {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        html[data-formulario="2"] form:not([data-filtros]) .lg\:col-span-3,
+        html[data-formulario="2"] form:not([data-filtros]) .lg\:col-span-4 {
+            grid-column: 1 / -1;
+        }
+    }
+
+    @media (min-width: 80rem) {
+        html[data-formulario="2"] form:not([data-filtros]) .xl\:grid-cols-3,
+        html[data-formulario="2"] form:not([data-filtros]) .xl\:grid-cols-4 {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        html[data-formulario="2"] form:not([data-filtros]) .xl\:col-span-3,
+        html[data-formulario="2"] form:not([data-filtros]) .xl\:col-span-4 {
+            grid-column: 1 / -1;
+        }
+    }
 </style>

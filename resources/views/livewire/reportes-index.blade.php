@@ -731,6 +731,7 @@
             </div>
 
             <form
+                data-filtros {{-- Filtros: no cambian con «Columnas de los formularios» --}}
 
                 wire:submit="aplicarFiltros"
 

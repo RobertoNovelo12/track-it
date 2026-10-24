@@ -36,6 +36,8 @@ class AjustesPreferencias extends Component
     public bool $altoContraste = false;
     public bool $resaltarFoco = false;
 
+    public string $columnasFormulario = '3';
+
     public function mount(PreferenciasUsuarioService $preferencias): void
     {
         $actuales = $preferencias->obtener();
@@ -54,6 +56,7 @@ class AjustesPreferencias extends Component
         $this->reducirMovimiento = (bool) $actuales['reducir_movimiento'];
         $this->altoContraste = (bool) $actuales['alto_contraste'];
         $this->resaltarFoco = (bool) $actuales['resaltar_foco'];
+        $this->columnasFormulario = (string) $actuales['columnas_formulario'];
     }
 
     public function save(PreferenciasUsuarioService $preferencias): void
@@ -75,6 +78,7 @@ class AjustesPreferencias extends Component
             'reducirMovimiento' => ['boolean'],
             'altoContraste' => ['boolean'],
             'resaltarFoco' => ['boolean'],
+            'columnasFormulario' => ['required', Rule::in(array_keys(PreferenciasUsuarioService::COLUMNAS_FORMULARIO))],
         ], [
             'pantallaInicio.in' => 'Esa pantalla no está disponible para tu rol.',
             'idUnidadPredeterminada.exists' => 'El elemento seleccionado ya no está disponible.',
@@ -92,6 +96,7 @@ class AjustesPreferencias extends Component
             'reducir_movimiento' => (bool) $validated['reducirMovimiento'],
             'alto_contraste' => (bool) $validated['altoContraste'],
             'resaltar_foco' => (bool) $validated['resaltarFoco'],
+            'columnas_formulario' => (string) $validated['columnasFormulario'],
         ]);
 
         /*

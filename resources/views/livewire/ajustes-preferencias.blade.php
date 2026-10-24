@@ -47,7 +47,10 @@
         x-data="{
             tema: $wire.entangle('tema'),
             densidad: $wire.entangle('densidad'),
+            columnasFormulario: $wire.entangle('columnasFormulario'),
         }"
+        {{-- Vista previa al instante; se conserva al guardar. --}}
+        x-effect="document.documentElement.setAttribute('data-formulario', columnasFormulario === '2' ? '2' : '3')"
     >
         <div class="{{ $cabecera }}">
             <h2 class="text-sm font-semibold text-[var(--theme-text-strong)]">Apariencia</h2>
@@ -151,6 +154,42 @@
                             @endforeach
                         </tbody>
                     </table>
+                </div>
+            </div>
+
+            {{-- Columnas de los formularios (pantallas grandes) --}}
+            <div class="{{ $fila }}">
+                <div class="min-w-0">
+                    <p class="text-sm font-medium text-[var(--theme-text)]">Columnas de los formularios</p>
+                    <p class="mt-0.5 text-xs text-[var(--theme-text-muted)]">
+                        En pantallas grandes, los formularios (alta de equipos, mantenimientos, catálogos…) se acomodan en tres o en dos columnas. Con dos, cada campo es más ancho. En el celular siempre es una.
+                    </p>
+                </div>
+
+                <div class="grid w-full shrink-0 grid-cols-2 gap-2 md:w-auto" role="radiogroup" aria-label="Columnas de los formularios">
+                    @foreach (\App\Services\PreferenciasUsuarioService::COLUMNAS_FORMULARIO as $valor => $nombre)
+                        @php $valor = (string) $valor; @endphp
+                        <label
+                            wire:key="pref-columnas-{{ $valor }}"
+                            class="flex cursor-pointer items-center justify-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-colors {{ $tarjeta($columnasFormulario === $valor) }}"
+                            x-bind:class="{{ $tarjetaAlpine('columnasFormulario', $valor) }}"
+                        >
+                            <input type="radio" x-model="columnasFormulario" value="{{ $valor }}" class="sr-only">
+
+                            <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true">
+                                @if ($valor === '2')
+                                    <rect x="3" y="5" width="8" height="14" rx="1"/>
+                                    <rect x="13" y="5" width="8" height="14" rx="1"/>
+                                @else
+                                    <rect x="2.5" y="5" width="5" height="14" rx="1"/>
+                                    <rect x="9.5" y="5" width="5" height="14" rx="1"/>
+                                    <rect x="16.5" y="5" width="5" height="14" rx="1"/>
+                                @endif
+                            </svg>
+
+                            <span class="whitespace-nowrap">{{ $nombre }}</span>
+                        </label>
+                    @endforeach
                 </div>
             </div>
         </div>
