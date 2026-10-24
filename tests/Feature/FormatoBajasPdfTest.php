@@ -25,7 +25,9 @@ class FormatoBajasPdfTest extends TestCase
             foreach (EquipoBaja::FIRMANTES as $label) { $this->assertStringContainsString($label, $html); }
             $partial = $view === 'reportes.baja-multiple-pdf' ? 'reportes.partials.firmas-baja-multiple' : 'reportes.partials.firmas-baja';
             $firmasHtml = view($partial, ['firmasDocumento' => $firmas, 'fechaDocumento' => '2026-10-23'])->render();
-            $this->assertSame(5, substr_count($firmasHtml, 'Fecha: 23/10/2026'));
+            $this->assertSame(5, substr_count($firmasHtml, 'Fecha:'));
+            $this->assertStringNotContainsString('23/10/2026', $firmasHtml);
+            $this->assertStringContainsString('Sistemas', $firmasHtml);
             $pdf = Pdf::loadHTML($html)->setPaper('letter');
             $pdf->output();
             $this->assertSame(2, $pdf->getDomPDF()->getCanvas()->get_page_count());

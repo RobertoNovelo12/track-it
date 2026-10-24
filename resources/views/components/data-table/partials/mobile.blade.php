@@ -45,6 +45,7 @@
         @endphp
 
         <article
+            data-dado-de-baja="{{ $rowDecommissioned instanceof \Closure && $rowDecommissioned($row) ? '1' : '0' }}"
             @if ($selectionModel)
                 x-data="{ menuOpen: false,
                     get selected() { return $wire.get(@js($selectionModel)).map(String).includes(@js((string) $id)); },

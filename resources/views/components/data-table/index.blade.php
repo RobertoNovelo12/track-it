@@ -70,6 +70,7 @@
 
     'selectable' => false,
     'rowSelectable' => null,
+    'rowDecommissioned' => null,
     'selectionModel' => null,
     'selectedKeys' => [],
     'selectionLimit' => null,

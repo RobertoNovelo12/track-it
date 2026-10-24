@@ -370,6 +370,7 @@
                                 <input
                                     type="checkbox"
                                     name="ids[]"
+                                    data-dado-de-baja="{{ $rowDecommissioned instanceof \Closure && $rowDecommissioned($row) ? '1' : '0' }}"
                                     @disabled($rowSelectable instanceof \Closure && !$rowSelectable($row))
                                     value="{{ $id }}"
                                     @if ($selectionModel)

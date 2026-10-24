@@ -14,7 +14,7 @@ trait RecogeFirmasBaja
 
     public const FIRMANTES = [
         'responsable_departamental' => 'Responsable Departamental',
-        'mantenimiento' => 'Mantenimiento (si aplica)',
+        'mantenimiento' => 'Sistemas',
         'gerente_hotel' => 'Gerente de Hotel / General Manager',
         'auditor_costos' => 'Auditor de Costos',
         'gerente_financiero' => 'Gerente Financiero',
@@ -24,7 +24,7 @@ trait RecogeFirmasBaja
     {
         $rules = [];
         foreach (self::FIRMANTES as $key => $label) {
-            $rules['firmas.'.$key] = [$key === 'mantenimiento' ? 'nullable' : 'required', 'string', 'max:255'];
+            $rules['firmas.'.$key] = ['nullable', 'string', 'max:255'];
         }
         return $rules;
     }

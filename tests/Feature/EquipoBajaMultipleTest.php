@@ -200,7 +200,7 @@ class EquipoBajaMultipleTest extends TestCase
     {
         Livewire::test(EquipoBajaMultiple::class)->set('seleccionados', ['1'])->call('siguiente')->call('guardar')
             ->assertHasErrors(['solicitante', 'departamentoId', 'motivoBaja', 'autoriza', 'puesto'])
-            ->assertHasErrors(['firmas.responsable_departamental', 'firmas.gerente_hotel', 'firmas.auditor_costos', 'firmas.gerente_financiero'])
+            ->assertHasNoErrors(['firmas.responsable_departamental', 'firmas.gerente_hotel', 'firmas.auditor_costos', 'firmas.gerente_financiero'])
             ->assertHasNoErrors('firmas.mantenimiento')
             ->set('fotoFrontal', UploadedFile::fake()->create('archivo.pdf', 20, 'application/pdf'))->assertHasErrors('fotoFrontal');
     }

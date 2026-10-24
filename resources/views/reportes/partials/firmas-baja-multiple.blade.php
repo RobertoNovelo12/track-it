@@ -2,12 +2,6 @@
 @php
     $nombresFirmas = $firmasDocumento ?? [];
 
-    $fechaFirma = (string) ($fechaDocumento ?? '');
-
-    if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaFirma)) {
-        $fechaFirma = \Carbon\Carbon::parse($fechaFirma)
-            ->format('d/m/Y');
-    }
 @endphp
 
 <style>
@@ -172,7 +166,7 @@
                                 </div>
 
                                 <div class="bmfm-fecha">
-                                    Fecha: {{ $fechaFirma ?: '—' }}
+                                    Fecha:
                                 </div>
 
                             </div>

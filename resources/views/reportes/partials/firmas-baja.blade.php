@@ -1,7 +1,5 @@
 @php
     $nombresFirmas = $firmasDocumento ?? [];
-    $fechaFirma = $fechaDocumento ?? '';
-    if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaFirma)) { $fechaFirma = \Carbon\Carbon::parse($fechaFirma)->format('d/m/Y'); }
 @endphp
 <style>
     table.firmas-baja { width:100%; table-layout:fixed; border-collapse:collapse; border-spacing:0; page-break-inside:avoid; margin-top:8px; }
@@ -23,7 +21,7 @@
                     <div class="firma-cargo">{{ $titulo }}</div>
                     <div class="firma-nombre">{{ $nombresFirmas[$clave] ?? '' }}</div>
                     <div class="firma-espacio"></div>
-                    <div class="firma-fecha">Fecha: {{ $fechaFirma ?: '—' }}</div>
+                    <div class="firma-fecha">Fecha:</div>
                 </div></td>
             @endforeach
             @if (count($fila) === 1)<td></td>@endif

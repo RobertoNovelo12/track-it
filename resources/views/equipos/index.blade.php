@@ -191,6 +191,7 @@
                 class="relative flex-1 sm:flex-none"
                 x-data="{
                     ids: [],
+                    incluyeBajas: false,
                     menu: false,
 
                     contar() {
@@ -203,8 +204,10 @@
                             .map(el => el.dataset.exportSelected);
 
                         this.ids = [...new Set([...escritorio, ...movil])].filter(Boolean);
+                        this.incluyeBajas = [...document.querySelectorAll('.row-checkbox:checked, [data-export-selected]')]
+                            .some(el => el.getClientRects().length && el.dataset.dadoDeBaja === '1');
 
-                        if (this.ids.length < 2) {
+                        if (this.ids.length < 2 || this.incluyeBajas) {
                             this.menu = false;
                         }
                     },
@@ -212,7 +215,7 @@
                     pulsar() {
                         this.contar();
 
-                        if (this.ids.length === 0) {
+                        if (this.ids.length === 0 || this.incluyeBajas) {
                             return;
                         }
 
@@ -234,6 +237,8 @@
                     },
 
                     ir(modo) {
+                        this.contar();
+                        if (this.ids.length === 0 || this.incluyeBajas) return;
                         this.menu = false;
 
                         const destino = new URL(
@@ -299,8 +304,8 @@
                 <button
                     type="button"
                     x-on:click="pulsar()"
-                    x-bind:disabled="ids.length === 0"
-                    x-bind:title="ids.length === 0 ? 'Marca en la tabla los equipos que quieres dar de baja' : ''"
+                    x-bind:disabled="ids.length === 0 || incluyeBajas"
+                    x-bind:title="incluyeBajas ? 'La selección incluye equipos que ya están dados de baja' : ids.length === 0 ? 'Marca en la tabla los equipos que quieres dar de baja' : ''"
                     x-bind:aria-haspopup="ids.length > 1 ? 'menu' : null"
                     x-bind:aria-expanded="ids.length > 1 ? menu.toString() : null"
                     class="flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-[var(--theme-danger-soft)] px-4 py-2 text-sm font-medium text-[var(--theme-danger)] transition-opacity hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:opacity-50 sm:w-auto"
