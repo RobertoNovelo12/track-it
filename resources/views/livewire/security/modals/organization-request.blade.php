@@ -267,13 +267,18 @@
             </div>
 
             @php
-                $unidadesSolicitud = \Illuminate\Support\Facades\DB::table('unidades_organizativas')
-                    ->where('activo', true)
-                    ->orderBy('nombre')
-                    ->get(['id_unidad', 'nombre'])
-                    ->map(fn ($unidad) => ['value' => (string) $unidad->id_unidad, 'label' => $unidad->nombre])
-                    ->values()
-                    ->all();
+                // Hoteles activos: cambian poco, 5 minutos en caché (evita una consulta por render).
+                $unidadesSolicitud = \Illuminate\Support\Facades\Cache::remember(
+                    'seguridad.unidades-activas.v1',
+                    now()->addMinutes(5),
+                    fn () => \Illuminate\Support\Facades\DB::table('unidades_organizativas')
+                        ->where('activo', true)
+                        ->orderBy('nombre')
+                        ->get(['id_unidad', 'nombre'])
+                        ->map(fn ($unidad) => ['value' => (string) $unidad->id_unidad, 'label' => $unidad->nombre])
+                        ->values()
+                        ->all()
+                );
                 $etiquetaUnidadSolicitud = mb_strtolower(app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['unidad_singular']);
             @endphp
 

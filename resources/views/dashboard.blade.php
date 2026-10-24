@@ -357,10 +357,30 @@
     ============================================================ --}}
 
     {{--
-        Carga por secciones: la página aparece de inmediato con el
-        skeleton, luego las tarjetas y al final gráficas y actividad.
+        Carga por secciones.
+
+        Rendimiento (LCP / CLS): si las tarjetas ya están en caché (lo
+        normal), el componente se pinta en esta misma respuesta, sin
+        «lazy». Así no hay segunda petición antes de ver los números ni
+        salto de diseño al cambiar el skeleton por el contenido (era el
+        CLS de 0.62). Las gráficas siguen cargándose después con
+        wire:init cuando no están en caché.
+
+        Solo con la caché fría (primera visita tras «Actualizar» o tras
+        un cambio en los datos) se usa lazy, para no bloquear la página
+        con las consultas de las tarjetas.
     --}}
-    <livewire:dashboard-overview lazy />
+    @php
+        $kpisEnCache = \Illuminate\Support\Facades\Cache::has(
+            app(\App\Services\SystemCacheService::class)->key('dashboard', 'kpis')
+        );
+    @endphp
+
+    @if ($kpisEnCache)
+        <livewire:dashboard-overview />
+    @else
+        <livewire:dashboard-overview lazy />
+    @endif
 
 </div>
 

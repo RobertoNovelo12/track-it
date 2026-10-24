@@ -769,6 +769,37 @@ class SeguridadIndex extends Component
     |--------------------------------------------------------------------------
     */
 
+    /**
+     * Paginación con un solo viaje a la base de datos: el total viene en
+     * cada fila (COUNT(*) OVER()). Si la página quedó vacía (p. ej. tras
+     * filtrar), se usa el paginador normal, que corrige la página.
+     */
+    protected function paginarUsuarios($consulta): \Illuminate\Pagination\LengthAwarePaginator
+    {
+        $porPagina = max(1, (int) $this->perPage);
+        $pagina = max(1, (int) \Illuminate\Pagination\Paginator::resolveCurrentPage('usuariosPage'));
+
+        $filas = (clone $consulta)
+            ->offset(($pagina - 1) * $porPagina)
+            ->limit($porPagina)
+            ->get();
+
+        if ($filas->isEmpty() && $pagina > 1) {
+            return $consulta->paginate($porPagina, ['*'], 'usuariosPage');
+        }
+
+        return new \Illuminate\Pagination\LengthAwarePaginator(
+            $filas,
+            (int) ($filas->first()->total_resultados ?? 0),
+            $porPagina,
+            $pagina,
+            [
+                'path' => \Illuminate\Pagination\Paginator::resolveCurrentPath(),
+                'pageName' => 'usuariosPage',
+            ]
+        );
+    }
+
     public function render(): View
     {
         /*
@@ -784,50 +815,113 @@ class SeguridadIndex extends Component
 
         $limiteInactividad = now()->subDays(90);
 
-        $statsRow = DB::table('usuarios as u')
-            ->join(
-                'estados_usuario as eu',
-                'eu.id_estado_usuario',
-                '=',
-                'u.id_estado_usuario'
-            )
-            ->selectRaw(
-                "
-                COUNT(*) AS total,
+        /*
+         * Rendimiento: la base de datos está lejos (cada viaje cuesta
+         * ~150-300 ms), así que indicadores, solicitudes de cambio,
+         * bitácora y resumen semanal salen de UNA sola consulta (antes
+         * eran 5-6 viajes en cada render: buscar, paginar, abrir...).
+         */
+        $inicioSemana = now()->startOfDay()->subDays(6);
 
-                COUNT(*) FILTER (
-                    WHERE eu.clave = 'ACTIVO'
-                ) AS activos,
+        $panel = DB::selectOne(
+            <<<'SQL'
+            SELECT
+                (
+                    SELECT row_to_json(st) FROM (
+                        SELECT
+                            COUNT(*) AS total,
+                            COUNT(*) FILTER (WHERE eu.clave = 'ACTIVO') AS activos,
+                            COUNT(*) FILTER (WHERE eu.clave = 'PENDIENTE') AS pendientes,
+                            COUNT(*) FILTER (WHERE eu.clave IN ('INACTIVO', 'BAJA')) AS inactivos,
+                            COUNT(*) FILTER (
+                                WHERE DATE_TRUNC('month', u.fecha_registro) = DATE_TRUNC('month', CURRENT_DATE)
+                            ) AS registrados_mes,
+                            COUNT(*) FILTER (
+                                WHERE u.id_rol IS NULL AND eu.clave IN ('PENDIENTE', 'ACTIVO')
+                            ) AS usuarios_sin_rol,
+                            COUNT(*) FILTER (
+                                WHERE eu.clave = 'ACTIVO' AND COALESCE(u.ultimo_acceso, u.fecha_registro) < ?
+                            ) AS usuarios_inactivos_90
+                        FROM usuarios u
+                        JOIN estados_usuario eu ON eu.id_estado_usuario = u.id_estado_usuario
+                    ) st
+                ) AS stats,
+                (
+                    SELECT COALESCE(json_agg(sc ORDER BY sc.orden), '[]'::json) FROM (
+                        SELECT
+                            s.id_solicitud, s.campo, s.valor_actual, s.valor_solicitado, s.motivo,
+                            s.fecha_solicitud::text AS fecha_solicitud,
+                            s.fecha_solicitud AS orden,
+                            u.id_usuario, u.username, u.correo,
+                            TRIM(CONCAT_WS(' ', u.nombres, u.apellido_paterno, u.apellido_materno)) AS usuario_nombre
+                        FROM solicitudes_cambio_organizacion s
+                        JOIN usuarios u ON u.id_usuario = s.id_usuario
+                        WHERE s.estado = 'pendiente'
+                    ) sc
+                ) AS solicitudes,
+                (
+                    SELECT COALESCE(json_agg(au ORDER BY au.orden DESC), '[]'::json) FROM (
+                        SELECT
+                            b.id_bitacora, b.accion, b.modulo, b.descripcion,
+                            b.fecha_hora::text AS fecha_hora,
+                            b.fecha_hora AS orden,
+                            u.id_usuario, u.username,
+                            TRIM(CONCAT_WS(' ', u.nombres, u.apellido_paterno)) AS usuario_nombre
+                        FROM bitacora_auditoria b
+                        LEFT JOIN usuarios u ON u.id_usuario = b.id_usuario
+                        ORDER BY b.fecha_hora DESC
+                        LIMIT 8
+                    ) au
+                ) AS auditoria,
+                (
+                    SELECT COALESCE(json_object_agg(ac.fecha, ac.total), '{}'::json) FROM (
+                        SELECT DATE(fecha_hora)::text AS fecha, COUNT(*) AS total
+                        FROM bitacora_auditoria
+                        WHERE fecha_hora >= ?
+                        GROUP BY DATE(fecha_hora)
+                    ) ac
+                ) AS actividad_semana,
+                (
+                    SELECT COALESCE(json_object_agg(rg.fecha, rg.total), '{}'::json) FROM (
+                        SELECT DATE(fecha_registro)::text AS fecha, COUNT(*) AS total
+                        FROM usuarios
+                        WHERE fecha_registro >= ?
+                        GROUP BY DATE(fecha_registro)
+                    ) rg
+                ) AS registros_semana
+            SQL,
+            [$limiteInactividad, $inicioSemana, $inicioSemana]
+        );
 
-                COUNT(*) FILTER (
-                    WHERE eu.clave = 'PENDIENTE'
-                ) AS pendientes,
+        $statsRow = (object) (json_decode((string) ($panel->stats ?? '{}'), true) ?: []);
 
-                COUNT(*) FILTER (
-                    WHERE eu.clave IN ('INACTIVO', 'BAJA')
-                ) AS inactivos,
+        $aObjetos = fn (?string $json) => collect(json_decode((string) $json, true) ?: [])
+            ->map(function (array $fila): object {
+                unset($fila['orden']);
 
-                COUNT(*) FILTER (
-                    WHERE DATE_TRUNC('month', u.fecha_registro)
-                        = DATE_TRUNC('month', CURRENT_DATE)
-                ) AS registrados_mes,
+                return (object) $fila;
+            })
+            ->values();
 
-                COUNT(*) FILTER (
-                    WHERE u.id_rol IS NULL
-                    AND eu.clave IN ('PENDIENTE', 'ACTIVO')
-                ) AS usuarios_sin_rol,
+        $solicitudesCambio = $aObjetos($panel->solicitudes ?? '[]');
+        $auditoria = $aObjetos($panel->auditoria ?? '[]');
 
-                COUNT(*) FILTER (
-                    WHERE eu.clave = 'ACTIVO'
-                    AND COALESCE(
-                        u.ultimo_acceso,
-                        u.fecha_registro
-                    ) < ?
-                ) AS usuarios_inactivos_90
-                ",
-                [$limiteInactividad]
-            )
-            ->first();
+        $actividadRaw = json_decode((string) ($panel->actividad_semana ?? '{}'), true) ?: [];
+        $registrosRaw = json_decode((string) ($panel->registros_semana ?? '{}'), true) ?: [];
+
+        // La vista usa ->max() sobre el resumen.
+        $resumenSemanal = collect(range(6, 0))
+            ->map(function (int $dias) use ($actividadRaw, $registrosRaw): array {
+                $fecha = now()->startOfDay()->subDays($dias);
+                $key = $fecha->toDateString();
+
+                return [
+                    'fecha' => $key,
+                    'label' => $fecha->format('d/m'),
+                    'actividad' => (int) ($actividadRaw[$key] ?? 0),
+                    'registros' => (int) ($registrosRaw[$key] ?? 0),
+                ];
+            });
 
         /*
         |--------------------------------------------------------------------------
@@ -842,7 +936,8 @@ class SeguridadIndex extends Component
 
         $catalogos = Cache::remember(
             'seguridad.catalogos-activos.v2',
-            now()->addSeconds(30),
+            // Roles, áreas, departamentos y estados cambian poco: 5 minutos.
+            now()->addMinutes(5),
             function (): array {
                 /*
                  * IMPORTANTE:
@@ -1013,7 +1108,18 @@ class SeguridadIndex extends Component
                 'a.nombre as area_nombre',
                 'd.nombre as departamento_nombre',
                 'uo.nombre as unidad_nombre',
-            ]);
+            ])
+            /*
+             * En la misma consulta: total de resultados (sin un COUNT
+             * aparte del paginador), solicitud vigente de restablecimiento
+             * y equipos asignados (modal de detalles).
+             */
+            ->selectRaw('COUNT(*) OVER() AS total_resultados')
+            ->selectRaw(
+                app(\App\Services\ColaboradoresService::class)->disponible()
+                    ? '(SELECT COUNT(DISTINCT ax.id_equipo) FROM asignaciones ax WHERE ax.id_usuario = u.id_usuario AND ax.fecha_fin IS NULL) AS equipos_asignados'
+                    : '0 AS equipos_asignados'
+            );
 
         $search = trim($this->search);
 
@@ -1096,11 +1202,7 @@ class SeguridadIndex extends Component
             )
             ->orderByDesc('u.fecha_registro');
 
-        $usuarios = $usuariosQuery->paginate(
-            $this->perPage,
-            ['*'],
-            'usuariosPage'
-        );
+        $usuarios = $this->paginarUsuarios($usuariosQuery);
 
         /*
         |--------------------------------------------------------------------------
@@ -1108,39 +1210,7 @@ class SeguridadIndex extends Component
         |--------------------------------------------------------------------------
         */
 
-        $solicitudesCambio = DB::table('solicitudes_cambio_organizacion as s')
-            ->join(
-                'usuarios as u',
-                'u.id_usuario',
-                '=',
-                's.id_usuario'
-            )
-            ->where('s.estado', 'pendiente')
-            ->select([
-                's.id_solicitud',
-                's.campo',
-                's.valor_actual',
-                's.valor_solicitado',
-                's.motivo',
-                's.fecha_solicitud',
-                'u.id_usuario',
-                'u.username',
-                'u.correo',
-            ])
-            ->selectRaw(
-                "
-                TRIM(
-                    CONCAT_WS(
-                        ' ',
-                        u.nombres,
-                        u.apellido_paterno,
-                        u.apellido_materno
-                    )
-                ) AS usuario_nombre
-                "
-            )
-            ->orderBy('s.fecha_solicitud')
-            ->get();
+        // Solicitudes de cambio: vienen en la consulta combinada ($panel).
 
         $solicitudesCambioPendientes =
             $solicitudesCambio->count();
@@ -1151,36 +1221,7 @@ class SeguridadIndex extends Component
         |--------------------------------------------------------------------------
         */
 
-        $auditoria = DB::table('bitacora_auditoria as b')
-            ->leftJoin(
-                'usuarios as u',
-                'u.id_usuario',
-                '=',
-                'b.id_usuario'
-            )
-            ->select([
-                'b.id_bitacora',
-                'b.accion',
-                'b.modulo',
-                'b.descripcion',
-                'b.fecha_hora',
-                'u.id_usuario',
-                'u.username',
-            ])
-            ->selectRaw(
-                "
-                TRIM(
-                    CONCAT_WS(
-                        ' ',
-                        u.nombres,
-                        u.apellido_paterno
-                    )
-                ) AS usuario_nombre
-                "
-            )
-            ->orderByDesc('b.fecha_hora')
-            ->limit(8)
-            ->get();
+        // Bitácora: viene en la consulta combinada ($panel).
 
         /*
         |--------------------------------------------------------------------------
@@ -1192,65 +1233,7 @@ class SeguridadIndex extends Component
         |
         */
 
-        $resumenSemanalData = Cache::remember(
-            'seguridad.resumen-semanal.v2.' . now()->toDateString(),
-            now()->addSeconds(30),
-            function (): array {
-                $inicioSemana = now()
-                    ->startOfDay()
-                    ->subDays(6);
-
-                /*
-                 * También convertimos los pluck() a arrays antes de que
-                 * cualquier dato sea guardado en caché.
-                 */
-                $actividadRaw = DB::table('bitacora_auditoria')
-                    ->where('fecha_hora', '>=', $inicioSemana)
-                    ->selectRaw(
-                        'DATE(fecha_hora) AS fecha, COUNT(*) AS total'
-                    )
-                    ->groupByRaw('DATE(fecha_hora)')
-                    ->pluck('total', 'fecha')
-                    ->all();
-
-                $registrosRaw = DB::table('usuarios')
-                    ->where('fecha_registro', '>=', $inicioSemana)
-                    ->selectRaw(
-                        'DATE(fecha_registro) AS fecha, COUNT(*) AS total'
-                    )
-                    ->groupByRaw('DATE(fecha_registro)')
-                    ->pluck('total', 'fecha')
-                    ->all();
-
-                return collect(range(6, 0))
-                    ->map(function (int $dias) use (
-                        $actividadRaw,
-                        $registrosRaw
-                    ) {
-                        $fecha = now()
-                            ->startOfDay()
-                            ->subDays($dias);
-
-                        $key = $fecha->toDateString();
-
-                        return [
-                            'fecha' => $key,
-                            'label' => $fecha->format('d/m'),
-                            'actividad' =>
-                                (int) ($actividadRaw[$key] ?? 0),
-                            'registros' =>
-                                (int) ($registrosRaw[$key] ?? 0),
-                        ];
-                    })
-                    ->all();
-            }
-        );
-
-        /*
-         * La vista usa ->max(), por eso reconstruimos la Collection
-         * únicamente después de recuperar los datos escalares del caché.
-         */
-        $resumenSemanal = collect($resumenSemanalData);
+        // Resumen semanal: viene en la consulta combinada ($panel).
 
         /*
         |--------------------------------------------------------------------------

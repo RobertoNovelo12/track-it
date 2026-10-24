@@ -202,6 +202,8 @@ class RestablecimientoContrasenaService
     /** Registra la solicitud verificada y avisa a los administradores. */
     public function registrarSolicitud(object $usuario, ?string $ip): void
     {
+        self::$pendientesMemo = null;
+
         if (! $this->solicitudVigente((int) $usuario->id_usuario)) {
             DB::table('solicitudes_restablecimiento')->insert([
                 'id_usuario' => (int) $usuario->id_usuario,
@@ -245,7 +247,15 @@ class RestablecimientoContrasenaService
     }
 
     /** Solicitudes vigentes con los datos del usuario (para Seguridad y roles). */
+    /** Memo por petición: Seguridad la usa en el aviso y en el modal de detalles. */
+    private static ?array $pendientesMemo = null;
+
     public function pendientes(): array
+    {
+        return self::$pendientesMemo ??= $this->consultarPendientes();
+    }
+
+    private function consultarPendientes(): array
     {
         try {
             return DB::table('solicitudes_restablecimiento as s')
@@ -305,6 +315,8 @@ class RestablecimientoContrasenaService
     /** Asigna una contraseña temporal y la devuelve (se muestra una sola vez). */
     public function restablecer(int $idUsuario, int $idAdministrador): string
     {
+        self::$pendientesMemo = null;
+
         $temporal = $this->generarTemporal();
 
         DB::transaction(function () use ($idUsuario, $idAdministrador, $temporal) {

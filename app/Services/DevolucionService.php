@@ -115,7 +115,7 @@ class DevolucionService
      */
     public function conteoPorUsuario(array $idsUsuario): array
     {
-        if ($idsUsuario === [] || ! Schema::hasColumn('asignaciones', 'id_usuario')) {
+        if ($idsUsuario === [] || ! app(ColaboradoresService::class)->disponible()) {
             return [];
         }
 
@@ -196,7 +196,7 @@ class DevolucionService
                 'fecha_hora' => $fecha,
             ];
 
-            if (Schema::hasColumn('movimientos', 'recibido_por')) {
+            if ($this->tieneRecibidoPor()) {
                 $movimiento['recibido_por'] = filled($recibidoPor) ? trim($recibidoPor) : null;
             }
 
@@ -251,7 +251,7 @@ class DevolucionService
      */
     public function devolverTodosDeUsuario(int $idUsuario, string $motivo, ?string $observaciones = null): array
     {
-        if (! $this->disponible() || ! Schema::hasColumn('asignaciones', 'id_usuario')) {
+        if (! $this->disponible() || ! app(ColaboradoresService::class)->disponible()) {
             return [];
         }
 
@@ -305,7 +305,7 @@ class DevolucionService
             'tm.clave as tipo_clave',
         ];
 
-        if (Schema::hasColumn('movimientos', 'recibido_por')) {
+        if ($this->tieneRecibidoPor()) {
             $columnas[] = 'm.recibido_por';
         }
 
@@ -334,6 +334,25 @@ class DevolucionService
     | Apoyo
     |--------------------------------------------------------------------------
     */
+
+    /*
+     * Comprobaciones de esquema en caché: en Postgres cada Schema::hasColumn
+     * es una consulta (y la base está lejos). Solo se guarda el «sí».
+     */
+    private function tieneRecibidoPor(): bool
+    {
+        if (\Illuminate\Support\Facades\Cache::get('trackit.movimientos.recibido_por.v1') === true) {
+            return true;
+        }
+
+        $existe = Schema::hasColumn('movimientos', 'recibido_por');
+
+        if ($existe) {
+            \Illuminate\Support\Facades\Cache::forever('trackit.movimientos.recibido_por.v1', true);
+        }
+
+        return $existe;
+    }
 
     private function idTipoMovimiento(): ?int
     {

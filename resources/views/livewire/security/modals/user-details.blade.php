@@ -6,20 +6,22 @@
 ============================================================ --}}
 
 @php
+    /*
+     * Sin consultas extra: las solicitudes vigentes salen de pendientes()
+     * (la misma lista del aviso de restablecimiento, se consulta una vez)
+     * y los equipos asignados vienen en la consulta de usuarios.
+     */
     try {
-        $solicitudesRestablecimientoDetalle = app(\App\Services\RestablecimientoContrasenaService::class)
-            ->solicitudesVigentes($usuarios->getCollection()->pluck('id_usuario')->map(fn ($id) => (int) $id)->all());
+        $solicitudesRestablecimientoDetalle = collect(app(\App\Services\RestablecimientoContrasenaService::class)->pendientes())
+            ->mapWithKeys(fn (array $solicitud) => [(int) $solicitud['id'] => (string) $solicitud['fecha']])
+            ->all();
     } catch (\Throwable $e) {
         $solicitudesRestablecimientoDetalle = [];
     }
 
-    // Equipos asignados por cuenta (aviso al dar de baja).
-    try {
-        $equiposPorUsuarioDetalle = app(\App\Services\DevolucionService::class)
-            ->conteoPorUsuario($usuarios->getCollection()->pluck('id_usuario')->map(fn ($id) => (int) $id)->all());
-    } catch (\Throwable $e) {
-        $equiposPorUsuarioDetalle = [];
-    }
+    $equiposPorUsuarioDetalle = $usuarios->getCollection()
+        ->mapWithKeys(fn ($usuario) => [(int) $usuario->id_usuario => (int) ($usuario->equipos_asignados ?? 0)])
+        ->all();
 
     $userDetailsData = $usuarios->getCollection()
         ->mapWithKeys(function ($usuario) use ($solicitudesRestablecimientoDetalle, $equiposPorUsuarioDetalle) {
