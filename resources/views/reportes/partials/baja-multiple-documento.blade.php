@@ -14,8 +14,8 @@
         box-sizing: border-box;
         width: auto;
         padding: 14px;
-        background: #fff;
-        color: #273f57;
+        background: #ffffff;
+        color: #000000;
         font-family: DejaVu Sans, Arial, sans-serif;
         font-size: 8px;
         line-height: 1.35;
@@ -39,7 +39,7 @@
 
     .bm-documento .bm-institucion {
         padding: 0 0 6px;
-        border-bottom: 1px solid #d1d5db;
+        border-bottom: 1px solid #000000;
         font-size: 7px;
     }
 
@@ -79,9 +79,9 @@
 
     .bm-documento h2 {
         margin: 0;
-        color: #273f57;
+        color: #000000;
         font-size: 12px;
-        font-weight: bold;
+        font-weight: normal;
         line-height: 1.3;
     }
 
@@ -108,15 +108,19 @@
     .bm-documento h3 {
         margin: 8px 0 5px;
         padding: 5px 6px;
-        color: #273f57;
-        background: #eff1f3;
+
+
         font-size: 9px;
-        font-weight: bold;
-    }
+
+
+        background: #000000; color: #ffffff; font-weight: normal;
+}
 
     .bm-documento .bm-encabezado + h3 {
         margin-top: 5px;
-    }
+
+        background: #000000; color: #ffffff; font-weight: normal;
+}
 
     .bm-documento table {
         width: 100%;
@@ -126,22 +130,26 @@
 
     .bm-documento td,
     .bm-documento th {
-        border: 1px solid #d1d5db;
+        border: 1px solid #000000;
         padding: 4px 6px;
         text-align: left;
         vertical-align: top;
         word-wrap: break-word;
-    }
+
+        background: #ffffff; color: #000000; font-weight: normal;
+}
 
     .bm-documento th {
-        background: #edf1f5;
+
         font-size: 8px;
-    }
+
+        background: #000000; color: #ffffff; font-weight: normal;
+}
 
     .bm-documento .bm-label {
         display: block;
         margin: 0 0 3px;
-        color: #526679;
+        color: #000000;
         font-size: 7px;
     }
 
@@ -196,7 +204,7 @@
     }
 
     .bm-documento .firmas-baja .firma-recuadro {
-        border-color: #d1d5db;
+        border-color: #000000;
     }
 
     .bm-documento .firmas-baja .firma-espacio {
@@ -234,17 +242,17 @@
 
     .bm-documento .bm-foto-titulo {
         padding: 5px 6px;
-        border: 1px solid #d1d5db;
-        background: #eff1f3;
-        color: #273f57;
+        border: 1px solid #000000;
+        background: #ffffff;
+        color: #000000;
         font-size: 8px;
-        font-weight: bold;
+        font-weight: normal;
     }
 
     .bm-documento .bm-foto-contenedor {
         height: 270px;
         padding: 8px;
-        border: 1px solid #d1d5db;
+        border: 1px solid #000000;
         border-top: 0;
         text-align: center;
         vertical-align: middle;
@@ -259,7 +267,7 @@
 
     .bm-documento .bm-sin-foto {
         padding-top: 110px;
-        color: #778597;
+        color: #000000;
         font-size: 8px;
         text-align: center;
     }
@@ -273,7 +281,7 @@
     .baja-preview .bm-documento {
         max-width: 100%;
         margin: 0 auto 12px;
-        border: 1px solid #d1d5db;
+        border: 1px solid #000000;
         box-shadow: 0 2px 7px rgba(0, 0, 0, .08);
     }
 

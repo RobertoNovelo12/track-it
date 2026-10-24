@@ -62,13 +62,13 @@
 
         body {
 
-            font-family: 'Aptos', 'DejaVu Sans', sans-serif;
+            font-family: DejaVu Sans, Arial, sans-serif;
 
             font-size: 8px;
 
             line-height: 1.35;
 
-            color: #273f57;
+            color: #000000;
 
             background: #ffffff;
 
@@ -118,7 +118,7 @@
 
             padding-bottom: 8px;
 
-            border-bottom: 2px solid #ad9647;
+            border-bottom: 1px solid #000000;
 
         }
 
@@ -157,7 +157,7 @@
 
             margin-top: 7px;
 
-            color: #718293;
+            color: #000000;
 
             font-size: 6.5px;
 
@@ -171,11 +171,11 @@
 
             margin-bottom: 4px;
 
-            color: #213c55;
+            color: #000000;
 
             font-size: 13px;
 
-            font-weight: bold;
+            font-weight: normal;
 
         }
 
@@ -185,7 +185,7 @@
 
             margin-bottom: 10px;
 
-            color: #748494;
+            color: #000000;
 
             font-size: 7.5px;
 
@@ -213,17 +213,19 @@
 
             padding: 4px 6px;
 
-            background: #eff1f3;
 
-            color: #2b435b;
+
+
 
             font-size: 8px;
 
-            font-weight: bold;
+
 
             page-break-inside: avoid;
 
-        }
+
+        background: #000000; color: #ffffff; font-weight: normal;
+}
 
 
 
@@ -233,7 +235,7 @@
 
             width: 22px;
 
-            font-weight: bold;
+            font-weight: normal;
 
         }
 
@@ -267,7 +269,7 @@
 
             padding: 5px;
 
-            border: 1px solid #d1d5db;
+            border: 1px solid #000000;
 
             vertical-align: top;
 
@@ -283,11 +285,11 @@
 
             margin-bottom: 3px;
 
-            color: #617b91;
+            color: #000000;
 
             font-size: 6px;
 
-            font-weight: bold;
+            font-weight: normal;
 
             text-transform: uppercase;
 
@@ -299,11 +301,11 @@
 
             display: block;
 
-            color: #253d56;
+            color: #000000;
 
             font-size: 8px;
 
-            font-weight: bold;
+            font-weight: normal;
 
             line-height: 1.45;
 
@@ -359,7 +361,7 @@
 
             padding: 9px;
 
-            border: 1px solid #d1d5db;
+            border: 1px solid #000000;
 
             vertical-align: top;
 
@@ -369,11 +371,11 @@
 
         .firma-titulo {
 
-            color: #213c55;
+            color: #000000;
 
             font-size: 7.5px;
 
-            font-weight: bold;
+            font-weight: normal;
 
         }
 
@@ -383,7 +385,7 @@
 
             margin-top: 52px;
 
-            border-bottom: 1px solid #d1d5db;
+            border-bottom: 1px solid #000000;
 
         }
 
@@ -393,7 +395,7 @@
 
             margin-top: 5px;
 
-            color: #718293;
+            color: #000000;
 
             font-size: 6.5px;
 
@@ -421,9 +423,9 @@
 
             padding-top: 6px;
 
-            border-top: 1px solid #e0e5ea;
+            border-top: 1px solid #000000;
 
-            color: #8593a0;
+            color: #000000;
 
             font-size: 6.5px;
 
@@ -479,15 +481,15 @@
 
             padding: 5px;
 
-            border: 1px solid #d1d5db;
+            border: 1px solid #000000;
 
-            background: #eff1f3;
+            background: #ffffff;
 
-            color: #2b435b;
+            color: #000000;
 
             font-size: 7px;
 
-            font-weight: bold;
+            font-weight: normal;
 
         }
 
@@ -499,7 +501,7 @@
 
             padding: 6px;
 
-            border: 1px solid #d1d5db;
+            border: 1px solid #000000;
 
             border-top: 0;
 
@@ -529,7 +531,7 @@
 
             padding-top: 150px;
 
-            color: #8694a2;
+            color: #000000;
 
             font-size: 7px;
 
@@ -543,13 +545,13 @@
 
             margin-top: 9px;
 
-            color: #748494;
+            color: #000000;
 
             font-size: 7px;
 
         }
 
-    
+
         /* Compatible con DomPDF: float y dimensiones fijas. */
         .logo-palladium-izquierda {
             float: none;

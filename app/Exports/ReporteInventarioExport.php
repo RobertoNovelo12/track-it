@@ -72,10 +72,14 @@ WithCustomCsvSettings
 
     public function styles(Worksheet $sheet): array
     {
+        $sheet->getStyle($sheet->calculateWorksheetDimension())->applyFromArray([
+            'font' => ['name' => 'Arial', 'size' => 11, 'color' => ['rgb' => '000000']],
+            'borders' => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN, 'color' => ['rgb' => '000000']]],
+        ]);
         return [
             1 => [
                 'font'      => [
-                    'bold'  => true,
+                    'bold'  => false,
                     'color' => [
                         'argb' => 'FFFFFFFF',
                     ],
@@ -83,7 +87,7 @@ WithCustomCsvSettings
                 'fill'      => [
                     'fillType'   => Fill::FILL_SOLID,
                     'startColor' => [
-                        'argb' => 'FF247BA0',
+                        'argb' => 'FF000000',
                     ],
                 ],
                 'alignment' => [

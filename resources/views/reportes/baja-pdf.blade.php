@@ -19,14 +19,11 @@
         body {
             margin: 0;
 
-            font-family:
-                DejaVu Sans,
-                Arial,
-                sans-serif;
+            font-family: DejaVu Sans, Arial, sans-serif;
 
             font-size: 11px;
 
-            color: #111827;
+            color: #000000;
         }
 
         .page {
@@ -53,15 +50,17 @@
                 24px
                 auto;
 
-            border: 1px solid #222;
+            border: 1px solid #000000;
 
             padding: 4px 8px;
 
             text-align: center;
 
             font-size: 15px;
-            font-weight: normal;
-        }
+
+
+        background: #000000; color: #ffffff; font-weight: normal;
+}
 
         .field-row {
             width: 82%;
@@ -92,7 +91,7 @@
                 2px
                 4px;
 
-            border-bottom: 1px solid #222;
+            border-bottom: 1px solid #000000;
         }
 
         .asset-table {
@@ -111,7 +110,7 @@
 
         .asset-table th,
         .asset-table td {
-            border: 1px solid #222;
+            border: 1px solid #000000;
         }
 
         .asset-table th {
@@ -120,10 +119,12 @@
             text-align: left;
 
             font-size: 11px;
-            font-weight: normal;
+
 
             vertical-align: top;
-        }
+
+        background: #000000; color: #ffffff; font-weight: normal;
+}
 
         .asset-table td {
             height: 105px;
@@ -177,7 +178,7 @@
 
             padding: 0;
 
-            border: 1px solid #222;
+            border: 1px solid #000000;
 
             vertical-align: top;
         }
@@ -185,7 +186,7 @@
         .signature-title {
             padding: 3px 7px;
 
-            border-bottom: 1px solid #222;
+            border-bottom: 1px solid #000000;
 
             font-size: 11px;
         }
@@ -216,7 +217,7 @@
                 28px
                 auto;
 
-            border: 1px solid #222;
+            border: 1px solid #000000;
 
             padding: 4px 8px;
 
@@ -245,7 +246,7 @@
 
             padding-bottom: 2px;
 
-            border-bottom: 1px solid #222;
+            border-bottom: 1px solid #000000;
         }
 
         .photo-table {
@@ -263,7 +264,7 @@
 
             padding: 0;
 
-            border: 1px solid #222;
+            border: 1px solid #000000;
 
             vertical-align: top;
         }
@@ -273,7 +274,7 @@
 
             padding-top: 3px;
 
-            border-bottom: 1px solid #222;
+            border-bottom: 1px solid #000000;
 
             text-align: center;
 
@@ -303,7 +304,7 @@
 
             margin-top: 4px;
 
-            color: #444;
+            color: #000000;
         }
 
         .small {

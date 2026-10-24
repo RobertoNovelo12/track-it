@@ -32,9 +32,9 @@
 
         background: #ffffff;
 
-        color: #273f57;
+        color: #000000;
 
-        font-family: 'Aptos', 'Segoe UI', Arial, sans-serif;
+        font-family: DejaVu Sans, Arial, sans-serif;
 
         font-size: 7px;
 
@@ -79,11 +79,11 @@
     .preview-mantenimiento .submarca {
         clear: both;
 
-        color: #788795;
+        color: #000000;
 
         font-size: .9em;
 
-        border-bottom: 2px solid #ad9647;
+        border-bottom: 1px solid #000000;
 
         padding-bottom: 6px;
 
@@ -95,11 +95,11 @@
 
         margin: 8px 0 3px;
 
-        color: #213c55;
+        color: #000000;
 
         font-size: 1.55em;
 
-        font-weight: 700;
+        font-weight: normal;
 
         line-height: 1.2;
 
@@ -109,7 +109,7 @@
 
     .preview-mantenimiento .subtitulo {
 
-        color: #748494;
+        color: #000000;
 
         margin-bottom: 6px;
 
@@ -123,13 +123,15 @@
 
         padding: 5px 8px;
 
-        background: #ffffff;
 
-        color: #2b435b;
 
-        font-weight: bold;
 
-    }
+
+
+
+
+        background: #000000; color: #ffffff; font-weight: normal;
+}
 
 
 
@@ -147,7 +149,9 @@
 
         grid-template-columns: repeat(2, minmax(0, 1fr));
 
-    }
+
+        gap: 1px; padding: 1px; background: #000000;
+}
 
 
 
@@ -169,7 +173,7 @@
 
     .preview-mantenimiento .campo {
 
-        border: 1px solid #d6dfe7;
+        border: 0; background: #ffffff;
 
         padding: 5px 7px;
 
@@ -183,11 +187,11 @@
 
         display: block;
 
-        color: #617b91;
+        color: #000000;
 
         font-size: .82em;
 
-        font-weight: bold;
+        font-weight: normal;
 
         text-transform: uppercase;
 
@@ -201,9 +205,9 @@
 
         display: block;
 
-        color: #253d56;
+        color: #000000;
 
-        font-weight: 600;
+        font-weight: normal;
 
         white-space: pre-line;
 
@@ -215,7 +219,7 @@
 
     .preview-mantenimiento .descripcion {
 
-        border: 1px solid #d6dfe7;
+        border: 1px solid #000000;
 
         padding: 6px 8px;
 
@@ -241,15 +245,17 @@
 
         padding: 6px 5px;
 
-        background: #ffffff;
 
-        color: white;
+
+
 
         text-align: left;
 
         font-size: .85em;
 
-    }
+
+        background: #000000; color: #ffffff; font-weight: normal;
+}
 
 
 
@@ -257,7 +263,7 @@
 
         padding: 6px 5px;
 
-        border: 1px solid #d6dfe7;
+        border: 1px solid #000000;
 
         vertical-align: top;
 
@@ -271,11 +277,11 @@
 
         padding: 8px;
 
-        border: 1px solid #d6dfe7;
+        border: 1px solid #000000;
 
         background: #ffffff;
 
-        color: #607487;
+        color: #000000;
 
     }
 
@@ -303,7 +309,7 @@
 
     .preview-mantenimiento .firma {
 
-        border: 1px solid #d6dfe7;
+        border: 1px solid #000000;
 
         padding: 6px;
 
@@ -315,11 +321,11 @@
 
     .preview-mantenimiento .firma-titulo {
 
-        color: #2b435b;
+        color: #000000;
 
         font-size: 1em;
 
-        font-weight: bold;
+        font-weight: normal;
 
     }
 
@@ -329,7 +335,7 @@
 
         height: 32px;
 
-        border-bottom: 1px solid #8797a6;
+        border-bottom: 1px solid #000000;
 
     }
 
@@ -339,7 +345,7 @@
 
         margin-top: 4px;
 
-        color: #6f8193;
+        color: #000000;
 
         font-size: .95em;
 
@@ -363,9 +369,9 @@
 
         padding-top: 5px;
 
-        border-top: 1px solid #e0e5ea;
+        border-top: 1px solid #000000;
 
-        color: #8593a0;
+        color: #000000;
 
         font-size: .86em;
 
@@ -385,7 +391,7 @@
 
 
 
-<div class="overflow-hidden border border-slate-200 bg-white shadow-sm">
+<div class="overflow-hidden border border-black bg-white shadow-sm">
 
     <article class="preview-mantenimiento">
 
@@ -617,7 +623,7 @@
 
                     {{ $dato($m['prioridad'] ?? null) }}
 
-                    
+
 
                     {{ $dato($m['estado'] ?? null) }}
 

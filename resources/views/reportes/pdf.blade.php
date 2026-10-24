@@ -16,8 +16,8 @@
 
         body {
             margin: 0;
-            color: #3f4548;
-            font-family: DejaVu Sans, sans-serif;
+            color: #000000;
+            font-family: DejaVu Sans, Arial, sans-serif;
             font-size: 9px;
         }
 
@@ -25,7 +25,7 @@
             width: 100%;
             margin-bottom: 14px;
             padding-bottom: 10px;
-            border-bottom: 2px solid #247ba0;
+            border-bottom: 1px solid #000000;
         }
 
         .header td {
@@ -38,12 +38,12 @@
 
         h1 {
             margin: 0 0 4px;
-            color: #25344a;
+            color: #000000;
             font-size: 18px;
-        }
+         font-weight: normal; }
 
         .muted {
-            color: #7a7b79;
+            color: #000000;
         }
 
         .meta {
@@ -55,13 +55,13 @@
         .meta td {
             width: 25%;
             padding: 7px 9px;
-            border: 1px solid #dde4e8;
-            background: #f6f9fa;
+            border: 1px solid #000000;
+            background: #ffffff;
         }
 
         .meta strong {
             display: block;
-            color: #25344a;
+            color: #000000;
             font-size: 8px;
             text-transform: uppercase;
         }
@@ -74,22 +74,24 @@
 
         .data th {
             padding: 7px 5px;
-            color: #ffffff;
-            background: #247ba0;
-            border: 1px solid #1d6688;
+
+
+            border: 1px solid #000000;
             font-size: 8px;
             text-align: left;
-        }
+
+        background: #000000; color: #ffffff; font-weight: normal;
+}
 
         .data td {
             padding: 6px 5px;
-            border: 1px solid #dde4e8;
+            border: 1px solid #000000;
             vertical-align: top;
             word-wrap: break-word;
         }
 
         .data tr:nth-child(even) td {
-            background: #f8fafb;
+            background: #ffffff;
         }
 
         .footer {
@@ -97,14 +99,14 @@
             right: 0;
             bottom: -22px;
             left: 0;
-            color: #7a7b79;
+            color: #000000;
             font-size: 8px;
             text-align: center;
         }
 
         .empty {
             padding: 30px;
-            border: 1px solid #dde4e8;
+            border: 1px solid #000000;
             text-align: center;
         }
     </style>

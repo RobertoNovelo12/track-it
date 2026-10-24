@@ -101,6 +101,10 @@ class InventarioEquiposExport extends \PhpOffice\PhpSpreadsheet\Cell\StringValue
 
     public function styles(Worksheet $sheet): array
     {
+        $sheet->getStyle($sheet->calculateWorksheetDimension())->applyFromArray([
+            'font' => ['name' => 'Arial', 'size' => 11, 'color' => ['rgb' => '000000']],
+            'borders' => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN, 'color' => ['rgb' => '000000']]],
+        ]);
         $uno = count($this->equipos) === 1;
         $ultima = $sheet->getHighestColumn();
         $filas = $sheet->getHighestRow();
@@ -112,13 +116,24 @@ class InventarioEquiposExport extends \PhpOffice\PhpSpreadsheet\Cell\StringValue
             $sheet->getRowDimension($row)->setRowHeight($row === 1 ? 20 : 15);
             if ($row > 1 && $row % 2 === 0) {
                 $sheet->getStyle('A'.$row.':'.$ultima.$row)->getFill()
-                    ->setFillType('solid')->getStartColor()->setRGB('F1F5F9');
+                    ->setFillType('solid')->getStartColor()->setRGB('FFFFFF');
             }
         }
         $sheet->getStyle('A1:'.$ultima.'1')->applyFromArray([
-            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
-            'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '203A51']],
+            'font' => ['bold' => false, 'color' => ['rgb' => 'FFFFFF']],
+            'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '000000']],
         ]);
+        if ($uno) {
+            foreach ($this->array() as $indice => $fila) {
+                if (in_array($fila[0], ['ESPECIFICACIONES DEL TIPO', 'PROGRAMAS INSTALADOS', 'HISTORIAL COMPLETO'], true)) {
+                    $numero = $indice + 1;
+                    $sheet->getStyle('A'.$numero.':'.$ultima.$numero)->applyFromArray([
+                        'font' => ['bold' => false, 'color' => ['rgb' => 'FFFFFF']],
+                        'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '000000']],
+                    ]);
+                }
+            }
+        }
         for ($col = 1; $col <= Coordinate::columnIndexFromString($ultima); $col++) {
             $sheet->getColumnDimension(Coordinate::stringFromColumnIndex($col))->setWidth(20);
         }

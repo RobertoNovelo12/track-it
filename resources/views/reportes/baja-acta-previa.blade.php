@@ -46,11 +46,11 @@
 
         background: #ffffff;
 
-        color: #273f57;
+        color: #000000;
 
         padding: 5%;
 
-        font-family: 'Aptos', 'Segoe UI', Arial, sans-serif;
+        font-family: DejaVu Sans, Arial, sans-serif;
 
         font-size: 7px;
 
@@ -101,9 +101,9 @@
 
         padding-bottom: 6px;
 
-        border-bottom: 2px solid #ad9647;
+        border-bottom: 1px solid #000000;
 
-        color: #718293;
+        color: #000000;
 
         font-size: 6px;
 
@@ -115,11 +115,11 @@
 
         margin: 9px 0 3px;
 
-        color: #213c55;
+        color: #000000;
 
         font-size: 12px;
 
-        font-weight: bold;
+        font-weight: normal;
 
     }
 
@@ -127,7 +127,7 @@
 
     .preview-baja .subtitulo {
 
-        color: #748494;
+        color: #000000;
 
         margin-bottom: 8px;
 
@@ -141,13 +141,15 @@
 
         padding: 6px 8px;
 
-        background: #eff1f3;
 
-        color: #2b435b;
 
-        font-weight: bold;
 
-    }
+
+
+
+
+        background: #000000; color: #ffffff; font-weight: normal;
+}
 
 
 
@@ -165,7 +167,9 @@
 
         grid-template-columns: repeat(2, minmax(0, 1fr));
 
-    }
+
+        gap: 1px; padding: 1px; background: #000000;
+}
 
 
 
@@ -183,7 +187,7 @@
 
         padding: 6px;
 
-        border: 1px solid #d1d5db;
+        border: 0; background: #ffffff;
 
     }
 
@@ -203,11 +207,11 @@
 
         margin-bottom: 3px;
 
-        color: #617b91;
+        color: #000000;
 
         font-size: 6px;
 
-        font-weight: bold;
+        font-weight: normal;
 
         text-transform: uppercase;
 
@@ -219,9 +223,9 @@
 
         display: block;
 
-        font-weight: 600;
+        font-weight: normal;
 
-        color: #253d56;
+        color: #000000;
 
         white-space: pre-line;
 
@@ -245,7 +249,7 @@
 
     .preview-baja .firma {
 
-        border: 1px solid #d1d5db;
+        border: 1px solid #000000;
 
         padding: 6px;
 
@@ -255,9 +259,9 @@
 
     .preview-baja .firma-titulo {
 
-        font-weight: bold;
+        font-weight: normal;
 
-        color: #2b435b;
+        color: #000000;
 
     }
 
@@ -267,7 +271,7 @@
 
         height: 38px;
 
-        border-bottom: 1px solid #d1d5db;
+        border-bottom: 1px solid #000000;
 
     }
 
@@ -277,7 +281,7 @@
 
         margin-top: 4px;
 
-        color: #718293;
+        color: #000000;
 
         font-size: 6px;
 
@@ -301,7 +305,7 @@
 
         min-width: 0;
 
-        border: 1px solid #d1d5db;
+        border: 1px solid #000000;
 
     }
 
@@ -311,9 +315,9 @@
 
         padding: 6px;
 
-        background: #eff1f3;
+        background: #ffffff;
 
-        font-weight: bold;
+        font-weight: normal;
 
         font-size: 6px;
 
@@ -335,7 +339,7 @@
 
         text-align: center;
 
-        color: #8694a2;
+        color: #000000;
 
         font-size: 6px;
 
@@ -361,9 +365,9 @@
 
         padding-top: 5px;
 
-        border-top: 1px solid #e0e5ea;
+        border-top: 1px solid #000000;
 
-        color: #8593a0;
+        color: #000000;
 
         font-size: 6px;
 
@@ -383,7 +387,7 @@
 
 
 
-<div class="overflow-hidden border border-slate-200 bg-white shadow-sm">
+<div class="overflow-hidden border border-black bg-white shadow-sm">
 
     <article class="preview-baja">
 

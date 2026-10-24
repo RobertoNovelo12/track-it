@@ -22,8 +22,8 @@
 <style>
     .rp-acta {
         background: #ffffff;
-        color: #253b54;
-        font-family: 'Aptos', 'Segoe UI', Arial, sans-serif;
+        color: #000000;
+        font-family: DejaVu Sans, Arial, sans-serif;
         padding: 5%;
         font-size: 7px;
         line-height: 1.35;
@@ -48,33 +48,35 @@
     .rp-acta .submarca {
         clear: both;
         font-size: .9em;
-        color: #788795;
-        border-bottom: 2px solid #a08a3c;
+        color: #000000;
+        border-bottom: 1px solid #000000;
         padding-bottom: 6px;
     }
 
     .rp-acta h2 {
         margin: 7px 0 2px;
-        color: #233b54;
+        color: #000000;
         font-size: 1.55em;
-        font-weight: 700;
+        font-weight: normal;
         line-height: 1.2;
     }
 
     .rp-acta .sub {
         margin-bottom: 6px;
-        color: #738391;
+        color: #000000;
         font-size: .94em;
     }
 
     .rp-acta .section {
         margin: 7px 0 4px;
         padding: 5px 7px;
-        background: #ffffff;
-        color: #253d55;
-        font-weight: bold;
+
+
+
         font-size: 1.04em;
-    }
+
+        background: #000000; color: #ffffff; font-weight: normal;
+}
 
     .rp-acta .section b {
         margin-right: 8px;
@@ -83,7 +85,9 @@
     .rp-acta .fields {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
+
+        gap: 1px; padding: 1px; background: #000000;
+}
 
     .rp-acta .fields.three {
         grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -93,7 +97,7 @@
         min-width: 0;
         min-height: 28px;
         padding: 5px 7px;
-        border: 1px solid #d5dee6;
+        border: 0; background: #ffffff;
     }
 
     .rp-acta .field.wide {
@@ -103,15 +107,15 @@
     .rp-acta .label {
         display: block;
         margin-bottom: 3px;
-        color: #61788c;
-        font-weight: bold;
+        color: #000000;
+        font-weight: normal;
         font-size: .82em;
         text-transform: uppercase;
     }
 
     .rp-acta .value {
         display: block;
-        font-weight: 700;
+        font-weight: normal;
         overflow-wrap: anywhere;
         white-space: pre-line;
     }
@@ -124,33 +128,35 @@
 
     .rp-acta th {
         padding: 6px 4px;
-        background: #ffffff;
-        color: #253d55;
+
+
         text-align: left;
         font-size: .85em;
-    }
+
+        background: #000000; color: #ffffff; font-weight: normal;
+}
 
     .rp-acta td {
         padding: 6px 4px;
-        border: 1px solid #d5dee6;
+        border: 1px solid #000000;
         vertical-align: top;
         overflow-wrap: anywhere;
     }
 
     .rp-acta .secondary {
         margin-top: 3px;
-        color: #657b8f;
+        color: #000000;
     }
 
     .rp-acta .observaciones {
         padding: 6px 8px;
-        border: 1px solid #d5dee6;
+        border: 1px solid #000000;
         min-height: 30px;
     }
 
     .rp-acta .commit {
         margin: 6px 2px;
-        color: #657b8f;
+        color: #000000;
         text-align: justify;
         line-height: 1.45;
     }
@@ -164,7 +170,7 @@
     .rp-acta .sign {
         min-height: 70px;
         padding: 6px;
-        border: 1px solid #d5dee6;
+        border: 1px solid #000000;
         display: flex;
         flex-direction: column;
     }
@@ -172,19 +178,19 @@
     .rp-acta .sign .line {
         flex: 1;
         min-height: 30px;
-        border-bottom: 1px solid #8191a0;
+        border-bottom: 1px solid #000000;
     }
 
     .rp-acta .sign .foot {
         padding-top: 4px;
-        color: #728395;
+        color: #000000;
     }
 
     .rp-acta .bottom {
         display: flex;
         justify-content: space-between;
         margin-top: 8px;
-        color: #8694a2;
+        color: #000000;
         font-size: .85em;
     }
 
@@ -199,7 +205,7 @@
     }
 </style>
 
-<div class="overflow-hidden border border-slate-200 bg-white shadow-sm">
+<div class="overflow-hidden border border-black bg-white shadow-sm">
     <article class="rp-acta">
 
         <img

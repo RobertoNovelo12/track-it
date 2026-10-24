@@ -40,9 +40,9 @@
 
         body {
 
-            font-family: 'Aptos', 'DejaVu Sans', sans-serif;
+            font-family: DejaVu Sans, Arial, sans-serif;
 
-            color: #273f57;
+            color: #000000;
 
             font-size: 9px;
 
@@ -74,7 +74,7 @@
 
             padding-bottom: 6px;
 
-            border-bottom: 2px solid #ad9647;
+            border-bottom: 1px solid #000000;
 
         }
 
@@ -113,7 +113,7 @@
 
             margin-top: 6px;
 
-            color: #718293;
+            color: #000000;
 
             font-size: 7.5px;
 
@@ -129,7 +129,7 @@
 
             font-weight: normal;
 
-            color: #213c55;
+            color: #000000;
 
         }
 
@@ -141,7 +141,7 @@
 
             font-size: 8px;
 
-            color: #748494;
+            color: #000000;
 
         }
 
@@ -155,17 +155,19 @@
 
             padding: 5px 8px;
 
-            background: #ffffff;
 
-            color: #2b435b;
+
+
 
             font-size: 8.5px;
 
-            font-weight: bold;
+
 
             line-height: 1.2;
 
-        }
+
+        background: #000000; color: #ffffff; font-weight: normal;
+}
 
 
 
@@ -193,7 +195,7 @@
 
         .datos td {
 
-            border: 1px solid #d6dfe7;
+            border: 1px solid #000000;
 
             padding: 5px 8px;
 
@@ -211,9 +213,9 @@
 
             font-size: 7px;
 
-            color: #617b91;
+            color: #000000;
 
-            font-weight: bold;
+            font-weight: normal;
 
             text-transform: uppercase;
 
@@ -225,9 +227,9 @@
 
             font-size: 8.5px;
 
-            font-weight: bold;
+            font-weight: normal;
 
-            color: #253d56;
+            color: #000000;
 
             line-height: 1.28;
 
@@ -239,9 +241,9 @@
 
         .tabla th {
 
-            background: #ffffff;
 
-            color: #253d55;
+
+
 
             padding: 6px;
 
@@ -249,7 +251,9 @@
 
             font-size: 7px;
 
-        }
+
+        background: #000000; color: #ffffff; font-weight: normal;
+}
 
 
 
@@ -257,7 +261,7 @@
 
             padding: 6px;
 
-            border: 1px solid #d6dfe7;
+            border: 1px solid #000000;
 
             font-size: 8px;
 
@@ -285,7 +289,7 @@
 
         .descripcion-grid td {
 
-            border: 1px solid #d6dfe7;
+            border: 1px solid #000000;
 
             padding: 5px 8px;
 
@@ -301,7 +305,7 @@
 
             font-size: 8.5px;
 
-            color: #344b62;
+            color: #000000;
 
             line-height: 1.32;
 
@@ -317,7 +321,7 @@
 
         .sin-refacciones {
 
-            border: 1px solid #d6dfe7;
+            border: 1px solid #000000;
 
             background: #ffffff;
 
@@ -325,7 +329,7 @@
 
             font-size: 8px;
 
-            color: #607487;
+            color: #000000;
 
         }
 
@@ -343,7 +347,7 @@
 
             width: 50%;
 
-            border: 1px solid #d6dfe7;
+            border: 1px solid #000000;
 
             padding: 8px 10px;
 
@@ -357,9 +361,9 @@
 
             font-size: 8px;
 
-            font-weight: bold;
+            font-weight: normal;
 
-            color: #2b435b;
+            color: #000000;
 
         }
 
@@ -369,7 +373,7 @@
 
             margin-top: 46px;
 
-            border-bottom: 1px solid #8797a6;
+            border-bottom: 1px solid #000000;
 
         }
 
@@ -383,7 +387,7 @@
 
             line-height: 1.35;
 
-            color: #6f8193;
+            color: #000000;
 
         }
 
@@ -403,15 +407,15 @@
 
             padding-top: 5px;
 
-            border-top: 1px solid #e0e5ea;
+            border-top: 1px solid #000000;
 
             font-size: 7px;
 
-            color: #8593a0;
+            color: #000000;
 
         }
 
-    
+
         /* Compatible con DomPDF: float y dimensiones fijas. */
         .logo-palladium-izquierda {
             float: none;

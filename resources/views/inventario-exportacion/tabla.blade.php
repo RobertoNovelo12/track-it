@@ -5,16 +5,18 @@
     <title>Inventario de equipos</title>
     <style>
         @page { margin: 24px 28px 35px; }
-        body { font-family: DejaVu Sans, sans-serif; font-size: 8px; line-height: 1.2; color: #28394a; }
+        body { font-family: DejaVu Sans, Arial, sans-serif; font-size: 8px; line-height: 1.2; color: #000000; }
         .marca { font-weight: bold; color: #a28b53; font-size: 14px; letter-spacing: 1px; }
-        h1 { margin: 6px 0; font-size: 15px; color: #18354b; }
-        .sub { color: #657b8d; font-size: 8px; margin: 4px 0 13px; }
+        h1 { margin: 6px 0; font-size: 15px; color: #000000;  font-weight: normal; }
+        .sub { color: #000000; font-size: 8px; margin: 4px 0 13px; }
         table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-        th { background: #1f4057; color: white; font-weight: bold; font-size: 8px; padding: 5px 4px; text-align: left; }
-        td { border: 1px solid #d7dfe5; padding: 3px; vertical-align: top; word-wrap: break-word; }
-        tr:nth-child(even) td { background: #f4f7f9; }
+        th {    font-size: 8px; padding: 5px 4px; text-align: left;
+        background: #000000; color: #ffffff; font-weight: normal;
+}
+        td { border: 1px solid #000000; padding: 3px; vertical-align: top; word-wrap: break-word; }
+        tr:nth-child(even) td { background: #ffffff; }
         tr { page-break-inside: avoid; }
-        .pie { position: fixed; bottom: -22px; left: 0; right: 0; text-align: right; color: #738595; font-size: 7px; }
+        .pie { position: fixed; bottom: -22px; left: 0; right: 0; text-align: right; color: #000000; font-size: 7px; }
         .mini { font-size: 8px; }
         td div + div { margin-top: 2px; }
         thead { display: table-header-group; }

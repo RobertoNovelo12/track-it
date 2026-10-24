@@ -20,7 +20,7 @@
         body {
             margin: 0;
             font-family: DejaVu Sans, Arial, sans-serif;
-            color: #273f57;
+            color: #000000;
             font-size: 9px;
         }
 
@@ -32,7 +32,7 @@
 
         .organizacion {
             font-size: 8px;
-            border-bottom: 1px solid #d1d5db;
+            border-bottom: 1px solid #000000;
             padding-bottom: 8px;
         }
 
@@ -50,7 +50,7 @@
 
         .titulo {
             font-size: 13px;
-            font-weight: bold;
+            font-weight: normal;
             margin: 0 0 4px;
         }
 
@@ -64,11 +64,13 @@
         }
 
         .seccion {
-            background: #edf1f3;
-            font-weight: bold;
+
+
             margin: 13px 0 6px;
             padding: 6px 8px;
-        }
+
+        background: #000000; color: #ffffff; font-weight: normal;
+}
 
         .tabla {
             width: 100%;
@@ -78,16 +80,18 @@
 
         .tabla td,
         .tabla th {
-            border: 1px solid #d1d5db;
+            border: 1px solid #000000;
             padding: 7px;
             vertical-align: top;
             word-wrap: break-word;
-        }
+
+        background: #ffffff; color: #000000; font-weight: normal;
+}
 
         .etiqueta {
             display: block;
             font-size: 7px;
-            color: #586b7d;
+            color: #000000;
             margin-bottom: 4px;
         }
 
@@ -104,15 +108,15 @@
         }
 
         .firma-recuadro {
-            border: 1px solid #d1d5db;
+            border: 1px solid #000000;
         }
 
         .firma-cargo {
             padding: 6px 4px;
-            border-bottom: 1px solid #d1d5db;
+            border-bottom: 1px solid #000000;
             text-align: center;
             font-size: 8px;
-            font-weight: bold;
+            font-weight: normal;
         }
 
         .firma-espacio {
@@ -146,15 +150,15 @@
 
         .foto-titulo {
             padding: 6px;
-            font-weight: bold;
-            background: #edf1f3;
-            border: 1px solid #d1d5db;
+            font-weight: normal;
+            background: #ffffff;
+            border: 1px solid #000000;
         }
 
         .foto-marco {
             height: 242px;
             text-align: center;
-            border: 1px solid #d1d5db;
+            border: 1px solid #000000;
             border-top: 0;
             padding: 8px;
         }

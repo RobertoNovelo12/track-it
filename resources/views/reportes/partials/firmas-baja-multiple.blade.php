@@ -34,8 +34,8 @@
     */
 
     .bm-documento .firmas-baja-multiple .firma-recuadro {
-        border: 1px solid #d1d5db;
-        color: #273f57;
+        border: 1px solid #000000;
+        color: #000000;
         background: #ffffff;
         font-size: 8px;
         page-break-inside: avoid;
@@ -48,12 +48,12 @@
     */
 
     .bm-documento .firmas-baja-multiple .firma-cargo {
-        border-bottom: 1px solid #d1d5db;
+        border-bottom: 1px solid #000000;
         text-align: center;
         padding: 5px 6px;
-        font-weight: bold;
+        font-weight: normal;
         background: #ffffff;
-        color: #273f57;
+        color: #000000;
     }
 
     /*
@@ -86,7 +86,7 @@
         display: block;
         margin: 0 0 4px;
         padding: 0;
-        color: #273f57;
+        color: #000000;
         font-size: 8px;
         font-weight: normal;
         line-height: 1.35;
@@ -98,7 +98,7 @@
         display: block;
         margin: 0;
         padding: 0;
-        color: #526679;
+        color: #000000;
         font-size: 8px;
         line-height: 1.35;
         text-align: left;

@@ -42,13 +42,13 @@
 
         body {
 
-            font-family: 'Aptos', 'DejaVu Sans', sans-serif;
+            font-family: DejaVu Sans, Arial, sans-serif;
 
             font-size: 9px;
 
             line-height: 1.35;
 
-            color: #273f57;
+            color: #000000;
 
         }
 
@@ -74,7 +74,7 @@
 
         .encabezado {
 
-            border-bottom: 2px solid #ad9647;
+            border-bottom: 1px solid #000000;
 
             padding-bottom: 7px;
 
@@ -115,7 +115,7 @@
 
             margin-top: 7px;
 
-            color: #718293;
+            color: #000000;
 
             font-size: 7.5px;
 
@@ -133,7 +133,7 @@
 
             font-weight: normal;
 
-            color: #213c55;
+            color: #000000;
 
         }
 
@@ -143,7 +143,7 @@
 
             margin-bottom: 8px;
 
-            color: #748494;
+            color: #000000;
 
             font-size: 8px;
 
@@ -159,15 +159,17 @@
 
             padding: 6px 9px;
 
-            background: #ffffff;
 
-            color: #2b435b;
+
+
 
             font-size: 8.5px;
 
-            font-weight: bold;
 
-        }
+
+
+        background: #000000; color: #ffffff; font-weight: normal;
+}
 
 
 
@@ -195,7 +197,7 @@
 
         .datos td {
 
-            border: 1px solid #d6dfe7;
+            border: 1px solid #000000;
 
             padding: 7px 9px;
 
@@ -215,9 +217,9 @@
 
             font-size: 7px;
 
-            color: #617b91;
+            color: #000000;
 
-            font-weight: bold;
+            font-weight: normal;
 
             text-transform: uppercase;
 
@@ -231,9 +233,9 @@
 
             line-height: 1.35;
 
-            color: #253d56;
+            color: #000000;
 
-            font-weight: bold;
+            font-weight: normal;
 
             word-wrap: break-word;
 
@@ -243,9 +245,9 @@
 
         .equipos th {
 
-            background: #ffffff;
 
-            color: #253d55;
+
+
 
             padding: 7px 6px;
 
@@ -253,13 +255,15 @@
 
             font-size: 7px;
 
-        }
+
+        background: #000000; color: #ffffff; font-weight: normal;
+}
 
 
 
         .equipos td {
 
-            border: 1px solid #d6dfe7;
+            border: 1px solid #000000;
 
             padding: 7px 6px;
 
@@ -279,7 +283,7 @@
 
             margin-top: 3px;
 
-            color: #6c7f90;
+            color: #000000;
 
             font-size: 7.5px;
 
@@ -289,7 +293,7 @@
 
         .observaciones {
 
-            border: 1px solid #d6dfe7;
+            border: 1px solid #000000;
 
             padding: 7px 9px;
 
@@ -319,7 +323,7 @@
 
             margin: 5px 2px 7px;
 
-            color: #5d7185;
+            color: #000000;
 
             font-size: 8px;
 
@@ -343,7 +347,7 @@
 
         .firmas td {
 
-            border: 1px solid #d6dfe7;
+            border: 1px solid #000000;
 
             padding: 8px 10px;
 
@@ -357,11 +361,11 @@
 
         .firma-titulo {
 
-            color: #2b435b;
+            color: #000000;
 
             font-size: 8px;
 
-            font-weight: bold;
+            font-weight: normal;
 
         }
 
@@ -371,7 +375,7 @@
 
             margin-top: 36px;
 
-            border-bottom: 1px solid #8797a6;
+            border-bottom: 1px solid #000000;
 
         }
 
@@ -381,7 +385,7 @@
 
             margin-top: 5px;
 
-            color: #6f8193;
+            color: #000000;
 
             font-size: 7px;
 
@@ -393,7 +397,7 @@
 
         .pie {
 
-            border-top: 1px solid #e0e5ea;
+            border-top: 1px solid #000000;
 
             margin-top: 7px;
 
@@ -401,7 +405,7 @@
 
             font-size: 7px;
 
-            color: #8593a0;
+            color: #000000;
 
         }
 
@@ -419,7 +423,9 @@
 
             padding: 5px 9px;
 
-        }
+
+        background: #000000; color: #ffffff; font-weight: normal;
+}
 
 
 
@@ -499,7 +505,7 @@
 
         }
 
-    
+
         /* Compatible con DomPDF: float y dimensiones fijas. */
         .logo-palladium-izquierda {
             float: none;

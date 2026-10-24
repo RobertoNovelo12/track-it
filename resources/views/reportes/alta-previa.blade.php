@@ -65,8 +65,8 @@
 
 <style>
     .alta-vista {
-        background: #fff;
-        color: #273f57;
+        background: #ffffff;
+        color: #000000;
         font: 7px/1.35 'Aptos', 'Segoe UI', Arial, sans-serif;
         padding: 5%;
         overflow-wrap: anywhere;
@@ -99,32 +99,34 @@
 
     .alta-vista .institucion {
         clear: both;
-        color: #718293;
+        color: #000000;
         font-size: 6px;
         padding: 5px 0;
-        border-bottom: 2px solid #ad9647;
+        border-bottom: 1px solid #000000;
     }
 
     .alta-vista h2 {
         font-size: 11px;
-        color: #213c55;
-        font-weight: 700;
+        color: #000000;
+        font-weight: normal;
         margin: 9px 0 3px;
     }
 
     .alta-vista .subtitulo {
-        color: #748494;
+        color: #000000;
         font-size: 6px;
         margin-bottom: 7px;
     }
 
     .alta-vista .seccion {
-        background: #fff;
-        color: #2b435b;
-        font-weight: bold;
+
+
+
         padding: 6px;
         margin: 8px 0 4px;
-    }
+
+        background: #000000; color: #ffffff; font-weight: normal;
+}
 
     .alta-vista table {
         width: 100%;
@@ -133,25 +135,25 @@
     }
 
     .alta-vista td {
-        border: 1px solid #d6dfe7;
+        border: 1px solid #000000;
         padding: 6px;
         vertical-align: top;
         width: 50%;
     }
 
     .alta-vista .etiqueta {
-        color: #617b91;
+        color: #000000;
         font-size: 6px;
         text-transform: uppercase;
-        font-weight: bold;
+        font-weight: normal;
         display: block;
         margin-bottom: 4px;
     }
 
 
 .alta-vista .valor {
-    color: #253d56;
-    font-weight: 400;
+    color: #000000;
+    font-weight: normal;
     white-space: pre-line;
     overflow-wrap: anywhere;
     display: block;
@@ -160,19 +162,19 @@
 
     .alta-vista .linea {
         height: 42px;
-        border-bottom: 1px solid #8797a6;
+        border-bottom: 1px solid #000000;
     }
 
     .alta-vista .pie {
-        color: #718293;
+        color: #000000;
         font-size: 6px;
         padding-top: 6px;
-        border-top: 1px solid #e0e5ea;
+        border-top: 1px solid #000000;
         margin-top: 9px;
     }
 </style>
 
-<div class="overflow-hidden border border-slate-200 bg-white shadow-sm">
+<div class="overflow-hidden border border-black bg-white shadow-sm">
     <article class="alta-vista">
         <img
             class="logo-palladium-izquierda"
