@@ -114,45 +114,46 @@
             x-transition:leave-start="opacity-100"
             x-transition:leave-end="opacity-0"
             x-trap.noscroll="abierto"
-            class="relative z-10 w-full max-w-sm overflow-hidden rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] theme-shadow-xl"
+            class="relative z-10 w-full max-w-md overflow-hidden rounded-lg border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] theme-shadow-xl"
         >
-            <div class="flex items-start gap-3 px-5 pt-5">
-                <span
-                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
-                    x-bind:class="peligro ? 'bg-[var(--theme-danger-soft)] text-[var(--theme-danger)]' : 'bg-[var(--theme-primary-soft)] text-[var(--theme-primary)]'"
-                >
-                    <svg x-show="peligro" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M4 7h16M10 11v6M14 11v6"/>
-                        <path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/>
+            {{--
+                Diseño sobrio: sin círculo de color ni ícono grande. Un ícono
+                pequeño junto al título indica si la acción es destructiva.
+            --}}
+            <div class="px-5 pt-5">
+                <div class="flex items-center gap-2">
+                    <svg x-show="peligro" class="h-4 w-4 shrink-0 text-[var(--theme-danger)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M12 3 2 20h20L12 3Z"/>
+                        <path d="M12 10v4M12 17h.01"/>
                     </svg>
-                    <svg x-show="! peligro" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <svg x-show="! peligro" class="h-4 w-4 shrink-0 text-[var(--theme-text-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <circle cx="12" cy="12" r="9"/>
-                        <path d="M12 8v5M12 16h.01"/>
+                        <path d="M12 11v5M12 8h.01"/>
                     </svg>
-                </span>
 
-                <div class="min-w-0 pt-0.5">
-                    <h2 id="confirmacion-titulo" class="text-sm font-semibold text-[var(--theme-text-strong)]" x-text="titulo"></h2>
-                    <p id="confirmacion-mensaje" class="mt-1 text-xs leading-relaxed text-[var(--theme-text-muted)]" x-text="mensaje"></p>
+                    <h2 id="confirmacion-titulo" class="text-[15px] font-semibold leading-snug text-[var(--theme-text-strong)]" x-text="titulo"></h2>
                 </div>
+
+                <p id="confirmacion-mensaje" class="mt-2 text-[13px] leading-relaxed text-[var(--theme-text-muted)]" x-text="mensaje"></p>
             </div>
 
-            <div class="mt-5 flex flex-col-reverse gap-2 border-t border-[var(--theme-border)] bg-[var(--theme-surface-soft)] px-5 py-3 sm:flex-row sm:justify-end">
+            <div class="mt-5 flex flex-col-reverse gap-2 px-5 pb-5 sm:flex-row sm:justify-end">
                 <button
                     type="button"
                     x-ref="cancelar"
                     x-on:click="cerrar()"
                     x-bind:disabled="procesando"
-                    class="h-9 rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-4 text-xs font-medium text-[var(--theme-text)] transition-colors hover:bg-[var(--theme-surface-soft)] disabled:opacity-60"
+                    class="h-9 rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-4 text-[13px] font-medium text-[var(--theme-text)] transition-colors hover:bg-[var(--theme-surface-soft)] disabled:opacity-60"
                     x-text="textoCancelar"
                 ></button>
 
+                {{-- Rojo sólido y oscuro en ambos temas (no el rojo claro del modo oscuro). --}}
                 <button
                     type="button"
                     x-on:click="aceptar()"
                     x-bind:disabled="procesando"
-                    class="inline-flex h-9 items-center justify-center gap-2 rounded-md px-4 text-xs font-medium text-white transition-colors disabled:cursor-wait disabled:opacity-80"
-                    x-bind:class="peligro ? 'bg-[var(--theme-danger)] hover:opacity-90' : 'bg-[var(--theme-primary)] hover:bg-[var(--theme-primary-hover)]'"
+                    class="inline-flex h-9 items-center justify-center gap-2 rounded-md px-4 text-[13px] font-medium text-white transition-colors disabled:cursor-wait disabled:opacity-80"
+                    x-bind:class="peligro ? 'confirmacion-boton-peligro' : 'bg-[var(--theme-primary)] hover:bg-[var(--theme-primary-hover)]'"
                 >
                     <span x-show="procesando"><x-ui.spinner size="sm" /></span>
                     <span x-text="procesando ? 'Procesando…' : textoConfirmar"></span>
@@ -161,3 +162,16 @@
         </div>
     </div>
 </div>
+
+<style>
+    /* Botón de acción destructiva: rojo sobrio (contraste 6.5:1 con el texto blanco). */
+    .confirmacion-boton-peligro {
+        background-color: #B42318;
+        border: 1px solid #B42318;
+    }
+
+    .confirmacion-boton-peligro:hover {
+        background-color: #9A1E14;
+        border-color: #9A1E14;
+    }
+</style>

@@ -7,7 +7,7 @@
         <div class="rounded-xl border border-[var(--theme-primary)] bg-[var(--theme-primary-soft)] p-4 sm:p-5">
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <h3 class="text-xl font-semibold text-[var(--theme-text-strong)]">{{ $plantilla['nombre'] }}</h3>
-                <span class="rounded-full border border-[var(--theme-border)] px-3 py-1 text-xs text-[var(--theme-text)]">Plantilla activa · Permanente</span>
+                <span class="rounded-md border border-[var(--theme-border)] px-3 py-1 text-xs text-[var(--theme-text)]">Plantilla activa · Permanente</span>
             </div>
             <p class="mt-3 text-sm text-[var(--theme-text-muted)]">
                 Esta instalación utiliza {{ mb_strtolower($etiquetas['unidad_plural']) }} y departamentos.

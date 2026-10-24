@@ -34,7 +34,7 @@
         aria-haspopup="dialog"
         title="Equipos recibidos desde el teléfono"
         aria-label="Equipos recibidos desde el teléfono"
-        class="relative flex h-9 w-9 items-center justify-center rounded-full text-[var(--theme-text-muted)] transition-colors hover:bg-[var(--theme-primary-soft)] hover:text-[var(--theme-primary)]"
+        class="relative flex h-9 w-9 items-center justify-center rounded-lg text-[var(--theme-text-muted)] transition-colors hover:bg-[var(--theme-primary-soft)] hover:text-[var(--theme-primary)] aria-expanded:bg-[var(--theme-primary-soft)] aria-expanded:text-[var(--theme-primary)]"
     >
         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <rect x="7" y="2.5" width="10" height="19" rx="2"/>
@@ -111,7 +111,7 @@
                                     @endif
                                 </div>
 
-                                <span class="shrink-0 rounded-full bg-[var(--theme-warning-soft)] px-2 py-0.5 text-[10px] font-medium text-[var(--theme-warning)]">
+                                <span class="shrink-0 rounded-md bg-[var(--theme-warning-soft)] px-2 py-0.5 text-[10px] font-medium text-[var(--theme-warning)]">
                                     Nuevo
                                 </span>
                             </div>

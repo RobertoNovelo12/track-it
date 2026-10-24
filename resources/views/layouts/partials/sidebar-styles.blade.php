@@ -598,7 +598,7 @@
             padding-left: 0.75rem;
             padding-right: 0.75rem;
 
-            border-radius: 0.5rem;
+            border-radius: var(--radius-lg);
 
             font-size: 0.9375rem;
         }

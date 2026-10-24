@@ -94,6 +94,66 @@
             }).then((confirmado) => confirmado && salir());
         });
 
+        /*
+         * Enlaces normales (sin wire:navigate, p. ej. «Cancelar»): antes
+         * recargaban la página y salía el aviso del navegador («¿Deseas
+         * abandonar el sitio?»). Ahora se usa la misma ventana del sistema.
+         */
+        document.addEventListener('click', (evento) => {
+            if (
+                evento.defaultPrevented
+                || evento.button !== 0
+                || evento.metaKey || evento.ctrlKey || evento.shiftKey || evento.altKey
+                || ! window.trackitHayCambiosSinGuardar()
+                || ! window.trackitConfirmar
+            ) {
+                return;
+            }
+
+            const enlace = evento.target instanceof Element ? evento.target.closest('a[href]') : null;
+
+            if (
+                ! enlace
+                || enlace.hasAttribute('download')
+                || (enlace.target && enlace.target !== '_self')
+                || enlace.hasAttribute('wire:navigate')
+                || enlace.hasAttribute('wire:navigate.hover')
+                || enlace.closest('[data-sin-aviso]')
+            ) {
+                return;
+            }
+
+            const destino = new URL(enlace.href, window.location.href);
+
+            // Solo páginas del sistema; anclas (#) de la misma página no salen.
+            if (
+                destino.origin !== window.location.origin
+                || (destino.pathname === window.location.pathname && destino.search === window.location.search && destino.hash)
+            ) {
+                return;
+            }
+
+            evento.preventDefault();
+
+            window.trackitConfirmar({
+                titulo: '¿Salir sin guardar?',
+                mensaje: 'Hiciste cambios en este formulario que todavía no se han guardado. Si sales, se perderán.',
+                confirmar: 'Salir sin guardar',
+                cancelar: 'Seguir editando',
+                peligro: true,
+            }).then((confirmado) => {
+                if (! confirmado) {
+                    return;
+                }
+
+                window.trackitDescartarCambios();
+
+                window.Livewire?.navigate
+                    ? window.Livewire.navigate(destino.href)
+                    : (window.location.href = destino.href);
+            });
+        }, true);
+
         // Cerrar o recargar la pestaña.
         window.addEventListener('beforeunload', (evento) => {
             if (window.trackitHayCambiosSinGuardar()) {

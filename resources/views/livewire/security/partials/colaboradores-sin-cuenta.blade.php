@@ -23,7 +23,7 @@
             </h2>
 
             @if ($colaboradoresSinCuenta !== [])
-                <span class="rounded-full bg-[var(--theme-warning-soft)] px-2 py-0.5 text-[11px] font-medium text-[var(--theme-warning)]">
+                <span class="rounded-md bg-[var(--theme-warning-soft)] px-2 py-0.5 text-[11px] font-medium text-[var(--theme-warning)]">
                     {{ count($colaboradoresSinCuenta) }}
                 </span>
             @endif

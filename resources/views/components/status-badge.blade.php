@@ -52,10 +52,11 @@
         inline-flex
         items-center
 
-        px-2.5
-        py-1
+        px-2
+        py-0.5
 
-        rounded-full
+        {{-- Etiqueta rectangular discreta (antes píldora). --}}
+        rounded-md
 
         text-xs
         font-medium

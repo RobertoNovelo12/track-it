@@ -64,7 +64,7 @@
                             {{ $nombreCompleto }}
                         </h2>
 
-                        <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium {{ $estadoClasses }}">
+                        <span class="inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-medium {{ $estadoClasses }}">
                             {{ $usuario->estado_nombre ?? 'Sin estado' }}
                         </span>
                     </div>

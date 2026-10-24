@@ -21,13 +21,8 @@
 
         <title>@yield('title', 'Sistema') | Grand Palladium</title>
 
-        {{-- Fuente Poppins --}}
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link
-            href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
-            rel="stylesheet"
-        >
+        {{-- Fuente Poppins (local) --}}
+        @include('layouts.partials.fuente-poppins')
 
         <script>
         /*
@@ -81,18 +76,48 @@
             }
 
 
+
+            /*
+             * Cambio de tema sin transiciones: muchos elementos tienen
+             * transition-colors / transition-all con duraciones distintas,
+             * así que al pasar de claro a oscuro unos cambiaban al instante
+             * y otros se animaban desde blanco. Durante el cambio se apagan
+             * todas las transiciones y se vuelven a encender dos frames después.
+             */
+            function cambiarTemaSinTransiciones(cambio) {
+                const estilo = document.createElement('style');
+                estilo.textContent = '*,*::before,*::after{transition:none!important}';
+                document.head.appendChild(estilo);
+
+                cambio();
+
+                // Fuerza a aplicar los colores nuevos antes de reactivar.
+                window.getComputedStyle(document.documentElement).backgroundColor;
+
+                requestAnimationFrame(() => requestAnimationFrame(() => estilo.remove()));
+            }
+
             function applyTheme(preference = getThemePreference()) {
                 const resolved = resolveTheme(preference);
                 const html = document.documentElement;
 
-                html.classList.toggle(
-                    'dark',
-                    resolved === 'dark'
-                );
+                const aplicar = () => {
+                    html.classList.toggle(
+                        'dark',
+                        resolved === 'dark'
+                    );
 
-                html.dataset.themePreference = preference;
+                    html.dataset.themePreference = preference;
 
-                html.style.colorScheme = resolved;
+                    html.style.colorScheme = resolved;
+                };
+
+                // Solo si el tema visible cambia (la carga inicial no anima nada).
+                if (html.classList.contains('dark') !== (resolved === 'dark')) {
+                    cambiarTemaSinTransiciones(aplicar);
+                } else {
+                    aplicar();
+                }
             }
 
 
@@ -307,6 +332,29 @@ document.addEventListener(
     <style>
         html.filtros-equipos-plegados [data-filtros-equipos-cuerpo] {
             display: none;
+        }
+
+        /*
+         * Foco del buscador con teclado: el contorno va en la caja
+         * redondeada (como los demás campos), no en el input interno,
+         * que es cuadrado y queda metido dentro del borde.
+         */
+        .top-search input.top-search-input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus-visible {
+            outline: none !important;
+            box-shadow: none !important;
+        }
+
+        .top-search:has(.top-search-input:focus-visible) {
+            border-color: var(--theme-primary);
+            outline: 2px solid color-mix(in srgb, var(--theme-primary) 45%, transparent);
+            outline-offset: 0;
+        }
+
+        /* Preferencia «Resaltar el foco del teclado». */
+        html[data-foco="resaltado"] .top-search:has(.top-search-input:focus-visible) {
+            outline: 3px solid var(--theme-primary);
+            outline-offset: 2px;
+            box-shadow: 0 0 0 6px color-mix(in srgb, var(--theme-primary) 22%, transparent);
         }
 
         /* Sin la «X» nativa del buscador (se usa un botón propio). */
@@ -527,7 +575,7 @@ document.addEventListener(
                         : (window.location.href = destino.toString());
                 "
             >
-                <div class="relative flex h-10 items-center rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface)] transition-colors focus-within:border-[var(--theme-border-strong)]">
+                <div class="top-search relative flex h-10 items-center rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface)] transition-colors focus-within:border-[var(--theme-border-strong)]">
                     <svg class="pointer-events-none absolute left-3 h-4 w-4 text-[var(--theme-text-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <circle cx="11" cy="11" r="7"/>
                         <path d="M20 20l-4-4"/>
@@ -635,6 +683,7 @@ document.addEventListener(
                     NOTIFICACIONES
                 ==================================================== --}}
                 <button
+                    id="boton-notificaciones"
                     type="button"
                     onclick="
                             if (window.innerWidth < 768) {
@@ -662,15 +711,18 @@ document.addEventListener(
                         items-center
                         justify-center
 
-                        rounded-full
+                        rounded-lg
 
                         text-[var(--theme-text-muted)]
 
                         hover:text-[var(--theme-primary)]
                         hover:bg-[var(--theme-primary-soft)]
+                        aria-expanded:text-[var(--theme-primary)]
+                        aria-expanded:bg-[var(--theme-primary-soft)]
 
                         transition-colors
                     "
+                    aria-expanded="false"
                     aria-label="Notificaciones"
                     aria-haspopup="dialog"
                 >
@@ -783,7 +835,7 @@ document.addEventListener(
                             items-center
                             gap-2
 
-                            rounded-full
+                            rounded-lg
 
                             border
                             border-[var(--theme-border)]
@@ -796,10 +848,12 @@ document.addEventListener(
 
                             hover:border-[var(--theme-primary-border)]
                             hover:bg-[var(--theme-primary-soft-subtle)]
+                            aria-expanded:border-[var(--theme-primary-border)]
+                            aria-expanded:bg-[var(--theme-primary-soft-subtle)]
 
                             transition-all
                         "
-                        :aria-expanded="open"
+                        :aria-expanded="open ? 'true' : 'false'"
                         aria-haspopup="true"
                     >
 
@@ -1175,235 +1229,65 @@ document.addEventListener(
 
                             {{-- ============================================================
                                 APARIENCIA
+                                Un solo botón con el modo actual; al hacer clic se
+                                despliegan Claro / Oscuro / Sistema debajo.
                             ============================================================ --}}
-                            <div
-                                class="
-                                    px-3
-                                    py-2.5
-                                "
-                            >
+                            <div x-data="{ modos: false }" x-on:keydown.escape.stop="modos ? (modos = false) : (open = false)">
+                                @php
+                                    $iconosModo = [
+                                        'light' => '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>',
+                                        'dark' => '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
+                                        'system' => '<rect x="3" y="4" width="18" height="13" rx="1.5"/><path d="M8 21h8M12 17v4"/>',
+                                    ];
+                                    $nombresModo = ['light' => 'Claro', 'dark' => 'Oscuro', 'system' => 'Sistema'];
+                                @endphp
 
-                                {{-- Título --}}
-                                <div
-                                    class="
-                                        flex
-                                        items-center
-                                        gap-3
-
-                                        text-sm
-                                        text-[var(--theme-text-strong)]
-                                    "
+                                <button
+                                    type="button"
+                                    x-on:click="modos = ! modos"
+                                    x-bind:aria-expanded="modos ? 'true' : 'false'"
+                                    aria-controls="menu-modos-tema"
+                                    class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-[var(--theme-text-strong)] hover:bg-[var(--theme-primary-soft)] hover:text-[var(--theme-primary)] aria-expanded:bg-[var(--theme-primary-soft-subtle)] transition-colors"
                                 >
+                                    {{-- Icono del modo actual --}}
+                                    @foreach ($iconosModo as $claveModo => $iconoModo)
+                                        <svg x-show="theme === @js($claveModo)" @if ($claveModo !== 'light') x-cloak @endif class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{!! $iconoModo !!}</svg>
+                                    @endforeach
 
-                                    {{-- Icono --}}
-                                    <svg
-                                        class="w-5 h-5 shrink-0"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        stroke-width="1.5"
-                                    >
-                                        <circle cx="12" cy="12" r="3"/>
+                                    <span class="flex-1 text-left">Apariencia</span>
 
-                                        <path d="M12 2v2"/>
-                                        <path d="M12 20v2"/>
+                                    <span
+                                        class="text-xs text-[var(--theme-text-muted)]"
+                                        x-text="({ light: 'Claro', dark: 'Oscuro', system: 'Sistema' })[theme] ?? 'Sistema'"
+                                    >Sistema</span>
 
-                                        <path d="M4.93 4.93l1.41 1.41"/>
-                                        <path d="M17.66 17.66l1.41 1.41"/>
+                                    <svg class="w-4 h-4 shrink-0 text-[var(--theme-text-muted)] transition-transform duration-150" x-bind:class="modos && 'rotate-180'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                                </button>
 
-                                        <path d="M2 12h2"/>
-                                        <path d="M20 12h2"/>
-
-                                        <path d="M4.93 19.07l1.41-1.41"/>
-                                        <path d="M17.66 6.34l1.41-1.41"/>
-                                    </svg>
-                                    <span>
-                                        Apariencia
-                                    </span>
-
-                                </div>
-
-
-                                {{-- ========================================================
-                                    OPCIONES
-                                ======================================================== --}}
                                 <div
-                                    class="
-                                        grid
-                                        grid-cols-3
-
-                                        gap-2
-
-                                        mt-3
-                                    "
+                                    id="menu-modos-tema"
+                                    x-show="modos"
+                                    x-cloak
+                                    x-transition.opacity.duration.120ms
+                                    role="group"
+                                    aria-label="Modo de color"
+                                    class="mt-0.5 space-y-0.5 pl-8"
                                 >
-
-                                    {{-- Claro --}}
-                                    <button
-                                        type="button"
-
-                                        @click="
-                                            window.setTrackItTheme('light');
-                                            theme = 'light';
-                                        "
-
-                                        :class="
-                                            theme === 'light'
-                                                ? 'border-[var(--theme-primary)] bg-[var(--theme-primary-soft)] text-[var(--theme-primary)]'
-                                                : 'border-[var(--theme-border)] bg-[var(--theme-surface)] text-[var(--theme-text-muted)] hover:bg-[var(--theme-surface-soft)]'
-                                        "
-
-                                        class="
-                                            h-9
-
-                                            flex
-                                            items-center
-                                            justify-center
-                                            gap-1.5
-
-                                            border
-                                            rounded-lg
-
-                                            text-[11px]
-                                            font-medium
-
-                                            transition-colors
-                                        "
-                                    >
-
-                                        <svg
-                                            class="w-3.5 h-3.5"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            stroke-width="1.6"
+                                    @foreach ($nombresModo as $claveModo => $nombreModo)
+                                        <button
+                                            type="button"
+                                            x-on:click="window.setTrackItTheme(@js($claveModo)); theme = @js($claveModo);"
+                                            x-bind:aria-pressed="theme === @js($claveModo) ? 'true' : 'false'"
+                                            x-bind:class="theme === @js($claveModo) ? 'text-[var(--theme-primary)] font-medium' : 'text-[var(--theme-text)]'"
+                                            class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm hover:bg-[var(--theme-primary-soft)] hover:text-[var(--theme-primary)] transition-colors"
                                         >
-                                            <circle cx="12" cy="12" r="4"/>
-
-                                            <path d="M12 2v2"/>
-                                            <path d="M12 20v2"/>
-                                            <path d="M4.93 4.93l1.41 1.41"/>
-                                            <path d="M17.66 17.66l1.41 1.41"/>
-                                            <path d="M2 12h2"/>
-                                            <path d="M20 12h2"/>
-                                        </svg>
-
-                                        Claro
-                                    </button>
-
-
-                                    {{-- Oscuro --}}
-                                    <button
-                                        type="button"
-
-                                        @click="
-                                            window.setTrackItTheme('dark');
-                                            theme = 'dark';
-                                        "
-
-                                        :class="
-                                            theme === 'dark'
-                                                ? 'border-[var(--theme-primary)] bg-[var(--theme-primary-soft)] text-[var(--theme-primary)]'
-                                                : 'border-[var(--theme-border)] bg-[var(--theme-surface)] text-[var(--theme-text-muted)] hover:bg-[var(--theme-surface-soft)]'
-                                        "
-
-                                        class="
-                                            h-9
-
-                                            flex
-                                            items-center
-                                            justify-center
-                                            gap-1.5
-
-                                            border
-                                            rounded-lg
-
-                                            text-[11px]
-                                            font-medium
-
-                                            transition-colors
-                                        "
-                                    >
-
-                                        <svg
-                                            class="w-3.5 h-3.5"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            stroke-width="1.6"
-                                        >
-                                            <path
-                                                d="
-                                                    M20 15.5
-                                                    A8 8 0 0 1 8.5 4
-                                                    A8 8 0 1 0 20 15.5
-                                                "
-                                            />
-                                        </svg>
-
-                                        Oscuro
-                                    </button>
-
-
-                                    {{-- Sistema --}}
-                                    <button
-                                        type="button"
-
-                                        @click="
-                                            window.setTrackItTheme('system');
-                                            theme = 'system';
-                                        "
-
-                                        :class="
-                                            theme === 'system'
-                                                ? 'border-[var(--theme-primary)] bg-[var(--theme-primary-soft)] text-[var(--theme-primary)]'
-                                                : 'border-[var(--theme-border)] bg-[var(--theme-surface)] text-[var(--theme-text-muted)] hover:bg-[var(--theme-surface-soft)]'
-                                        "
-
-                                        class="
-                                            h-9
-
-                                            flex
-                                            items-center
-                                            justify-center
-                                            gap-1.5
-
-                                            border
-                                            rounded-lg
-
-                                            text-[11px]
-                                            font-medium
-
-                                            transition-colors
-                                        "
-                                    >
-
-                                        <svg
-                                            class="w-3.5 h-3.5"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            stroke-width="1.6"
-                                        >
-                                            <rect
-                                                x="3"
-                                                y="4"
-                                                width="18"
-                                                height="13"
-                                                rx="1.5"
-                                            />
-
-                                            <path d="M8 21h8"/>
-                                            <path d="M12 17v4"/>
-                                        </svg>
-
-                                        Sistema
-                                    </button>
-
+                                            <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{!! $iconosModo[$claveModo] !!}</svg>
+                                            <span class="flex-1 text-left">{{ $nombreModo }}</span>
+                                            <svg x-show="theme === @js($claveModo)" x-cloak class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l4 4L19 7"/></svg>
+                                        </button>
+                                    @endforeach
                                 </div>
-
                             </div>
-
 
                             {{-- Seguridad --}}
                             <a

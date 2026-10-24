@@ -52,7 +52,7 @@
 
     $sidebarItems = [
         [
-            'label' => 'Vista General',
+            'label' => 'Dashboard',
             'url' => route('dashboard'),
             'active' => request()->routeIs('dashboard'),
             'icon' => 'dashboard',
@@ -70,7 +70,7 @@
         ],
 
         [
-            'label' => 'Asignación/Mov',
+            'label' => 'Movimientos',
             'url' => Route::has('asignaciones.index')
                 ? route('asignaciones.index')
                 : '#',
@@ -100,7 +100,7 @@
         ],
 
         [
-            'label' => 'Seguridad y Roles',
+            'label' => 'Seguridad',
             'url' => Route::has('usuarios.index')
                 ? route('usuarios.index')
                 : '#',
@@ -1028,11 +1028,7 @@
                 stroke-linejoin="round"
             >
                 <path
-                    d="
-                        M20 15.5
-                        A8 8 0 0 1 8.5 4
-                        A8 8 0 1 0 20 15.5
-                    "
+                    d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"
                 />
             </svg>
 

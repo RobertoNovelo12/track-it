@@ -524,19 +524,12 @@
             }
         "
 
-        class="
-            relative
-            flex
-            items-center
-            w-full
-            border
-            border-[var(--theme-border-strong)]
-            rounded-md
-            bg-[var(--theme-surface)]
-            focus-within:ring-1
-            focus-within:ring-[var(--theme-primary)]
-            focus-within:border-[var(--theme-primary)]
-        "
+        {{-- Altura fija de 40 px (igual que los campos de texto; ver ui-styles). --}}
+        @class([
+            'relative flex items-center w-full border border-[var(--theme-border-strong)] rounded-md',
+            'bg-[var(--theme-surface)] focus-within:ring-1 focus-within:ring-[var(--theme-primary)] focus-within:border-[var(--theme-primary)]',
+            'h-10' => ! $compact,
+        ])
 
         :class="
             disabled
@@ -587,7 +580,7 @@
                 'disabled:cursor-not-allowed',
 
                 'text-xs py-2' => $compact,
-                'text-sm py-2.5' => ! $compact,
+                'text-sm h-full py-0' => ! $compact,
             ])
         >
 
@@ -726,7 +719,7 @@
                     Usar «<span x-text="String(query ?? '').trim()"></span>»
                 </span>
 
-                <span class="shrink-0 rounded-full bg-[var(--theme-warning-soft)] px-2 py-0.5 text-[10px] font-medium text-[var(--theme-warning)]">
+                <span class="shrink-0 rounded-md bg-[var(--theme-warning-soft)] px-2 py-0.5 text-[10px] font-medium text-[var(--theme-warning)]">
                     {{ $customHint }}
                 </span>
             </div>

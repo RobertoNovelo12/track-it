@@ -1472,7 +1472,7 @@ new class extends Component
                         <span class="text-[28px] font-semibold leading-none tracking-tight tabular-nums {{ $estiloKpi['valor'] }}">{{ number_format($kpi['valor']) }}</span>
 
                         @if ($estiloKpi['insignia'])
-                            <span class="inline-flex items-center gap-1 truncate rounded-full px-2 py-0.5 text-[10px] font-semibold {{ $estiloKpi['insignia'][1] }}">
+                            <span class="inline-flex items-center gap-1 truncate rounded-md px-2 py-0.5 text-[10px] font-semibold {{ $estiloKpi['insignia'][1] }}">
                                 @if ($kpi['estado'] === 'ok')
                                     <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>
                                 @else

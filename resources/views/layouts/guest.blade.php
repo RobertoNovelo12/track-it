@@ -76,16 +76,33 @@
                 const resolved =
                     resolveTheme(normalized);
 
-                document.documentElement.classList.toggle(
-                    'dark',
-                    resolved === 'dark'
-                );
+                const aplicar = () => {
+                    document.documentElement.classList.toggle(
+                        'dark',
+                        resolved === 'dark'
+                    );
 
-                document.documentElement.dataset.themePreference =
-                    normalized;
+                    document.documentElement.dataset.themePreference =
+                        normalized;
 
-                document.documentElement.style.colorScheme =
-                    resolved;
+                    document.documentElement.style.colorScheme =
+                        resolved;
+                };
+
+                /*
+                 * Sin transiciones durante el cambio (si no, unos elementos
+                 * se animan desde blanco y otros cambian al instante).
+                 */
+                if (document.documentElement.classList.contains('dark') !== (resolved === 'dark')) {
+                    const estilo = document.createElement('style');
+                    estilo.textContent = '*,*::before,*::after{transition:none!important}';
+                    document.head.appendChild(estilo);
+                    aplicar();
+                    window.getComputedStyle(document.documentElement).backgroundColor;
+                    requestAnimationFrame(() => requestAnimationFrame(() => estilo.remove()));
+                } else {
+                    aplicar();
+                }
 
             };
 
@@ -178,21 +195,7 @@
     {{-- ============================================================
         FUENTE
     ============================================================ --}}
-    <link
-        rel="preconnect"
-        href="https://fonts.googleapis.com"
-    >
-
-    <link
-        rel="preconnect"
-        href="https://fonts.gstatic.com"
-        crossorigin
-    >
-
-    <link
-        href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
-        rel="stylesheet"
-    >
+    @include('layouts.partials.fuente-poppins')
 
     {{-- Spinner y animaciones comunes (components/ui) --}}
     @include('layouts.partials.ui-styles')
@@ -350,8 +353,7 @@
                         stroke-width="1.7"
                     >
                         <path
-                            d="M20 15.5A8 8 0 018.5 4
-                               8 8 0 1020 15.5z"
+                            d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"
                         />
                     </svg>
                 </button>

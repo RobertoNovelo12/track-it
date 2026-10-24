@@ -171,7 +171,7 @@
                             </label>
 
                             <div class="min-h-[42px] flex items-center px-3 py-2.5 rounded-md border border-[var(--theme-border)] bg-[var(--theme-surface-soft)]">
-                                <span class="inline-flex items-center px-2 py-1 rounded-full bg-[var(--theme-success-soft)] text-[var(--theme-success)] text-[10px] font-medium">
+                                <span class="inline-flex items-center px-2 py-1 rounded-md bg-[var(--theme-success-soft)] text-[var(--theme-success)] text-[10px] font-medium">
                                     Activo
                                 </span>
                             </div>

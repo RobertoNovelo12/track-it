@@ -295,7 +295,7 @@
                                     };
                                 @endphp
 
-                                <span class="rounded-full bg-[var(--theme-surface-soft)] px-2 py-0.5 text-[10px] font-medium text-[var(--theme-text-muted)]">
+                                <span class="rounded-md bg-[var(--theme-surface-soft)] px-2 py-0.5 text-[10px] font-medium text-[var(--theme-text-muted)]">
                                     {{ $nivelRol }}
                                 </span>
                             </span>

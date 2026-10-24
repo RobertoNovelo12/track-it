@@ -146,7 +146,7 @@
                 <button
                     id="togglePasswordButton"
                     type="button"
-                    onclick="togglePassword('password')"
+                    onclick="togglePassword('password', this)" aria-pressed="false"
                     class="
                         absolute
                         inset-y-0
@@ -175,7 +175,7 @@
                     >
                         <path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/>
                         <circle cx="12" cy="12" r="2.5"/>
-                        <line x1="3" y1="21" x2="21" y2="3"/>
+                        <line class="ojo-tachado" pathLength="1" x1="3" y1="21" x2="21" y2="3"/>
                     </svg>
                 </button>
 
@@ -333,16 +333,18 @@
     |--------------------------------------------------------------------------
     */
 
-    function togglePassword(fieldId) {
+    function togglePassword(fieldId, boton = null) {
+        const field = document.getElementById(fieldId);
+        if (!field) return;
 
-        const field =
-            document.getElementById(fieldId);
+        const visible = field.type === 'password';
+        field.type = visible ? 'text' : 'password';
 
-        field.type =
-            field.type === 'password'
-                ? 'text'
-                : 'password';
-
+        /* La línea del ojo se borra o se dibuja (ui-styles: .ojo-tachado). */
+        if (boton) {
+            boton.setAttribute('aria-pressed', visible ? 'true' : 'false');
+            boton.setAttribute('aria-label', visible ? 'Ocultar contraseña' : 'Mostrar contraseña');
+        }
     }
 
 

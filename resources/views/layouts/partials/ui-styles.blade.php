@@ -16,8 +16,10 @@
     |   --skeleton-base / --skeleton-shine  colores del skeleton
     |
     | Radios
-    |   --radius-sm (6px) controles pequeños, --radius-md (8px) botones e
-    |   inputs, --radius-lg (12px) tarjetas.
+    |   Se definen en resources/css/app.css (@theme): --radius-md (4px)
+    |   botones e inputs, --radius-lg (5px), --radius-xl (6px) tarjetas.
+    |   Aquí NO se redefinen: antes este :root los subía a 6/8/12 px y
+    |   pisaba la escala de Tailwind en todo el sistema.
     |
     */
 
@@ -30,10 +32,6 @@
 
         --skeleton-base: var(--theme-surface-soft);
         --skeleton-shine: color-mix(in srgb, var(--theme-surface-soft) 55%, var(--theme-border-strong));
-
-        --radius-sm: 6px;
-        --radius-md: 8px;
-        --radius-lg: 12px;
     }
 
 
@@ -274,6 +272,54 @@
     .ui-range:disabled {
         cursor: not-allowed;
         opacity: 0.6;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | OJO DE CONTRASEÑA: la línea se borra / dibuja
+    |--------------------------------------------------------------------------
+    |
+    | Contraseña oculta: ojo tachado. Al mostrarla (aria-pressed="true")
+    | la línea se recoge hasta desaparecer y al ocultarla se vuelve a
+    | trazar. pathLength="1" en la línea permite animarla con dashoffset.
+    |
+    */
+    .ojo-tachado {
+        stroke-dasharray: 1;
+        stroke-dashoffset: 0;
+        transition: stroke-dashoffset var(--motion-base, 180ms) var(--ease-standard, ease);
+    }
+
+    [aria-pressed="true"] .ojo-tachado {
+        stroke-dashoffset: 1;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .ojo-tachado { transition: none; }
+    }
+
+    html[data-movimiento="reducido"] .ojo-tachado {
+        transition: none;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | ALTURA ÚNICA DE CAMPOS (40 px)
+    |--------------------------------------------------------------------------
+    |
+    | Los formularios usaban tres alturas: py-2 (38 px), h-10 (40 px) y
+    | py-2.5 (42 px), y el select con buscador quedaba más alto que los
+    | campos de texto. Todos los campos de una línea (input y select
+    | nativos con text-sm) miden 40 px, igual que el select con buscador.
+    | No afecta a textarea, casillas ni campos compactos (text-xs).
+    | Los campos que piden otra altura a propósito (h-11, h-12, py-3:
+    | inicio de sesión, filtros del celular) se respetan.
+    */
+    input.text-sm:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="hidden"]):not(.h-full):not(.h-11):not(.h-12):not(.py-3):not(.py-3\.5),
+    select.text-sm:not(.h-11):not(.h-12):not(.py-3) {
+        height: 2.5rem;
+        padding-top: 0;
+        padding-bottom: 0;
     }
 
     /*

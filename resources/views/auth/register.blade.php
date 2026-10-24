@@ -199,12 +199,12 @@
                     <div class="relative">
                         <input id="password" type="password" name="password" placeholder="Contraseña"
                             autocomplete="new-password" required minlength="8" class="{{ $campoClase }} pr-10">
-                        <button type="button" data-password-toggle onclick="togglePassword('password')"
+                        <button type="button" data-password-toggle onclick="togglePassword('password', this)" aria-pressed="false"
                             class="absolute inset-y-0 right-3 flex items-center text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] transition-colors"
                             aria-label="Mostrar u ocultar contraseña">
                             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                                 <path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/>
-                                <circle cx="12" cy="12" r="2.5"/><line x1="3" y1="21" x2="21" y2="3"/>
+                                <circle cx="12" cy="12" r="2.5"/><line class="ojo-tachado" pathLength="1" x1="3" y1="21" x2="21" y2="3"/>
                             </svg>
                         </button>
                     </div>
@@ -215,12 +215,12 @@
                         <input id="password_confirmation" type="password" name="password_confirmation"
                             placeholder="Confirmar contraseña" autocomplete="new-password" required minlength="8"
                             class="{{ $campoClase }} pr-10">
-                        <button type="button" data-password-toggle onclick="togglePassword('password_confirmation')"
+                        <button type="button" data-password-toggle onclick="togglePassword('password_confirmation', this)" aria-pressed="false"
                             class="absolute inset-y-0 right-3 flex items-center text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] transition-colors"
                             aria-label="Mostrar u ocultar confirmación de contraseña">
                             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                                 <path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/>
-                                <circle cx="12" cy="12" r="2.5"/><line x1="3" y1="21" x2="21" y2="3"/>
+                                <circle cx="12" cy="12" r="2.5"/><line class="ojo-tachado" pathLength="1" x1="3" y1="21" x2="21" y2="3"/>
                             </svg>
                         </button>
                     </div>
@@ -251,9 +251,18 @@
     </x-auth-card>
 </div>
 <script>
-    function togglePassword(fieldId) {
+    function togglePassword(fieldId, boton = null) {
         const field = document.getElementById(fieldId);
-        if (field) field.type = field.type === 'password' ? 'text' : 'password';
+        if (!field) return;
+
+        const visible = field.type === 'password';
+        field.type = visible ? 'text' : 'password';
+
+        /* La línea del ojo se borra o se dibuja (ui-styles: .ojo-tachado). */
+        if (boton) {
+            boton.setAttribute('aria-pressed', visible ? 'true' : 'false');
+            boton.setAttribute('aria-label', visible ? 'Ocultar contraseña' : 'Mostrar contraseña');
+        }
     }
     document.addEventListener('DOMContentLoaded', function () {
         const form = document.getElementById('registerForm');

@@ -1251,6 +1251,8 @@
                     'aria-hidden',
                     'false'
                 );
+                // Campana del encabezado: queda marcada como abierta.
+                document.getElementById('boton-notificaciones')?.setAttribute('aria-expanded', 'true');
 
 
                 card.style.opacity =
@@ -1352,6 +1354,7 @@
                     'aria-hidden',
                     'true'
                 );
+                document.getElementById('boton-notificaciones')?.setAttribute('aria-expanded', 'false');
 
 
                 if (
