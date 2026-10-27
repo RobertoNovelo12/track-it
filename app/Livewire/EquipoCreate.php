@@ -170,7 +170,6 @@ class EquipoCreate extends Component
             ->where('activo', true)
             ->first([
                 'id_unidad',
-                'id_area_origen',
             ]);
 
         if (! $hotel) {
@@ -234,7 +233,6 @@ class EquipoCreate extends Component
             'id_ubicacion' => $ubicacionId,
 
             // El área ya no se usa: la organización es hotel + departamento.
-            'id_area' => null,
         ];
     }
 
@@ -1531,7 +1529,6 @@ class EquipoCreate extends Component
                                 $payload['idCondicionActivo']
                             ),
                             'id_unidad' => $organizacion['id_unidad'],
-                            'id_area' => $organizacion['id_area'],
                             'id_departamento' => $organizacion['id_departamento'],
                             ...(\App\Services\UbicacionOrganizacionalService::equiposTienenUbicacion()
                                 ? ['id_ubicacion' => $organizacion['id_ubicacion']]
@@ -1667,7 +1664,6 @@ class EquipoCreate extends Component
 
                             'id_unidad' => $organizacion['id_unidad'],
 
-                            'id_area' => $organizacion['id_area'],
 
                             'id_departamento' => $organizacion['id_departamento'],
 

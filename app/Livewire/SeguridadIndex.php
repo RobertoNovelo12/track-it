@@ -395,7 +395,7 @@ class SeguridadIndex extends Component
                     'numero_colaborador',
                     'puesto',
                     'id_rol',
-                    'id_area',
+                    'id_unidad',
                     'id_departamento',
                 ]);
 
@@ -463,49 +463,6 @@ class SeguridadIndex extends Component
                     'id_rol' => $rol->id_rol,
                 ];
                 $valorAplicado = $rol->nombre;
-            } elseif ($solicitud->campo === 'area') {
-                if (! $this->organizationRequestCatalogId) {
-                    return [
-                        'ok' => false,
-                        'message' =>
-                            'Selecciona el área que se asignará al usuario.',
-                    ];
-                }
-
-                $area = DB::table('areas')
-                    ->where('id_area', $this->organizationRequestCatalogId)
-                    ->where('activo', true)
-                    ->first([
-                        'id_area',
-                        'nombre',
-                    ]);
-
-                if (! $area) {
-                    return [
-                        'ok' => false,
-                        'message' =>
-                            'El área seleccionada no está disponible.',
-                    ];
-                }
-
-                $mantenerDepartamento = false;
-
-                if ($usuario->id_departamento) {
-                    $mantenerDepartamento = DB::table('departamentos')
-                        ->where('id_departamento', $usuario->id_departamento)
-                        ->where('id_area', $area->id_area)
-                        ->exists();
-                }
-
-                $datosActualizar = [
-                    'id_area' => $area->id_area,
-                ];
-
-                if (! $mantenerDepartamento) {
-                    $datosActualizar['id_departamento'] = null;
-                }
-
-                $valorAplicado = $area->nombre;
             } elseif ($solicitud->campo === 'hotel') {
                 if (! $this->organizationRequestCatalogId) {
                     return [
@@ -544,7 +501,6 @@ class SeguridadIndex extends Component
 
                     if (! $mantenerDepartamento) {
                         $datosActualizar['id_departamento'] = null;
-                        $datosActualizar['id_area'] = null;
                     }
                 }
 
@@ -558,7 +514,7 @@ class SeguridadIndex extends Component
                     ];
                 }
 
-                $departamento = DB::table('departamentos')
+                $departamento = \App\Models\Departamento::disponiblesParaUnidad((int) $usuario->id_unidad)
                     ->where(
                         'id_departamento',
                         $this->organizationRequestCatalogId
@@ -566,7 +522,6 @@ class SeguridadIndex extends Component
                     ->where('activo', true)
                     ->first([
                         'id_departamento',
-                        'id_area',
                         'nombre',
                     ]);
 
@@ -580,7 +535,6 @@ class SeguridadIndex extends Component
 
                 $datosActualizar = [
                     'id_departamento' => $departamento->id_departamento,
-                    'id_area' => $departamento->id_area,
                 ];
                 $valorAplicado = $departamento->nombre;
             } else {
@@ -971,22 +925,12 @@ class SeguridadIndex extends Component
                     ->map(fn ($row): array => (array) $row)
                     ->all();
 
-                $areas = DB::table('areas')
-                    ->where('activo', true)
-                    ->orderBy('nombre')
-                    ->get([
-                        'id_area',
-                        'nombre',
-                    ])
-                    ->map(fn ($row): array => (array) $row)
-                    ->all();
 
                 $departamentos = DB::table('departamentos')
                     ->where('activo', true)
                     ->orderBy('nombre')
                     ->get([
                         'id_departamento',
-                        'id_area',
                         'nombre',
                     ])
                     ->map(fn ($row): array => (array) $row)
@@ -1006,7 +950,6 @@ class SeguridadIndex extends Component
 
                 return [
                     'roles' => $roles,
-                    'areas' => $areas,
                     'departamentos' => $departamentos,
                     'estados' => $estados,
                 ];
@@ -1020,8 +963,6 @@ class SeguridadIndex extends Component
         $roles = collect($catalogos['roles'] ?? [])
             ->map(fn (array $row): object => (object) $row);
 
-        $areas = collect($catalogos['areas'] ?? [])
-            ->map(fn (array $row): object => (object) $row);
 
         $departamentos = collect($catalogos['departamentos'] ?? [])
             ->map(fn (array $row): object => (object) $row);
@@ -1073,12 +1014,6 @@ class SeguridadIndex extends Component
                 'u.id_rol'
             )
             ->leftJoin(
-                'areas as a',
-                'a.id_area',
-                '=',
-                'u.id_area'
-            )
-            ->leftJoin(
                 'departamentos as d',
                 'd.id_departamento',
                 '=',
@@ -1105,7 +1040,7 @@ class SeguridadIndex extends Component
                 'r.nombre as rol_nombre',
                 'eu.clave as estado_clave',
                 'eu.nombre as estado_nombre',
-                'a.nombre as area_nombre',
+                'uo.nombre as area_nombre',
                 'd.nombre as departamento_nombre',
                 'uo.nombre as unidad_nombre',
             ])
@@ -1318,7 +1253,6 @@ class SeguridadIndex extends Component
                 'usuarios' => $usuarios,
                 'estados' => $estados,
                 'roles' => $roles,
-                'areas' => $areas,
                 'departamentos' => $departamentos,
                 'solicitudesCambio' => $solicitudesCambio,
                 'solicitudesCambioPendientes' =>
@@ -1569,7 +1503,6 @@ class SeguridadIndex extends Component
             'numero_colaborador' => 'Número de colaborador',
             'puesto' => 'Puesto',
             'rol' => 'Rol',
-            'area' => 'Área',
             'hotel' => app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['unidad_singular'],
             'departamento' => 'Departamento',
             default => 'Información organizacional',
@@ -1595,13 +1528,6 @@ class SeguridadIndex extends Component
                 )
                 ->value('id_rol'),
 
-            'area' => DB::table('areas')
-                ->where('activo', true)
-                ->whereRaw(
-                    'LOWER(nombre) = LOWER(?)',
-                    [$requestedValue]
-                )
-                ->value('id_area'),
 
             'hotel' => DB::table('unidades_organizativas')
                 ->where('activo', true)

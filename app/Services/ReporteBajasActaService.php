@@ -68,6 +68,7 @@ class ReporteBajasActaService
             ->select([
                 'b.id_baja',
                 'b.folio',
+                'b.numero_ticket',
                 'b.fecha_baja',
                 'b.motivo_baja',
                 'b.comentarios',
@@ -119,6 +120,7 @@ class ReporteBajasActaService
                 return [
                     'id' => $id,
                     'folio' => $baja->folio,
+                    'numero_ticket' => $baja->numero_ticket,
 
                     'fecha' => $this->fecha(
                         $baja->fecha_baja

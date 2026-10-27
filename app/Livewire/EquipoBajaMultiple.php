@@ -60,6 +60,7 @@ class EquipoBajaMultiple extends Component
     public string $hotelId = '';
     public string $departamentoId = '';
     public string $fechaBaja = '';
+    public string $numeroTicket = '';
     public string $motivoBaja = '';
     public string $observaciones = '';
     public string $autoriza = '';
@@ -778,6 +779,7 @@ class EquipoBajaMultiple extends Component
                 ->all(),
 
             'folio' => 'Por asignar',
+            'numero_ticket' => $this->numeroTicket !== '' ? 'GPRVM-'.$this->numeroTicket : 'Por capturar',
             'fotos' => [],
             'firmas' => $this->nombresFirmas(),
         ];
@@ -825,6 +827,7 @@ class EquipoBajaMultiple extends Component
             'fechaBaja' => [
                 'required', 'date_format:Y-m-d'
             ],
+            'numeroTicket' => ['required', 'regex:/^[0-9]+$/', 'max:20'],
             'motivoBaja' => [
                 'required', 'string', 'max:500'
             ],
@@ -960,7 +963,8 @@ class EquipoBajaMultiple extends Component
                                 $this->autoriza,
                                 (int) auth()->id(),
                                 $documento['folio'],
-                                $this->nombresFirmas()
+                                $this->nombresFirmas(),
+                                $documento['numero_ticket']
                             );
 
                             $idsDadosDeBaja[] =
@@ -1046,6 +1050,7 @@ class EquipoBajaMultiple extends Component
     protected function mensajesValidacion(): array
     {
         return [
+            'numeroTicket.regex' => 'Ingresa solo los números del tiket, sin el prefijo GPRVM-.',
             'required' =>
                 'Este campo es obligatorio.',
             'integer' =>
@@ -1099,7 +1104,8 @@ class EquipoBajaMultiple extends Component
             ->unique()
             ->values();
 
-        $documento = $this->documento($elegidos);
+        $mostrarSeleccion = !$this->detalles && $this->modo !== 'elegir';
+        $documento = $this->detalles ? $this->documento($elegidos) : [];
 
         foreach ([
             'fotoFrontal' => 'Vista frontal',
@@ -1108,7 +1114,7 @@ class EquipoBajaMultiple extends Component
             'fotoLateral2' => 'Vista lateral 2',
         ] as $campo => $titulo) {
             if (
-                $this->{$campo} &&
+                $this->detalles && $this->{$campo} &&
                 !$this->getErrorBag()->has($campo)
             ) {
                 $documento['fotos'][$titulo] =
@@ -1119,13 +1125,13 @@ class EquipoBajaMultiple extends Component
         return view(
             'livewire.equipo-baja-multiple',
             [
-                'tiposActivo' => $this->getTiposActivo(),
-                'marcas' => $this->getMarcas(),
-                'modelos' => $this->getModelos(),
-                'estados' => $this->getEstados(),
-                'areas' => $this->getAreas(),
+                'tiposActivo' => $mostrarSeleccion ? $this->getTiposActivo() : collect(),
+                'marcas' => $mostrarSeleccion ? $this->getMarcas() : collect(),
+                'modelos' => $mostrarSeleccion ? $this->getModelos() : collect(),
+                'estados' => $mostrarSeleccion ? $this->getEstados() : collect(),
+                'areas' => $mostrarSeleccion ? $this->getAreas() : collect(),
 
-                'camposTipoFiltros' => $this->tipoActivo
+                'camposTipoFiltros' => $mostrarSeleccion && $this->tipoActivo
                     ? $this->getCamposFiltrables(
                         (int) $this->tipoActivo
                     )
@@ -1140,9 +1146,9 @@ class EquipoBajaMultiple extends Component
                     ]
                 )->values()->all(),
 
-                'equipos' => $this->listado()->paginate(
+                'equipos' => $mostrarSeleccion ? $this->listado()->paginate(
                     $this->cantidadPagina($this->perPage)
-                ),
+                ) : null,
 
                 'elegidos' => $elegidos,
                 'documento' => $documento,
@@ -1155,7 +1161,7 @@ class EquipoBajaMultiple extends Component
                     )
                     ->count(),
 
-                'hoteles' => DB::table(
+                'hoteles' => ($mostrarSeleccion || $this->detalles) ? DB::table(
                     'unidades_organizativas'
                 )
                     ->where('activo', true)
@@ -1163,9 +1169,9 @@ class EquipoBajaMultiple extends Component
                     ->get([
                         'id_unidad',
                         'nombre',
-                    ]),
+                    ]) : collect(),
 
-                'departamentos' => $this->hotelId
+                'departamentos' => $this->detalles && $this->hotelId
                     ? Departamento::disponiblesParaUnidad(
                         (int) $this->hotelId
                     )

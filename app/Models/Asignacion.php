@@ -13,7 +13,7 @@ class Asignacion extends Model
     protected $fillable = [
         'id_unidad',
         'id_equipo', 'nombre_colaborador', 'numero_colaborador',
-        'id_area', 'id_departamento', 'id_ubicacion', 'id_tipo_asignacion',
+        'id_departamento', 'id_ubicacion', 'id_tipo_asignacion',
         'fecha_asignacion', 'fecha_fin', 'observaciones', 'asignado_por',
     ];
 
@@ -27,10 +27,6 @@ class Asignacion extends Model
         return $this->belongsTo(Equipo::class, 'id_equipo', 'id_equipo');
     }
 
-    public function area()
-    {
-        return $this->belongsTo(Area::class, 'id_area', 'id_area');
-    }
 
     public function departamento()
     {

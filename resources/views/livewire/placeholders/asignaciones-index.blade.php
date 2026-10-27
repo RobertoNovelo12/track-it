@@ -515,7 +515,7 @@
     >
 
         {{-- ========================================================
-            EQUIPOS ASIGNADOS POR ÁREA
+            EQUIPOS ASIGNADOS POR HOTEL
         ======================================================== --}}
         <div class="flex min-w-0 flex-col gap-4">
         <section
@@ -574,7 +574,7 @@
                                 text-[var(--theme-text-strong)]
                             "
                         >
-                            Equipos asignados por área
+                            Equipos asignados por hotel
                         </h2>
 
                         <p
@@ -584,7 +584,7 @@
                                 text-[var(--theme-text-muted)]
                             "
                         >
-                            Distribución de equipos en uso por área de la organización.
+                            Distribución de equipos en uso por hotel de la organización.
                         </p>
                     </div>
                 </div>
@@ -614,7 +614,7 @@
                         disabled:opacity-100
                     "
                 >
-                    Todas las áreas
+                    Todos los hoteles
 
                     <svg
                         class="w-3.5 h-3.5"

@@ -446,11 +446,11 @@
 
             <div class="campo">
 
-                <span class="etiqueta">Folio de baja</span>
+                <span class="etiqueta">N° Tiket:</span>
 
                 <span class="valor">
 
-                    {{ $dato($baja['folio'] ?? null) }}
+                    {{ $dato($baja['numero_ticket'] ?? null) }}
 
                 </span>
 

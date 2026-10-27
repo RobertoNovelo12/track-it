@@ -28,7 +28,7 @@ class DevolucionService
 {
     public const MOTIVOS = [
         'baja_colaborador' => 'Baja del colaborador',
-        'cambio_puesto' => 'Cambio de puesto o de área',
+        'cambio_puesto' => 'Cambio de puesto o de hotel',
         'fin_prestamo' => 'Fin de préstamo o proyecto',
         'equipo_danado' => 'Equipo dañado o con falla',
         'reemplazo' => 'Reemplazo por otro equipo',

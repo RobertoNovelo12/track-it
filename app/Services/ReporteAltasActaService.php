@@ -76,17 +76,12 @@ class ReporteAltasActaService
                 'e.id_departamento'
             )
             ->leftJoin(
-                'areas as ar',
-                'ar.id_area',
+                'unidades_organizativas as ar',
+                'ar.id_unidad',
                 '=',
-                'e.id_area'
+                'e.id_unidad'
             )
-            ->leftJoin(
-                'areas as ar_dep',
-                'ar_dep.id_area',
-                '=',
-                'dep.id_area'
-            )
+
             ->whereIn('e.id_equipo', $ids->all())
             ->select([
                 'e.id_equipo',
@@ -107,7 +102,6 @@ class ReporteAltasActaService
                 'estado.nombre as estado',
                 'condicion.nombre as condicion',
                 'ar.nombre as area_directa',
-                'ar_dep.nombre as area_departamento',
                 'dep.nombre as departamento',
             ])
             ->get()
@@ -185,8 +179,7 @@ class ReporteAltasActaService
                         $responsable->nombre_colaborador ?? null,
 
                     'area' =>
-                        $equipo->area_directa
-                        ?: $equipo->area_departamento,
+                        $equipo->area_directa,
 
                     'departamento' => $equipo->departamento,
                     'comentarios' => $equipo->comentarios,

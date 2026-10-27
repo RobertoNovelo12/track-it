@@ -46,7 +46,7 @@ class EquipoBajaMultipleTest extends TestCase
             $t->integer('id_equipo')->primary(); $t->string('codigo_inventario'); $t->string('nombre_equipo'); $t->string('numero_serie');
             foreach (['id_estado_activo', 'id_tipo_equipo', 'id_marca', 'id_modelo', 'id_unidad'] as $campo) { $t->integer($campo)->nullable(); }
         });
-        Schema::create('bajas', function (Blueprint $t) { $t->id('id_baja'); $t->integer('id_equipo'); });
+        Schema::create('bajas', function (Blueprint $t) { $t->id('id_baja'); $t->integer('id_equipo'); $t->string('numero_ticket')->nullable(); });
         Schema::create('reportes_generados', function (Blueprint $t) {
             $t->id('id_reporte'); $t->integer('id_usuario'); $t->integer('total_registros');
             foreach (['tipo_reporte', 'formato', 'fecha_desde', 'fecha_hasta', 'filtros', 'nombre_archivo', 'ruta_archivo'] as $campo) { $t->text($campo)->nullable(); }
@@ -59,6 +59,33 @@ class EquipoBajaMultipleTest extends TestCase
             if ($id !== 12) { DB::table('bajas')->insert(['id_equipo' => $id]); }
         }
         Storage::fake('local');
+    }
+
+    public function test_ticket_preview_validation_and_mode_switch(): void
+    {
+        $component = Livewire::test(EquipoBajaMultiple::class)->set('seleccionados', ['1'])->call('siguiente');
+        $component->set('numeroTicket', '99273')->assertSee('GPRVM-99273')
+            ->set('numeroTicket', 'GPRVM-99273')->call('guardar')->assertHasErrors('numeroTicket')
+            ->set('numeroTicket', '12abc')->call('guardar')->assertHasErrors('numeroTicket');
+        DB::table('bajas')->where('id_equipo', 1)->delete();
+        DB::table('equipos')->where('id_equipo', 1)->update(['id_estado_activo' => 2]);
+        Livewire::withQueryParams(['equipos' => '1,12', 'modo' => 'conjunta'])->test(EquipoBajaMultiple::class)
+            ->set('numeroTicket', '99273')->call('volver')->assertSet('modo', 'elegir')
+            ->assertViewHas('equipos', null)->assertViewHas('documento', [])
+            ->call('todasEnUnDocumento')->assertSet('numeroTicket', '99273')->assertSee('GPRVM-99273');
+    }
+
+    public function test_cancel_skips_current_equipment_and_last_returns_to_inventory(): void
+    {
+        $component = new \App\Livewire\EquipoBaja;
+        $component->equipoId = 1;
+        $component->cola = [1, 12];
+        $component->omitir();
+        $this->assertSame(route('equipos.baja', ['equipo' => 12, 'cola' => '12']), \Livewire\store($component)->get('redirect'));
+        $component->equipoId = 12;
+        $component->omitir();
+        $this->assertSame(route('equipos.index'), \Livewire\store($component)->get('redirect'));
+        $this->assertFalse(DB::table('bajas')->where('id_equipo', 12)->exists());
     }
 
     public function test_export_decommissioned_equipment_downloads_the_original_file(): void
@@ -120,7 +147,7 @@ class EquipoBajaMultipleTest extends TestCase
     public function test_saves_pdf_evidence_and_report_without_duplicate_bajas(): void
     {
         $component = Livewire::test(EquipoBajaMultiple::class)->set('seleccionados', ['1', '2'])->call('siguiente')
-            ->set('solicitante', 'Solicitante de prueba')->set('departamentoId', '1')->set('motivoBaja', 'Fin de vida útil')
+            ->set('numeroTicket', '99273')->set('solicitante', 'Solicitante de prueba')->set('departamentoId', '1')->set('motivoBaja', 'Fin de vida útil')
             ->set('observaciones', '')->set('autoriza', 'Responsable de prueba')->set('puesto', 'Sistemas')
             ->set('firmas', ['responsable_departamental' => 'Responsable', 'mantenimiento' => '', 'gerente_hotel' => 'Gerente', 'auditor_costos' => 'Auditor', 'gerente_financiero' => 'Financiero'])
             ->set('fotoLateral1', UploadedFile::fake()->image('lateral1.jpg'))
@@ -129,6 +156,7 @@ class EquipoBajaMultipleTest extends TestCase
         $this->assertSame(ReporteGenerado::first()->getKey(), session('descargar_reporte'));
         $reporte = ReporteGenerado::firstOrFail();
         $this->assertSame(2, $reporte->total_registros);
+        $this->assertSame('GPRVM-99273', $reporte->filtros['baja_multiple']['numero_ticket']);
         $this->assertStringStartsWith('%PDF-', Storage::disk('local')->get($reporte->ruta_archivo));
         $descarga = app(\App\Http\Controllers\ReporteController::class)->download($reporte);
         $this->assertSame('application/pdf', $descarga->headers->get('Content-Type'));
@@ -177,10 +205,11 @@ class EquipoBajaMultipleTest extends TestCase
         $firmas = ['responsable_departamental' => 'Responsable', 'mantenimiento' => '', 'gerente_hotel' => 'Gerente', 'auditor_costos' => 'Auditor', 'gerente_financiero' => 'Financiero'];
         Livewire::withQueryParams(['equipos' => '1,12', 'modo' => 'conjunta'])->test(EquipoBajaMultiple::class)
             ->assertSet('modo', 'conjunta')->assertSee('Dar de baja y generar PDF')
-            ->set('solicitante', 'Solicitante')->set('departamentoId', '1')->set('motivoBaja', 'Fin de vida útil')
+            ->set('numeroTicket', '99273')->set('solicitante', 'Solicitante')->set('departamentoId', '1')->set('motivoBaja', 'Fin de vida útil')
             ->set('autoriza', 'Responsable')->set('puesto', 'Sistemas')->set('firmas', $firmas)
             ->call('guardar')->assertHasNoErrors()->assertRedirect(route('equipos.index'));
         $this->assertSame(12, DB::table('bajas')->count());
+        $this->assertSame(2, DB::table('bajas')->where('numero_ticket', 'GPRVM-99273')->count());
         $this->assertSame($firmas, json_decode(DB::table('bajas')->where('id_equipo', 12)->value('firmas'), true));
         $this->assertSame(1, DB::table('equipos')->where('id_equipo', 12)->value('id_estado_activo'));
     }
@@ -199,7 +228,7 @@ class EquipoBajaMultipleTest extends TestCase
     public function test_rejects_invalid_photos_and_missing_fields(): void
     {
         Livewire::test(EquipoBajaMultiple::class)->set('seleccionados', ['1'])->call('siguiente')->call('guardar')
-            ->assertHasErrors(['solicitante', 'departamentoId', 'motivoBaja', 'autoriza', 'puesto'])
+            ->assertHasErrors(['numeroTicket', 'solicitante', 'departamentoId', 'motivoBaja', 'autoriza', 'puesto'])
             ->assertHasNoErrors(['firmas.responsable_departamental', 'firmas.gerente_hotel', 'firmas.auditor_costos', 'firmas.gerente_financiero'])
             ->assertHasNoErrors('firmas.mantenimiento')
             ->set('fotoFrontal', UploadedFile::fake()->create('archivo.pdf', 20, 'application/pdf'))->assertHasErrors('fotoFrontal');

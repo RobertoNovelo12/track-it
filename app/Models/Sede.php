@@ -17,8 +17,4 @@ class Sede extends Model
         return $this->hasMany(UnidadOrganizativa::class, 'id_sede', 'id_sede');
     }
 
-    public function areas()
-    {
-        return $this->hasMany(Area::class, 'id_sede', 'id_sede');
-    }
 }

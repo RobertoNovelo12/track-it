@@ -15,7 +15,7 @@ class MantenimientosDepartamentosTest extends TestCase
     {
         $this->assertSame('sqlite', config('database.default'));
         $this->assertSame(':memory:', config('database.connections.sqlite.database'));
-        foreach (['departamentos' => 'id_departamento', 'areas' => 'id_area', 'catalogos' => 'id_catalogo', 'catalogo_valores' => 'id_valor', 'tipos_equipo' => 'id_tipo_equipo', 'marcas' => 'id_marca', 'modelos' => 'id_modelo'] as $name => $key) {
+        foreach (['departamentos' => 'id_departamento', 'catalogos' => 'id_catalogo', 'catalogo_valores' => 'id_valor', 'tipos_equipo' => 'id_tipo_equipo', 'marcas' => 'id_marca', 'modelos' => 'id_modelo'] as $name => $key) {
             Schema::create($name, function (Blueprint $t) use ($key) {
                 $t->integer($key)->primary();
                 $t->string('nombre');

@@ -2,7 +2,6 @@
 
 namespace App\Livewire;
 
-use App\Models\Area;
 use App\Models\CatalogoValor;
 use App\Models\Marca;
 use App\Models\Modelo;
@@ -614,10 +613,8 @@ class EquiposIndex extends Component
             'id_condicion_activo',
 
             'id_unidad',
-            'id_area',
             'id_departamento',
 
-            'departamento_area_id',
 
             'fecha_fin_garantia',
 
@@ -735,14 +732,10 @@ class EquiposIndex extends Component
 
                     'id_unidad' => $row['id_unidad'],
 
-                    'id_area' =>
-                        $row['id_area'],
 
                     'id_departamento' =>
                         $row['id_departamento'],
 
-                    'departamento_area_id' =>
-                        $row['departamento_area_id'],
 
                     'fecha_fin_garantia' =>
                         $row['fecha_fin_garantia'],
@@ -856,7 +849,6 @@ class EquiposIndex extends Component
                 'e.id_condicion_activo',
 
                 'e.id_unidad',
-                'e.id_area',
                 'e.id_departamento',
 
                 'e.fecha_fin_garantia',
@@ -874,7 +866,6 @@ class EquiposIndex extends Component
                 |
                 */
 
-                'dep.id_area as departamento_area_id',
             ])
 
             ->selectRaw("
@@ -1032,7 +1023,7 @@ class EquiposIndex extends Component
 
         /*
         |--------------------------------------------------------------------------
-        | ÁREA / DEPARTAMENTO
+        | HOTEL / DEPARTAMENTO
         |--------------------------------------------------------------------------
         */
 

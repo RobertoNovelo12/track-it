@@ -531,8 +531,6 @@ class ReasignacionCreate extends Component
                                      * Igual que en asignación: la
                                      * organización es hotel + departamento.
                                      */
-                                    'id_area' =>
-                                        null,
 
                                     'id_unidad' =>
                                         $organizacion['id_unidad'],
@@ -954,8 +952,6 @@ class ReasignacionCreate extends Component
     |--------------------------------------------------------------------------
     |
     | El hotel sale de asignaciones.id_unidad. Para registros anteriores
-    | que no lo tienen se usa el hotel cuya área de origen coincide con
-    | el área registrada (o la del departamento), igual que la migración
     | que creó id_unidad.
     |
     */
@@ -969,13 +965,7 @@ class ReasignacionCreate extends Component
             ->leftJoin('modelos as mo', 'mo.id_modelo', '=', 'e.id_modelo')
             ->leftJoin('departamentos as d', 'd.id_departamento', '=', 'a.id_departamento')
             ->leftJoin('unidades_organizativas as un', 'un.id_unidad', '=', 'a.id_unidad')
-            ->leftJoin('unidades_organizativas as un_origen', function ($join) {
-                $join->whereNull('a.id_unidad')
-                    ->whereColumn(
-                        'un_origen.id_area_origen',
-                        DB::raw('COALESCE(a.id_area, d.id_area)')
-                    );
-            })
+
             ->leftJoin('ubicaciones as ubicacion', 'ubicacion.id_ubicacion', '=', 'a.id_ubicacion')
             ->leftJoin('catalogo_valores as tipo_asignacion', 'tipo_asignacion.id_valor', '=', 'a.id_tipo_asignacion')
             ->whereNull('a.fecha_fin')
@@ -1001,8 +991,8 @@ class ReasignacionCreate extends Component
                 'ubicacion.nombre as ubicacion_nombre',
                 'tipo_asignacion.nombre as tipo_asignacion_nombre',
             ])
-            ->selectRaw('COALESCE(un.id_unidad, un_origen.id_unidad) as unidad_id')
-            ->selectRaw('COALESCE(un.nombre, un_origen.nombre) as unidad_nombre');
+            ->selectRaw('un.id_unidad as unidad_id')
+            ->selectRaw('un.nombre as unidad_nombre');
     }
 
     /*

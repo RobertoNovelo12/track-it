@@ -2296,24 +2296,14 @@ class AjustesCuenta extends Component
                 '=',
                 'u.id_estado_usuario'
             )
-            ->leftJoin(
-                'areas as a',
-                'a.id_area',
-                '=',
-                'u.id_area'
-            )
+
             ->leftJoin(
                 'departamentos as d',
                 'd.id_departamento',
                 '=',
                 'u.id_departamento'
             )
-            ->leftJoin(
-                'areas as da',
-                'da.id_area',
-                '=',
-                'd.id_area'
-            )
+
             ->leftJoin(
                 'unidades_organizativas as uo',
                 'uo.id_unidad',
@@ -2325,7 +2315,7 @@ class AjustesCuenta extends Component
                 's.id_sede',
                 '=',
                 DB::raw(
-                    'COALESCE(uo.id_sede, a.id_sede, da.id_sede)'
+                    'uo.id_sede'
                 )
             )
             ->where(
@@ -2351,7 +2341,7 @@ class AjustesCuenta extends Component
                 'eu.clave as estado_clave',
                 'eu.nombre as estado_nombre',
 
-                'a.nombre as area_nombre',
+                'uo.nombre as area_nombre',
 
                 'd.nombre as departamento_nombre',
 

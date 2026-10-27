@@ -28,7 +28,6 @@ class UnidadOrganizativa extends Model
         return [
             'id_unidad' => 'integer',
             'id_sede' => 'integer',
-            'id_area_origen' => 'integer',
             'activo' => 'boolean',
         ];
     }

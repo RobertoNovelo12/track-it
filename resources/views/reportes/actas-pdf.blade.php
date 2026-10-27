@@ -726,7 +726,7 @@
 
                     <td>
 
-                        <div class="etiqueta">Área / Departamento anterior</div>
+                        <div class="etiqueta">Hotel / Departamento anterior</div>
 
                         <div class="valor">
 
@@ -854,7 +854,7 @@
 
                     <td>
 
-                        <div class="etiqueta">Nueva área</div>
+                        <div class="etiqueta">Nuevo hotel</div>
 
                         <div class="valor">
 
@@ -990,7 +990,7 @@
 
                     <td>
 
-                        <div class="etiqueta">Departamento / Área</div>
+                        <div class="etiqueta">Departamento / Hotel</div>
 
                         <div class="valor">
 

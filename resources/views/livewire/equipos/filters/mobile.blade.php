@@ -108,7 +108,7 @@
     if ($area) {
         $item = collect($areas)->first(
             fn ($item) =>
-                (string) $item['id_area'] === (string) $area
+                (string) $item['id_unidad'] === (string) $area
         );
 
         $activeFilters[] = [

@@ -379,8 +379,6 @@ class AsignacionCreate extends Component
                                      * El área ya no se captura: la
                                      * organización es hotel + departamento.
                                      */
-                                    'id_area' =>
-                                        null,
 
                                     'id_unidad' =>
                                         $organizacion['id_unidad'],

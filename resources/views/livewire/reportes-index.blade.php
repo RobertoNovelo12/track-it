@@ -632,7 +632,7 @@
 
             'bajas' => 'Equipos incluidos en procesos de baja.',
 
-            'asignaciones' => 'Equipos asignados a usuarios o áreas.',
+            'asignaciones' => 'Equipos asignados a usuarios u hoteles.',
 
             'reasignaciones' => 'Cambios de asignación de equipos.',
 

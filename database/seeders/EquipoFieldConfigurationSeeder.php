@@ -236,18 +236,18 @@ class EquipoFieldConfigurationSeeder extends Seeder
                         'Seleccionar condición',
                 ],
 
-                'id_area' => [
+                'id_unidad' => [
                     'nombre' =>
-                        'Hotel / Área',
+                        'Hotel',
 
                     'tipo_control' =>
                         'select',
 
                     'descripcion' =>
-                        'Área principal donde se encuentra el equipo.',
+                        'Hotel donde se encuentra el equipo.',
 
                     'placeholder' =>
-                        'Seleccionar área',
+                        'Seleccionar hotel',
                 ],
 
                 'id_departamento' => [
@@ -1329,7 +1329,7 @@ class EquipoFieldConfigurationSeeder extends Seeder
 
                 [
                     'clave' =>
-                        'id_area',
+                        'id_unidad',
 
                     'origen' =>
                         'equipos',
@@ -1338,10 +1338,10 @@ class EquipoFieldConfigurationSeeder extends Seeder
                         'equipos',
 
                     'columna' =>
-                        'id_area',
+                        'id_unidad',
 
                     'fuente' =>
-                        'areas',
+                        'unidades_organizativas',
 
                     'catalogo' =>
                         null,

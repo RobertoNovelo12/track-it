@@ -17,10 +17,6 @@
     | Más adelante serán obtenidas desde la plantilla activa sin cambiar
     | las claves internas utilizadas por el sistema.
     |
-    | IMPORTANTE:
-    | "areas" seguirá siendo la clave interna aunque visualmente pueda
-    | llamarse "Hoteles", "Áreas", "Propiedades", etc.
-    |
     */
 
     $administrationSections = [

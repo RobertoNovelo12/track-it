@@ -779,7 +779,7 @@
         <div class="flex min-w-0 flex-col gap-4">
 
         {{-- ========================================================
-            EQUIPOS ASIGNADOS POR ÁREA
+            EQUIPOS ASIGNADOS POR HOTEL
         ======================================================== --}}
         <section
             class="

@@ -234,38 +234,6 @@
                 </div>
             </div>
 
-            <div
-                id="organization-request-catalog-area"
-                class="{{ $organizationRequestField === 'area' ? '' : 'hidden' }}"
-            >
-                <label
-                    for="organization-request-area-select"
-                    class="block mb-1.5 text-xs font-medium text-[var(--theme-text)]"
-                >
-                    Área que se asignará
-                    <span class="text-[var(--theme-danger)]">*</span>
-                </label>
-
-                {{-- Lista con buscador (x-searchable-select). El valor se envía a
-                     organizationRequestCatalogId con syncOrganizationRequestCatalog(). --}}
-                <div
-                    id="organization-request-area-select"
-                    data-options="{{ json_encode(collect($areas)->map(fn ($area) => ['value' => (string) $area->id_area, 'label' => $area->nombre])->values()->all()) }}"
-                    x-data="{ valor: '' }"
-                    x-init="$watch('valor', v => window.syncOrganizationRequestCatalog(v ?? ''))"
-                    @org-request-catalog.window="if ($event.detail.id === $el.id) valor = $event.detail.value"
-                >
-                    <x-searchable-select
-                        x-model="valor"
-                        :options="collect($areas)->map(fn ($area) => ['value' => (string) $area->id_area, 'label' => $area->nombre])->values()->all()"
-                        placeholder="Selecciona un área"
-                        :show-clear="true"
-                        clear-label="Selecciona un área"
-                        :empty-as-null="false"
-                    />
-                </div>
-            </div>
-
             @php
                 // Hoteles activos: cambian poco, 5 minutos en caché (evita una consulta por render).
                 $unidadesSolicitud = \Illuminate\Support\Facades\Cache::remember(
@@ -483,7 +451,6 @@
 
     const hideCatalogs = () => {
         document.getElementById('organization-request-catalog-role')?.classList.add('hidden');
-        document.getElementById('organization-request-catalog-area')?.classList.add('hidden');
         document.getElementById('organization-request-catalog-hotel')?.classList.add('hidden');
         document.getElementById('organization-request-catalog-department')?.classList.add('hidden');
     };
@@ -573,12 +540,6 @@
             document.getElementById('organization-request-catalog-role')?.classList.remove('hidden');
             catalogId = selectRequestedCatalogValue(
                 'organization-request-role-select',
-                requestedValue
-            );
-        } else if (field === 'area') {
-            document.getElementById('organization-request-catalog-area')?.classList.remove('hidden');
-            catalogId = selectRequestedCatalogValue(
-                'organization-request-area-select',
                 requestedValue
             );
         } else if (field === 'hotel') {

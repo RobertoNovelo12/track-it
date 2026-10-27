@@ -298,7 +298,6 @@ class RegisteredUserController extends Controller
             ->where('activo', true)
             ->first([
                 'id_unidad',
-                'id_area_origen',
             ]);
 
         if (! $unidadSeleccionada) {
@@ -375,14 +374,7 @@ class RegisteredUserController extends Controller
 
             'id_unidad' => (int) $unidadSeleccionada->id_unidad,
 
-            /*
-             * usuarios tiene la llave foránea compuesta
-             * (id_departamento, id_area) -> departamentos: id_area debe
-             * ser el área del propio departamento (NULL si no tiene).
-             */
-            'id_area' => DB::table('departamentos')
-                ->where('id_departamento', (int) $validated['id_departamento'])
-                ->value('id_area'),
+
 
             'id_departamento' => (int) $validated['id_departamento'],
             'id_rol' => filled($validated['id_rol'] ?? null)

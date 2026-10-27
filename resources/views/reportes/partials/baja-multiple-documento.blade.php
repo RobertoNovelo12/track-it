@@ -345,7 +345,7 @@
                 <td class="bm-folio-col">
 
                     <div class="bm-meta">
-                        Folio: {{ $documento['folio'] ?? 'Por asignar' }}
+                        N° Tiket: {{ $documento['numero_ticket'] ?? 'Sin registrar' }}
                         <br>
                         Fecha: {{ $fechaVisible }}
                     </div>
@@ -527,7 +527,7 @@
                 <td class="bm-folio-col">
 
                     <div class="bm-meta">
-                        Folio: {{ $documento['folio'] ?? 'Por asignar' }}
+                        N° Tiket: {{ $documento['numero_ticket'] ?? 'Sin registrar' }}
                         <br>
                         Fecha: {{ $fechaVisible }}
                     </div>

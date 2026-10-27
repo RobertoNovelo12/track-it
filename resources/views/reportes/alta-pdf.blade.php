@@ -736,7 +736,7 @@
 
                 <td>
 
-                    <span class="etiqueta">Área</span>
+                    <span class="etiqueta">Hotel</span>
 
                     <span class="valor">
 

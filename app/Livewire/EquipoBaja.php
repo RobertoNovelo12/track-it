@@ -25,6 +25,7 @@ class EquipoBaja extends Component
     public int $equipoId;
     public array $equipo = [];
 
+    public string $numeroTicket = '';
     public string $motivoBaja = '';
     public string $fechaBaja = '';
     public string $comentariosBaja = '';
@@ -94,6 +95,7 @@ class EquipoBaja extends Component
     protected function limpiarFormularioDeBaja(): void
     {
         // Limpiar motivo, comentarios y autorización.
+        $this->numeroTicket = '';
         $this->motivoBaja = '';
         $this->comentariosBaja = '';
         $this->autoriza = '';
@@ -317,18 +319,28 @@ class EquipoBaja extends Component
 
     /*
     |--------------------------------------------------------------------------
-    | NO OMITIR EQUIPOS
+    | CANCELAR Y AVANZAR SIN REGISTRAR LA BAJA
     |--------------------------------------------------------------------------
     */
 
-    public function omitir(): void
+    public function omitir()
     {
         Gate::authorize('gestionar');
 
-        throw ValidationException::withMessages([
-            'motivoBaja' =>
-                'Debes completar la baja y generar su acta antes de avanzar.',
-        ]);
+        $posicion = array_search($this->equipoId, $this->cola, true);
+        $restantes = $posicion === false ? [] : array_slice($this->cola, $posicion + 1);
+        $restantes = array_values(array_diff($restantes, $this->idsDadosDeBaja($restantes)));
+
+        if ($restantes === []) {
+            return $this->redirectRoute('equipos.index', navigate: true);
+        }
+
+        session()->flash('baja_lote_fecha', $this->fechaBaja);
+
+        return $this->redirectRoute('equipos.baja', [
+            'equipo' => $restantes[0],
+            'cola' => implode(',', $restantes),
+        ], navigate: true);
     }
 
     /*
@@ -540,6 +552,7 @@ class EquipoBaja extends Component
         Gate::authorize('gestionar');
 
         $validated = $this->validate([
+            'numeroTicket' => ['required', 'regex:/^[0-9]+$/', 'max:20'],
             'motivoBaja' => [
                 'required',
                 'string',
@@ -565,6 +578,9 @@ class EquipoBaja extends Component
             'fotoLateral2' => $this->photoRules(),
             ...$this->reglasFirmas(),
         ], [
+            'numeroTicket.required' => 'Ingresa el número de tiket.',
+            'numeroTicket.regex' => 'Ingresa solo los números del tiket, sin el prefijo GPRVM-.',
+            'numeroTicket.max' => 'El número de tiket no debe superar 20 dígitos.',
             'motivoBaja.required' =>
                 'Ingresa el motivo de la baja.',
             'fechaBaja.required' =>
@@ -744,6 +760,7 @@ class EquipoBaja extends Component
                 $idBaja = DB::table('bajas')
                     ->insertGetId([
                         'folio' => $folio,
+                        'numero_ticket' => 'GPRVM-'.$validated['numeroTicket'],
 
                         'id_equipo' =>
                             $this->equipoId,

@@ -44,7 +44,7 @@ class CrearRegistro extends Component
     */
     public ?int $idMarca = null;
     public ?int $idTipoEquipo = null;
-    public ?int $idAreaUsoComun = null;
+    public ?int $idUnidadUsoComun = null;
 
     /*
     |--------------------------------------------------------------------------
@@ -62,7 +62,7 @@ class CrearRegistro extends Component
         if ($this->tipoRegistro === 'marca') {
             $this->idMarca = null;
             $this->idTipoEquipo = null;
-            $this->idAreaUsoComun = null;
+            $this->idUnidadUsoComun = null;
         } else {
             $this->idPaisOrigen = null;
         }
@@ -236,7 +236,7 @@ class CrearRegistro extends Component
                 'idTipoEquipo' => ['required', 'integer'],
                 'idProveedorSugerido' => ['nullable', 'integer'],
                 'garantiaEstandarMeses' => ['nullable', 'integer', 'min:1', 'max:600'],
-                'idAreaUsoComun' => ['nullable', 'integer'],
+                'idUnidadUsoComun' => ['nullable', 'integer'],
                 'comentarios' => ['nullable', 'string', 'max:5000'],
             ],
             [
@@ -289,14 +289,14 @@ class CrearRegistro extends Component
         }
 
         if (
-            $validated['idAreaUsoComun'] !== null
-            && ! DB::table('areas')
-                ->where('id_area', $validated['idAreaUsoComun'])
+            $validated['idUnidadUsoComun'] !== null
+            && ! DB::table('unidades_organizativas')
+                ->where('id_unidad', $validated['idUnidadUsoComun'])
                 ->where('activo', true)
                 ->exists()
         ) {
             throw ValidationException::withMessages([
-                'idAreaUsoComun' => 'El área seleccionada no es válida.',
+                'idUnidadUsoComun' => 'El hotel seleccionado no es válido.',
             ]);
         }
 
@@ -327,7 +327,7 @@ class CrearRegistro extends Component
                 'sitio_web' => $this->nullableTrim($validated['sitioWeb']),
                 'id_proveedor_sugerido' => $validated['idProveedorSugerido'],
                 'garantia_estandar_meses' => $validated['garantiaEstandarMeses'],
-                'id_area_uso_comun' => $validated['idAreaUsoComun'],
+                'id_unidad_uso_comun' => $validated['idUnidadUsoComun'],
                 'comentarios' => $this->nullableTrim($validated['comentarios']),
                 'fecha_creacion' => now(),
                 'fecha_actualizacion' => now(),
@@ -388,7 +388,7 @@ class CrearRegistro extends Component
             'idTipoEquipo' => null,
             'idProveedorSugerido' => null,
             'garantiaEstandarMeses' => null,
-            'idAreaUsoComun' => null,
+            'idUnidadUsoComun' => null,
             'comentarios' => null,
         ], $payload);
 
@@ -398,7 +398,7 @@ class CrearRegistro extends Component
             'idTipoEquipo',
             'idProveedorSugerido',
             'garantiaEstandarMeses',
-            'idAreaUsoComun',
+            'idUnidadUsoComun',
         ] as $field) {
             if ($payload[$field] === '') {
                 $payload[$field] = null;
@@ -436,7 +436,7 @@ class CrearRegistro extends Component
             'idPaisOrigen',
             'idMarca',
             'idTipoEquipo',
-            'idAreaUsoComun',
+            'idUnidadUsoComun',
         ]);
 
         $this->tipoRegistro = $currentType;
@@ -546,11 +546,11 @@ class CrearRegistro extends Component
                 'correo',
             ]);
 
-        $areas = DB::table('areas')
+        $unidades = DB::table('unidades_organizativas')
             ->where('activo', true)
             ->orderBy('nombre')
             ->get([
-                'id_area',
+                'id_unidad',
                 'nombre',
             ]);
 
@@ -609,7 +609,7 @@ class CrearRegistro extends Component
             'tiposEquipo' => $tiposEquipo,
             'paisesOrigen' => $paisesOrigen,
             'proveedores' => $proveedores,
-            'areas' => $areas,
+            'unidades' => $unidades,
             'contactoProveedor' => $contactoProveedor,
             'paisOrigenModelo' => $paisOrigenModelo,
         ]);

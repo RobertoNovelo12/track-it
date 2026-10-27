@@ -247,7 +247,7 @@ trait FiltraEquipos
 
         /*
         |--------------------------------------------------------------------------
-        | ÁREA / DEPARTAMENTO
+        | HOTEL / DEPARTAMENTO
         |--------------------------------------------------------------------------
         */
 
@@ -456,7 +456,6 @@ trait FiltraEquipos
                 'modelos' => 'id_modelo',
                 'proveedores' => 'id_proveedor',
                 'unidades_organizativas' => 'id_unidad',
-                'areas' => 'id_area',
                 'departamentos' => 'id_departamento',
             ];
 
@@ -717,12 +716,12 @@ trait FiltraEquipos
     {
         return app(SystemCacheService::class)->rememberSimple(
             'catalogos',
-            'filtros.unidades.arrays.v1',
+            'filtros.unidades.arrays.v2',
             fn (): array => DB::table('unidades_organizativas')->where('activo', true)
                     ->orderBy('nombre')
                     ->get(['id_unidad', 'nombre'])
                     ->map(fn ($row): array => [
-                        'id_area' => (int) $row->id_unidad,
+                        'id_unidad' => (int) $row->id_unidad,
                         'nombre' => (string) $row->nombre,
                     ])
                     ->all(),

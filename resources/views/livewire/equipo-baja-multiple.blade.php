@@ -196,7 +196,7 @@
                         @if ($modo === 'conjunta' && $activosSeleccion > 0)
                             <button
                                 type="button"
-                                wire:click="volver"
+                                wire:click="volver" wire:loading.attr="disabled" wire:target="volver"
                                 class="inline-flex h-9 shrink-0 items-center rounded-lg border border-[var(--theme-border-strong)] px-3 text-xs font-medium text-[var(--theme-text)] hover:bg-[var(--theme-surface-soft)]"
                             >
                                 Cambiar modo
@@ -233,6 +233,7 @@
                     </h2>
 
                     <div class="grid gap-4 sm:grid-cols-2">
+                        @include('livewire.equipos.numero-ticket')
 
                         <div>
                             <label
@@ -551,8 +552,7 @@
                     </div>
 
                     <p class="mt-3 text-center text-xs text-[var(--theme-text-muted)]">
-                        Vista preliminar. El folio definitivo se genera
-                        al guardar el acta.
+                        Vista preliminar. El tiket capturado se incluirá en el acta.
                     </p>
                 </section>
 

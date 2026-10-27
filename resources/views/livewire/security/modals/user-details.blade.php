@@ -333,7 +333,7 @@
                     </div>
 
                     <div class="px-3 py-2.5 flex items-start justify-between gap-4">
-                        <span class="text-xs text-[var(--theme-text-muted)]">Área</span>
+                        <span class="text-xs text-[var(--theme-text-muted)]">Hotel</span>
                         <span id="user-details-area" class="text-xs text-right text-[var(--theme-text)]">—</span>
                     </div>
 

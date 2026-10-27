@@ -276,7 +276,7 @@
                     </span>
                 </div>
                 <div class="field">
-                    <span class="label">Área / Departamento anterior</span>
+                    <span class="label">Hotel / Departamento anterior</span>
                     <span class="value">
                         {{ $dato(implode(' / ', array_filter([
                             $anterior['departamento'] ?? null,
@@ -334,7 +334,7 @@
                     </span>
                 </div>
                 <div class="field">
-                    <span class="label">Nueva área</span>
+                    <span class="label">Nuevo hotel</span>
                     <span class="value">
                         {{ $dato($nuevo['area'] ?? null) }}
                     </span>
@@ -392,7 +392,7 @@
                     </span>
                 </div>
                 <div class="field">
-                    <span class="label">Departamento / Área</span>
+                    <span class="label">Departamento / Hotel</span>
                     <span class="value">
                         {{ $dato($areaNuevo) }}
                     </span>

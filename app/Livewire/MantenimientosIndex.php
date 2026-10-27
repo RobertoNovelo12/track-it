@@ -352,7 +352,7 @@ class MantenimientosIndex extends Component
 
         /*
         |--------------------------------------------------------------------------
-        | Área / Departamento
+        | Hotel / Departamento
         |--------------------------------------------------------------------------
         */
 
@@ -367,9 +367,9 @@ class MantenimientosIndex extends Component
                 null
             );
 
-            if ($tipoFiltro === 'area' && $id) {
+            if ($tipoFiltro === 'hotel' && $id) {
                 $query->where(
-                    'e.id_area',
+                    'e.id_unidad',
                     (int) $id
                 );
             }
@@ -501,17 +501,6 @@ class MantenimientosIndex extends Component
                 ->all()
         ));
 
-        $areas = $aObjetos($cache->rememberSimple(
-            'catalogos',
-            'mantenimientos.filtros.areas.v1',
-            fn (): array => DB::table('areas')
-                ->where('activo', true)
-                ->orderBy('nombre')
-                ->get(['id_area', 'nombre'])
-                ->map(fn ($fila): array => (array) $fila)
-                ->all(),
-            24
-        ));
 
         $departamentos = $aObjetos($cache->rememberSimple(
             'catalogos',
@@ -529,7 +518,6 @@ class MantenimientosIndex extends Component
             'tiposMantenimiento' => $tiposMantenimiento,
             'estadosMantenimiento' => $estadosMantenimiento,
             'tecnicos' => $tecnicos,
-            'areas' => $areas,
             'departamentos' => $departamentos,
         ]);
     }

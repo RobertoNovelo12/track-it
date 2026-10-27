@@ -82,7 +82,7 @@ class InventarioDocumentoService
                     ->leftJoin('catalogo_valores as co', 'co.id_valor', '=', 'e.id_condicion_activo')
                     ->leftJoin('unidades_organizativas as u', 'u.id_unidad', '=', 'e.id_unidad')
                     ->leftJoin('departamentos as dep', 'dep.id_departamento', '=', 'e.id_departamento')
-                    ->leftJoin('areas as ar', 'ar.id_area', '=', 'e.id_area')
+
                     ->leftJoin('ubicaciones as ub', 'ub.id_ubicacion', '=', 'e.id_ubicacion')
                     ->leftJoin('proveedores as pr', 'pr.id_proveedor', '=', 'e.id_proveedor')
                     ->whereIn('e.id_equipo', $lote)
@@ -91,7 +91,7 @@ class InventarioDocumentoService
                         'mo.nombre as modelo_nombre', 'es.nombre as estado_nombre',
                         'es.clave as estado_clave', 'co.nombre as condicion_nombre',
                         'u.nombre as hotel_nombre', 'dep.nombre as departamento_nombre',
-                        'ar.nombre as area_nombre', 'ub.nombre as ubicacion_nombre',
+                        'u.nombre as area_nombre', 'ub.nombre as ubicacion_nombre',
                         'pr.nombre as proveedor_nombre',
                     ])->get()
             );
@@ -100,7 +100,7 @@ class InventarioDocumentoService
                 DB::table('asignaciones as a')
                     ->leftJoin('unidades_organizativas as u', 'u.id_unidad', '=', 'a.id_unidad')
                     ->leftJoin('departamentos as d', 'd.id_departamento', '=', 'a.id_departamento')
-                    ->leftJoin('areas as ar', 'ar.id_area', '=', 'a.id_area')
+
                     ->leftJoin('ubicaciones as ub', 'ub.id_ubicacion', '=', 'a.id_ubicacion')
                     ->when(Schema::hasColumn('asignaciones', 'id_usuario'), function ($consulta) {
                         $consulta->leftJoin('usuarios as usuario_asignado', 'usuario_asignado.id_usuario', '=', 'a.id_usuario');
@@ -114,7 +114,7 @@ class InventarioDocumentoService
                         'ta.nombre as tipo_asignacion', 'a.observaciones', 'a.id_equipo', 'a.nombre_colaborador', 'a.numero_colaborador',
                         'a.fecha_asignacion', 'a.fecha_fin', 'a.id_asignacion',
                         'u.nombre as hotel_nombre', 'd.nombre as departamento_nombre',
-                        'ar.nombre as area_nombre', 'ub.nombre as ubicacion_nombre',
+                        'u.nombre as area_nombre', 'ub.nombre as ubicacion_nombre',
                     ])
             );
 
@@ -228,7 +228,7 @@ class InventarioDocumentoService
         foreach ($asignaciones as $a) {
             $detalle = $this->unir([
                 $a->nombre_colaborador, $a->numero_colaborador,
-                $a->hotel_nombre, $a->departamento_nombre, $a->area_nombre, $a->ubicacion_nombre,
+                $a->hotel_nombre, $a->departamento_nombre, $a->ubicacion_nombre,
                 $a->observaciones,
             ]);
             $eventos[] = ['fecha' => $this->texto($a->fecha_asignacion), 'tipo' => $a->tipo_asignacion ?: 'Asignación', 'detalle' => $detalle];
@@ -316,7 +316,7 @@ class InventarioDocumentoService
                     if (in_array($columna, [
                         'nombre_equipo', 'id_tipo_equipo', 'id_marca', 'id_modelo',
                         'id_estado_activo', 'id_condicion_activo', 'id_unidad',
-                        'id_departamento', 'id_area', 'id_ubicacion', 'id_proveedor',
+                        'id_departamento', 'id_ubicacion', 'id_proveedor',
                         'codigo_inventario', 'numero_serie', 'numero_factura',
                         'fecha_compra', 'fecha_fin_garantia', 'fecha_registro',
                         'host', 'direccion_ip', 'direccion_mac', 'service_tag', 'comentarios',

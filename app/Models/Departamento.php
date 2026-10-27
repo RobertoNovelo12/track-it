@@ -17,7 +17,6 @@ class Departamento extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'id_area',
         'codigo',
         'nombre',
         'responsable',
@@ -33,23 +32,11 @@ class Departamento extends Model
         return [
             'id_departamento' => 'integer',
             'id_departamento_principal' => 'integer',
-            'id_area' => 'integer',
             'activo' => 'boolean',
             'atiende_todas_unidades' => 'boolean',
         ];
     }
 
-    /*
-     * Relación temporal para los módulos que todavía utilizan áreas.
-     */
-    public function area(): BelongsTo
-    {
-        return $this->belongsTo(
-            Area::class,
-            'id_area',
-            'id_area'
-        );
-    }
 
     /*
      * Permite reconocer el departamento unificado cuando un equipo

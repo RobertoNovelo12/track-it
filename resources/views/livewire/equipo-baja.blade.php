@@ -480,15 +480,10 @@
 
             {{-- CANCELAR --}}
 
-            <a
-                href="{{ $this->enCola()
-                    ? route('equipos.index')
-                    : route('equipos.edit', $equipoId)
-                }}"
-                class="inline-flex h-10 items-center justify-center rounded-lg border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-5 text-sm font-medium text-[var(--theme-text-muted)] transition-colors hover:bg-[var(--theme-surface-soft)]"
+            <button type="button" wire:click="omitir" wire:loading.attr="disabled" class="inline-flex h-10 items-center justify-center rounded-lg border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-5 text-sm font-medium text-[var(--theme-text-muted)] transition-colors hover:bg-[var(--theme-surface-soft)]"
             >
                 Cancelar
-            </a>
+            </button>
 
             {{-- DAR DE BAJA Y GENERAR PDF --}}
 
@@ -645,6 +640,8 @@
                 </h2>
 
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+
+                    @include('livewire.equipos.numero-ticket')
 
                     {{-- MOTIVO --}}
 
@@ -947,11 +944,11 @@
                             <div class="campo">
 
                                 <span class="etiqueta">
-                                    Folio de baja
+                                    N° Tiket:
                                 </span>
 
                                 <span class="valor">
-                                    Pendiente de generar
+                                    {{ $numeroTicket !== '' ? 'GPRVM-'.$numeroTicket : 'Por capturar' }}
                                 </span>
 
                             </div>
@@ -1172,8 +1169,7 @@
                 </div>
 
                 <p class="mt-3 text-center text-[11px] text-[var(--theme-text-muted)]">
-                    Vista preliminar. El folio definitivo
-                    se genera al confirmar la baja.
+                    Vista preliminar. El tiket capturado se incluirá en el acta.
                 </p>
 
             </section>

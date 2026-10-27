@@ -167,7 +167,7 @@ new class extends Component
         )));
 
         $unidad = $hotel !== null
-            ? DB::table('unidades_organizativas')->where('id_unidad', $hotel)->first(['id_sede', 'id_area_origen'])
+            ? DB::table('unidades_organizativas')->where('id_unidad', $hotel)->first(['id_sede'])
             : null;
 
         $fila = [
@@ -178,7 +178,6 @@ new class extends Component
             'activo' => $this->activo,
             // Columnas anteriores: se llenan desde el hotel por compatibilidad.
             'id_sede' => $unidad->id_sede ?? null,
-            'id_area' => $unidad->id_area_origen ?? null,
         ];
 
         $esNueva = $this->ubicacionId === 0;

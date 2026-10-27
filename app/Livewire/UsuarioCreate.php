@@ -252,19 +252,11 @@ class UsuarioCreate extends Component
             return null;
         }
 
-        /*
-         * usuarios tiene la llave foránea compuesta
-         * (id_departamento, id_area) -> departamentos, por eso id_area
-         * debe ser el área registrada en el propio departamento
-         * (NULL si no tiene). No se usa el área de origen del hotel.
-         */
-        $areaOrigen = DB::table('departamentos')
-            ->where('id_departamento', (int) $validated['idDepartamento'])
-            ->value('id_area');
+
 
         $opcional = fn (?string $valor): ?string => filled($valor) ? $valor : null;
 
-        $usuario = DB::transaction(function () use ($validated, $idEstadoActivo, $areaOrigen, $opcional) {
+        $usuario = DB::transaction(function () use ($validated, $idEstadoActivo, $opcional) {
             $usuario = User::create([
                 'nombres' => $validated['nombres'],
                 'apellido_paterno' => $validated['apellidoPaterno'],
@@ -279,8 +271,6 @@ class UsuarioCreate extends Component
 
                 'id_unidad' => (int) $validated['idUnidad'],
 
-                // Debe coincidir con departamentos.id_area (FK compuesta).
-                'id_area' => $areaOrigen,
 
                 'id_departamento' => (int) $validated['idDepartamento'],
                 'id_rol' => (int) $validated['idRol'],

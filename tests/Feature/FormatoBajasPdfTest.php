@@ -12,16 +12,18 @@ class FormatoBajasPdfTest extends TestCase
     {
         $firmas = array_fill_keys(array_keys(EquipoBaja::FIRMANTES), 'Nombre de prueba');
         $documento = [
-            'logo' => '', 'organizacion' => 'Hotel de prueba', 'folio' => 'BM-PRUEBA',
+            'logo' => '', 'organizacion' => 'Hotel de prueba', 'folio' => 'BM-PRUEBA', 'numero_ticket' => 'GPRVM-99273',
             'fecha' => '2026-10-23', 'hotel' => 'Hotel', 'departamento' => 'Sistemas',
             'solicitante' => 'Solicitante', 'motivo' => 'Fin de vida útil', 'observaciones' => '',
-            'autoriza' => 'NO MOSTRAR', 'puesto' => 'NO MOSTRAR', 'firmas' => $firmas, 'fotos' => [],
+            'equipo' => [], 'comentarios' => '', 'autoriza' => 'NO MOSTRAR', 'puesto' => 'NO MOSTRAR', 'firmas' => $firmas, 'fotos' => [],
             'equipos' => array_fill(0, 10, ['codigo_inventario' => 'ACT-00061', 'nombre_equipo' => 'Laptop de prueba', 'marca' => 'Lenovo', 'modelo' => 'ThinkPad', 'numero_serie' => 'SERIE-123']),
         ];
-        $baja = ['folio' => 'B-PRUEBA', 'fecha' => '23/10/2026', 'motivo' => 'Fin de vida útil', 'comentarios' => '', 'autoriza' => 'NO MOSTRAR', 'firmas' => $firmas, 'fotos' => [], 'equipo' => []];
-        foreach ([['reportes.baja-multiple-pdf', ['documento' => $documento]], ['reportes.baja-acta-pdf', ['bajas' => collect([$baja])]]] as [$view, $data]) {
+        $baja = ['folio' => 'B-PRUEBA', 'numero_ticket' => 'GPRVM-99273', 'fecha' => '23/10/2026', 'motivo' => 'Fin de vida útil', 'comentarios' => '', 'autoriza' => 'NO MOSTRAR', 'firmas' => $firmas, 'fotos' => [], 'equipo' => []];
+        foreach ([['reportes.baja-individual-pdf', ['documento' => $documento]], ['reportes.baja-multiple-pdf', ['documento' => $documento]], ['reportes.baja-acta-pdf', ['bajas' => collect([$baja])]]] as [$view, $data]) {
             $html = view($view, $data)->render();
             $this->assertStringNotContainsString('NO MOSTRAR', $html);
+            $this->assertStringContainsString('N° Tiket:', $html);
+            $this->assertStringContainsString('GPRVM-99273', $html);
             foreach (EquipoBaja::FIRMANTES as $label) { $this->assertStringContainsString($label, $html); }
             $partial = $view === 'reportes.baja-multiple-pdf' ? 'reportes.partials.firmas-baja-multiple' : 'reportes.partials.firmas-baja';
             $firmasHtml = view($partial, ['firmasDocumento' => $firmas, 'fechaDocumento' => '2026-10-23'])->render();

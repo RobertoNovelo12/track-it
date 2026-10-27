@@ -462,22 +462,22 @@
                             class="min-w-0"
                         >
                             <x-searchable-select
-                                wire-model="idAreaUsoComun"
-                                :options="$areas
+                                wire-model="idUnidadUsoComun"
+                                :options="$unidades
                                     ->map(fn ($area) => [
-                                        'value' => $area->id_area,
+                                        'value' => $area->id_unidad,
                                         'label' => $area->nombre,
                                     ])
                                     ->values()
                                     ->all()"
-                                label="Área de uso común"
-                                placeholder="Buscar área..."
+                                label="Hotel de uso común"
+                                placeholder="Buscar hotel..."
                             />
 
                             <p
-                                x-show="fieldError('idAreaUsoComun')"
+                                x-show="fieldError('idUnidadUsoComun')"
                                 x-cloak
-                                x-text="fieldError('idAreaUsoComun')"
+                                x-text="fieldError('idUnidadUsoComun')"
                                 class="mt-1 text-xs text-[var(--theme-danger)]"
                             ></p>
                         </div>
@@ -625,7 +625,7 @@
                         );
 
                         $wire.$set(
-                            'idAreaUsoComun',
+                            'idUnidadUsoComun',
                             null,
                             false
                         );
@@ -885,9 +885,9 @@
                                     )
                                 ),
 
-                            idAreaUsoComun:
+                            idUnidadUsoComun:
                                 this.nullableInteger(
-                                    $wire.idAreaUsoComun
+                                    $wire.idUnidadUsoComun
                                 ),
 
                             comentarios:
@@ -1084,7 +1084,7 @@
                     );
 
                     $wire.$set(
-                        'idAreaUsoComun',
+                        'idUnidadUsoComun',
                         null,
                         false
                     );
@@ -1177,8 +1177,8 @@
                         )
                         &&
                         (
-                            $wire.idAreaUsoComun === null
-                            || $wire.idAreaUsoComun === ''
+                            $wire.idUnidadUsoComun === null
+                            || $wire.idUnidadUsoComun === ''
                         )
                     );
                 },
@@ -1281,8 +1281,8 @@
                     );
 
                     $wire.$set(
-                        'idAreaUsoComun',
-                        payload.idAreaUsoComun,
+                        'idUnidadUsoComun',
+                        payload.idUnidadUsoComun,
                         false
                     );
 

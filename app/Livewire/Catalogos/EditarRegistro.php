@@ -74,7 +74,7 @@ class EditarRegistro extends Component
 
     public ?int $idTipoEquipo = null;
 
-    public ?int $idAreaUsoComun = null;
+    public ?int $idUnidadUsoComun = null;
 
 
     /*
@@ -210,9 +210,9 @@ class EditarRegistro extends Component
                 ? (int) $registro->garantia_estandar_meses
                 : null;
 
-        $this->idAreaUsoComun =
-            $registro->id_area_uso_comun !== null
-                ? (int) $registro->id_area_uso_comun
+        $this->idUnidadUsoComun =
+            $registro->id_unidad_uso_comun !== null
+                ? (int) $registro->id_unidad_uso_comun
                 : null;
 
         $this->comentarios =
@@ -562,7 +562,7 @@ class EditarRegistro extends Component
                 'max:600',
             ],
 
-            'idAreaUsoComun' => [
+            'idUnidadUsoComun' => [
                 'nullable',
                 'integer',
             ],
@@ -668,18 +668,18 @@ class EditarRegistro extends Component
 
 
         if (
-            $validated['idAreaUsoComun'] !== null
+            $validated['idUnidadUsoComun'] !== null
             &&
-            ! DB::table('areas')
+            ! DB::table('unidades_organizativas')
                 ->where(
-                    'id_area',
-                    $validated['idAreaUsoComun']
+                    'id_unidad',
+                    $validated['idUnidadUsoComun']
                 )
                 ->exists()
         ) {
             $this->addError(
-                'idAreaUsoComun',
-                'El área seleccionada no es válida.'
+                'idUnidadUsoComun',
+                'El hotel seleccionado no es válido.'
             );
 
             return;
@@ -792,8 +792,8 @@ class EditarRegistro extends Component
                         'garantia_estandar_meses' =>
                             $validated['garantiaEstandarMeses'],
 
-                        'id_area_uso_comun' =>
-                            $validated['idAreaUsoComun'],
+                        'id_unidad_uso_comun' =>
+                            $validated['idUnidadUsoComun'],
 
                         'comentarios' =>
                             $this->nullableTrim(
@@ -1192,8 +1192,8 @@ class EditarRegistro extends Component
         |--------------------------------------------------------------------------
         */
 
-        $areas =
-            DB::table('areas')
+        $unidades =
+            DB::table('unidades_organizativas')
                 ->where(
                     function ($query) {
                         $query->where(
@@ -1203,11 +1203,11 @@ class EditarRegistro extends Component
 
 
                         if (
-                            $this->idAreaUsoComun !== null
+                            $this->idUnidadUsoComun !== null
                         ) {
                             $query->orWhere(
-                                'id_area',
-                                $this->idAreaUsoComun
+                                'id_unidad',
+                                $this->idUnidadUsoComun
                             );
                         }
                     }
@@ -1216,7 +1216,7 @@ class EditarRegistro extends Component
                     'nombre'
                 )
                 ->get([
-                    'id_area',
+                    'id_unidad',
                     'nombre',
                 ]);
 
@@ -1339,8 +1339,7 @@ class EditarRegistro extends Component
                 'proveedores' =>
                     $proveedores,
 
-                'areas' =>
-                    $areas,
+                'unidades' => $unidades,
 
                 'contactoProveedor' =>
                     $contactoProveedor,

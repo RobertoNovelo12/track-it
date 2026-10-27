@@ -517,7 +517,6 @@ class EquipoShow extends Component
 
                 'e.id_condicion_activo',
 
-                'e.id_area',
 
                 'e.id_departamento',
 

@@ -72,7 +72,7 @@ class EquipoSearch extends Component
     |--------------------------------------------------------------------------
     */
 
-    
+
 
     public function render()
     {
@@ -119,18 +119,13 @@ class EquipoSearch extends Component
                 'e.id_departamento'
             )
 
-            ->leftJoin(
-                'areas as area_dep',
-                'area_dep.id_area',
-                '=',
-                'dep.id_area'
-            )
+
 
             ->leftJoin(
-                'areas as area_directa',
-                'area_directa.id_area',
+                'unidades_organizativas as area_directa',
+                'area_directa.id_unidad',
                 '=',
-                'e.id_area'
+                'e.id_unidad'
             )
 
             ->select([
@@ -165,9 +160,9 @@ class EquipoSearch extends Component
 
                             THEN CASE
 
-                                WHEN area_dep.nombre IS NOT NULL
+                                WHEN area_directa.nombre IS NOT NULL
 
-                                    THEN area_dep.nombre
+                                    THEN area_directa.nombre
                                         || ' / '
                                         || dep.nombre
 

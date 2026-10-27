@@ -16,7 +16,7 @@ class Usuario extends Authenticatable
     protected $fillable = [
         'id_rol', 'id_estado_usuario', 'nombres', 'apellido_paterno',
         'apellido_materno', 'username', 'correo', 'password_hash',
-        'telefono', 'numero_colaborador', 'puesto', 'id_area',
+        'telefono', 'numero_colaborador', 'puesto',
         'id_unidad', 'id_departamento',
     ];
 
@@ -46,10 +46,6 @@ class Usuario extends Authenticatable
         return $this->belongsTo(CatalogoValor::class, 'id_estado_usuario', 'id_valor');
     }
 
-    public function area()
-    {
-        return $this->belongsTo(Area::class, 'id_area', 'id_area');
-    }
 
     public function departamento()
     {

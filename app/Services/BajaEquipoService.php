@@ -32,7 +32,8 @@ class BajaEquipoService
         string $autoriza,
         int $usuarioId,
         ?string $referencia = null,
-        array $firmas = []
+        array $firmas = [],
+        ?string $numeroTicket = null
     ): string {
         $equipo = DB::table('equipos')
             ->where('id_equipo', $idEquipo)
@@ -73,6 +74,7 @@ class BajaEquipoService
 
         DB::table('bajas')->insert([
             'folio' => $folio,
+            'numero_ticket' => $numeroTicket,
             'id_equipo' => $idEquipo,
             'id_motivo_baja' => (int) $idMotivoOtro,
             'motivo_baja' => trim($motivo),

@@ -920,8 +920,9 @@
                     sectionKey: 'adicional',
                 },
 
-                // Solo en los tipos que agregaron «Ubicación» (o si ya tiene dato).
+                // Ubicación opcional en todos los tipos, también al editar.
                 id_ubicacion: {
+                    alwaysVisible: true,
                     model: 'idUbicacion',
                     label: 'Ubicación',
                     type: 'select',
@@ -1029,9 +1030,10 @@
                             key,
                             child: false,
 
-                            required: !!(
-                                base.required || meta?.obligatorio
-                            ),
+                            // Ubicación siempre es información adicional opcional.
+                            required: key === 'id_ubicacion'
+                                ? false
+                                : !!(base.required || meta?.obligatorio),
 
                             label: meta?.etiqueta || base.label,
                             sectionId: meta?.id_seccion,

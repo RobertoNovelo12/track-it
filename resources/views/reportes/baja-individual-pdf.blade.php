@@ -219,7 +219,7 @@
         </td>
 
         <td width="30%" class="metadatos">
-            Folio: {{ $documento['folio'] }}
+            N° Tiket: {{ $documento['numero_ticket'] ?? 'Sin registrar' }}
             <br>
             Fecha: {{ $fecha }}
         </td>
@@ -376,7 +376,7 @@
             </td>
 
             <td width="30%" class="metadatos">
-                Folio: {{ $documento['folio'] }}
+                N° Tiket: {{ $documento['numero_ticket'] ?? 'Sin registrar' }}
                 <br>
                 Fecha: {{ $fecha }}
             </td>

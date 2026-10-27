@@ -55,17 +55,12 @@ class ReporteActasService
                 'a.id_departamento'
             )
             ->leftJoin(
-                'areas as ar',
-                'ar.id_area',
+                'unidades_organizativas as ar',
+                'ar.id_unidad',
                 '=',
-                'a.id_area'
+                'a.id_unidad'
             )
-            ->leftJoin(
-                'areas as ar_dep',
-                'ar_dep.id_area',
-                '=',
-                'dep.id_area'
-            )
+
             ->leftJoin(
                 'ubicaciones as ub',
                 'ub.id_ubicacion',
@@ -77,12 +72,6 @@ class ReporteActasService
                 'sede_area.id_sede',
                 '=',
                 'ar.id_sede'
-            )
-            ->leftJoin(
-                'sedes as sede_dep',
-                'sede_dep.id_sede',
-                '=',
-                'ar_dep.id_sede'
             )
             ->leftJoin(
                 'sedes as sede_ubicacion',
@@ -105,11 +94,9 @@ class ReporteActasService
                 'a.fecha_fin',
                 'a.observaciones',
                 'ar.nombre as area_directa',
-                'ar_dep.nombre as area_departamento',
                 'dep.nombre as departamento',
                 'ub.nombre as ubicacion',
                 'sede_area.nombre as sede_directa',
-                'sede_dep.nombre as sede_departamento',
                 'sede_ubicacion.nombre as sede_ubicacion',
                 'tipo.nombre as tipo_asignacion',
             ]);
@@ -118,11 +105,9 @@ class ReporteActasService
             return null;
         }
 
-        $area = $registro->area_directa
-            ?: $registro->area_departamento;
+        $area = $registro->area_directa;
 
         $sede = $registro->sede_directa
-            ?: $registro->sede_departamento
             ?: $registro->sede_ubicacion;
 
         return [

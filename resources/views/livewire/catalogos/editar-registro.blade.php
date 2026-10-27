@@ -659,18 +659,18 @@
                         <div class="min-w-0">
 
                             <x-searchable-select
-                                wire-model="idAreaUsoComun"
+                                wire-model="idUnidadUsoComun"
 
-                                :options="$areas->map(fn ($area) => [
-                                    'value' => $area->id_area,
+                                :options="$unidades->map(fn ($area) => [
+                                    'value' => $area->id_unidad,
                                     'label' => $area->nombre,
                                 ])->values()->all()"
 
-                                label="Área de uso común"
-                                placeholder="Buscar área..."
+                                label="Hotel de uso común"
+                                placeholder="Buscar hotel..."
                             />
 
-                            @error('idAreaUsoComun')
+                            @error('idUnidadUsoComun')
                                 <p
                                     class="
                                         mt-1

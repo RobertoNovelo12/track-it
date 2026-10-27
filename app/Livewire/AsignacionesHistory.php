@@ -120,19 +120,9 @@ class AsignacionesHistory extends Component
                 'a.id_departamento'
             )
 
-            ->leftJoin(
-                'areas as area_directa',
-                'area_directa.id_area',
-                '=',
-                'a.id_area'
-            )
 
-            ->leftJoin(
-                'areas as area_departamento',
-                'area_departamento.id_area',
-                '=',
-                'd.id_area'
-            )
+
+
 
             ->leftJoin(
                 'ubicaciones as ub',
@@ -148,30 +138,13 @@ class AsignacionesHistory extends Component
                 'a.id_unidad'
             )
 
-            ->leftJoin(
-                'unidades_organizativas as unidad_origen',
-                function ($join) {
-                    $join->whereNull('a.id_unidad')
-                        ->on(
-                            'unidad_origen.id_area_origen',
-                            '=',
-                            DB::raw('COALESCE(area_directa.id_area, area_departamento.id_area)')
-                        );
-                }
-            )
+
 
             ->leftJoin(
                 'sedes as sede_directa',
                 'sede_directa.id_sede',
                 '=',
-                'area_directa.id_sede'
-            )
-
-            ->leftJoin(
-                'sedes as sede_departamento',
-                'sede_departamento.id_sede',
-                '=',
-                'area_departamento.id_sede'
+                'unidad.id_sede'
             )
 
             ->leftJoin(
@@ -293,7 +266,6 @@ class AsignacionesHistory extends Component
             ->selectRaw("
                 COALESCE(
                     unidad.nombre,
-                    unidad_origen.nombre,
                     ''
                 ) as area
             ")
@@ -396,28 +368,9 @@ class AsignacionesHistory extends Component
                 }
             )
 
-            ->leftJoin(
-                'areas as area_directa',
-                function ($join) {
-                    $join->on(
-                        'area_directa.id_area',
-                        '=',
-                        DB::raw(
-                            'COALESCE(
-                                nueva.id_area,
-                                anterior.id_area
-                            )'
-                        )
-                    );
-                }
-            )
 
-            ->leftJoin(
-                'areas as area_departamento',
-                'area_departamento.id_area',
-                '=',
-                'd.id_area'
-            )
+
+
 
             ->leftJoin(
                 'ubicaciones as ub',
@@ -442,30 +395,13 @@ class AsignacionesHistory extends Component
                 DB::raw('COALESCE(nueva.id_unidad, anterior.id_unidad)')
             )
 
-            ->leftJoin(
-                'unidades_organizativas as unidad_origen',
-                function ($join) {
-                    $join->whereRaw('COALESCE(nueva.id_unidad, anterior.id_unidad) IS NULL')
-                        ->on(
-                            'unidad_origen.id_area_origen',
-                            '=',
-                            DB::raw('COALESCE(area_directa.id_area, area_departamento.id_area)')
-                        );
-                }
-            )
+
 
             ->leftJoin(
                 'sedes as sede_directa',
                 'sede_directa.id_sede',
                 '=',
-                'area_directa.id_sede'
-            )
-
-            ->leftJoin(
-                'sedes as sede_departamento',
-                'sede_departamento.id_sede',
-                '=',
-                'area_departamento.id_sede'
+                'unidad.id_sede'
             )
 
             ->leftJoin(
@@ -607,7 +543,6 @@ class AsignacionesHistory extends Component
             ->selectRaw("
                 COALESCE(
                     unidad.nombre,
-                    unidad_origen.nombre,
                     ''
                 ) as area
             ")

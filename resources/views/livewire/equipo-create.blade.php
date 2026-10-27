@@ -126,25 +126,30 @@
                                 ></label>
 
                                 {{--
-                                    PROPIETARIO: busca una cuenta o permite escribir
-                                    un nombre (sin cuenta: lo resuelve un administrador
-                                    en Seguridad y roles).
+                                    RESPONSABLE: se busca por nombre y el selector
+                                    muestra únicamente el nombre (sin número de
+                                    colaborador). También acepta nombres nuevos,
+                                    que quedan pendientes de crear una cuenta en
+                                    Seguridad y roles.
                                 --}}
                                 <template x-if="field.model === 'propietario'">
                                     <div>
                                         <x-searchable-select
                                             x-model="values[field.model]"
-                                            x-options="data.usuarios ?? []"
-                                            :show-clear="false"
+                                            x-options="opcionesResponsables"
+                                            :show-clear="true"
+                                            clear-label="Todos"
+                                            :empty-as-null="false"
                                             allow-custom
-                                            placeholder="Busca un usuario o escribe un nombre"
+                                            custom-hint="sin cuenta"
+                                            placeholder="Busca o escribe el nombre del responsable"
                                         />
 
                                         <p
                                             x-show="String(values[field.model] ?? '').startsWith('texto:')"
                                             class="mt-1.5 text-xs text-[var(--theme-warning)]"
                                         >
-                                            Sin cuenta: el equipo se guardará y un administrador deberá crear la cuenta en Seguridad y roles.
+                                            Sin cuenta: el equipo se guardará y un administrador podrá crear la cuenta en Seguridad y roles.
                                         </p>
                                     </div>
                                 </template>
@@ -373,7 +378,7 @@
 
                 propietario: {
                     model: 'propietario',
-                    label: 'Propietario / Responsable',
+                    label: 'Responsable',
                     type: 'text',
                     sectionKey: 'adicional',
                 },
@@ -394,8 +399,10 @@
                     sectionKey: 'adicional',
                 },
 
-                // Solo en los tipos que agregaron «Ubicación» en Campos disponibles.
+                // Ubicación opcional en todos los tipos de equipo.
+                // Se guarda en equipos.id_ubicacion (sin exigir configurar el campo por tipo).
                 id_ubicacion: {
+                    alwaysVisible: true,
                     model: 'idUbicacion',
                     label: 'Ubicación',
                     type: 'select',
@@ -585,6 +592,19 @@
                     : opciones.filter(opcion => normalizar(opcion.label + ' ' + opcion.detalle + ' ' + opcion.categoria).includes(buscar));
             },
 
+            // Mostrar solo el nombre del responsable; el identificador
+            // interno se conserva para vincularlo con su cuenta al guardar.
+            get opcionesResponsables() {
+                return (this.data.usuarios ?? []).map(usuario => ({
+                    ...usuario,
+                    label: String(usuario.nombre || usuario.label || '').trim(),
+                    search: String(usuario.nombre || usuario.label || '')
+                        .normalize('NFD')
+                        .replace(/[\u0300-\u036f]/g, '')
+                        .trim(),
+                }));
+            },
+
             get displayFields() {
                 const configured = this.typeId
                     ? (this.data.baseFieldsByType?.[this.typeId] ?? {})
@@ -608,11 +628,14 @@
                             key,
                             child: false,
 
-                            required: !!(
-                                base.required || meta?.obligatorio
-                            ),
+                            // Ubicación siempre es información adicional opcional.
+                            required: key === 'id_ubicacion'
+                                ? false
+                                : !!(base.required || meta?.obligatorio),
 
-                            label: meta?.etiqueta || base.label,
+                            label: key === 'propietario'
+                                ? 'Responsable'
+                                : (meta?.etiqueta || base.label),
                             sectionId: meta?.id_seccion,
                             sectionKey: base.sectionKey || 'general',
                             order: Number(
@@ -689,7 +712,16 @@
                 };
 
                 this.displayFields.forEach(field => {
-                    let section = sections.find(
+                    // Mantener Hotel, Departamento, Responsable y Ubicación
+                    // dentro de Información adicional, sin cambiar su configuración.
+                    const campoAdicional = ['id_unidad', 'id_departamento', 'propietario', 'id_ubicacion']
+                        .includes(field.key);
+
+                    let section = campoAdicional
+                        ? sections.find(item => item.clave === 'adicional')
+                        : null;
+
+                    section ??= sections.find(
                         item =>
                             field.sectionId != null
                             && String(item.id_seccion)
@@ -727,9 +759,29 @@
                     .map(section => ({
                         ...section,
 
-                        fields: section.fields.sort(
-                            (a, b) => a.order - b.order
-                        ),
+                        fields: section.fields.sort((a, b) => {
+                            if (section.clave === 'adicional') {
+                                // Primera fila: Hotel, Departamento, Responsable.
+                                // Segunda fila: Ubicación debajo de Hotel;
+                                // Comentarios queda después de estos campos.
+                                const prioridad = {
+                                    id_unidad: 0,
+                                    id_departamento: 1,
+                                    propietario: 2,
+                                    id_ubicacion: 3,
+                                    comentarios: 5,
+                                };
+
+                                const ordenA = prioridad[a.key] ?? 4;
+                                const ordenB = prioridad[b.key] ?? 4;
+
+                                if (ordenA !== ordenB) {
+                                    return ordenA - ordenB;
+                                }
+                            }
+
+                            return a.order - b.order;
+                        }),
                     }));
             },
 

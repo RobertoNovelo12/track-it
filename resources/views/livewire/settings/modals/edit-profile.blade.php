@@ -515,7 +515,7 @@
                             text-[var(--theme-text-muted)]
                         "
                     >
-                        El correo, usuario, puesto, rol, área y departamento
+                        El correo, usuario, puesto, rol, hotel y departamento
                         deben ser gestionados por un administrador.
                     </p>
 

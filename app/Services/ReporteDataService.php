@@ -804,13 +804,13 @@ class ReporteDataService
 
             ->leftJoin(
 
-                'areas as ar',
+                'unidades_organizativas as ar',
 
-                'ar.id_area',
+                'ar.id_unidad',
 
                 '=',
 
-                'a.id_area'
+                'a.id_unidad'
 
             )
 

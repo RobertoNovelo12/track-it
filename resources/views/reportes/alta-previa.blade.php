@@ -48,7 +48,7 @@
             ],
             [
                 ['Propietario / Responsable', $alta['responsable'] ?? null],
-                ['Área', $alta['area'] ?? null],
+                ['Hotel', $alta['area'] ?? null],
             ],
             [
                 ['Departamento', $alta['departamento'] ?? null],

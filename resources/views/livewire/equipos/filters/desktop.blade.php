@@ -337,7 +337,7 @@
             :options="
                 collect($areas)->map(
                     fn ($a) => [
-                        'value' => $a['id_area'],
+                        'value' => $a['id_unidad'],
                         'label' => $a['nombre'],
                     ]
                 )

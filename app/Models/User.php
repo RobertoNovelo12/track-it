@@ -35,7 +35,6 @@ class User extends Authenticatable
         'puesto',
         'id_rol',
         'id_estado_usuario',
-        'id_area',
         'id_unidad',
         'id_departamento',
         'fecha_nacimiento',

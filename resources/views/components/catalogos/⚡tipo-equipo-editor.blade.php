@@ -273,19 +273,6 @@ new class extends Component
                 'order' => 'nombre',
             ],
 
-            'areas' => [
-                'table' =>
-                    'areas',
-
-                'id' =>
-                    'id_area',
-
-                'label' =>
-                    'Hoteles / Áreas',
-
-                'order' =>
-                    'nombre',
-            ],
 
 
             'departamentos' => [

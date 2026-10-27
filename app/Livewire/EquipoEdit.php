@@ -58,7 +58,6 @@ class EquipoEdit extends Component
 
     public string $idHotel = '';
 
-    public string $idArea = '';
 
     public string $idDepartamento = '';
     public string $idUbicacion = '';
@@ -135,7 +134,6 @@ class EquipoEdit extends Component
 
                 'id_unidad',
 
-                'id_area_origen',
 
             ]);
 
@@ -238,7 +236,6 @@ class EquipoEdit extends Component
             'id_ubicacion' => $ubicacionId,
 
             // El área ya no se usa: la organización es hotel + departamento.
-            'id_area' => null,
 
         ];
 
@@ -312,7 +309,7 @@ class EquipoEdit extends Component
         $row = DB::table('equipos as e')
             ->leftJoin('departamentos as dep', 'dep.id_departamento', '=', 'e.id_departamento')
             ->where('e.id_equipo', $this->equipoId)
-            ->first(['e.*', 'dep.id_area as departamento_area_id',
+            ->first(['e.*',
                 'dep.id_departamento_principal as departamento_principal_id']);
         $data = $row ? (array) $row : null;
 
@@ -388,15 +385,6 @@ class EquipoEdit extends Component
 
         );
 
-        $this->idArea = (string) (
-
-            $this->idDepartamento !== ''
-
-                ? ($data['departamento_area_id'] ?? '')
-
-                : ($data['id_area'] ?? '')
-
-        );
 
         $this->cargarDatosComplementarios();
 
@@ -1310,13 +1298,7 @@ class EquipoEdit extends Component
                 ],
 
                 'unidades_organizativas' => ['unidades_organizativas', 'id_unidad'],
-                'areas' => [
 
-                    'areas',
-
-                    'id_area',
-
-                ],
 
                 'departamentos' => [
 
@@ -1464,13 +1446,7 @@ class EquipoEdit extends Component
 
     }
 
-    public function updatedIdArea(): void
 
-    {
-
-        $this->idDepartamento = '';
-
-    }
 
     public function getEstadosProperty(): array
 
@@ -1670,31 +1646,7 @@ class EquipoEdit extends Component
 
     }
 
-    public function getAreasProperty(): array
 
-    {
-
-        return Cache::remember(
-
-            'form.areas.v2',
-
-            now()->addMinutes(30),
-
-            fn () => $this->toPlainArray(
-
-                DB::table('areas')
-
-                    ->where('activo', true)
-
-                    ->orderBy('nombre')
-
-                    ->get(['id_area', 'nombre'])
-
-            )
-
-        );
-
-    }
 
     public function getHotelesProperty(): array
 
@@ -2102,7 +2054,6 @@ class EquipoEdit extends Component
 
             'idCondicionActivo',
 
-            'idArea',
 
             'idHotel',
 
@@ -2182,13 +2133,6 @@ class EquipoEdit extends Component
 
             'hoteles' => $this->toFrontendOptions($this->hoteles, 'id_unidad'),
 
-            'areas' => $this->toFrontendOptions(
-
-                $this->areas,
-
-                'id_area'
-
-            ),
 
             // [{ value, label, unidad, departamentos }] (filtro en el navegador).
             'ubicaciones' => app(\App\Services\UbicacionOrganizacionalService::class)->ubicaciones(),
@@ -2690,7 +2634,6 @@ class EquipoEdit extends Component
 
                         'id_unidad' => $organizacion['id_unidad'],
 
-                        'id_area' => $organizacion['id_area'],
 
                         'id_departamento' => $organizacion['id_departamento'],
 
@@ -2994,7 +2937,6 @@ class EquipoEdit extends Component
 
                 'idHotel' => '',
 
-                'idArea' => '',
 
                 'idDepartamento' => '',
 

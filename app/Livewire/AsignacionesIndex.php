@@ -58,7 +58,7 @@ class AsignacionesIndex extends Component
 
     public string $numeroColaborador = '';
 
-    public string $idAreaAsignar = '';
+    public string $idUnidadAsignar = '';
 
     public string $idDepartamentoAsignar = '';
 
@@ -138,7 +138,7 @@ class AsignacionesIndex extends Component
     |--------------------------------------------------------------------------
     */
 
-    public function updatedIdAreaAsignar(): void
+    public function updatedIdUnidadAsignar(): void
     {
         $this->idDepartamentoAsignar = '';
 
@@ -189,10 +189,10 @@ class AsignacionesIndex extends Component
                     'max:255',
                 ],
 
-                'idAreaAsignar' => [
-                    'nullable',
+                'idUnidadAsignar' => [
+                    'required',
                     'integer',
-                    'exists:areas,id_area',
+                    \Illuminate\Validation\Rule::exists('unidades_organizativas', 'id_unidad')->where('activo', true),
                 ],
 
                 'idDepartamentoAsignar' => [
@@ -240,23 +240,11 @@ class AsignacionesIndex extends Component
         if (
             $this->idDepartamentoAsignar !== ''
             &&
-            $this->idAreaAsignar !== ''
+            $this->idUnidadAsignar !== ''
         ) {
 
-            $departamentoValido =
-                DB::table(
-                    'departamentos'
-                )
-
-                    ->where(
-                        'id_departamento',
-                        (int) $this->idDepartamentoAsignar
-                    )
-
-                    ->where(
-                        'id_area',
-                        (int) $this->idAreaAsignar
-                    )
+            $departamentoValido = \App\Models\Departamento::disponiblesParaUnidad((int) $this->idUnidadAsignar)
+                    ->where('id_departamento', (int) $this->idDepartamentoAsignar)
 
                     ->exists();
 
@@ -267,7 +255,7 @@ class AsignacionesIndex extends Component
 
                 $this->addError(
                     'idDepartamentoAsignar',
-                    'El departamento no pertenece al área seleccionada.'
+                    'El departamento no pertenece al hotel seleccionado.'
                 );
 
                 return;
@@ -383,10 +371,7 @@ class AsignacionesIndex extends Component
                 | Crear asignación
                 |--------------------------------------------------------------------------
                 |
-                | Si se selecciona un departamento, guardamos el departamento
-                | y dejamos id_area en NULL.
-                |
-                | Si no hay departamento, guardamos directamente el área.
+                | Se guarda siempre el hotel y, opcionalmente, el departamento.
                 |
                 */
 
@@ -414,19 +399,7 @@ class AsignacionesIndex extends Component
 
                                 : null,
 
-                        'id_area' =>
-                            $this->idDepartamentoAsignar !== ''
-
-                                ? null
-
-                                : (
-                                    $this->idAreaAsignar !== ''
-
-                                        ? (int)
-                                            $this->idAreaAsignar
-
-                                        : null
-                                ),
+                        'id_unidad' => $this->idUnidadAsignar !== '' ? (int) $this->idUnidadAsignar : null,
 
                         'id_departamento' =>
                             $this->idDepartamentoAsignar !== ''
@@ -609,7 +582,7 @@ class AsignacionesIndex extends Component
             'idEquipoAsignar',
             'nombreColaborador',
             'numeroColaborador',
-            'idAreaAsignar',
+            'idUnidadAsignar',
             'idDepartamentoAsignar',
             'idUbicacionAsignar',
             'idTipoAsignacion',
@@ -1906,11 +1879,11 @@ class AsignacionesIndex extends Component
             ->rememberSimple(
                 self::CATALOG_CACHE_MODULE,
 
-                'asignaciones.areas',
+                'asignaciones.hoteles.v2',
 
                 fn (): array =>
                     DB::table(
-                        'areas'
+                        'unidades_organizativas'
                     )
 
                         ->where(
@@ -1923,7 +1896,7 @@ class AsignacionesIndex extends Component
                         )
 
                         ->get([
-                            'id_area',
+                            'id_unidad',
                             'nombre',
                         ])
 
@@ -1931,7 +1904,7 @@ class AsignacionesIndex extends Component
                             fn ($area) => [
                                 'value' =>
                                     (string)
-                                    $area->id_area,
+                                    $area->id_unidad,
 
                                 'label' =>
                                     $area->nombre,
@@ -1959,36 +1932,16 @@ class AsignacionesIndex extends Component
             ->remember(
                 self::CATALOG_CACHE_MODULE,
 
-                'asignaciones.departamentos',
+                'asignaciones.departamentos.v2',
 
                 [
                     'area' =>
-                        $this->idAreaAsignar,
+                        $this->idUnidadAsignar,
                 ],
 
                 function (): array {
 
-                    $query =
-                        DB::table(
-                            'departamentos'
-                        )
-
-                            ->where(
-                                'activo',
-                                true
-                            );
-
-
-                    if (
-                        $this->idAreaAsignar !== ''
-                    ) {
-
-                        $query->where(
-                            'id_area',
-                            (int)
-                            $this->idAreaAsignar
-                        );
-                    }
+                    $query = \App\Models\Departamento::disponiblesParaUnidad((int) $this->idUnidadAsignar);
 
 
                     return $query
@@ -2037,11 +1990,11 @@ class AsignacionesIndex extends Component
             ->remember(
                 self::CATALOG_CACHE_MODULE,
 
-                'asignaciones.ubicaciones',
+                'asignaciones.ubicaciones.v2',
 
                 [
                     'area' =>
-                        $this->idAreaAsignar,
+                        $this->idUnidadAsignar,
                 ],
 
                 function (): array {
@@ -2058,13 +2011,13 @@ class AsignacionesIndex extends Component
 
 
                     if (
-                        $this->idAreaAsignar !== ''
+                        $this->idUnidadAsignar !== ''
                     ) {
 
                         $query->where(
-                            'id_area',
+                            'id_unidad',
                             (int)
-                            $this->idAreaAsignar
+                            $this->idUnidadAsignar
                         );
                     }
 

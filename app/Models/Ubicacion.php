@@ -10,15 +10,11 @@ class Ubicacion extends Model
     protected $primaryKey = 'id_ubicacion';
     public $timestamps = false;
 
-    protected $fillable = ['id_sede', 'id_area', 'id_unidad', 'id_tipo_ubicacion', 'nombre', 'descripcion', 'activo'];
+    protected $fillable = ['id_sede', 'id_unidad', 'id_tipo_ubicacion', 'nombre', 'descripcion', 'activo'];
 
     public function sede()
     {
         return $this->belongsTo(Sede::class, 'id_sede', 'id_sede');
     }
 
-    public function area()
-    {
-        return $this->belongsTo(Area::class, 'id_area', 'id_area');
-    }
 }

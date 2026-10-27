@@ -12,7 +12,7 @@ test('el estado conservado desde el placeholder permite exportar tras la carga d
         const html = fs.readFileSync(path.join(views, file), 'utf8');
         assert.ok(html.includes(`x-data="@include('${shared}')"`));
     }
-    const state = new Function(`return (${expression})`)();
+    const state = new Function('window', `return (${expression})`)({});
     assert.equal(state.filtersOpen, false);
     assert.equal(state.exportando, false);
     const calls = [];
@@ -34,7 +34,12 @@ test('el estado conservado desde el placeholder permite exportar tras la carga d
 
 test('la exportación recupera su estado cuando falla la descarga', async () => {
     const messages = [];
-    const state = new Function('alert', `return (${expression})`)(text => messages.push(text));
+    const state = new Function('window', `return (${expression})`)({
+        trackitToast: (type, text) => {
+            if (type === 'error') messages.push(text);
+        },
+        trackitMensajeError: error => error.message,
+    });
     state.$root = { querySelectorAll: () => [] };
     state.$wire = { exportarInventario: async () => { throw new Error('network'); } };
     await state.exportar('xlsx');
