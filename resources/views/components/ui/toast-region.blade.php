@@ -181,6 +181,8 @@
 
     @toast.window="agregar($event.detail)"
 
+    id="trackitToastRegion"
+
     class="pointer-events-none fixed inset-x-4 bottom-4 z-[200] flex flex-col items-end gap-2 sm:inset-x-auto sm:right-6 sm:bottom-6"
     aria-live="polite"
     aria-atomic="false"

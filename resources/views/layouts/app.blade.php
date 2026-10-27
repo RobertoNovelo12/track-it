@@ -16,7 +16,7 @@
 
     <head>
         <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <title>@yield('title', 'Sistema') | Grand Palladium</title>
@@ -516,19 +516,28 @@ document.addEventListener(
                         @include('layouts.partials.encabezado', ['variante' => 'barra', 'encabezado' => $encabezadoPagina])
                     </div>
 
-                    {{-- Hamburguesa móvil: abre el drawer --}}
-                    <button
-                        type="button"
-                        onclick="toggleSidebar()"
-                        class="col-start-1 md:hidden shrink-0 text-[var(--theme-text-muted)] hover:text-[var(--theme-primary)]"
-                        aria-label="Abrir menú"
+                    {{--
+                        Logotipo (móvil): el menú está en la barra inferior
+                        (layouts/partials/menu-inferior); el logo lleva a Inicio.
+                    --}}
+                    @php
+                        $organizacionEncabezado = app(\App\Services\OrganizacionService::class);
+                    @endphp
+
+                    <a
+                        href="{{ route('dashboard') }}"
+                        wire:navigate
+                        class="col-start-1 flex shrink-0 items-center md:hidden"
+                        aria-label="Inicio — {{ $organizacionEncabezado->nombre() }}"
                     >
-                        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                            <path d="M4 6h16"/>
-                            <path d="M4 12h16"/>
-                            <path d="M4 18h16"/>
-                        </svg>
-                    </button>
+                        <img
+                            class="org-logo"
+                            src="{{ $organizacionEncabezado->logoUrl() }}"
+                            alt=""
+                            data-dark-mode="{{ $organizacionEncabezado->logoModoOscuro() }}"
+                            style="--org-logo-bg: {{ $organizacionEncabezado->logoColorFondo() }}; display: block; height: auto; max-height: 1.75rem; width: auto; max-width: 6.5rem; object-fit: contain;"
+                        >
+                    </a>
 
 
             {{-- ========================================================
@@ -613,7 +622,7 @@ document.addEventListener(
                         x-show="String(query ?? '') !== ''"
                         x-cloak
                         x-on:click="query = ''; $refs.campo?.focus()"
-                        class="absolute right-9 flex h-7 w-7 items-center justify-center rounded-md text-[var(--theme-text-muted)] transition-colors hover:bg-[var(--theme-surface-soft)] hover:text-[var(--theme-text-strong)] md:right-[3.75rem]"
+                        class="absolute right-1 flex h-7 w-7 items-center justify-center rounded-md text-[var(--theme-text-muted)] transition-colors hover:bg-[var(--theme-surface-soft)] hover:text-[var(--theme-text-strong)] md:right-[3.75rem]"
                         aria-label="Limpiar búsqueda"
                         title="Limpiar"
                     >
@@ -627,11 +636,11 @@ document.addEventListener(
                         Ctrl K
                     </span>
 
-                    {{-- Escáner de códigos de barras (móvil) --}}
+                    {{-- Escáner de códigos de barras: en móvil ahora está en la barra inferior (oculto aquí). --}}
                     <button
                         type="button"
                         x-on:click="$dispatch('abrir-escaner')"
-                        class="absolute right-1 flex h-8 w-8 items-center justify-center rounded-md text-[var(--theme-text-muted)] transition-colors hover:bg-[var(--theme-primary-soft)] hover:text-[var(--theme-primary)] md:hidden"
+                        class="absolute right-1 hidden h-8 w-8 items-center justify-center rounded-md text-[var(--theme-text-muted)] transition-colors hover:bg-[var(--theme-primary-soft)] hover:text-[var(--theme-primary)]"
                         aria-label="Escanear código de barras"
                         title="Escanear código de barras"
                     >
@@ -1488,7 +1497,10 @@ document.addEventListener(
     {{-- ============================================================
         PANEL GLOBAL DE NOTIFICACIONES
     ============================================================ --}}
-    {{-- Escáner de códigos de barras (se abre desde el buscador en móvil) --}}
+    {{-- Menú inferior (móvil): Inicio · Inventario · Escanear · Movimientos · Más --}}
+    @include('layouts.partials.menu-inferior')
+
+    {{-- Escáner de códigos de barras (se abre desde «Escanear» del menú inferior) --}}
     @include('layouts.partials.escaner-movil')
 
     <livewire:notifications-panel
