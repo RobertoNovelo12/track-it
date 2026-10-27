@@ -551,6 +551,19 @@ document.addEventListener(
                      */
                     init() {
                         window.focusTopSearch = () => this.enfocar();
+
+                        /*
+                         * Al vaciar el buscador estando en Inventario con
+                         * ?buscar=, la lista también deja de filtrar por él.
+                         */
+                        this.$watch('query', (valor) => {
+                            if (
+                                String(valor ?? '').trim() === ''
+                                && new URLSearchParams(window.location.search).has('buscar')
+                            ) {
+                                window.Livewire?.dispatch('limpiar-busqueda-general');
+                            }
+                        });
                     },
 
                     enfocar() {
