@@ -21,6 +21,9 @@
 
         <title>@yield('title', 'Sistema') | Grand Palladium</title>
 
+        {{-- Aplicación instalable (manifiesto, íconos, service worker) --}}
+        @include('layouts.partials.pwa-head')
+
         {{-- Fuente Poppins (local) --}}
         @include('layouts.partials.fuente-poppins')
 

@@ -55,6 +55,34 @@
 </style>
 
 {{-- ============================================================
+    LOGOTIPO CON VERSIÓN OSCURA (Track IT predeterminado)
+    ------------------------------------------------------------
+    Las <img class="org-logo"> con data-src-claro / data-src-oscuro
+    cambian de archivo según el tema (en lugar de aplicar un filtro).
+============================================================ --}}
+<script>
+    (() => {
+        const aplicar = () => {
+            const oscuro = document.documentElement.classList.contains('dark');
+
+            document.querySelectorAll('img.org-logo[data-src-oscuro]').forEach((img) => {
+                const destino = oscuro ? img.dataset.srcOscuro : img.dataset.srcClaro;
+
+                if (destino && img.getAttribute('src') !== destino) {
+                    img.setAttribute('src', destino);
+                }
+            });
+        };
+
+        window.trackitAplicarLogoTema = aplicar;
+
+        document.addEventListener('DOMContentLoaded', aplicar);
+        document.addEventListener('livewire:navigated', aplicar);
+        window.addEventListener('trackit-theme-changed', aplicar);
+    })();
+</script>
+
+{{-- ============================================================
     COLOR PRINCIPAL DE LA ORGANIZACIÓN
     ------------------------------------------------------------
     Administración › Organización › Colores. Reemplaza

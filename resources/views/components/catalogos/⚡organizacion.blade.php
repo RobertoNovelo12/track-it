@@ -711,7 +711,9 @@ new class extends Component
         'sedes' => 'Sedes',
     ];
 
-    $logoActual = $org->logoUrl();
+    // Interfaz: el personalizado o Track IT (predeterminado) y su versión oscura.
+    $logoActual = $org->logoInterfazUrl();
+    $logoActualOscuro = $org->logoInterfazUrlOscuro();
     $logoPrevio = null;
 
     if ($logo && ! $errors->has('logo')) {
@@ -874,7 +876,7 @@ new class extends Component
                     @elseif ($org->logoPersonalizado())
                         <button
                             type="button"
-                            x-on:click="$dispatch('confirmar', { titulo: '¿Restaurar el logotipo predeterminado?', mensaje: 'Se quitará el logotipo personalizado de la organización.', confirmar: 'Restaurar', peligro: false, accion: () => $wire.restaurarLogo() })"
+                            x-on:click="$dispatch('confirmar', { titulo: '¿Restaurar el logotipo predeterminado?', mensaje: 'Se quitará el logotipo personalizado y se usará el de Track IT.', confirmar: 'Restaurar', peligro: false, accion: () => $wire.restaurarLogo() })"
                             wire:loading.attr="disabled"
                             class="text-xs text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] hover:underline"
                         >
@@ -1028,14 +1030,19 @@ new class extends Component
                                     class="flex h-24 items-center justify-between gap-3 rounded-lg border px-5"
                                     style="background-color: {{ $previa['fondo'] }}; border-color: {{ $previa['borde'] }};"
                                 >
+                                    @php
+                                        // Track IT ya tiene versión oscura: se muestra tal cual, sin filtro.
+                                        $usaVersionOscura = $previa['oscuro'] && ! $logoPrevio && $logoActualOscuro;
+                                    @endphp
+
                                     <img
-                                        src="{{ $logoPrevio ?? $logoActual }}"
+                                        src="{{ $logoPrevio ?? ($usaVersionOscura ? $logoActualOscuro : $logoActual) }}"
                                         alt="Vista previa en {{ mb_strtolower($previa['titulo']) }}"
                                         @class([
                                             'h-auto max-h-[4.5rem] min-w-0 object-contain',
                                             'org-logo-preview-dark' => $previa['oscuro'],
                                         ])
-                                        @if ($previa['oscuro']) x-bind:data-dark-mode="modo" @endif
+                                        @if ($previa['oscuro'] && ! $usaVersionOscura) x-bind:data-dark-mode="modo" @endif
                                         x-bind:style="'width: ' + Math.min(Math.round(135 * escala / 100), 170) + 'px; --org-logo-bg: ' + colorFondo"
                                     >
 

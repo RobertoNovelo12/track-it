@@ -26,6 +26,16 @@ class OrganizacionService
 {
     public const LOGO_PREDETERMINADO = 'images/logo-grand-palladium.png';
 
+    /*
+     * Logotipo de Track IT: el predeterminado de la interfaz (menú,
+     * hoja «Más», inicio de sesión). Es el que queda al pulsar
+     * «Restaurar logotipo predeterminado». Los documentos (actas, PDF)
+     * siguen usando LOGO_PREDETERMINADO.
+     */
+    public const LOGO_INTERFAZ = 'images/track-it/track-it-logo.svg';
+
+    public const LOGO_INTERFAZ_OSCURO = 'images/track-it/track-it-logo-oscuro.svg';
+
     public const NOMBRE_PREDETERMINADO = 'Grand Palladium Hotels & Resorts';
 
     public const ESCALA_MINIMA = 50;
@@ -241,6 +251,38 @@ class OrganizacionService
         return filled($version)
             ? route('organizacion.logo', ['version' => $version])
             : asset(self::LOGO_PREDETERMINADO);
+    }
+
+    /*
+     * Logotipo de la interfaz: el personalizado o, si no hay, Track IT.
+     */
+    public function logoInterfazUrl(): string
+    {
+        return $this->logoPersonalizado()
+            ? $this->logoUrl()
+            : asset(self::LOGO_INTERFAZ);
+    }
+
+    /*
+     * Versión para modo oscuro (solo la de Track IT; un logotipo
+     * personalizado usa su ajuste «En modo oscuro»).
+     */
+    public function logoInterfazUrlOscuro(): ?string
+    {
+        return $this->logoPersonalizado()
+            ? null
+            : asset(self::LOGO_INTERFAZ_OSCURO);
+    }
+
+    /*
+     * Modo oscuro del logotipo de la interfaz: Track IT ya tiene su
+     * versión oscura, así que no lleva filtro.
+     */
+    public function logoInterfazModoOscuro(): string
+    {
+        return $this->logoPersonalizado()
+            ? $this->logoModoOscuro()
+            : 'original';
     }
 
     public function logoEscala(): int

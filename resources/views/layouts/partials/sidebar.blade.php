@@ -214,11 +214,13 @@
                 <img
                     id="sidebarLogo"
 
-                    src="{{ $organizacion->logoUrl() }}"
+                    src="{{ $organizacion->logoInterfazUrl() }}"
+
+                    @if ($organizacion->logoInterfazUrlOscuro()) data-src-claro="{{ $organizacion->logoInterfazUrl() }}" data-src-oscuro="{{ $organizacion->logoInterfazUrlOscuro() }}" @endif
 
                     alt="{{ $organizacion->nombre() }}"
 
-                    data-dark-mode="{{ $organizacion->logoModoOscuro() }}"
+                    data-dark-mode="{{ $organizacion->logoInterfazModoOscuro() }}"
 
                     style="--org-logo-w: {{ $organizacion->logoAncho(135) }}px; --org-logo-bg: {{ $organizacion->logoColorFondo() }};"
 
@@ -869,6 +871,61 @@
             space-y-0.5
         "
     >
+
+        {{-- ====================================================
+            INSTALAR APLICACIÓN (solo si el navegador lo permite;
+            ver layouts/partials/pwa-head)
+        ==================================================== --}}
+        <button
+            type="button"
+            x-data="{
+                disponible: !! window.trackitInstalacion,
+                instalada: window.trackitAppInstalada?.() ?? false,
+                init() {
+                    window.addEventListener('trackit-instalable', () => this.disponible = !! window.trackitInstalacion);
+                    window.addEventListener('trackit-instalada', () => { this.instalada = true; this.disponible = false; });
+                },
+            }"
+            x-show="disponible && ! instalada"
+            x-cloak
+            x-on:click="window.trackitInstalarApp()"
+            class="
+                sidebar-footer-link
+
+                w-full
+                min-h-8
+
+                flex
+                items-center
+
+                gap-3
+
+                px-2
+
+                rounded-md
+
+                text-sm
+                font-medium
+
+                text-[var(--theme-text-muted)]
+
+                hover:bg-[var(--theme-surface)]
+                hover:text-[var(--theme-text-strong)]
+
+                transition-colors
+            "
+        >
+            <svg class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 4v11"/>
+                <path d="M7.5 10.5L12 15l4.5-4.5"/>
+                <path d="M5 19h14"/>
+            </svg>
+
+            <span class="sidebar-label whitespace-nowrap">
+                Instalar aplicación
+            </span>
+        </button>
+
 
         {{-- ====================================================
             MI CUENTA

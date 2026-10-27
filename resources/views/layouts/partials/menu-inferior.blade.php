@@ -354,6 +354,23 @@
         color: var(--theme-text-strong);
     }
 
+    .mi-pasos {
+        margin: 0.25rem 0.75rem 0.5rem 2.75rem;
+        padding-left: 1rem;
+        color: var(--theme-text-muted);
+        font-size: 0.875rem;
+        line-height: 1.5;
+    }
+
+    .mi-pasos li + li {
+        margin-top: 0.25rem;
+    }
+
+    .mi-pasos strong {
+        color: var(--theme-text-strong);
+        font-weight: 600;
+    }
+
     .mi-separador {
         height: 1px;
         margin: 0.5rem 0.75rem;
@@ -407,7 +424,7 @@
             document.documentElement.style.overflow = 'hidden';
 
             this.$nextTick(() => {
-                this.$refs['hoja_' + nombre]?.querySelector('a, button')?.focus();
+                [...(this.$refs['hoja_' + nombre]?.querySelectorAll('a, button') ?? [])].find(elemento => elemento.offsetParent !== null)?.focus();
             });
         },
 
@@ -467,7 +484,7 @@
                 return;
             }
 
-            const elementos = [...hoja.querySelectorAll('a[href], button:not([disabled])')];
+            const elementos = [...hoja.querySelectorAll('a[href], button:not([disabled])')].filter(elemento => elemento.offsetParent !== null);
 
             if (elementos.length === 0) {
                 return;
@@ -735,9 +752,11 @@
             <div class="mi-logo-hoja">
                 <img
                     class="org-logo"
-                    src="{{ $organizacionMenu->logoUrl() }}"
+                    src="{{ $organizacionMenu->logoInterfazUrl() }}"
+
+                    @if ($organizacionMenu->logoInterfazUrlOscuro()) data-src-claro="{{ $organizacionMenu->logoInterfazUrl() }}" data-src-oscuro="{{ $organizacionMenu->logoInterfazUrlOscuro() }}" @endif
                     alt="{{ $organizacionMenu->nombre() }}"
-                    data-dark-mode="{{ $organizacionMenu->logoModoOscuro() }}"
+                    data-dark-mode="{{ $organizacionMenu->logoInterfazModoOscuro() }}"
                     style="--org-logo-w: {{ $organizacionMenu->logoAncho(135) }}px; --org-logo-bg: {{ $organizacionMenu->logoColorFondo() }};"
                 >
             </div>
@@ -810,6 +829,61 @@
                     Mi cuenta
                 </a>
             @endif
+
+            {{--
+                INSTALAR APLICACIÓN (ver layouts/partials/pwa-head):
+                botón si el navegador lo permite; en iPhone, los pasos.
+            --}}
+            <div
+                x-data="{
+                    disponible: !! window.trackitInstalacion,
+                    instalada: window.trackitAppInstalada?.() ?? false,
+                    ios: window.trackitEsIos?.() ?? false,
+                    verPasos: false,
+                    init() {
+                        window.addEventListener('trackit-instalable', () => this.disponible = !! window.trackitInstalacion);
+                        window.addEventListener('trackit-instalada', () => { this.instalada = true; this.disponible = false; });
+                    },
+                }"
+                x-show="! instalada && (disponible || ios)"
+                x-cloak
+            >
+                <button
+                    type="button"
+                    class="mi-opcion"
+                    x-show="disponible"
+                    x-on:click="window.trackitInstalarApp()"
+                >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M12 4v11"/>
+                        <path d="M7.5 10.5L12 15l4.5-4.5"/>
+                        <path d="M5 19h14"/>
+                    </svg>
+                    Instalar aplicación
+                </button>
+
+                <button
+                    type="button"
+                    class="mi-opcion"
+                    x-show="! disponible && ios"
+                    x-on:click="verPasos = ! verPasos"
+                    x-bind:aria-expanded="verPasos ? 'true' : 'false'"
+                    aria-controls="mi-pasos-ios"
+                >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M12 4v11"/>
+                        <path d="M7.5 10.5L12 15l4.5-4.5"/>
+                        <path d="M5 19h14"/>
+                    </svg>
+                    Instalar en el iPhone
+                </button>
+
+                <ol id="mi-pasos-ios" class="mi-pasos" x-show="verPasos" x-cloak>
+                    <li>En Safari, toca <strong>Compartir</strong> (el cuadro con la flecha hacia arriba).</li>
+                    <li>Elige <strong>Agregar a pantalla de inicio</strong>.</li>
+                    <li>Toca <strong>Agregar</strong>. Track IT aparecerá como una app.</li>
+                </ol>
+            </div>
 
             {{-- MODO CLARO / OSCURO --}}
             <button

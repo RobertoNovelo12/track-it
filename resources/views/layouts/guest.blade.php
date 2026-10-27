@@ -13,6 +13,9 @@
         @yield('title', 'Track-IT') | Grand Palladium Hotels &amp; Resorts
     </title>
 
+    {{-- Aplicación instalable (manifiesto, íconos, service worker) --}}
+    @include('layouts.partials.pwa-head')
+
 
     {{-- ============================================================
         TEMA
@@ -440,9 +443,11 @@
 
                 <img
                     id="guestLogo"
-                    src="{{ $organizacion->logoUrl() }}"
+                    src="{{ $organizacion->logoInterfazUrl() }}"
+
+                    @if ($organizacion->logoInterfazUrlOscuro()) data-src-claro="{{ $organizacion->logoInterfazUrl() }}" data-src-oscuro="{{ $organizacion->logoInterfazUrlOscuro() }}" @endif
                     alt="{{ $organizacion->nombre() }}"
-                    data-dark-mode="{{ $organizacion->logoModoOscuro() }}"
+                    data-dark-mode="{{ $organizacion->logoInterfazModoOscuro() }}"
                     style="--org-logo-w: {{ $organizacion->logoAncho(150) }}px; --org-logo-w-sm: {{ $organizacion->logoAncho(170) }}px; --org-logo-bg: {{ $organizacion->logoColorFondo() }};"
                     class="
                         org-logo
