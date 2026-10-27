@@ -201,18 +201,31 @@ class EquipoSearch extends Component
          * accidente y compara códigos y series sin guiones. Si no queda
          * ningún término útil, no se muestran los equipos automáticamente.
          */
+        $columnas = [
+            'e.nombre_equipo',
+            'e.id_equipo',
+            'e.codigo_inventario',
+            'e.numero_serie',
+            'te.nombre',
+            'ma.nombre',
+            'mo.nombre',
+        ];
+
+        /*
+         * Software instalado (Administración › Programas): nombre y
+         * empresa de los programas del equipo, p. ej. «office», «adobe».
+         */
+        if (app(\App\Services\ProgramasService::class)->disponible()) {
+            $columnas[] = "(SELECT string_agg(p_busqueda.nombre || ' ' || COALESCE(p_busqueda.empresa, ''), ' ')
+                FROM equipo_programa AS ep_busqueda
+                JOIN programas AS p_busqueda ON p_busqueda.id_programa = ep_busqueda.id_programa
+                WHERE ep_busqueda.id_equipo = e.id_equipo)";
+        }
+
         $hayTerminos = \App\Support\BusquedaTolerante::aplicar(
             $query,
             (string) $this->search,
-            [
-                'e.nombre_equipo',
-                'e.id_equipo',
-                'e.codigo_inventario',
-                'e.numero_serie',
-                'te.nombre',
-                'ma.nombre',
-                'mo.nombre',
-            ],
+            $columnas,
             [
                 'e.codigo_inventario',
                 'e.numero_serie',
