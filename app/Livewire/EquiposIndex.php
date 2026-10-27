@@ -255,6 +255,28 @@ class EquiposIndex extends Component
     public function updatedTipoActivo(): void
     {
         $this->camposTipo = [];
+
+        // «Programa instalado» sólo aplica a tipos que incluyen programas.
+        if (! $this->filtroProgramaAplica()) {
+            $this->programa = null;
+        }
+    }
+
+    /*
+     * «Programa instalado» sólo se muestra con un tipo elegido que
+     * «Incluye programas» (sin tipo elegido no aparece).
+     */
+    private function filtroProgramaAplica(): bool
+    {
+        $tipo = trim((string) ($this->tipoActivo ?? ''));
+
+        if ($tipo === '') {
+            return false;
+        }
+
+        $porTipo = app(\App\Services\ProgramasService::class)->porTipo();
+
+        return (bool) ($porTipo[$tipo]['incluye'] ?? false);
     }
 
 
@@ -369,6 +391,21 @@ class EquiposIndex extends Component
     | No se limpia la búsqueda general porque continúa siendo independiente.
     |
     */
+
+    /*
+     * El buscador del encabezado se vació estando en Inventario: quitar
+     * también ?buscar= (si no, seguía filtrando sin verse en el panel).
+     */
+    #[\Livewire\Attributes\On('limpiar-busqueda-general')]
+    public function limpiarBusquedaGeneral(): void
+    {
+        if (($this->search ?? '') === '') {
+            return;
+        }
+
+        $this->search = null;
+        $this->resetPage();
+    }
 
     public function resetFilters(): void
     {
@@ -906,18 +943,28 @@ class EquiposIndex extends Component
          * («movil» = «Móvil»), ignora signos tecleados por accidente
          * («laptop{») y compara códigos y series también sin guiones.
          */
+        $columnas = [
+            'e.nombre_equipo',
+            'e.id_equipo',
+            'e.codigo_inventario',
+            'e.numero_serie',
+            'te.nombre',
+            'ma.nombre',
+            'mo.nombre',
+        ];
+
+        // Software instalado (igual que el buscador del encabezado).
+        if (app(\App\Services\ProgramasService::class)->disponible()) {
+            $columnas[] = "(SELECT string_agg(p_busqueda.nombre || ' ' || COALESCE(p_busqueda.empresa, ''), ' ')
+                FROM equipo_programa AS ep_busqueda
+                JOIN programas AS p_busqueda ON p_busqueda.id_programa = ep_busqueda.id_programa
+                WHERE ep_busqueda.id_equipo = e.id_equipo)";
+        }
+
         \App\Support\BusquedaTolerante::aplicar(
             $query,
             (string) ($this->search ?? ''),
-            [
-                'e.nombre_equipo',
-                'e.id_equipo',
-                'e.codigo_inventario',
-                'e.numero_serie',
-                'te.nombre',
-                'ma.nombre',
-                'mo.nombre',
-            ],
+            $columnas,
             [
                 'e.codigo_inventario',
                 'e.numero_serie',
@@ -1348,10 +1395,13 @@ class EquiposIndex extends Component
                         ? $this->getCamposFiltrables((int) $this->tipoActivo)
                         : [],
                 // Filtro «Programa instalado» (vacío si no hay programas).
+                // Sólo para tipos que «Incluyen programas».
                 'programasFiltro' =>
-                    app(\App\Services\ProgramasService::class)->opciones(
-                        ctype_digit((string) $this->programa) ? [(int) $this->programa] : []
-                    ),
+                    $this->filtroProgramaAplica()
+                        ? app(\App\Services\ProgramasService::class)->opciones(
+                            ctype_digit((string) $this->programa) ? [(int) $this->programa] : []
+                        )
+                        : [],
                 'situaciones' =>
                     collect(self::SITUACIONES)
                         ->map(fn (string $label, string $value): array => [

@@ -762,6 +762,11 @@ trait FiltraEquipos
             return;
         }
 
+        // Con un tipo que no incluye programas, el filtro no aplica (p. ej. ?programa= en la URL).
+        if (method_exists($this, 'filtroProgramaAplica') && ! $this->filtroProgramaAplica()) {
+            return;
+        }
+
         $query->whereExists(fn ($sub) => $sub->selectRaw('1')
             ->from('equipo_programa as ep_filtro')
             ->whereColumn('ep_filtro.id_equipo', 'e.id_equipo')
