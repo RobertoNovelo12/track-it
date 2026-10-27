@@ -516,28 +516,7 @@ document.addEventListener(
                         @include('layouts.partials.encabezado', ['variante' => 'barra', 'encabezado' => $encabezadoPagina])
                     </div>
 
-                    {{--
-                        Logotipo (móvil): el menú está en la barra inferior
-                        (layouts/partials/menu-inferior); el logo lleva a Inicio.
-                    --}}
-                    @php
-                        $organizacionEncabezado = app(\App\Services\OrganizacionService::class);
-                    @endphp
-
-                    <a
-                        href="{{ route('dashboard') }}"
-                        wire:navigate
-                        class="col-start-1 flex shrink-0 items-center md:hidden"
-                        aria-label="Inicio — {{ $organizacionEncabezado->nombre() }}"
-                    >
-                        <img
-                            class="org-logo"
-                            src="{{ $organizacionEncabezado->logoUrl() }}"
-                            alt=""
-                            data-dark-mode="{{ $organizacionEncabezado->logoModoOscuro() }}"
-                            style="--org-logo-bg: {{ $organizacionEncabezado->logoColorFondo() }}; display: block; height: auto; max-height: 1.75rem; width: auto; max-width: 6.5rem; object-fit: contain;"
-                        >
-                    </a>
+                    {{-- Móvil: el menú está en la barra inferior y el logotipo en su hoja «Más» (layouts/partials/menu-inferior). --}}
 
 
             {{-- ========================================================

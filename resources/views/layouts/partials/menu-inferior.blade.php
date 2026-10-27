@@ -116,9 +116,9 @@
         display: flex;
         align-items: stretch;
         justify-content: space-around;
-        gap: 0.25rem;
+        gap: 0;
         height: calc(4rem + env(safe-area-inset-bottom, 0px));
-        padding: 0 0.5rem env(safe-area-inset-bottom, 0px);
+        padding: 0 0.25rem env(safe-area-inset-bottom, 0px);
         background: var(--theme-surface);
         border-top: 1px solid var(--theme-border);
         box-shadow: 0 -6px 18px rgba(0, 0, 0, 0.06);
@@ -141,8 +141,9 @@
         border: 0;
         background: transparent;
         color: var(--theme-text-muted);
-        font-size: 0.6875rem;
+        font-size: 0.65rem;
         font-weight: 500;
+        letter-spacing: -0.01em;
         line-height: 1;
         text-decoration: none;
         border-radius: 0.5rem;
@@ -199,7 +200,7 @@
         border: 0;
         background: transparent;
         color: var(--theme-text);
-        font-size: 0.6875rem;
+        font-size: 0.65rem;
         font-weight: 600;
         line-height: 1;
         cursor: pointer;
