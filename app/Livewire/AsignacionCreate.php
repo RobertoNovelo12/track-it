@@ -104,6 +104,8 @@ class AsignacionCreate extends Component
         // Permiso por rol (ver AppServiceProvider).
         \Illuminate\Support\Facades\Gate::authorize('gestionar');
 
+        $payloadOriginal = $payload;
+
         $payload =
             $this->normalizePayload($payload);
 
@@ -130,6 +132,20 @@ class AsignacionCreate extends Component
                         'required',
                         'integer',
                         'exists:equipos,id_equipo',
+                    ],
+
+                    // Host editable (vacío = sin host).
+                    'hostEquipo' => [
+                        'nullable',
+                        'string',
+                        'max:255',
+                    ],
+
+                    // «Nuevo nombre»: opcional; vacío = conservar el actual.
+                    'nuevoNombreEquipo' => [
+                        'nullable',
+                        'string',
+                        'max:255',
                     ],
 
                     'nombreColaborador' => [
@@ -277,6 +293,7 @@ class AsignacionCreate extends Component
             DB::transaction(
                 function () use (
                     $payload,
+                    $payloadOriginal,
                     $validated,
                     $organizacion,
                     $fechaAsignacion,
@@ -435,6 +452,43 @@ class AsignacionCreate extends Component
                                 'id_estado_activo' =>
                                     $estadoAsignado,
                             ]);
+                    }
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Nuevo nombre del equipo (opcional)
+                    |--------------------------------------------------------------------------
+                    */
+
+                    /*
+                     * Host: editable en el formulario; se guarda si cambió.
+                     * Sólo si llegó en el envío (formularios abiertos antes
+                     * de este cambio no lo mandan y no deben borrarlo).
+                     */
+                    if (array_key_exists('hostEquipo', $payloadOriginal)) {
+                        $host = trim((string) ($validated['hostEquipo'] ?? ''));
+                        $host = $host === '' ? null : $host;
+
+                        if ($host !== ($equipo->host !== null && $equipo->host !== '' ? (string) $equipo->host : null)) {
+                            DB::table('equipos')
+                                ->where('id_equipo', $equipoId)
+                                ->update(['host' => $host]);
+
+                            $equipo->host = $host;
+                        }
+                    }
+
+                    $nuevoNombre = trim((string) ($validated['nuevoNombreEquipo'] ?? ''));
+
+                    if (
+                        $nuevoNombre !== ''
+                        && $nuevoNombre !== (string) $equipo->nombre_equipo
+                    ) {
+                        DB::table('equipos')
+                            ->where('id_equipo', $equipoId)
+                            ->update(['nombre_equipo' => $nuevoNombre]);
+
+                        $equipo->nombre_equipo = $nuevoNombre;
                     }
 
                     return [
@@ -642,10 +696,16 @@ class AsignacionCreate extends Component
                             )
                         );
 
-                    if ($descripcion === '') {
-                        $descripcion =
-                            $equipo->nombre_equipo
-                            ?: 'Equipo';
+                    /*
+                     * En la lista se muestra el nombre del equipo (hay
+                     * muchos modelos iguales); sin nombre, tipo/marca/modelo.
+                     */
+                    $nombre = trim((string) ($equipo->nombre_equipo ?? ''));
+
+                    if ($nombre !== '') {
+                        $descripcion = $nombre;
+                    } elseif ($descripcion === '') {
+                        $descripcion = 'Equipo';
                     }
 
                     return [
@@ -822,6 +882,9 @@ class AsignacionCreate extends Component
                     'asignacion',
 
                 'idEquipoAsignar' =>
+                    '',
+
+                'nuevoNombreEquipo' =>
                     '',
 
                 'colaborador' =>

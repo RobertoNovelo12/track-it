@@ -32,6 +32,28 @@
             idEquipoAsignar: '',
             hostEquipo: '',
 
+            // «Nuevo nombre»: renombrar el equipo al asignarlo (opcional).
+            nuevoNombreActivo: false,
+            nuevoNombreEquipo: '',
+
+            nombreActualEquipo() {
+                const equipo = (this.data?.equipos ?? []).find(
+                    item => String(item?.value ?? '') === String(this.idEquipoAsignar ?? '')
+                );
+
+                return equipo ? String(equipo.name ?? '') : '';
+            },
+
+            alternarNuevoNombre() {
+                this.nuevoNombreActivo = ! this.nuevoNombreActivo;
+                this.nuevoNombreEquipo = '';
+                this.clearValidationError('nuevoNombreEquipo');
+
+                if (this.nuevoNombreActivo) {
+                    this.$nextTick(() => document.getElementById('assignment-new-name')?.focus());
+                }
+            },
+
             // Selector: id del usuario o «texto:Nombre» (sin cuenta).
             colaborador: '',
             nombreColaborador: '',
@@ -102,6 +124,10 @@
                         this.clearValidationError(
                             'idEquipoAsignar'
                         );
+
+                        // Otro equipo: el nuevo nombre escrito ya no aplica.
+                        this.nuevoNombreEquipo = '';
+                        this.clearValidationError('nuevoNombreEquipo');
                     }
                 );
 
@@ -324,6 +350,15 @@
                             this.idEquipoAsignar ?? ''
                         ),
 
+                    // Host editable: se guarda en el equipo si cambió.
+                    hostEquipo:
+                        String(this.hostEquipo ?? '').trim(),
+
+                    nuevoNombreEquipo:
+                        this.nuevoNombreActivo
+                            ? String(this.nuevoNombreEquipo ?? '').trim()
+                            : '',
+
                     colaborador:
                         String(
                             this.colaborador ?? ''
@@ -438,6 +473,15 @@
                 ) {
                     errors.idEquipoAsignar = [
                         'Selecciona un equipo.'
+                    ];
+                }
+
+                if (
+                    this.nuevoNombreActivo
+                    && String(payload.nuevoNombreEquipo ?? '') === ''
+                ) {
+                    errors.nuevoNombreEquipo = [
+                        'Escribe el nuevo nombre del equipo o quita «Nuevo nombre».'
                     ];
                 }
 
@@ -969,442 +1013,495 @@
                     "
                 >
 
-                    {{-- =================================================
-                        EQUIPO
-                    ================================================= --}}
-                    <div class="min-w-0">
+                    {{-- Columna izquierda: independiente en pantallas grandes; en celular
+                         (display: contents) los campos se intercalan con «order». --}}
+                    <div class="contents lg:flex lg:flex-col lg:gap-y-4 min-w-0">
+                        {{-- =================================================
+                            EQUIPO
+                        ================================================= --}}
+                        <div class="order-1 lg:order-none relative min-w-0">
+                            {{-- Nuevo nombre: se guarda en el equipo al asignar. --}}
+                            <button
+                                type="button"
+                                x-on:click="alternarNuevoNombre()"
+                                x-bind:aria-expanded="nuevoNombreActivo ? 'true' : 'false'"
+                                class="absolute right-0 top-0 z-10 text-xs text-[var(--theme-primary)] hover:text-[var(--theme-primary-hover)] hover:underline transition-colors"
+                                x-text="nuevoNombreActivo ? 'Conservar el nombre actual' : 'Nuevo nombre'"
+                            >Nuevo nombre</button>
 
-                        <x-searchable-select
-                            x-model="idEquipoAsignar"
-                            x-options="data.equipos"
-
-                            label="Nombre de Equipo *"
-                            placeholder="Buscar equipo..."
-
-                            :show-clear="false"
-                        />
-
-                        <p
-                            x-show="fieldError('idEquipoAsignar')"
-                            x-cloak
-                            x-text="fieldError('idEquipoAsignar')"
-                            class="
-                                mt-1
-                                text-xs
-                                text-[var(--theme-danger)]
-                            "
-                        ></p>
-                    </div>
-
-
-                    {{-- =================================================
-                        COLABORADOR
-                    ================================================= --}}
-                    <div class="min-w-0">
-
-                        <label
-                            for="assignment-collaborator"
-                            class="
-                                block
-                                mb-1.5
-
-                                text-xs
-                                text-[var(--theme-text-muted)]
-                            "
-                        >
-                            Colaborador *
-                        </label>
-
-                        <div id="assignment-collaborator">
                             <x-searchable-select
-                                x-model="colaborador"
-                                x-options="data.usuarios ?? []"
-                                :options="$assignmentData['usuarios'] ?? []"
+                                x-model="idEquipoAsignar"
+                                x-options="data.equipos"
+
+                                label="Nombre de Equipo *"
+                                placeholder="Buscar equipo..."
+
                                 :show-clear="false"
-                                allow-custom
-                                placeholder="Busca un usuario o escribe un nombre"
                             />
+
+                            <p
+                                x-show="fieldError('idEquipoAsignar')"
+                                x-cloak
+                                x-text="fieldError('idEquipoAsignar')"
+                                class="
+                                    mt-1
+                                    text-xs
+                                    text-[var(--theme-danger)]
+                                "
+                            ></p>
                         </div>
 
-                        {{-- Sin cuenta: se guarda igual; un administrador la crea después --}}
-                        <p
-                            x-show="colaboradorSinCuenta()"
-                            x-cloak
-                            class="mt-1.5 flex items-start gap-1.5 text-xs text-[var(--theme-warning)]"
-                        >
-                            <svg class="mt-px h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <path d="M12 9v4M12 16.5v.5"/>
-                                <path d="M10.3 3.9L2.6 17.3A2 2 0 0 0 4.3 20h15.4a2 2 0 0 0 1.7-2.7L13.7 3.9a2 2 0 0 0-3.4 0z"/>
-                            </svg>
-                            <span>
-                                Este colaborador no tiene cuenta. La asignación se guardará y un
-                                administrador deberá crear su cuenta en Seguridad y roles.
-                            </span>
-                        </p>
 
-                        <p
-                            x-show="fieldError('nombreColaborador')"
-                            x-cloak
-                            x-text="fieldError('nombreColaborador')"
-                            class="
-                                mt-1
-                                text-xs
-                                text-[var(--theme-danger)]
-                            "
-                        ></p>
-                    </div>
-
-
-                    {{-- =================================================
-                        NÚMERO DE COLABORADOR
-                    ================================================= --}}
-                    <div class="min-w-0">
-
-                        <label
-                            for="assignment-collaborator-number"
-                            class="
-                                block
-                                mb-1.5
-
-                                text-xs
-                                text-[var(--theme-text-muted)]
-                            "
-                        >
-                            Número de colaborador
-                        </label>
-
-                        <input
-                            id="assignment-collaborator-number"
-                            type="text"
-
-                            x-model="numeroColaborador"
-                            x-bind:readonly="!! (usuarioSeleccionado()?.numero)"
-                            x-bind:title="usuarioSeleccionado()?.numero ? 'Número tomado de la cuenta del usuario' : ''"
-
-                            placeholder="Ej. 001245"
-
-                            class="
-                                w-full
-
-                                px-3
-                                py-2.5
-
-                                rounded-md
-
-                                border
-                                border-[var(--theme-border-strong)]
-
-                                bg-[var(--theme-surface)]
-
-                                text-sm
-                                text-[var(--theme-text)]
-
-                                placeholder:text-[var(--theme-text-muted)]
-
-                                outline-none
-
-                                focus:ring-1
-                                focus:ring-[var(--theme-primary)]
-                                focus:border-[var(--theme-primary)]
-
-                                transition-colors
-                            "
-                        >
-
-                    </div>
-
-
-                    {{-- =================================================
-                        HOST
-                    ================================================= --}}
-                    <div class="min-w-0">
-
-                        <label
-                            class="
-                                block
-                                mb-1.5
-
-                                text-xs
-                                text-[var(--theme-text-muted)]
-                            "
-                        >
-                            Host
-                        </label>
-
-                        <div class="relative">
+                        {{-- Nuevo nombre del equipo (fila completa: no desacomoda las columnas). --}}
+                        <div x-show="nuevoNombreActivo" x-cloak class="order-2 lg:order-none min-w-0">
+                            <label
+                                for="assignment-new-name"
+                                class="block mb-1.5 text-xs text-[var(--theme-text-muted)]"
+                            >
+                                Nuevo nombre del equipo
+                            </label>
 
                             <input
+                                id="assignment-new-name"
                                 type="text"
+                                maxlength="255"
 
-                                :value="hostEquipo"
-
-                                readonly
-
-                                placeholder="Se obtiene del equipo seleccionado"
+                                x-model="nuevoNombreEquipo"
+                                x-on:input="clearValidationError('nuevoNombreEquipo')"
+                                x-bind:placeholder="nombreActualEquipo() ? 'Actual: ' + nombreActualEquipo() : 'Ej. Laptop de Recepción'"
 
                                 class="
                                     w-full
 
                                     px-3
                                     py-2.5
-                                    pr-9
 
                                     rounded-md
 
                                     border
-                                    border-[var(--theme-border)]
+                                    border-[var(--theme-border-strong)]
 
-                                    bg-[var(--theme-surface-soft)]
+                                    bg-[var(--theme-surface)]
 
                                     text-sm
-                                    text-[var(--theme-text-muted)]
+                                    text-[var(--theme-text)]
 
                                     placeholder:text-[var(--theme-text-muted)]
 
-                                    cursor-default
+                                    outline-none
+
+                                    focus:ring-1
+                                    focus:ring-[var(--theme-primary)]
+                                    focus:border-[var(--theme-primary)]
+
+                                    transition-colors
                                 "
                             >
 
-                            <svg
+                            <p
+                                x-show="fieldError('nuevoNombreEquipo')"
+                                x-cloak
+                                x-text="fieldError('nuevoNombreEquipo')"
+                                class="mt-1 text-xs text-[var(--theme-danger)]"
+                            ></p>
+                        </div>
+
+
+                        {{-- =================================================
+                            NÚMERO DE COLABORADOR
+                        ================================================= --}}
+                        <div class="order-4 lg:order-none min-w-0">
+
+                            <label
+                                for="assignment-collaborator-number"
                                 class="
-                                    absolute
-                                    right-3
-                                    top-1/2
-                                    -translate-y-1/2
+                                    block
+                                    mb-1.5
 
-                                    w-4
-                                    h-4
-
+                                    text-xs
                                     text-[var(--theme-text-muted)]
                                 "
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="1.6"
                             >
-                                <rect
-                                    x="6"
-                                    y="10"
-                                    width="12"
-                                    height="9"
-                                    rx="1.5"
-                                />
+                                Número de colaborador
+                            </label>
 
-                                <path d="M8 10V7a4 4 0 018 0v3"/>
-                            </svg>
+                            <input
+                                id="assignment-collaborator-number"
+                                type="text"
+
+                                x-model="numeroColaborador"
+                                x-bind:readonly="!! (usuarioSeleccionado()?.numero)"
+                                x-bind:title="usuarioSeleccionado()?.numero ? 'Número tomado de la cuenta del usuario' : ''"
+
+                                placeholder="Ej. 001245"
+
+                                class="
+                                    w-full
+
+                                    px-3
+                                    py-2.5
+
+                                    rounded-md
+
+                                    border
+                                    border-[var(--theme-border-strong)]
+
+                                    bg-[var(--theme-surface)]
+
+                                    text-sm
+                                    text-[var(--theme-text)]
+
+                                    placeholder:text-[var(--theme-text-muted)]
+
+                                    outline-none
+
+                                    focus:ring-1
+                                    focus:ring-[var(--theme-primary)]
+                                    focus:border-[var(--theme-primary)]
+
+                                    transition-colors
+                                "
+                            >
+
+                        </div>
+
+
+                        {{-- =================================================
+                            HOTEL
+                        ================================================= --}}
+                        <div class="order-6 lg:order-none min-w-0">
+
+                            <x-searchable-select
+                                x-model="idUnidadAsignar"
+                                x-options="data.unidades"
+
+                                :label="app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['unidad_singular'] . ' *'"
+                                :placeholder="app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['buscar_unidad']"
+
+                                :show-clear="false"
+                            />
+
+                            <p
+                                x-show="fieldError('idUnidadAsignar')"
+                                x-cloak
+                                x-text="fieldError('idUnidadAsignar')"
+                                class="
+                                    mt-1
+                                    text-xs
+                                    text-[var(--theme-danger)]
+                                "
+                            ></p>
+                        </div>
+
+
+                        {{-- =================================================
+                            UBICACIÓN
+                            Depende del hotel y del departamento.
+                        ================================================= --}}
+                        <div class="order-8 lg:order-none min-w-0">
+
+                            <x-searchable-select
+                                x-model="idUbicacionAsignar"
+                                x-options="ubicacionesDisponibles"
+
+                                label="Ubicación"
+
+                                placeholder="Selecciona un departamento primero"
+
+                                x-placeholder="
+                                    idDepartamentoAsignar === ''
+                                        ? 'Selecciona un departamento primero'
+                                        : (ubicacionesDisponibles.length
+                                            ? 'Buscar ubicación...'
+                                            : 'Sin ubicaciones para este departamento')
+                                "
+
+                                x-disabled="idDepartamentoAsignar === '' || ! ubicacionesDisponibles.length"
+
+                                clear-label="Sin ubicación específica"
+                            />
+
+                            <p
+                                x-show="fieldError('idUbicacionAsignar')"
+                                x-cloak
+                                x-text="fieldError('idUbicacionAsignar')"
+                                class="
+                                    mt-1
+                                    text-xs
+                                    text-[var(--theme-danger)]
+                                "
+                            ></p>
+                        </div>
+
+
+                        {{-- =================================================
+                            TIPO DE ASIGNACIÓN
+                        ================================================= --}}
+                        <div class="order-10 lg:order-none min-w-0">
+
+                            <x-searchable-select
+                                x-model="idTipoAsignacion"
+                                x-options="data.tiposAsignacion"
+
+                                label="Tipo de asignación *"
+                                placeholder="Buscar tipo de asignación..."
+
+                                :show-clear="false"
+                            />
+
+                            <p
+                                x-show="fieldError('idTipoAsignacion')"
+                                x-cloak
+                                x-text="fieldError('idTipoAsignacion')"
+                                class="
+                                    mt-1
+                                    text-xs
+                                    text-[var(--theme-danger)]
+                                "
+                            ></p>
+
+                        </div>
+                    </div>
+
+
+                    {{-- Columna derecha: independiente en pantallas grandes; en celular
+                         (display: contents) los campos se intercalan con «order». --}}
+                    <div class="contents lg:flex lg:flex-col lg:gap-y-4 min-w-0">
+                        {{-- =================================================
+                            COLABORADOR
+                        ================================================= --}}
+                        <div class="order-3 lg:order-none min-w-0">
+
+                            <label
+                                for="assignment-collaborator"
+                                class="
+                                    block
+                                    mb-1.5
+
+                                    text-xs
+                                    text-[var(--theme-text-muted)]
+                                "
+                            >
+                                Colaborador *
+                            </label>
+
+                            <div id="assignment-collaborator">
+                                <x-searchable-select
+                                    x-model="colaborador"
+                                    x-options="data.usuarios ?? []"
+                                    :options="$assignmentData['usuarios'] ?? []"
+                                    :show-clear="false"
+                                    allow-custom
+                                    placeholder="Busca un usuario o escribe un nombre"
+                                />
+                            </div>
+
+                            {{-- Sin cuenta: se guarda igual; un administrador la crea después --}}
+                            <p
+                                x-show="colaboradorSinCuenta()"
+                                x-cloak
+                                class="mt-1.5 flex items-start gap-1.5 text-xs text-[var(--theme-warning)]"
+                            >
+                                <svg class="mt-px h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M12 9v4M12 16.5v.5"/>
+                                    <path d="M10.3 3.9L2.6 17.3A2 2 0 0 0 4.3 20h15.4a2 2 0 0 0 1.7-2.7L13.7 3.9a2 2 0 0 0-3.4 0z"/>
+                                </svg>
+                                <span>
+                                    Este colaborador no tiene cuenta. La asignación se guardará y un
+                                    administrador deberá crear su cuenta en Seguridad y roles.
+                                </span>
+                            </p>
+
+                            <p
+                                x-show="fieldError('nombreColaborador')"
+                                x-cloak
+                                x-text="fieldError('nombreColaborador')"
+                                class="
+                                    mt-1
+                                    text-xs
+                                    text-[var(--theme-danger)]
+                                "
+                            ></p>
+                        </div>
+
+
+                        {{-- =================================================
+                            HOST
+                        ================================================= --}}
+                        <div class="order-5 lg:order-none min-w-0">
+
+                            <label
+                                for="assignment-host"
+                                class="
+                                    block
+                                    mb-1.5
+
+                                    text-xs
+                                    text-[var(--theme-text-muted)]
+                                "
+                            >
+                                Host
+                            </label>
+
+                            <input
+                                id="assignment-host"
+                                type="text"
+                                maxlength="255"
+
+                                x-model="hostEquipo"
+                                x-on:input="clearValidationError('hostEquipo')"
+
+                                placeholder="Host del equipo"
+
+                                class="
+                                    w-full
+
+                                    px-3
+                                    py-2.5
+
+                                    rounded-md
+
+                                    border
+                                    border-[var(--theme-border-strong)]
+
+                                    bg-[var(--theme-surface)]
+
+                                    text-sm
+                                    text-[var(--theme-text)]
+
+                                    placeholder:text-[var(--theme-text-muted)]
+
+                                    outline-none
+
+                                    focus:ring-1
+                                    focus:ring-[var(--theme-primary)]
+                                    focus:border-[var(--theme-primary)]
+
+                                    transition-colors
+                                "
+                            >
+
+                            <p
+                                x-show="fieldError('hostEquipo')"
+                                x-cloak
+                                x-text="fieldError('hostEquipo')"
+                                class="mt-1 text-xs text-[var(--theme-danger)]"
+                            ></p>
+                        </div>
+
+
+                        {{-- =================================================
+                            DEPARTAMENTO
+                        ================================================= --}}
+                        <div class="order-7 lg:order-none min-w-0">
+
+                            <x-searchable-select
+                                x-model="idDepartamentoAsignar"
+                                x-options="departamentosDisponibles"
+
+                                label="Departamento *"
+
+                                placeholder="Selecciona un hotel primero"
+
+                                x-placeholder="
+                                    idUnidadAsignar === ''
+                                        ? 'Selecciona un hotel primero'
+                                        : 'Buscar departamento...'
+                                "
+
+                                x-disabled="idUnidadAsignar === ''"
+
+                                :show-clear="false"
+                            />
+
+                            <p
+                                x-show="fieldError('idDepartamentoAsignar')"
+                                x-cloak
+                                x-text="fieldError('idDepartamentoAsignar')"
+                                class="
+                                    mt-1
+                                    text-xs
+                                    text-[var(--theme-danger)]
+                                "
+                            ></p>
+                        </div>
+
+
+                        {{-- =================================================
+                            FECHA
+                        ================================================= --}}
+                        <div class="order-9 lg:order-none min-w-0">
+
+                            <label
+                                for="assignment-date"
+                                class="
+                                    block
+                                    mb-1.5
+
+                                    text-xs
+                                    text-[var(--theme-text-muted)]
+                                "
+                            >
+                                Fecha de Asignación *
+                            </label>
+
+                            <input
+                                id="assignment-date"
+                                type="date"
+
+                                x-model="fechaAsignacion"
+
+                                @change="
+                                    clearValidationError(
+                                        'fechaAsignacion'
+                                    )
+                                "
+
+                                class="
+                                    w-full
+
+                                    px-3
+                                    py-2.5
+
+                                    rounded-md
+
+                                    border
+                                    border-[var(--theme-border-strong)]
+
+                                    bg-[var(--theme-surface)]
+
+                                    text-sm
+                                    text-[var(--theme-text)]
+
+                                    outline-none
+
+                                    focus:ring-1
+                                    focus:ring-[var(--theme-primary)]
+                                    focus:border-[var(--theme-primary)]
+
+                                    transition-colors
+                                "
+                            >
+
+                            <p
+                                x-show="fieldError('fechaAsignacion')"
+                                x-cloak
+                                x-text="fieldError('fechaAsignacion')"
+                                class="
+                                    mt-1
+                                    text-xs
+                                    text-[var(--theme-danger)]
+                                "
+                            ></p>
 
                         </div>
                     </div>
 
 
                     {{-- =================================================
-                        HOTEL
-                    ================================================= --}}
-                    <div class="min-w-0">
-
-                        <x-searchable-select
-                            x-model="idUnidadAsignar"
-                            x-options="data.unidades"
-
-                            :label="app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['unidad_singular'] . ' *'"
-                            :placeholder="app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['buscar_unidad']"
-
-                            :show-clear="false"
-                        />
-
-                        <p
-                            x-show="fieldError('idUnidadAsignar')"
-                            x-cloak
-                            x-text="fieldError('idUnidadAsignar')"
-                            class="
-                                mt-1
-                                text-xs
-                                text-[var(--theme-danger)]
-                            "
-                        ></p>
-                    </div>
-
-
-                    {{-- =================================================
-                        DEPARTAMENTO
-                    ================================================= --}}
-                    <div class="min-w-0">
-
-                        <x-searchable-select
-                            x-model="idDepartamentoAsignar"
-                            x-options="departamentosDisponibles"
-
-                            label="Departamento *"
-
-                            placeholder="Selecciona un hotel primero"
-
-                            x-placeholder="
-                                idUnidadAsignar === ''
-                                    ? 'Selecciona un hotel primero'
-                                    : 'Buscar departamento...'
-                            "
-
-                            x-disabled="idUnidadAsignar === ''"
-
-                            :show-clear="false"
-                        />
-
-                        <p
-                            x-show="fieldError('idDepartamentoAsignar')"
-                            x-cloak
-                            x-text="fieldError('idDepartamentoAsignar')"
-                            class="
-                                mt-1
-                                text-xs
-                                text-[var(--theme-danger)]
-                            "
-                        ></p>
-                    </div>
-
-
-                    {{-- =================================================
-                        UBICACIÓN
-                        Depende del hotel y del departamento.
-                    ================================================= --}}
-                    <div class="min-w-0">
-
-                        <x-searchable-select
-                            x-model="idUbicacionAsignar"
-                            x-options="ubicacionesDisponibles"
-
-                            label="Ubicación"
-
-                            placeholder="Selecciona un departamento primero"
-
-                            x-placeholder="
-                                idDepartamentoAsignar === ''
-                                    ? 'Selecciona un departamento primero'
-                                    : (ubicacionesDisponibles.length
-                                        ? 'Buscar ubicación...'
-                                        : 'Sin ubicaciones para este departamento')
-                            "
-
-                            x-disabled="idDepartamentoAsignar === '' || ! ubicacionesDisponibles.length"
-
-                            clear-label="Sin ubicación específica"
-                        />
-
-                        <p
-                            x-show="fieldError('idUbicacionAsignar')"
-                            x-cloak
-                            x-text="fieldError('idUbicacionAsignar')"
-                            class="
-                                mt-1
-                                text-xs
-                                text-[var(--theme-danger)]
-                            "
-                        ></p>
-                    </div>
-
-
-                    {{-- =================================================
-                        FECHA
-                    ================================================= --}}
-                    <div class="min-w-0">
-
-                        <label
-                            for="assignment-date"
-                            class="
-                                block
-                                mb-1.5
-
-                                text-xs
-                                text-[var(--theme-text-muted)]
-                            "
-                        >
-                            Fecha de Asignación *
-                        </label>
-
-                        <input
-                            id="assignment-date"
-                            type="date"
-
-                            x-model="fechaAsignacion"
-
-                            @change="
-                                clearValidationError(
-                                    'fechaAsignacion'
-                                )
-                            "
-
-                            class="
-                                w-full
-
-                                px-3
-                                py-2.5
-
-                                rounded-md
-
-                                border
-                                border-[var(--theme-border-strong)]
-
-                                bg-[var(--theme-surface)]
-
-                                text-sm
-                                text-[var(--theme-text)]
-
-                                outline-none
-
-                                focus:ring-1
-                                focus:ring-[var(--theme-primary)]
-                                focus:border-[var(--theme-primary)]
-
-                                transition-colors
-                            "
-                        >
-
-                        <p
-                            x-show="fieldError('fechaAsignacion')"
-                            x-cloak
-                            x-text="fieldError('fechaAsignacion')"
-                            class="
-                                mt-1
-                                text-xs
-                                text-[var(--theme-danger)]
-                            "
-                        ></p>
-
-                    </div>
-
-
-                    {{-- =================================================
-                        TIPO DE ASIGNACIÓN
-                    ================================================= --}}
-                    <div class="min-w-0">
-
-                        <x-searchable-select
-                            x-model="idTipoAsignacion"
-                            x-options="data.tiposAsignacion"
-
-                            label="Tipo de asignación *"
-                            placeholder="Buscar tipo de asignación..."
-
-                            :show-clear="false"
-                        />
-
-                        <p
-                            x-show="fieldError('idTipoAsignacion')"
-                            x-cloak
-                            x-text="fieldError('idTipoAsignacion')"
-                            class="
-                                mt-1
-                                text-xs
-                                text-[var(--theme-danger)]
-                            "
-                        ></p>
-
-                    </div>
-
-
-                    {{-- =================================================
                         OBSERVACIONES
                     ================================================= --}}
-                    <div class="lg:col-span-2 min-w-0">
+                    <div class="order-11 lg:order-none lg:col-span-2 min-w-0">
 
                         <label
                             for="assignment-observations"

@@ -114,4 +114,18 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Registro y «Olvidé la contraseña» públicos
+    |--------------------------------------------------------------------------
+    |
+    | Apagados: las cuentas las crea un administrador (Seguridad y roles) y
+    | él restablece las contraseñas. Con false, los enlaces del login se
+    | ocultan y esas rutas responden 404. Para reactivarlos:
+    | AUTH_ACCESO_PUBLICO=true en .env.
+    |
+    */
+
+    'acceso_publico' => (bool) env('AUTH_ACCESO_PUBLICO', false),
+
 ];
