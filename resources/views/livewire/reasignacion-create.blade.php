@@ -52,6 +52,34 @@
             idDepartamentoNuevo: '',
             idUbicacionNueva: '',
 
+            // Host editable (se guarda en el equipo si cambió).
+            hostEquipo: '',
+
+            // «Nuevo nombre»: renombrar el equipo al reasignarlo (opcional).
+            nuevoNombreActivo: false,
+            nuevoNombreEquipo: '',
+
+            // Mientras se precargan hotel y departamento del responsable actual.
+            precargandoDestino: false,
+
+            nombreActualEquipo() {
+                const equipo = (this.data?.equipos ?? []).find(
+                    item => String(item?.value ?? '') === String(this.idEquipoReasignar ?? '')
+                );
+
+                return equipo ? String(equipo.name ?? '') : '';
+            },
+
+            alternarNuevoNombre() {
+                this.nuevoNombreActivo = ! this.nuevoNombreActivo;
+                this.nuevoNombreEquipo = '';
+                this.clearValidationError('nuevoNombreEquipo');
+
+                if (this.nuevoNombreActivo) {
+                    this.$nextTick(() => document.getElementById('reassignment-new-name')?.focus());
+                }
+            },
+
             fechaReasignacion: @js(
                 $reassignmentData['defaults']['fechaReasignacion'] ?? ''
             ),
@@ -79,10 +107,14 @@
                 this.$watch('idEquipoReasignar', () => {
                     this.loadSelectedAssignment();
                     this.clearValidationError('idEquipoReasignar');
+
+                    // Otro equipo: el nuevo nombre escrito ya no aplica.
+                    this.nuevoNombreEquipo = '';
+                    this.clearValidationError('nuevoNombreEquipo');
                 });
 
                 this.$watch('idUnidadNueva', (value, previous) => {
-                    if (String(value ?? '') === String(previous ?? '')) {
+                    if (this.precargandoDestino || String(value ?? '') === String(previous ?? '')) {
                         return;
                     }
 
@@ -94,7 +126,7 @@
                 });
 
                 this.$watch('idDepartamentoNuevo', (value, previous) => {
-                    if (String(value ?? '') === String(previous ?? '')) {
+                    if (this.precargandoDestino || String(value ?? '') === String(previous ?? '')) {
                         return;
                     }
 
@@ -166,6 +198,8 @@
                 this.idDepartamentoActual = '';
                 this.idUbicacionActual = '';
                 this.idTipoAsignacionActual = '';
+
+                this.hostEquipo = '';
             },
 
             resetNewDestination() {
@@ -234,6 +268,53 @@
 
                 this.idTipoAsignacionActual =
                     String(assignment.idTipoAsignacion ?? '');
+
+                // Host editable: empieza con el host actual del equipo.
+                this.hostEquipo = this.hostActual;
+
+                this.precargarDestino();
+            },
+
+            /*
+             * Hotel y departamento del responsable actual como
+             * predeterminados de la nueva reasignación (se pueden cambiar).
+             */
+            precargarDestino() {
+                const unidad = String(this.idUnidadActual ?? '');
+
+                if (
+                    unidad === ''
+                    || ! (this.data?.unidades ?? []).some(opcion => String(opcion.value) === unidad)
+                ) {
+                    return;
+                }
+
+                /*
+                 * Los vigilantes de hotel/departamento limpian los campos
+                 * dependientes; se ejecutan después (microtarea), así que la
+                 * bandera se apaga hasta la siguiente vuelta del navegador.
+                 */
+                this.precargandoDestino = true;
+                this.idUnidadNueva = unidad;
+
+                const departamento = String(this.idDepartamentoActual ?? '');
+
+                this.idDepartamentoNuevo = this.departamentosDisponibles.some(
+                    opcion => String(opcion.value) === departamento
+                )
+                    ? departamento
+                    : '';
+
+                const ubicacion = String(this.idUbicacionActual ?? '');
+
+                this.idUbicacionNueva = this.idDepartamentoNuevo !== ''
+                    && this.ubicacionesDisponibles.some(opcion => String(opcion.value) === ubicacion)
+                    ? ubicacion
+                    : '';
+
+                setTimeout(() => {
+                    this.precargandoDestino = false;
+                }, 0);
             },
 
             clearValidationError(field) {
@@ -293,6 +374,14 @@
                 return {
                     idEquipoReasignar:
                         String(this.idEquipoReasignar ?? ''),
+
+                    hostEquipo:
+                        String(this.hostEquipo ?? '').trim(),
+
+                    nuevoNombreEquipo:
+                        this.nuevoNombreActivo
+                            ? String(this.nuevoNombreEquipo ?? '').trim()
+                            : '',
 
                     idAsignacionActual:
                         String(this.idAsignacionActual ?? ''),
@@ -380,6 +469,15 @@
                 ) {
                     errors.idEquipoReasignar = [
                         'Selecciona el equipo que se reasignará.'
+                    ];
+                }
+
+                if (
+                    this.nuevoNombreActivo
+                    && String(payload.nuevoNombreEquipo ?? '') === ''
+                ) {
+                    errors.nuevoNombreEquipo = [
+                        'Escribe el nuevo nombre del equipo o quita «Nuevo nombre».'
                     ];
                 }
 
@@ -798,7 +896,16 @@
                 </h2>
 
                 {{-- EQUIPO --}}
-                <div class="mb-4">
+                <div class="relative mb-4">
+                    {{-- Nuevo nombre: se guarda en el equipo al reasignar. --}}
+                    <button
+                        type="button"
+                        x-on:click="alternarNuevoNombre()"
+                        x-bind:aria-expanded="nuevoNombreActivo ? 'true' : 'false'"
+                        class="absolute right-0 top-0 z-10 text-xs text-[var(--theme-primary)] hover:text-[var(--theme-primary-hover)] hover:underline transition-colors"
+                        x-text="nuevoNombreActivo ? 'Conservar el nombre actual' : 'Nuevo nombre'"
+                    >Nuevo nombre</button>
+
                     <x-searchable-select
                         x-model="idEquipoReasignar"
                         x-options="data.equipos"
@@ -812,6 +919,46 @@
                         x-text="fieldError('idEquipoReasignar')"
                         class="mt-1 text-xs text-[var(--theme-danger)]"
                     ></p>
+
+                    <div x-show="nuevoNombreActivo" x-cloak class="mt-4">
+                        <label
+                            for="reassignment-new-name"
+                            class="block mb-1.5 text-xs text-[var(--theme-text-muted)]"
+                        >
+                            Nuevo nombre del equipo
+                        </label>
+
+                        <input
+                            id="reassignment-new-name"
+                            type="text"
+                            maxlength="255"
+                            x-model="nuevoNombreEquipo"
+                            x-on:input="clearValidationError('nuevoNombreEquipo')"
+                            x-bind:placeholder="nombreActualEquipo() ? 'Actual: ' + nombreActualEquipo() : 'Ej. Laptop de Recepción'"
+                            class="
+                                w-full
+                                px-3 py-2.5
+                                rounded-md
+                                border border-[var(--theme-border-strong)]
+                                bg-[var(--theme-surface)]
+                                text-sm
+                                text-[var(--theme-text)]
+                                placeholder:text-[var(--theme-text-muted)]
+                                outline-none
+                                focus:ring-1
+                                focus:ring-[var(--theme-primary)]
+                                focus:border-[var(--theme-primary)]
+                                transition-colors
+                            "
+                        >
+
+                        <p
+                            x-show="fieldError('nuevoNombreEquipo')"
+                            x-cloak
+                            x-text="fieldError('nuevoNombreEquipo')"
+                            class="mt-1 text-xs text-[var(--theme-danger)]"
+                        ></p>
+                    </div>
                 </div>
 
 
@@ -1392,8 +1539,49 @@
                     </div>
 
 
-                    {{-- ESPACIO --}}
-                    <div class="hidden lg:block"></div>
+                    {{-- HOST (editable; se guarda en el equipo si cambió) --}}
+                    <div>
+                        <label
+                            for="reassignment-host"
+                            class="
+                                block mb-1.5
+                                text-xs
+                                text-[var(--theme-text-muted)]
+                            "
+                        >
+                            Host
+                        </label>
+
+                        <input
+                            id="reassignment-host"
+                            type="text"
+                            maxlength="255"
+                            x-model="hostEquipo"
+                            x-on:input="clearValidationError('hostEquipo')"
+                            placeholder="Host del equipo"
+                            class="
+                                w-full
+                                px-3 py-2.5
+                                rounded-md
+                                border border-[var(--theme-border-strong)]
+                                bg-[var(--theme-surface)]
+                                text-sm
+                                text-[var(--theme-text)]
+                                placeholder:text-[var(--theme-text-muted)]
+                                outline-none
+                                focus:ring-1
+                                focus:ring-[var(--theme-primary)]
+                                focus:border-[var(--theme-primary)]
+                                transition-colors
+                            ">
+
+                        <p
+                            x-show="fieldError('hostEquipo')"
+                            x-cloak
+                            x-text="fieldError('hostEquipo')"
+                            class="mt-1 text-xs text-[var(--theme-danger)]"
+                        ></p>
+                    </div>
 
 
                     {{-- OBSERVACIONES --}}

@@ -189,6 +189,8 @@ class ReasignacionCreate extends Component
         // Permiso por rol (ver AppServiceProvider).
         \Illuminate\Support\Facades\Gate::authorize('gestionar');
 
+        $payloadOriginal = $payload;
+
         $payload =
             $this->normalizePayload(
                 $payload
@@ -215,6 +217,20 @@ class ReasignacionCreate extends Component
                         'required',
                         'integer',
                         'exists:equipos,id_equipo',
+                    ],
+
+                    // Host editable (vacío = sin host).
+                    'hostEquipo' => [
+                        'nullable',
+                        'string',
+                        'max:255',
+                    ],
+
+                    // «Nuevo nombre»: opcional; vacío = conservar el actual.
+                    'nuevoNombreEquipo' => [
+                        'nullable',
+                        'string',
+                        'max:255',
                     ],
 
                     'idAsignacionActual' => [
@@ -351,6 +367,7 @@ class ReasignacionCreate extends Component
             DB::transaction(
                 function () use (
                     $payload,
+                    $payloadOriginal,
                     $validated,
                     $organizacion,
                     $idTipoMovimiento,
@@ -630,6 +647,40 @@ class ReasignacionCreate extends Component
                             ]);
                     }
 
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Host y nuevo nombre del equipo (opcionales)
+                    |--------------------------------------------------------------------------
+                    |
+                    | Host: sólo si llegó en el envío (un formulario abierto antes
+                    | de este cambio no lo manda y no debe borrarlo).
+                    |
+                    */
+
+                    $cambiosEquipo = [];
+
+                    if (array_key_exists('hostEquipo', $payloadOriginal)) {
+                        $host = trim((string) ($validated['hostEquipo'] ?? ''));
+                        $host = $host === '' ? null : $host;
+                        $hostActual = trim((string) ($equipo->host ?? ''));
+
+                        if ($host !== ($hostActual === '' ? null : $hostActual)) {
+                            $cambiosEquipo['host'] = $host;
+                        }
+                    }
+
+                    $nuevoNombre = trim((string) ($validated['nuevoNombreEquipo'] ?? ''));
+
+                    if ($nuevoNombre !== '' && $nuevoNombre !== (string) $equipo->nombre_equipo) {
+                        $cambiosEquipo['nombre_equipo'] = $nuevoNombre;
+                    }
+
+                    if ($cambiosEquipo !== []) {
+                        DB::table('equipos')
+                            ->where('id_equipo', $equipoId)
+                            ->update($cambiosEquipo);
+                    }
+
                     return [
                         'idMovimiento' =>
                             $idMovimiento,
@@ -740,10 +791,16 @@ class ReasignacionCreate extends Component
                                 )
                             );
 
-                        if ($descripcion === '') {
-                            $descripcion =
-                                $equipo->nombre_equipo
-                                ?: 'Equipo';
+                        /*
+                         * En la lista se muestra el nombre del equipo (hay
+                         * muchos modelos iguales); sin nombre, tipo/marca/modelo.
+                         */
+                        $nombre = trim((string) ($equipo->nombre_equipo ?? ''));
+
+                        if ($nombre !== '') {
+                            $descripcion = $nombre;
+                        } elseif ($descripcion === '') {
+                            $descripcion = 'Equipo';
                         }
 
                         $responsable =
@@ -758,6 +815,10 @@ class ReasignacionCreate extends Component
                              */
                             'value' =>
                                 (string) $equipo->id_equipo,
+
+                            // Nombre actual (sugerencia de «Nuevo nombre»).
+                            'name' =>
+                                $nombre,
 
                             'label' =>
                                 $equipo->codigo_inventario
@@ -797,9 +858,11 @@ class ReasignacionCreate extends Component
                                         ?? ''
                                     ),
 
+                                // Departamento principal (los unificados no están en la lista).
                                 'idDepartamento' =>
                                     (string) (
-                                        $equipo->id_departamento
+                                        $equipo->departamento_principal_id
+                                        ?? $equipo->id_departamento
                                         ?? ''
                                     ),
 
@@ -975,6 +1038,7 @@ class ReasignacionCreate extends Component
                 'a.nombre_colaborador',
                 'a.numero_colaborador',
                 'a.id_departamento',
+                'd.id_departamento_principal as departamento_principal_id',
                 'a.id_ubicacion',
                 'a.id_tipo_asignacion',
                 'a.fecha_asignacion',
@@ -1089,6 +1153,8 @@ class ReasignacionCreate extends Component
         return array_merge(
             [
                 'idEquipoReasignar' => '',
+                'hostEquipo' => '',
+                'nuevoNombreEquipo' => '',
                 'idAsignacionActual' => '',
                 'motivoReasignacion' => '',
                 'colaborador' => '',
