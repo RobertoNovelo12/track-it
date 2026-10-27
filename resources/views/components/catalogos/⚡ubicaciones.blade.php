@@ -36,10 +36,12 @@ new class extends Component
     public string $tipoId = '';
 
     public int $perPage = 10;
-    public string $sortField = 'nombre';
-    public string $sortDirection = 'asc';
+    // Por defecto lo más reciente primero (último registro arriba).
+    public string $sortField = 'recientes';
+    public string $sortDirection = 'desc';
 
     private const ORDENABLES = [
+        'recientes' => 'ub.id_ubicacion',
         'nombre' => 'ub.nombre',
         'tipo' => 'tu.nombre',
         'hotel' => 'u.nombre',

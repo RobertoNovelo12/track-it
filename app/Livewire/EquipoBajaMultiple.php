@@ -51,8 +51,9 @@ class EquipoBajaMultiple extends Component
     public array $seleccionados = [];
     public string $buscar = '';
     public int $perPage = 10;
-    public string $sort = 'asc';
-    public string $sortField = 'equipo';
+    // Por defecto lo más reciente primero (último equipo registrado arriba).
+    public string $sort = 'desc';
+    public string $sortField = 'recientes';
     public string $filtroHotel = '';
     public bool $mostrarFiltros = false;
 
@@ -369,6 +370,7 @@ class EquipoBajaMultiple extends Component
     protected function columnasOrden(): array
     {
         return [
+            'recientes' => 'e.id_equipo',
             'equipo' => 'e.nombre_equipo',
             'marca' => 'ma.nombre',
             'hotel' => 'u.nombre',

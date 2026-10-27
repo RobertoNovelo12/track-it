@@ -44,10 +44,11 @@ new class extends Component
      * Tabla: registros por página y ordenamiento.
      */
     public int $perPage = 10;
-    public string $sortField = 'nombre';
-    public string $sortDirection = 'asc';
+    // Por defecto lo más reciente primero (último registro arriba).
+    public string $sortField = 'recientes';
+    public string $sortDirection = 'desc';
 
-    private const ORDENABLES = ['nombre', 'sede', 'codigo', 'activo'];
+    private const ORDENABLES = ['recientes', 'nombre', 'sede', 'codigo', 'activo'];
     public bool $formOpen = false;
     public string $message = '';
 
@@ -365,7 +366,11 @@ new class extends Component
                     $this->sortDirection
                 ),
                 fn ($query) => $query->orderBy(
-                    in_array($this->sortField, self::ORDENABLES, true) ? $this->sortField : 'nombre',
+                    match (true) {
+                        $this->sortField === 'recientes' => 'id_unidad',
+                        in_array($this->sortField, self::ORDENABLES, true) => $this->sortField,
+                        default => 'id_unidad',
+                    },
                     $this->sortDirection === 'desc' ? 'desc' : 'asc'
                 )
             )

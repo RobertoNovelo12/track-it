@@ -59,9 +59,10 @@ class MarcasModelos extends Component
 
     public int $perPageModelos = 10;
 
-    public string $sortMarcas = 'asc';
+    // Por defecto lo más reciente primero (último registro arriba).
+    public string $sortMarcas = 'desc';
 
-    public string $sortModelos = 'asc';
+    public string $sortModelos = 'desc';
 
     /*
     |--------------------------------------------------------------------------
@@ -92,9 +93,9 @@ class MarcasModelos extends Component
         'fechaCreacion',
     ];
 
-    public string $sortFieldMarcas = 'nombre';
+    public string $sortFieldMarcas = 'id';
 
-    public string $sortFieldModelos = 'nombre';
+    public string $sortFieldModelos = 'id';
 
     /*
      * Mensaje tras activar / desactivar un registro.

@@ -44,9 +44,10 @@ new class extends Component
     /*
      * Ordenamiento de la tabla.
      */
-    public string $sortField = 'nombre';
+    public string $sortField = 'id';
 
-    public string $sortDirection = 'asc';
+    // Por defecto lo más reciente primero (último tipo creado arriba).
+    public string $sortDirection = 'desc';
 
     private const ORDENABLES = [
         'id' => 'id_tipo_equipo',

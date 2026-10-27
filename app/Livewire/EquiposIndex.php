@@ -78,6 +78,9 @@ class EquiposIndex extends Component
 
 
     private const SORTABLE_COLUMNS = [
+        // Predeterminado: orden de registro (lo más reciente primero con «desc»).
+        'recientes' => 'e.id_equipo',
+
         'codigo_inventario' => 'e.codigo_inventario',
 
         'nombre_equipo' => 'e.nombre_equipo',
@@ -200,11 +203,12 @@ class EquiposIndex extends Component
     |--------------------------------------------------------------------------
     */
 
+    // Por defecto lo más reciente primero (último equipo registrado arriba).
     #[Url(as: 'ordenar_por')]
-    public string $sortField = 'codigo_inventario';
+    public string $sortField = 'recientes';
 
     #[Url]
-    public string $sort = 'asc';
+    public string $sort = 'desc';
 
 
     /*
@@ -320,7 +324,7 @@ class EquiposIndex extends Component
                 true
             )
         ) {
-            $this->sort = 'asc';
+            $this->sort = 'desc';
         }
 
         $this->resetPage();
@@ -342,7 +346,7 @@ class EquiposIndex extends Component
             )
         ) {
             $this->sortField =
-                'codigo_inventario';
+                'recientes';
         }
 
         $this->resetPage();
@@ -589,7 +593,7 @@ class EquiposIndex extends Component
                     self::SORTABLE_COLUMNS
                 )
                     ? $this->sortField
-                    : 'codigo_inventario',
+                    : 'recientes',
 
             'sort' =>
                 $this->sort === 'desc'
@@ -1065,7 +1069,7 @@ class EquiposIndex extends Component
                 self::SORTABLE_COLUMNS
             )
                 ? $this->sortField
-                : 'codigo_inventario';
+                : 'recientes';
 
 
         /*

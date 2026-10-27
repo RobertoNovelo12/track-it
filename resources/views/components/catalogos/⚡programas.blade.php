@@ -28,10 +28,12 @@ new class extends Component
     public string $plataforma = '';
 
     public int $perPage = 10;
-    public string $sortField = 'nombre';
-    public string $sortDirection = 'asc';
+    // Por defecto lo más reciente primero (último registro arriba).
+    public string $sortField = 'recientes';
+    public string $sortDirection = 'desc';
 
     private const ORDENABLES = [
+        'recientes' => 'p.id_programa',
         'nombre' => 'p.nombre',
         'empresa' => 'p.empresa',
         'plataforma' => 'p.plataforma',
