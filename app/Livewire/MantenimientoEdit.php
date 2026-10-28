@@ -16,6 +16,7 @@ class MantenimientoEdit extends Component
     public string $estadoMantenimiento = '';
     public string $prioridad = '';
     public string $tecnicoId = '';
+    public string $proveedorId = ''; // Proveedor externo en garantía.
 
     public string $fechaIntervencion = '';
     public string $horaInicio = '';
@@ -75,6 +76,11 @@ class MantenimientoEdit extends Component
 
         $this->tecnicoId =
             (string) $mantenimiento->id_tecnico;
+
+        $this->proveedorId =
+            $mantenimiento->id_proveedor
+                ? (string) $mantenimiento->id_proveedor
+                : '';
 
         $this->fechaIntervencion =
             $mantenimiento->fecha_intervencion
@@ -243,6 +249,13 @@ class MantenimientoEdit extends Component
                 'exists:usuarios,id_usuario',
             ],
 
+            'proveedorId' => [
+                'bail',
+                'nullable',
+                'integer',
+                'exists:proveedores,id_proveedor',
+            ],
+
             'fechaIntervencion' => [
                 'required',
                 'date',
@@ -383,6 +396,12 @@ class MantenimientoEdit extends Component
 
                     'id_tecnico' =>
                         (int) $validated['tecnicoId'],
+
+                    'id_proveedor' =>
+                        $this->esEstadoGarantia($validated['estadoMantenimiento'])
+                            && filled($validated['proveedorId'])
+                            ? (int) $validated['proveedorId']
+                            : null,
 
                     'fecha_intervencion' =>
                         $validated['fechaIntervencion'],
@@ -609,6 +628,27 @@ class MantenimientoEdit extends Component
     | Convertir texto vacío a NULL
     |--------------------------------------------------------------------------
     */
+    /** El proveedor externo solo aplica al estado En garantía. */
+    private function esEstadoGarantia(string $estadoId): bool
+    {
+        if ($estadoId === '' || ! ctype_digit($estadoId)) {
+            return false;
+        }
+
+        return CatalogoValor::deCatalogo('estado_mantenimiento')
+            ->whereRaw('LOWER(clave) = ?', ['en_garantia'])
+            ->where('id_valor', $estadoId)
+            ->exists();
+    }
+
+    public function updatedEstadoMantenimiento(): void
+    {
+        if (! $this->esEstadoGarantia($this->estadoMantenimiento)) {
+            $this->proveedorId = '';
+            $this->resetValidation('proveedorId');
+        }
+    }
+
     private function nullableText(
         ?string $value
     ): ?string {
@@ -717,6 +757,20 @@ class MantenimientoEdit extends Component
             ]);
 
 
+        $estadoGarantiaId = CatalogoValor::deCatalogo('estado_mantenimiento')
+            ->whereRaw('LOWER(clave) = ?', ['en_garantia'])
+            ->value('id_valor');
+
+        $proveedores = DB::table('proveedores')
+            ->where(function ($query) {
+                $query->where('activo', true);
+                if ($this->proveedorId !== '') {
+                    $query->orWhere('id_proveedor', (int) $this->proveedorId);
+                }
+            })
+            ->orderBy('nombre')
+            ->get(['id_proveedor', 'nombre']);
+
         $prioridades =
             CatalogoValor::deCatalogo(
                 'prioridad_mantenimiento'
@@ -766,6 +820,12 @@ class MantenimientoEdit extends Component
 
                 'tecnicos' =>
                     $tecnicos,
+
+                'proveedores' =>
+                    $proveedores,
+
+                'estadoGarantiaId' =>
+                    $estadoGarantiaId,
             ]
         );
     }

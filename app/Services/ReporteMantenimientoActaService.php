@@ -81,6 +81,7 @@ class ReporteMantenimientoActaService
                 '=',
                 'm.id_tecnico'
             )
+            ->leftJoin('proveedores as proveedor', 'proveedor.id_proveedor', '=', 'm.id_proveedor')
             ->whereIn('m.id_mantenimiento', $ids->all())
             ->select([
                 'm.id_mantenimiento',
@@ -98,6 +99,8 @@ class ReporteMantenimientoActaService
                 'e.nombre_equipo',
                 'e.numero_serie',
                 'e.host',
+                'e.fecha_fin_garantia',
+                'proveedor.nombre as proveedor',
                 'ma.nombre as marca',
                 'mo.nombre as modelo',
                 'tm.nombre as tipo_mantenimiento',
@@ -165,6 +168,8 @@ class ReporteMantenimientoActaService
                     'tecnico' => $tecnico ?: null,
                     'prioridad' => $m->prioridad,
                     'estado' => $m->estado,
+                    'proveedor' => $m->proveedor,
+                    'fin_garantia_equipo' => $this->fecha($m->fecha_fin_garantia),
 
                     'fecha_inicio' => $this->fecha(
                         $m->fecha_intervencion

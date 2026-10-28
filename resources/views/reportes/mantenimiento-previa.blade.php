@@ -631,6 +631,14 @@
 
             </div>
 
+            <div class="campo">
+                <span class="etiqueta">Proveedor externo</span>
+                <span class="valor">{{ $dato($m['proveedor'] ?? null) }}</span>
+            </div>
+            <div class="campo">
+                <span class="etiqueta">Fin de garantía del equipo</span>
+                <span class="valor">{{ $dato($m['fin_garantia_equipo'] ?? null) }}</span>
+            </div>
         </div>
 
 

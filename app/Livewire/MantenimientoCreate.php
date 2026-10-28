@@ -14,6 +14,7 @@ class MantenimientoCreate extends Component
     public string $estadoMantenimiento = '';
     public string $prioridad           = '';
     public string $tecnicoId           = '';
+    public string $proveedorId         = ''; // Proveedor externo cuando la intervención está en garantía.
 
     public string $fechaIntervencion = '';
     public string $horaInicio        = '';
@@ -91,6 +92,13 @@ class MantenimientoCreate extends Component
             'tecnicoId'                      => [
                 'required',
                 'exists:usuarios,id_usuario',
+            ],
+
+            'proveedorId'                    => [
+                'bail',
+                'nullable',
+                'integer',
+                'exists:proveedores,id_proveedor',
             ],
 
             'fechaIntervencion'              => [
@@ -210,6 +218,12 @@ class MantenimientoCreate extends Component
                     'id_tecnico'                  =>
                     (int) $validated['tecnicoId'],
 
+                    'id_proveedor'                =>
+                    $this->esEstadoGarantia($validated['estadoMantenimiento'])
+                        && filled($validated['proveedorId'])
+                        ? (int) $validated['proveedorId']
+                        : null,
+
                     'fecha_intervencion'          =>
                     $validated['fechaIntervencion'],
 
@@ -323,6 +337,27 @@ class MantenimientoCreate extends Component
         );
     }
 
+    /** El proveedor externo solo aplica al estado En garantía. */
+    private function esEstadoGarantia(string $estadoId): bool
+    {
+        if ($estadoId === '' || ! ctype_digit($estadoId)) {
+            return false;
+        }
+
+        return CatalogoValor::deCatalogo('estado_mantenimiento')
+            ->whereRaw('LOWER(clave) = ?', ['en_garantia'])
+            ->where('id_valor', $estadoId)
+            ->exists();
+    }
+
+    public function updatedEstadoMantenimiento(): void
+    {
+        if (! $this->esEstadoGarantia($this->estadoMantenimiento)) {
+            $this->proveedorId = '';
+            $this->resetValidation('proveedorId');
+        }
+    }
+
     private function generarFolio(): string
     {
         do {
@@ -414,6 +449,15 @@ class MantenimientoCreate extends Component
             'nombre',
         ]);
 
+        $estadoGarantiaId = CatalogoValor::deCatalogo('estado_mantenimiento')
+            ->whereRaw('LOWER(clave) = ?', ['en_garantia'])
+            ->value('id_valor');
+
+        $proveedores = DB::table('proveedores')
+            ->where('activo', true)
+            ->orderBy('nombre')
+            ->get(['id_proveedor', 'nombre']);
+
         $prioridades = CatalogoValor::deCatalogo(
             'prioridad_mantenimiento'
         )->get([
@@ -440,6 +484,8 @@ class MantenimientoCreate extends Component
             'estadosMantenimiento' => $estadosMantenimiento,
             'prioridades'          => $prioridades,
             'tecnicos'             => $tecnicos,
+            'proveedores'          => $proveedores,
+            'estadoGarantiaId'     => $estadoGarantiaId,
         ]);
     }
 }

@@ -640,6 +640,16 @@
 
             </tr>
 
+            <tr>
+                <td>
+                    <div class="etiqueta">Proveedor externo</div>
+                    <div class="valor">{{ $dato($m['proveedor'] ?? null) }}</div>
+                </td>
+                <td>
+                    <div class="etiqueta">Fin de garantía del equipo</div>
+                    <div class="valor">{{ $dato($m['fin_garantia_equipo'] ?? null) }}</div>
+                </td>
+            </tr>
         </table>
 
 

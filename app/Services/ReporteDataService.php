@@ -1170,6 +1170,8 @@ class ReporteDataService
 
             )
 
+            ->leftJoin('proveedores as proveedor_mantenimiento', 'proveedor_mantenimiento.id_proveedor', '=', 'mt.id_proveedor')
+
             ->select([
 
                 'mt.id_mantenimiento as registro_id',
@@ -1197,6 +1199,10 @@ class ReporteDataService
                         ' · ',
 
                         tipo_mant.nombre,
+                        CASE WHEN proveedor_mantenimiento.nombre IS NOT NULL
+                            THEN 'Proveedor: ' || proveedor_mantenimiento.nombre END,
+                        CASE WHEN e.fecha_fin_garantia IS NOT NULL
+                            THEN 'Fin de garantía del equipo: ' || CAST(e.fecha_fin_garantia AS TEXT) END,
 
                         NULLIF(mt.falla_reportada, ''),
 

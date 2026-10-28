@@ -132,7 +132,7 @@ class EquipoBajaMultipleTest extends TestCase
 
     public function test_select_page_and_deselect_page(): void
     {
-        Livewire::test(EquipoBajaMultiple::class)->call('seleccionarPagina')->assertSet('seleccionados', ['1', '10', '11', '2', '3', '4', '5', '6', '7', '8'])
+        Livewire::test(EquipoBajaMultiple::class)->call('seleccionarPagina')->assertSet('seleccionados', ['11', '10', '9', '8', '7', '6', '5', '4', '3', '2'])
             ->call('seleccionarPagina')->assertSet('seleccionados', []);
     }
 
@@ -244,7 +244,7 @@ class EquipoBajaMultipleTest extends TestCase
     {
         Livewire::test(EquipoBajaMultiple::class)
             ->set('perPage', 25)->call('seleccionarPagina')
-            ->assertSet('seleccionados', ['1', '10', '11', '2', '3', '4', '5', '6', '7', '8'])
+            ->assertSet('seleccionados', ['11', '10', '9', '8', '7', '6', '5', '4', '3', '2'])
             ->call('seleccionarPagina')->assertSet('seleccionados', [])
             ->set('seleccionados', ['2'])->set('sort', 'desc')->call('sortBy', 'hotel')
             ->assertSet('seleccionados', ['2'])->assertSet('sortField', 'hotel')

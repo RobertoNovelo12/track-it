@@ -18,6 +18,7 @@ class Mantenimiento extends Model
         'id_estado_mantenimiento',
         'id_prioridad',
         'id_tecnico',
+        'id_proveedor',
         'fecha_intervencion',
         'fecha_fin',
         'hora_inicio',
@@ -88,6 +89,11 @@ class Mantenimiento extends Model
             'id_tecnico',
             'id_usuario'
         );
+    }
+
+    public function proveedor()
+    {
+        return $this->belongsTo(Proveedor::class, 'id_proveedor', 'id_proveedor');
     }
 
     public function refacciones()

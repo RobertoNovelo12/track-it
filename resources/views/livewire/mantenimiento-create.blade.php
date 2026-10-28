@@ -478,6 +478,39 @@
 
             </div>
 
+
+            {{-- Proveedor externo cuando el mantenimiento está en garantía.
+                 Se conserva el técnico interno como responsable del seguimiento. --}}
+            <div
+                x-data="{ estado: $wire.entangle('estadoMantenimiento').live }"
+                x-show="String(estado || '') === @js((string) ($estadoGarantiaId ?? '')) && @js((bool) $estadoGarantiaId)"
+                x-cloak
+                class="mt-5 rounded-lg border border-[var(--theme-border)] p-4"
+            >
+                <h3 class="mb-3 text-sm font-semibold text-[var(--theme-text-strong)]">
+                    Intervención por garantía
+                </h3>
+                <div class="max-w-xl">
+                    <x-searchable-select
+                        label="Proveedor que realizará la intervención (opcional)"
+                        wire-model="proveedorId"
+                        :empty-as-null="false"
+                        :show-clear="true"
+                        clear-label="Sin proveedor asignado"
+                        :options="collect($proveedores)->map(fn ($proveedor) => [
+                            'value' => $proveedor->id_proveedor,
+                            'label' => $proveedor->nombre,
+                        ])->values()->all()"
+                        placeholder="Buscar proveedor..."
+                    />
+                    @error('proveedorId')
+                        <p class="mt-1 text-xs text-[var(--theme-danger)]">{{ $message }}</p>
+                    @enderror
+                    <p class="mt-2 text-xs text-[var(--theme-text-muted)]">
+                        Selecciona un proveedor registrado. El técnico responsable mantiene el seguimiento interno.
+                    </p>
+                </div>
+            </div>
         </section>
 
 
