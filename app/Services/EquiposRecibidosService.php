@@ -24,6 +24,33 @@ use Illuminate\Support\Facades\Schema;
 class EquiposRecibidosService
 {
     /*
+    |--------------------------------------------------------------------------
+    | Caché de la bandeja
+    |--------------------------------------------------------------------------
+    |
+    | La bandeja aparece en la barra superior de TODAS las páginas y se
+    | revisa cada 15 s: sin caché eran 2 consultas por página (≈300 ms con
+    | la base remota). Se guarda el conteo y la lista por usuario con una
+    | «versión» global: cualquier envío o atención sube la versión y todas
+    | las bandejas se vuelven a consultar. La lista además caduca a los
+    | 60 s porque muestra nombre y estado del equipo, que se editan en
+    | otras pantallas.
+    |
+    */
+
+    private const VERSION_CACHE = 'equipos_recibidos:version';
+
+    private function versionCache(): int
+    {
+        return (int) Cache::get(self::VERSION_CACHE, 1);
+    }
+
+    private function invalidarCache(): void
+    {
+        Cache::forever(self::VERSION_CACHE, $this->versionCache() + 1);
+    }
+
+    /*
      * ¿Ya se corrió la migración? Solo se guarda el «sí».
      */
     public function disponible(): bool
@@ -246,6 +273,8 @@ class EquiposRecibidosService
             throw $e;
         }
 
+        $this->invalidarCache();
+
         return 'enviado';
     }
 
@@ -283,6 +312,8 @@ class EquiposRecibidosService
             throw $e;
         }
 
+        $this->invalidarCache();
+
         return 'enviado';
     }
 
@@ -308,11 +339,15 @@ class EquiposRecibidosService
             return;
         }
 
-        DB::table('equipos_recibidos')
+        $atendidos = DB::table('equipos_recibidos')
             ->whereNull('id_equipo')
             ->whereRaw('UPPER(codigo) = ?', [mb_strtoupper($numeroSerie)])
             ->whereNull('atendido_en')
             ->update(['atendido_en' => now(), 'motivo_atencion' => 'alta']);
+
+        if ($atendidos > 0) {
+            $this->invalidarCache();
+        }
     }
 
     /*
@@ -327,6 +362,15 @@ class EquiposRecibidosService
             return [];
         }
 
+        return Cache::remember(
+            'equipos_recibidos:'.$this->versionCache().':lista:'.$idUsuario.':'.$limite,
+            60,
+            fn (): array => $this->consultarPendientes($idUsuario, $limite)
+        );
+    }
+
+    private function consultarPendientes(int $idUsuario, int $limite): array
+    {
         $codigos = $this->admiteCodigos();
         $remitente = $this->admiteRemitente();
 
@@ -377,10 +421,14 @@ class EquiposRecibidosService
             return 0;
         }
 
-        return DB::table('equipos_recibidos')
-            ->where('id_usuario', $idUsuario)
-            ->whereNull('atendido_en')
-            ->count();
+        return (int) Cache::remember(
+            'equipos_recibidos:'.$this->versionCache().':conteo:'.$idUsuario,
+            600,
+            fn (): int => DB::table('equipos_recibidos')
+                ->where('id_usuario', $idUsuario)
+                ->whereNull('atendido_en')
+                ->count()
+        );
     }
 
     /*
@@ -391,11 +439,17 @@ class EquiposRecibidosService
 
     public function atender(int $idUsuario, int $idRecibido): bool
     {
-        return DB::table('equipos_recibidos')
+        $atendido = DB::table('equipos_recibidos')
             ->where('id_recibido', $idRecibido)
             ->where('id_usuario', $idUsuario)
             ->whereNull('atendido_en')
             ->update(['atendido_en' => now(), 'motivo_atencion' => 'manual']) > 0;
+
+        if ($atendido) {
+            $this->invalidarCache();
+        }
+
+        return $atendido;
     }
 
     public function idsPendientes(int $idUsuario): array
@@ -438,15 +492,25 @@ class EquiposRecibidosService
             }
         }
 
+        if ($restaurados > 0) {
+            $this->invalidarCache();
+        }
+
         return $restaurados;
     }
 
     public function atenderTodos(int $idUsuario): int
     {
-        return DB::table('equipos_recibidos')
+        $atendidos = DB::table('equipos_recibidos')
             ->where('id_usuario', $idUsuario)
             ->whereNull('atendido_en')
             ->update(['atendido_en' => now(), 'motivo_atencion' => 'manual']);
+
+        if ($atendidos > 0) {
+            $this->invalidarCache();
+        }
+
+        return $atendidos;
     }
 
     /*
@@ -458,9 +522,13 @@ class EquiposRecibidosService
             return;
         }
 
-        DB::table('equipos_recibidos')
+        $atendidos = DB::table('equipos_recibidos')
             ->where('id_equipo', $idEquipo)
             ->whereNull('atendido_en')
             ->update(['atendido_en' => now(), 'motivo_atencion' => 'baja']);
+
+        if ($atendidos > 0) {
+            $this->invalidarCache();
+        }
     }
 }
