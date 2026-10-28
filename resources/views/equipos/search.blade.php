@@ -4,6 +4,6 @@
 
 @section('content')
 
-    <livewire:equipo-search lazy />
+    <livewire:equipo-search />
 
 @endsection

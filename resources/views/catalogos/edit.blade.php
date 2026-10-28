@@ -11,8 +11,6 @@
 
     <livewire:catalogos.editar-registro
         :tipo="$tipo"
-        :registro-id="$registroId"
-        lazy
-    />
+        :registro-id="$registroId" />
 
 @endsection

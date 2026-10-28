@@ -5,9 +5,15 @@
  * conexión cuando no hay red. No guarda en caché páginas con datos
  * (todo requiere sesión): solo la página sin conexión y sus íconos.
  *
+ * Diseño en el teléfono: CSS, JS, fuentes, logos y el script de
+ * Livewire se guardan la primera vez que se descargan; después se
+ * leen del teléfono y solo se espera a los datos.
+ *
  * Al cambiar este archivo, sube VERSION para renovar la caché.
  */
-const VERSION = 'track-it-v2';
+const VERSION = 'track-it-v3';
+const ESTATICOS = 'track-it-estaticos-v1';
+const MAX_ESTATICOS = 120;
 const SIN_CONEXION = '/offline.html';
 const PRECARGA = [
     SIN_CONEXION,
@@ -27,7 +33,7 @@ self.addEventListener('activate', (evento) => {
     evento.waitUntil(
         caches.keys()
             .then((claves) => Promise.all(
-                claves.filter((clave) => clave !== VERSION).map((clave) => caches.delete(clave))
+                claves.filter((clave) => clave !== VERSION && clave !== ESTATICOS).map((clave) => caches.delete(clave))
             ))
             .then(() => self.clients.claim())
     );
@@ -82,15 +88,100 @@ self.addEventListener('notificationclick', (evento) => {
     );
 });
 
-self.addEventListener('fetch', (evento) => {
-    const peticion = evento.request;
+/*
+ * Archivos fijos del diseño.
+ * - Con nombre versionado (Vite /build/assets, fuentes, Livewire
+ *   con ?id=): se leen del teléfono y no se vuelven a pedir.
+ * - Logos e íconos (/images): se muestran del teléfono al instante
+ *   y se actualizan en segundo plano.
+ */
+const esVersionado = (url) =>
+    url.pathname.startsWith('/build/assets/')
+    || url.pathname.startsWith('/fonts/')
+    || (url.pathname.includes('livewire') && url.pathname.endsWith('.js') && url.searchParams.has('id'));
 
-    // Solo navegaciones (páginas): si no hay red, la página sin conexión.
-    if (peticion.mode !== 'navigate' || peticion.method !== 'GET') {
+const esImagen = (url) => url.pathname.startsWith('/images/');
+
+const recortar = async (cache) => {
+    const claves = await cache.keys();
+
+    for (let i = 0; i < claves.length - MAX_ESTATICOS; i++) {
+        await cache.delete(claves[i]);
+    }
+};
+
+const guardar = async (peticion, respuesta) => {
+    if (! respuesta || ! respuesta.ok || respuesta.type !== 'basic') {
         return;
     }
 
-    evento.respondWith(
-        fetch(peticion).catch(() => caches.match(SIN_CONEXION))
-    );
+    const cache = await caches.open(ESTATICOS);
+
+    await cache.put(peticion, respuesta);
+    await recortar(cache);
+};
+
+const primeroCache = async (evento) => {
+    const guardada = await caches.match(evento.request, { cacheName: ESTATICOS });
+
+    if (guardada) {
+        return guardada;
+    }
+
+    const respuesta = await fetch(evento.request);
+
+    evento.waitUntil(guardar(evento.request, respuesta.clone()));
+
+    return respuesta;
+};
+
+const cacheYActualizar = async (evento) => {
+    const guardada = await caches.match(evento.request, { cacheName: ESTATICOS });
+
+    const red = fetch(evento.request).then((respuesta) => {
+        evento.waitUntil(guardar(evento.request, respuesta.clone()));
+
+        return respuesta;
+    });
+
+    if (guardada) {
+        evento.waitUntil(red.catch(() => null));
+
+        return guardada;
+    }
+
+    return red;
+};
+
+self.addEventListener('fetch', (evento) => {
+    const peticion = evento.request;
+
+    if (peticion.method !== 'GET') {
+        return;
+    }
+
+    // Páginas: siempre de la red (tienen datos y sesión). Sin red, la página sin conexión.
+    if (peticion.mode === 'navigate') {
+        evento.respondWith(
+            fetch(peticion).catch(() => caches.match(SIN_CONEXION))
+        );
+
+        return;
+    }
+
+    const url = new URL(peticion.url);
+
+    if (url.origin !== self.location.origin) {
+        return;
+    }
+
+    if (esVersionado(url)) {
+        evento.respondWith(primeroCache(evento));
+
+        return;
+    }
+
+    if (esImagen(url)) {
+        evento.respondWith(cacheYActualizar(evento));
+    }
 });

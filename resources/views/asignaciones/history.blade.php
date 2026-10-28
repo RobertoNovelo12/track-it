@@ -11,7 +11,7 @@
             mx-auto
         "
     >
-        <livewire:asignaciones-history lazy />
+        <livewire:asignaciones-history />
     </div>
 
 @endsection

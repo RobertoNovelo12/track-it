@@ -35,7 +35,8 @@ RUN apt-get update && apt-get install -y \
         bcmath \
         xml \
         gd \
-    && a2enmod rewrite \
+        opcache \
+    && a2enmod rewrite deflate headers \
     && rm -rf /var/lib/apt/lists/*
 
 # Composer
@@ -62,6 +63,11 @@ RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-av
 # Permite que el .htaccess de Laravel funcione
 RUN printf '<Directory /var/www/html/public>\n    AllowOverride All\n    Require all granted\n</Directory>\n' > /etc/apache2/conf-available/laravel.conf \
     && a2enconf laravel
+
+# Rendimiento: OPcache (PHP) y compresión + caché de archivos fijos (Apache)
+COPY docker/opcache.ini /usr/local/etc/php/conf.d/zz-opcache.ini
+COPY docker/apache-rendimiento.conf /etc/apache2/conf-available/rendimiento.conf
+RUN a2enconf rendimiento
 
 # Permisos para logs, caché y sesiones
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache

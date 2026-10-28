@@ -14,7 +14,6 @@
     ============================================================ --}}
     <livewire:equipo-show
         :equipo-id="$equipoId"
-        lazy
     />
 
 </div>

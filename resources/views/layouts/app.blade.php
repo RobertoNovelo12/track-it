@@ -1483,8 +1483,21 @@ document.addEventListener(
     {{-- ============================================================
         PANEL GLOBAL DE NOTIFICACIONES
     ============================================================ --}}
-    {{-- Menú inferior (móvil): Inicio · Inventario · Escanear · Movimientos · Más --}}
-    @include('layouts.partials.menu-inferior')
+    {{--
+        Menú inferior (móvil): Inicio · Inventario · Escanear · Movimientos · Más
+        @persist lo conserva al navegar (no se redibuja). La opción
+        activa se marca con #trackitRutaActual, que sí viene en cada página.
+    --}}
+    <span
+        id="trackitRutaActual"
+        hidden
+        data-ruta="{{ \Illuminate\Support\Facades\Route::currentRouteName() }}"
+        data-tipo="{{ request()->routeIs('equipos.index') ? (string) request()->query('tipo_activo', '') : '' }}"
+    ></span>
+
+    @persist('menu-inferior')
+        @include('layouts.partials.menu-inferior')
+    @endpersist
 
     {{-- Escáner de códigos de barras (se abre desde «Escanear» del menú inferior) --}}
     @include('layouts.partials.escaner-movil')

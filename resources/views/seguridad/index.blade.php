@@ -67,7 +67,7 @@
         {{-- ============================================================
         CONTENIDO LIVEWIRE
     ============================================================ --}}
-        <livewire:seguridad-index lazy />
+        <livewire:seguridad-index />
 
     </div>
 

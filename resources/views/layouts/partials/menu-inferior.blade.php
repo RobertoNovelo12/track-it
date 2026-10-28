@@ -86,6 +86,12 @@
     $masActivo = collect($opcionesMas)->contains('activo', true)
         || request()->routeIs('ajustes.*');
 
+    /* Rutas de cada opción (ver sincronizar(): el menú persiste al navegar). */
+    $rutasMas = collect($opcionesMas)
+        ->map(fn (array $opcion): string => \Illuminate\Support\Str::before($opcion['route'], '.').'.*')
+        ->push('ajustes.*')
+        ->implode(' ');
+
     $organizacionMenu = app(\App\Services\OrganizacionService::class);
 @endphp
 
@@ -447,7 +453,6 @@
 
             const reubicar = () => this.moverIndicador(this.itemActivo(), false);
             window.addEventListener('resize', reubicar, { passive: true });
-            document.addEventListener('livewire:navigating', () => window.removeEventListener('resize', reubicar), { once: true });
         },
 
         itemActivo() {
@@ -488,6 +493,40 @@
          * Al tocar: la sección se marca y la línea se desliza en ese
          * momento; la página nueva llega con la línea ya en su lugar.
          */
+        /*
+         * El menú persiste entre páginas (@persist en layouts/app):
+         * al llegar una página nueva se marcan las opciones según su
+         * ruta (#trackitRutaActual, fuera del menú, viene en cada página).
+         */
+        sincronizar() {
+            const actual = document.getElementById('trackitRutaActual');
+
+            if (! actual) {
+                return;
+            }
+
+            const ruta = actual.dataset.ruta || '';
+            const tipo = actual.dataset.tipo || '';
+            const coincide = (patron) => patron.endsWith('.*')
+                ? ruta.startsWith(patron.slice(0, -1))
+                : ruta === patron;
+
+            this.$root.querySelectorAll('[data-rutas]').forEach((elemento) => {
+                const activo = elemento.dataset.rutas.split(' ').filter(Boolean).some(coincide)
+                    && (elemento.dataset.tipo === undefined || elemento.dataset.tipo === tipo);
+
+                elemento.dataset.activo = activo ? 'true' : 'false';
+
+                if (activo) {
+                    elemento.setAttribute('aria-current', 'page');
+                } else {
+                    elemento.removeAttribute('aria-current');
+                }
+            });
+
+            this.moverIndicador(this.itemActivo());
+        },
+
         marcar(elemento) {
             if (! elemento) {
                 return;
@@ -599,6 +638,7 @@
     x-on:keydown.escape.window="cerrar()"
     x-on:livewire:navigating.window="hoja = null; document.documentElement.style.overflow = ''"
     x-on:trackit-cerrar-menus.window="hoja = null; document.documentElement.style.overflow = ''"
+    x-on:livewire:navigated.window="sincronizar()"
 >
 
     {{-- ========================================================
@@ -615,9 +655,10 @@
         {{-- INICIO --}}
         <a
             href="{{ route('dashboard') }}"
-            wire:navigate
+            wire:navigate.hover
             x-on:click="marcar($el)"
             class="mi-item"
+            data-rutas="dashboard"
             data-activo="{{ request()->routeIs('dashboard') ? 'true' : 'false' }}"
             @if (request()->routeIs('dashboard')) aria-current="page" @endif
         >
@@ -635,6 +676,7 @@
                 type="button"
                 class="mi-item"
                 x-ref="itemInventario"
+                data-rutas="equipos.*"
                 data-activo="{{ $enInventario ? 'true' : 'false' }}"
                 @if ($enInventario) aria-current="page" @endif
                 aria-haspopup="dialog"
@@ -670,9 +712,10 @@
         @if ($puedeGestionar && Route::has('asignaciones.index'))
             <a
                 href="{{ route('asignaciones.index') }}"
-                wire:navigate
+                wire:navigate.hover
                 x-on:click="marcar($el)"
                 class="mi-item"
+                data-rutas="asignaciones.*"
                 data-activo="{{ request()->routeIs('asignaciones.*') ? 'true' : 'false' }}"
                 @if (request()->routeIs('asignaciones.*')) aria-current="page" @endif
             >
@@ -691,6 +734,7 @@
             type="button"
             class="mi-item"
             x-ref="itemMas"
+            data-rutas="{{ $rutasMas }}"
             data-activo="{{ $masActivo ? 'true' : 'false' }}"
             @if ($masActivo) aria-current="page" @endif
             aria-haspopup="dialog"
@@ -760,8 +804,10 @@
 
                 <a
                     href="{{ route('equipos.index') }}"
-                    wire:navigate
+                    wire:navigate.hover
                     class="mi-opcion mi-opcion-principal"
+                    data-rutas="equipos.index"
+                    data-tipo=""
                     data-activo="{{ $todosActivo ? 'true' : 'false' }}"
                     @if ($todosActivo) aria-current="page" @endif
                 >
@@ -784,8 +830,10 @@
 
                         <a
                             href="{{ route('equipos.index', ['tipo_activo' => $tipo['id']]) }}"
-                            wire:navigate
+                            wire:navigate.hover
                             class="mi-opcion"
+                            data-rutas="equipos.index"
+                            data-tipo="{{ $tipo['id'] }}"
                             data-activo="{{ $tipoActivo ? 'true' : 'false' }}"
                             @if ($tipoActivo) aria-current="page" @endif
                         >
@@ -799,8 +847,9 @@
 
                     <a
                         href="{{ route('equipos.create') }}"
-                        wire:navigate
+                        wire:navigate.hover
                         class="mi-opcion"
+                        data-rutas="equipos.create"
                         data-activo="{{ request()->routeIs('equipos.create') ? 'true' : 'false' }}"
                     >
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true">
@@ -863,8 +912,9 @@
             @foreach ($opcionesMas as $opcion)
                 <a
                     href="{{ route($opcion['route']) }}"
-                    wire:navigate
+                    wire:navigate.hover
                     class="mi-opcion"
+                    data-rutas="{{ \Illuminate\Support\Str::before($opcion['route'], '.') }}.*"
                     data-activo="{{ $opcion['activo'] ? 'true' : 'false' }}"
                     @if ($opcion['activo']) aria-current="page" @endif
                 >
@@ -916,8 +966,9 @@
 
                 <a
                     href="{{ route('ajustes.index', ['section' => 'cuenta']) }}"
-                    wire:navigate
+                    wire:navigate.hover
                     class="mi-opcion"
+                    data-rutas="ajustes.*"
                     data-activo="{{ $cuentaActiva ? 'true' : 'false' }}"
                     @if ($cuentaActiva) aria-current="page" @endif
                 >

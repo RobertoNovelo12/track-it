@@ -6,6 +6,6 @@
 
 {{-- Formulario Livewire --}}
 {{-- ?duplicar=ID: copia los datos comunes de otro equipo (ver EquipoCreate). --}}
-<livewire:equipo-create :duplicar="(int) request()->query('duplicar') ?: null" lazy />
+<livewire:equipo-create :duplicar="(int) request()->query('duplicar') ?: null" />
 
 @endsection
