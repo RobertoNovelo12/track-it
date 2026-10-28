@@ -101,6 +101,15 @@
             padding-bottom: calc(6rem + env(safe-area-inset-bottom, 0px));
         }
 
+        /*
+         * Sin la barra azul de progreso de Livewire al navegar: en el
+         * teléfono la respuesta la da el esqueleto de carga
+         * (layouts/partials/carga-navegacion).
+         */
+        #nprogress {
+            display: none !important;
+        }
+
         /* Los avisos aparecen por encima de la barra. */
         #trackitToastRegion {
             bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px));
