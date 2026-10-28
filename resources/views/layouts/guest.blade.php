@@ -206,6 +206,7 @@
 
 
 <body
+    id="guestBody"
     class="
         min-h-screen
 
@@ -232,6 +233,7 @@
         - Selector vuelve a quedar fijo arriba a la derecha.
     ============================================================ --}}
     <header
+        id="guestHeader"
         class="
             w-full
 
@@ -244,168 +246,60 @@
 
         {{-- ========================================================
             SELECTOR DE TEMA
+            Un solo botón; al tocarlo se despliegan Claro, Oscuro y
+            Sistema (estilos .guest-tema-* al final del archivo).
         ======================================================== --}}
-        <div
-            class="
-                flex
-                justify-end
+        <div id="guestThemeWrap" class="guest-tema">
 
-                sm:contents
-            "
-        >
+            <button
+                type="button"
+                id="guestThemeToggle"
+                class="guest-tema-boton"
+                aria-haspopup="menu"
+                aria-expanded="false"
+                aria-controls="guestThemeMenu"
+                aria-label="Cambiar tema"
+                title="Cambiar tema"
+                onclick="toggleGuestThemeMenu()"
+            >
+                {{-- Contraste (mitad clara / mitad oscura) --}}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="8.5"/>
+                    <path d="M12 3.5v17a8.5 8.5 0 0 0 0-17z" fill="currentColor" stroke="none"/>
+                </svg>
+            </button>
 
             <div
-                id="guestThemeSwitcher"
-                class="
-                    relative
-                    z-50
-
-                    flex
-                    items-center
-
-                    p-1
-
-                    rounded-lg
-
-                    bg-[var(--theme-surface)]
-
-                    border
-                    border-[var(--theme-border)]
-
-                    shadow-sm
-
-                    sm:fixed
-                    sm:top-6
-                    sm:right-6
-                "
+                id="guestThemeMenu"
+                class="guest-tema-menu"
+                role="menu"
+                aria-labelledby="guestThemeToggle"
             >
-
-                {{-- Claro --}}
-                <button
-                    type="button"
-                    data-theme-option="light"
-                    onclick="changeGuestTheme('light')"
-                    class="
-                        guest-theme-option
-
-                        w-9
-                        h-9
-
-                        flex
-                        items-center
-                        justify-center
-
-                        rounded-md
-
-                        text-[var(--theme-text-muted)]
-
-                        transition-colors
-                    "
-                    title="Tema claro"
-                    aria-label="Tema claro"
-                >
-                    <svg
-                        class="w-4 h-4"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.7"
-                    >
+                <button type="button" role="menuitemradio" aria-checked="false" data-theme-option="light" class="guest-theme-option guest-tema-opcion" onclick="changeGuestTheme('light')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
                         <circle cx="12" cy="12" r="4"/>
-                        <path d="M12 2v2"/>
-                        <path d="M12 20v2"/>
-                        <path d="M4.93 4.93l1.41 1.41"/>
-                        <path d="M17.66 17.66l1.41 1.41"/>
-                        <path d="M2 12h2"/>
-                        <path d="M20 12h2"/>
-                        <path d="M4.93 19.07l1.41-1.41"/>
-                        <path d="M17.66 6.34l1.41-1.41"/>
+                        <path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4L6 18M18 6l1.4-1.4"/>
                     </svg>
+                    <span>Claro</span>
+                    <svg class="guest-tema-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
                 </button>
 
-
-                {{-- Oscuro --}}
-                <button
-                    type="button"
-                    data-theme-option="dark"
-                    onclick="changeGuestTheme('dark')"
-                    class="
-                        guest-theme-option
-
-                        w-9
-                        h-9
-
-                        flex
-                        items-center
-                        justify-center
-
-                        rounded-md
-
-                        text-[var(--theme-text-muted)]
-
-                        transition-colors
-                    "
-                    title="Tema oscuro"
-                    aria-label="Tema oscuro"
-                >
-                    <svg
-                        class="w-4 h-4"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.7"
-                    >
-                        <path
-                            d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"
-                        />
+                <button type="button" role="menuitemradio" aria-checked="false" data-theme-option="dark" class="guest-theme-option guest-tema-opcion" onclick="changeGuestTheme('dark')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M20.5 13.2A8.5 8.5 0 1 1 10.8 3.5a6.6 6.6 0 0 0 9.7 9.7z"/>
                     </svg>
+                    <span>Oscuro</span>
+                    <svg class="guest-tema-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
                 </button>
 
-
-                {{-- Sistema --}}
-                <button
-                    type="button"
-                    data-theme-option="system"
-                    onclick="changeGuestTheme('system')"
-                    class="
-                        guest-theme-option
-
-                        w-9
-                        h-9
-
-                        flex
-                        items-center
-                        justify-center
-
-                        rounded-md
-
-                        text-[var(--theme-text-muted)]
-
-                        transition-colors
-                    "
-                    title="Usar tema del sistema"
-                    aria-label="Usar tema del sistema"
-                >
-                    <svg
-                        class="w-4 h-4"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.7"
-                    >
-                        <rect
-                            x="3"
-                            y="4"
-                            width="18"
-                            height="13"
-                            rx="2"
-                        />
-
-                        <path d="M8 21h8"/>
-                        <path d="M12 17v4"/>
+                <button type="button" role="menuitemradio" aria-checked="false" data-theme-option="system" class="guest-theme-option guest-tema-opcion" onclick="changeGuestTheme('system')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect x="3" y="4" width="18" height="13" rx="2"/>
+                        <path d="M8 21h8M12 17v4"/>
                     </svg>
+                    <span>Sistema</span>
+                    <svg class="guest-tema-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
                 </button>
-
             </div>
 
         </div>
@@ -415,6 +309,7 @@
             LOGO
         ======================================================== --}}
         <div
+            id="guestLogoWrap"
             class="
                 mt-3
 
@@ -473,6 +368,7 @@
         CONTENIDO
     ============================================================ --}}
     <main
+        id="guestMain"
         class="
             w-full
 
@@ -496,6 +392,63 @@
     </main>
 
     <script>
+    /*
+     * Menú de tema: abrir / cerrar (clic fuera, Esc o al elegir).
+     */
+    function setGuestThemeMenu(abierto) {
+        const contenedor = document.getElementById('guestThemeWrap');
+        const boton = document.getElementById('guestThemeToggle');
+
+        if (! contenedor || ! boton) {
+            return;
+        }
+
+        contenedor.dataset.abierto = abierto ? 'true' : 'false';
+        boton.setAttribute('aria-expanded', abierto ? 'true' : 'false');
+
+        if (abierto) {
+            const activa = contenedor.querySelector('.guest-tema-opcion[aria-checked="true"]')
+                ?? contenedor.querySelector('.guest-tema-opcion');
+
+            setTimeout(() => activa?.focus(), 60);
+        }
+    }
+
+    function toggleGuestThemeMenu() {
+        setGuestThemeMenu(document.getElementById('guestThemeWrap')?.dataset.abierto !== 'true');
+    }
+
+    document.addEventListener('click', (evento) => {
+        const contenedor = document.getElementById('guestThemeWrap');
+
+        if (contenedor && contenedor.dataset.abierto === 'true' && ! contenedor.contains(evento.target)) {
+            setGuestThemeMenu(false);
+        }
+    });
+
+    document.addEventListener('keydown', (evento) => {
+        const contenedor = document.getElementById('guestThemeWrap');
+
+        if (! contenedor || contenedor.dataset.abierto !== 'true') {
+            return;
+        }
+
+        if (evento.key === 'Escape') {
+            setGuestThemeMenu(false);
+            document.getElementById('guestThemeToggle')?.focus();
+        }
+
+        if (evento.key === 'ArrowDown' || evento.key === 'ArrowUp') {
+            evento.preventDefault();
+
+            const opciones = [...contenedor.querySelectorAll('.guest-tema-opcion')];
+            const actual = opciones.indexOf(document.activeElement);
+            const siguiente = (actual + (evento.key === 'ArrowDown' ? 1 : -1) + opciones.length) % opciones.length;
+
+            opciones[siguiente]?.focus();
+        }
+    });
+
     function updateGuestThemeSwitcher() {
 
         const currentTheme =
@@ -510,15 +463,7 @@
                 const active =
                     button.dataset.themeOption === currentTheme;
 
-                button.style.backgroundColor =
-                    active
-                        ? 'var(--theme-primary-soft)'
-                        : 'transparent';
-
-                button.style.color =
-                    active
-                        ? 'var(--theme-primary)'
-                        : 'var(--theme-text-muted)';
+                button.setAttribute('aria-checked', active ? 'true' : 'false');
 
             });
     }
@@ -531,6 +476,12 @@
         }
 
         updateGuestThemeSwitcher();
+
+        // Cierre con una pequeña pausa para ver la selección.
+        setTimeout(() => {
+            setGuestThemeMenu(false);
+            document.getElementById('guestThemeToggle')?.focus();
+        }, 140);
     }
 
 
@@ -539,6 +490,201 @@
         updateGuestThemeSwitcher
     );
 </script>
+
+<style>
+    /* ============================================================
+        SELECTOR DE TEMA (un botón que despliega las opciones)
+    ============================================================ */
+    .guest-tema {
+        position: relative;
+        z-index: 50;
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .guest-tema-boton {
+        width: 2.75rem;
+        height: 2.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--theme-border);
+        border-radius: 0.5rem;
+        background: var(--theme-surface);
+        color: var(--theme-text-muted);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        cursor: pointer;
+        transition: color 160ms ease-out, border-color 160ms ease-out, transform 160ms ease-out;
+    }
+
+    .guest-tema-boton svg {
+        width: 1.25rem;
+        height: 1.25rem;
+        transition: transform 280ms cubic-bezier(0.22, 0.8, 0.24, 1);
+    }
+
+    .guest-tema-boton:hover,
+    .guest-tema[data-abierto="true"] .guest-tema-boton {
+        color: var(--theme-primary);
+        border-color: var(--theme-border-strong);
+    }
+
+    .guest-tema[data-abierto="true"] .guest-tema-boton svg {
+        transform: rotate(180deg);
+    }
+
+    .guest-tema-boton:active {
+        transform: scale(0.96);
+    }
+
+    .guest-tema-menu {
+        position: absolute;
+        top: calc(100% + 0.5rem);
+        right: 0;
+        min-width: 10.5rem;
+        padding: 0.3rem;
+        border: 1px solid var(--theme-border);
+        border-radius: 0.75rem;
+        background: var(--theme-surface);
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14);
+        transform-origin: top right;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-6px) scale(0.94);
+        transition:
+            opacity 160ms ease-out,
+            transform 220ms cubic-bezier(0.22, 0.8, 0.24, 1),
+            visibility 0s linear 220ms;
+    }
+
+    .guest-tema[data-abierto="true"] .guest-tema-menu {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0) scale(1);
+        transition:
+            opacity 160ms ease-out,
+            transform 220ms cubic-bezier(0.22, 0.8, 0.24, 1),
+            visibility 0s;
+    }
+
+    .guest-tema-opcion {
+        width: 100%;
+        min-height: 2.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        padding: 0 0.7rem;
+        border: 0;
+        border-radius: 0.5rem;
+        background: transparent;
+        color: var(--theme-text);
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-align: left;
+        cursor: pointer;
+        transition: background-color 140ms ease-out, color 140ms ease-out;
+    }
+
+    .guest-tema-opcion > svg:first-child {
+        width: 1.125rem;
+        height: 1.125rem;
+        flex-shrink: 0;
+        color: var(--theme-text-muted);
+    }
+
+    .guest-tema-opcion span {
+        flex: 1;
+    }
+
+    .guest-tema-check {
+        width: 1rem;
+        height: 1rem;
+        opacity: 0;
+        transform: scale(0.6);
+        transition: opacity 140ms ease-out, transform 200ms cubic-bezier(0.22, 0.8, 0.24, 1);
+    }
+
+    .guest-tema-opcion:hover,
+    .guest-tema-opcion:focus-visible {
+        background: var(--theme-surface-soft);
+        outline: none;
+    }
+
+    .guest-tema-opcion[aria-checked="true"] {
+        background: var(--theme-primary-soft);
+        color: var(--theme-primary);
+        font-weight: 600;
+    }
+
+    .guest-tema-opcion[aria-checked="true"] > svg:first-child {
+        color: var(--theme-primary);
+    }
+
+    .guest-tema-opcion[aria-checked="true"] .guest-tema-check {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    .guest-tema-boton:focus-visible {
+        outline: 2px solid var(--theme-primary);
+        outline-offset: 2px;
+    }
+
+    /* Escritorio: arriba a la derecha, como antes. */
+    @media (min-width: 640px) {
+        .guest-tema {
+            position: fixed;
+            top: 1.5rem;
+            right: 1.5rem;
+        }
+    }
+
+    /*
+     * Móvil: logo y tarjeta centrados juntos en la pantalla (un poco
+     * por encima del centro); el selector de tema queda arriba.
+     */
+    @media (max-width: 639.98px) {
+        #guestBody {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 100vh;
+            min-height: 100dvh;
+            padding-top: env(safe-area-inset-top, 0px);
+            padding-bottom: calc(6vh + env(safe-area-inset-bottom, 0px));
+        }
+
+        #guestHeader {
+            display: contents;
+        }
+
+        #guestThemeWrap {
+            position: absolute;
+            top: calc(1rem + env(safe-area-inset-top, 0px));
+            right: 1rem;
+        }
+
+        #guestLogoWrap {
+            margin-top: 0;
+            padding: 0 1rem;
+        }
+
+        #guestMain {
+            padding-top: 1.5rem;
+            padding-bottom: 0;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .guest-tema-boton,
+        .guest-tema-boton svg,
+        .guest-tema-menu,
+        .guest-tema-opcion,
+        .guest-tema-check {
+            transition: none;
+        }
+    }
+</style>
 
 </body>
 </html>
