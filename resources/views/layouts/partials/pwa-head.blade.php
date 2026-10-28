@@ -12,6 +12,11 @@
 ============================================================ --}}
 <link rel="manifest" href="{{ asset('manifest.json') }}">
 
+{{-- Llave pública para las notificaciones push (config/webpush.php) --}}
+@if (filled(config('webpush.public_key')))
+    <meta name="vapid-public-key" content="{{ config('webpush.public_key') }}">
+@endif
+
 <meta name="theme-color" content="#FFFCFF" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#111416" media="(prefers-color-scheme: dark)">
 

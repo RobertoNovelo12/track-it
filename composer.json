@@ -16,6 +16,7 @@
         "laravel/tinker": "^3.0",
         "livewire/livewire": "*",
         "maatwebsite/excel": "4.0",
+        "minishlink/web-push": "^11.0",
         "pragmarx/google2fa": "^9.1"
     },
     "require-dev": {

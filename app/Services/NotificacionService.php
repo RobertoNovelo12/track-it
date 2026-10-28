@@ -141,11 +141,43 @@ class NotificacionService
                 Cache::forget('notifications.unread.'.$idUsuario);
             }
 
+            $this->enviarPush($usuarios, $titulo, $mensaje, $url, $definicion['tipo']);
+
             return count($filas);
         } catch (Throwable $exception) {
             report($exception);
 
             return 0;
+        }
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Notificación push (teléfono / computadora)
+    |--------------------------------------------------------------------------
+    |
+    | A los mismos destinatarios, en los dispositivos donde activaron
+    | «Notificaciones en este dispositivo». Se envía después de responder
+    | al navegador, así guardar no tarda más. Ver App\Services\PushService.
+    |
+    */
+
+    private function enviarPush(array $usuarios, string $titulo, string $mensaje, ?string $url, string $tipo): void
+    {
+        try {
+            if (! app(\App\Services\PushService::class)->disponible()) {
+                return;
+            }
+
+            dispatch(function () use ($usuarios, $titulo, $mensaje, $url, $tipo): void {
+                try {
+                    app(\App\Services\PushService::class)->enviarAUsuarios($usuarios, $titulo, $mensaje, $url, strtolower($tipo));
+                } catch (Throwable $exception) {
+                    report($exception);
+                }
+            })->afterResponse();
+        } catch (Throwable $exception) {
+            report($exception);
         }
     }
 

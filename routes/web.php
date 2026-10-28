@@ -569,6 +569,27 @@ Route::middleware([
         '/ajustes',
         fn () => view('ajustes.index')
     )->name('ajustes.index');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Notificaciones push (Ajustes › Notificaciones › En este dispositivo)
+    |--------------------------------------------------------------------------
+    */
+
+    Route::post(
+        '/push/suscripcion',
+        [\App\Http\Controllers\PushSuscripcionController::class, 'store']
+    )->name('push.suscribir');
+
+    Route::delete(
+        '/push/suscripcion',
+        [\App\Http\Controllers\PushSuscripcionController::class, 'destroy']
+    )->name('push.cancelar');
+
+    Route::post(
+        '/push/prueba',
+        [\App\Http\Controllers\PushSuscripcionController::class, 'prueba']
+    )->middleware('throttle:5,1')->name('push.prueba');
 });
 
 
