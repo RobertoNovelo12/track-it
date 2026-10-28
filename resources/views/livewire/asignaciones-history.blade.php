@@ -14,17 +14,6 @@
                 gap-4
             "
         >
-            <div>
-
-                <p
-                    class="
-                        text-xs
-                        text-[var(--theme-text-muted)]
-                    "
-                >
-                    Consulta las asignaciones, reasignaciones y movimientos registrados de los equipos.
-                </p>
-            </div>
 
             {{-- «Volver» lo agrega el layout (layouts/partials/boton-volver). --}}
         </div>
