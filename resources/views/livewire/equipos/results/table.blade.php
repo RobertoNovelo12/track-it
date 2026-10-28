@@ -1475,17 +1475,7 @@
                                         stroke-width="1.5"
 
                                         aria-hidden="true"
-                                    >
-                                        <path
-                                            d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"
-                                        />
-
-                                        <circle
-                                            cx="12"
-                                            cy="12"
-                                            r="3"
-                                        />
-                                    </svg>
+                                    ><use href="{{ \App\Support\Icono::url('i-41f2153') }}"></use></svg>
 
                                 </a>
 
@@ -1523,11 +1513,7 @@
                                         fill="currentColor"
 
                                         aria-hidden="true"
-                                    >
-                                        <circle cx="12" cy="5" r="1.5"/>
-                                        <circle cx="12" cy="12" r="1.5"/>
-                                        <circle cx="12" cy="19" r="1.5"/>
-                                    </svg>
+                                    ><use href="{{ \App\Support\Icono::url('i-6f7d564') }}"></use></svg>
 
                                 </button>
 
@@ -1855,27 +1841,7 @@
                     stroke-linejoin="round"
 
                     aria-hidden="true"
-                >
-                    <rect
-                        x="8"
-                        y="8"
-                        width="11"
-                        height="11"
-                        rx="2"
-                    />
-
-                    <path
-                        d="
-                            M16 8V5
-                            a2 2 0 0 0-2-2
-                            H5
-                            a2 2 0 0 0-2 2
-                            v9
-                            a2 2 0 0 0 2 2
-                            h3
-                        "
-                    />
-                </svg>
+                ><use href="{{ \App\Support\Icono::url('i-e2161e5') }}"></use></svg>
 
 
                 <span
@@ -1945,24 +1911,7 @@
                     stroke-linejoin="round"
 
                     aria-hidden="true"
-                >
-                    <path d="M12 20h9"/>
-
-                    <path
-                        d="
-                            M16.5 3.5
-                            a2.1 2.1 0 0 1 3 3
-
-                            L8 18
-
-                            l-4 1
-
-                            1-4
-
-                            Z
-                        "
-                    />
-                </svg>
+                ><use href="{{ \App\Support\Icono::url('i-08ed767') }}"></use></svg>
 
 
                 <span>
@@ -2028,23 +1977,7 @@
                     stroke-linejoin="round"
 
                     aria-hidden="true"
-                >
-                    <path
-                        d="
-                            M2 12
-                            s3.5-7 10-7
-                            10 7 10 7
-                            -3.5 7-10 7
-                            -10-7-10-7z
-                        "
-                    />
-
-                    <circle
-                        cx="12"
-                        cy="12"
-                        r="3"
-                    />
-                </svg>
+                ><use href="{{ \App\Support\Icono::url('i-7c20acb') }}"></use></svg>
 
 
                 <span>

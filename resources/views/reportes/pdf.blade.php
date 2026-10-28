@@ -125,7 +125,7 @@
 
             <td style="text-align: right;">
                 <img
-                    src="{{ public_path('images/logo-grand-palladium.png') }}"
+                    src="{{ app(\App\Services\ImagenPdfService::class)->archivoPublicoDataUri('images/logo-grand-palladium.png') }}"
                     class="logo"
                     alt="Grand Palladium"
                 >

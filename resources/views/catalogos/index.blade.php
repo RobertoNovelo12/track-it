@@ -356,11 +356,7 @@
                         stroke-width="1.8"
                         stroke-linecap="round"
                         stroke-linejoin="round"
-                    >
-                        <path d="M4 7h16"/>
-                        <path d="M4 12h16"/>
-                        <path d="M4 17h16"/>
-                    </svg>
+                    ><use href="{{ \App\Support\Icono::url('i-e54ddf2') }}"></use></svg>
                 </div>
 
                 <span
@@ -404,9 +400,7 @@
                 stroke-width="1.8"
                 stroke-linecap="round"
                 stroke-linejoin="round"
-            >
-                <path d="m6 9 6 6 6-6"/>
-            </svg>
+            ><use href="{{ \App\Support\Icono::url('i-8fdbbcf') }}"></use></svg>
         </button>
 
 
@@ -547,9 +541,7 @@
                             stroke-width="2"
                             stroke-linecap="round"
                             stroke-linejoin="round"
-                        >
-                            <path d="m5 12 4 4L19 7"/>
-                        </svg>
+                        ><use href="{{ \App\Support\Icono::url('i-5497b53') }}"></use></svg>
                     </button>
                 </template>
             </div>

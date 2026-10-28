@@ -16,9 +16,7 @@
             class="fixed z-[150] top-20 left-4 right-4 sm:left-auto sm:right-6 sm:w-96 flex items-start gap-3 bg-[var(--theme-surface)] border border-emerald-500/30 rounded-xl shadow-lg px-4 py-3"
         >
             <div class="shrink-0 w-8 h-8 rounded-full bg-emerald-500/15 text-emerald-500 flex items-center justify-center">
-                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M5 12l4 4L19 7"/>
-                </svg>
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="{{ \App\Support\Icono::url('i-e7e7dec') }}"></use></svg>
             </div>
 
             <div class="min-w-0 flex-1">
@@ -35,10 +33,7 @@
                 class="shrink-0 text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] transition-colors"
                 aria-label="Cerrar mensaje"
             >
-                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M6 6l12 12"/>
-                    <path d="M18 6L6 18"/>
-                </svg>
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="{{ \App\Support\Icono::url('i-e0c3579') }}"></use></svg>
             </button>
         </div>
 
@@ -57,11 +52,7 @@
             class="fixed z-[150] top-20 left-4 right-4 sm:left-auto sm:right-6 sm:w-96 flex items-start gap-3 bg-[var(--theme-surface)] border border-[var(--theme-danger)] rounded-xl shadow-lg px-4 py-3"
         >
             <div class="shrink-0 w-8 h-8 rounded-full bg-[var(--theme-danger-soft)] text-[var(--theme-danger)] flex items-center justify-center">
-                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 8v5"/>
-                    <path d="M12 17h.01"/>
-                    <circle cx="12" cy="12" r="9"/>
-                </svg>
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="{{ \App\Support\Icono::url('i-c96af83') }}"></use></svg>
             </div>
 
             <div class="min-w-0 flex-1">
@@ -78,10 +69,7 @@
                 class="shrink-0 text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] transition-colors"
                 aria-label="Cerrar mensaje"
             >
-                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M6 6l12 12"/>
-                    <path d="M18 6L6 18"/>
-                </svg>
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="{{ \App\Support\Icono::url('i-e0c3579') }}"></use></svg>
             </button>
         </div>
 
@@ -157,10 +145,7 @@
                                     fill="none"
                                     stroke="currentColor"
                                     stroke-width="1.6"
-                                >
-                                    <rect x="6" y="10" width="12" height="9" rx="1.5"/>
-                                    <path d="M8 10V7a4 4 0 018 0v3"/>
-                                </svg>
+                                ><use href="{{ \App\Support\Icono::url('i-6e570dc') }}"></use></svg>
                             </div>
                         </div>
 

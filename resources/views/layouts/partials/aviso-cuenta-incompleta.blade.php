@@ -32,11 +32,7 @@
         class="mb-5 flex flex-col gap-3 rounded-lg border border-[var(--theme-warning)] bg-[var(--theme-warning-soft)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
     >
         <div class="flex min-w-0 items-start gap-3">
-            <svg class="mt-0.5 h-5 w-5 shrink-0 text-[var(--theme-warning)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <circle cx="12" cy="8" r="4"/>
-                <path d="M4 21a8 8 0 0 1 16 0"/>
-                <path d="M19 3v4M19 10h.01"/>
-            </svg>
+            <svg class="mt-0.5 h-5 w-5 shrink-0 text-[var(--theme-warning)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-5c0cccf') }}"></use></svg>
 
             <div class="min-w-0">
                 <p class="text-sm font-semibold text-[var(--theme-text-strong)]">

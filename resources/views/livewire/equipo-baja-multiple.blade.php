@@ -31,10 +31,7 @@
                         stroke="currentColor"
                         stroke-width="1.8"
                         aria-hidden="true"
-                    >
-                        <path d="M12 3 2 20h20L12 3Z"/>
-                        <path d="M12 10v4M12 17h.01"/>
-                    </svg>
+                    ><use href="{{ \App\Support\Icono::url('i-a049c21') }}"></use></svg>
 
                     <p>
                         <span class="font-semibold">
@@ -453,9 +450,7 @@
                                             stroke="currentColor"
                                             stroke-width="1.7"
                                             aria-hidden="true"
-                                        >
-                                            <path d="M12 16V4M7 9l5-5 5 5M4 20h16"/>
-                                        </svg>
+                                        ><use href="{{ \App\Support\Icono::url('i-5480bc2') }}"></use></svg>
 
                                         <span>Seleccionar fotografía</span>
 
@@ -511,9 +506,7 @@
                                 stroke="currentColor"
                                 stroke-width="1.7"
                                 aria-hidden="true"
-                            >
-                                <path d="M14 2H6v20h12V6l-4-4ZM14 2v5h5M9 12h6M9 16h6"/>
-                            </svg>
+                            ><use href="{{ \App\Support\Icono::url('i-6c5b6b4') }}"></use></svg>
                         </x-slot:icon>
 
                         {{ $modo === 'conjunta'

@@ -120,11 +120,7 @@
                             class="w-5 h-5"
                             viewBox="0 0 24 24"
                             fill="currentColor"
-                        >
-                            <circle cx="12" cy="5" r="1.5"/>
-                            <circle cx="12" cy="12" r="1.5"/>
-                            <circle cx="12" cy="19" r="1.5"/>
-                        </svg>
+                        ><use href="{{ \App\Support\Icono::url('i-6f7d564') }}"></use></svg>
                     </button>
 
 

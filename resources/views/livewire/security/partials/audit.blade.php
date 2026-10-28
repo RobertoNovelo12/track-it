@@ -47,12 +47,7 @@
                         fill="none"
                         stroke="currentColor"
                         stroke-width="1.5"
-                    >
-                        <path d="M6 2h9l5 5v15H6z"/>
-                        <path d="M14 2v6h6"/>
-                        <path d="M9 13h6"/>
-                        <path d="M9 17h6"/>
-                    </svg>
+                    ><use href="{{ \App\Support\Icono::url('i-3964335') }}"></use></svg>
 
                     Bitácora de auditoría
                 </h2>

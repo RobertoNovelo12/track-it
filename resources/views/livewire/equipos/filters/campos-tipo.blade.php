@@ -29,9 +29,7 @@
             'flex items-center gap-2 text-xs font-semibold text-[var(--theme-text-strong)]',
             'mb-3' => ! $esMovil,
         ])>
-            <svg class="h-3.5 w-3.5 text-[var(--theme-primary)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M4 6h16M7 12h10M10 18h4"/>
-            </svg>
+            <svg class="h-3.5 w-3.5 text-[var(--theme-primary)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-ab35c9d') }}"></use></svg>
             Filtros de {{ $tipoNombre ?: 'este tipo' }}
         </p>
 

@@ -520,10 +520,8 @@
 
 <body>
 @php
-    $rutaLogoReporte = public_path('images/logo-grand-palladium.png');
-    $logoPalladiumPdf = is_file($rutaLogoReporte)
-        ? 'data:image/png;base64,' . base64_encode(file_get_contents($rutaLogoReporte))
-        : null;
+    // Logo reducido al tamaño impreso y sin transparencia (más rápido en dompdf).
+    $logoPalladiumPdf = app(\App\Services\ImagenPdfService::class)->archivoPublicoDataUri('images/logo-grand-palladium.png');
 @endphp
 
 

@@ -662,11 +662,7 @@
             data-activo="{{ request()->routeIs('dashboard') ? 'true' : 'false' }}"
             @if (request()->routeIs('dashboard')) aria-current="page" @endif
         >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M3 11.5L12 4l9 7.5"/>
-                <path d="M5 10v10h14V10"/>
-                <path d="M9 20v-6h6v6"/>
-            </svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-59b21d1') }}"></use></svg>
             <span>Inicio</span>
         </a>
 
@@ -683,11 +679,7 @@
                 x-bind:aria-expanded="hoja === 'inventario' ? 'true' : 'false'"
                 x-on:click="abrir('inventario', $event)"
             >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M21 8l-9-5-9 5 9 5 9-5z"/>
-                    <path d="M3 8v8l9 5 9-5V8"/>
-                    <path d="M12 13v8"/>
-                </svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-b41fc0d') }}"></use></svg>
                 <span>Inventario</span>
             </button>
         @endif
@@ -700,10 +692,7 @@
             x-on:click="$dispatch('abrir-escaner')"
         >
             <span class="mi-escanear-circulo">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/>
-                    <path d="M8 9v6M11 9v6M13.5 9v6M16 9v6"/>
-                </svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-ca2436a') }}"></use></svg>
             </span>
             <span>Escanear</span>
         </button>
@@ -719,12 +708,7 @@
                 data-activo="{{ request()->routeIs('asignaciones.*') ? 'true' : 'false' }}"
                 @if (request()->routeIs('asignaciones.*')) aria-current="page" @endif
             >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M4 7h15"/>
-                    <path d="M16 4l3 3-3 3"/>
-                    <path d="M20 17H5"/>
-                    <path d="M8 14l-3 3 3 3"/>
-                </svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-e5c8e79') }}"></use></svg>
                 <span>Movimientos</span>
             </a>
         @endif
@@ -741,11 +725,7 @@
             x-bind:aria-expanded="hoja === 'mas' ? 'true' : 'false'"
             x-on:click="abrir('mas', $event)"
         >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M4 6h16"/>
-                <path d="M4 12h16"/>
-                <path d="M4 18h16"/>
-            </svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-06fe192') }}"></use></svg>
             <span>Más</span>
         </button>
     </nav>
@@ -791,9 +771,7 @@
                 <h2 id="mi-titulo-inventario" class="mi-hoja-titulo">Inventario</h2>
 
                 <button type="button" class="mi-hoja-cerrar" x-on:click="cerrar()" aria-label="Cerrar">
-                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true">
-                        <path d="M6 6l12 12M18 6L6 18"/>
-                    </svg>
+                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-c00fbb2') }}"></use></svg>
                 </button>
             </div>
 
@@ -811,11 +789,7 @@
                     data-activo="{{ $todosActivo ? 'true' : 'false' }}"
                     @if ($todosActivo) aria-current="page" @endif
                 >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M21 8l-9-5-9 5 9 5 9-5z"/>
-                        <path d="M3 8v8l9 5 9-5V8"/>
-                        <path d="M12 13v8"/>
-                    </svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-b41fc0d') }}"></use></svg>
                     Todos los equipos
                 </a>
 
@@ -852,9 +826,7 @@
                         data-rutas="equipos.create"
                         data-activo="{{ request()->routeIs('equipos.create') ? 'true' : 'false' }}"
                     >
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true">
-                            <path d="M12 5v14M5 12h14"/>
-                        </svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-90887f4') }}"></use></svg>
                         Añadir equipo
                     </a>
                 @endif
@@ -889,9 +861,7 @@
             <span class="mi-hoja-titulo">Más</span>
 
             <button type="button" class="mi-hoja-cerrar" x-on:click="cerrar()" aria-label="Cerrar">
-                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true">
-                    <path d="M6 6l12 12M18 6L6 18"/>
-                </svg>
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-c00fbb2') }}"></use></svg>
             </button>
         </div>
 
@@ -920,33 +890,19 @@
                 >
                     @switch($opcion['icon'])
                         @case('mantenimientos')
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <path d="M14.7 6.3a4 4 0 00-5.4 5.4L3 18v3h3l6.3-6.3a4 4 0 005.4-5.4l-2.5 2.5-2-2z"/>
-                            </svg>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-4a00501') }}"></use></svg>
                             @break
 
                         @case('reportes')
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <path d="M4 20h16"/>
-                                <path d="M7 17V9"/>
-                                <path d="M12 17V4"/>
-                                <path d="M17 17v-6"/>
-                            </svg>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-6a3320d') }}"></use></svg>
                             @break
 
                         @case('seguridad')
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6l7-3z"/>
-                            </svg>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-518c3f4') }}"></use></svg>
                             @break
 
                         @case('catalogos')
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <rect x="4" y="3" width="16" height="18" rx="2"/>
-                                <path d="M8 8h8"/>
-                                <path d="M8 12h8"/>
-                                <path d="M8 16h5"/>
-                            </svg>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-9b73429') }}"></use></svg>
                             @break
                     @endswitch
 
@@ -972,10 +928,7 @@
                     data-activo="{{ $cuentaActiva ? 'true' : 'false' }}"
                     @if ($cuentaActiva) aria-current="page" @endif
                 >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <circle cx="12" cy="8" r="4"/>
-                        <path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/>
-                    </svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-84c3c1e') }}"></use></svg>
                     Mi cuenta
                 </a>
             @endif
@@ -1004,11 +957,7 @@
                     x-show="disponible"
                     x-on:click="window.trackitInstalarApp()"
                 >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M12 4v11"/>
-                        <path d="M7.5 10.5L12 15l4.5-4.5"/>
-                        <path d="M5 19h14"/>
-                    </svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-746136f') }}"></use></svg>
                     Instalar aplicación
                 </button>
 
@@ -1020,11 +969,7 @@
                     x-bind:aria-expanded="verPasos ? 'true' : 'false'"
                     aria-controls="mi-pasos-ios"
                 >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M12 4v11"/>
-                        <path d="M7.5 10.5L12 15l4.5-4.5"/>
-                        <path d="M5 19h14"/>
-                    </svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-746136f') }}"></use></svg>
                     Instalar en el iPhone
                 </button>
 
@@ -1043,13 +988,8 @@
                 x-on:trackit-theme-changed.window="oscuro = document.documentElement.classList.contains('dark')"
                 x-on:click="window.setTrackItTheme?.(oscuro ? 'light' : 'dark')"
             >
-                <svg x-show="oscuro" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
-                    <circle cx="12" cy="12" r="4"/>
-                    <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>
-                </svg>
-                <svg x-show="! oscuro" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>
-                </svg>
+                <svg x-show="oscuro" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-e3ed952') }}"></use></svg>
+                <svg x-show="! oscuro" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-f06bdc1') }}"></use></svg>
                 <span x-text="oscuro ? 'Modo claro' : 'Modo oscuro'">Modo oscuro</span>
             </button>
         </div>

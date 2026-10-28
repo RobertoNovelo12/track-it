@@ -36,10 +36,7 @@
                     fill="none"
                     stroke="currentColor"
                     stroke-width="1.5"
-                >
-                    <path d="M18 8a6 6 0 00-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/>
-                    <path d="M10 21h4"/>
-                </svg>
+                ><use href="{{ \App\Support\Icono::url('i-992e6c4') }}"></use></svg>
 
                 Alertas y seguridad
             </h2>
@@ -103,11 +100,7 @@
                                 fill="none"
                                 stroke="currentColor"
                                 stroke-width="1.6"
-                            >
-                                <circle cx="12" cy="12" r="9"/>
-                                <path d="M12 7v6"/>
-                                <path d="M12 17h.01"/>
-                            </svg>
+                            ><use href="{{ \App\Support\Icono::url('i-5699281') }}"></use></svg>
                         </div>
 
 

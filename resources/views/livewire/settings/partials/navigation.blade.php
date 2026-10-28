@@ -137,17 +137,7 @@
                         fill="none"
                         stroke="currentColor"
                         stroke-width="1.6"
-                    >
-                        <circle
-                            cx="12"
-                            cy="8"
-                            r="4"
-                        />
-
-                        <path
-                            d="M5 21c0-4 3-7 7-7s7 3 7 7"
-                        />
-                    </svg>
+                    ><use href="{{ \App\Support\Icono::url('i-871b7a5') }}"></use></svg>
 
 
                     {{-- SEGURIDAD --}}
@@ -161,19 +151,7 @@
                         fill="none"
                         stroke="currentColor"
                         stroke-width="1.6"
-                    >
-                        <rect
-                            x="5"
-                            y="10"
-                            width="14"
-                            height="10"
-                            rx="2"
-                        />
-
-                        <path
-                            d="M8 10V7a4 4 0 018 0v3"
-                        />
-                    </svg>
+                    ><use href="{{ \App\Support\Icono::url('i-660e321') }}"></use></svg>
 
 
                     {{-- NOTIFICACIONES --}}
@@ -187,15 +165,7 @@
                         fill="none"
                         stroke="currentColor"
                         stroke-width="1.6"
-                    >
-                        <path
-                            d="M18 8a6 6 0 00-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"
-                        />
-
-                        <path
-                            d="M10 21h4"
-                        />
-                    </svg>
+                    ><use href="{{ \App\Support\Icono::url('i-992e6c4') }}"></use></svg>
 
 
                     {{-- PREFERENCIAS --}}
@@ -209,19 +179,7 @@
                         fill="none"
                         stroke="currentColor"
                         stroke-width="1.6"
-                    >
-                        <circle
-                            cx="12"
-                            cy="12"
-                            r="3"
-                        />
-
-                        <path
-                            d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        />
-                    </svg>
+                    ><use href="{{ \App\Support\Icono::url('i-7ed7b69') }}"></use></svg>
                 </span>
 
 
@@ -268,11 +226,7 @@
                 fill="none"
                 stroke="currentColor"
                 stroke-width="1.7"
-            >
-                <path
-                    d="M6 9l6 6 6-6"
-                />
-            </svg>
+            ><use href="{{ \App\Support\Icono::url('i-abe9c4c') }}"></use></svg>
         </button>
 
 
@@ -416,17 +370,7 @@
                                     fill="none"
                                     stroke="currentColor"
                                     stroke-width="1.6"
-                                >
-                                    <circle
-                                        cx="12"
-                                        cy="8"
-                                        r="4"
-                                    />
-
-                                    <path
-                                        d="M5 21c0-4 3-7 7-7s7 3 7 7"
-                                    />
-                                </svg>
+                                ><use href="{{ \App\Support\Icono::url('i-871b7a5') }}"></use></svg>
 
                             @elseif ($item['icon'] === 'lock')
 
@@ -437,19 +381,7 @@
                                     fill="none"
                                     stroke="currentColor"
                                     stroke-width="1.6"
-                                >
-                                    <rect
-                                        x="5"
-                                        y="10"
-                                        width="14"
-                                        height="10"
-                                        rx="2"
-                                    />
-
-                                    <path
-                                        d="M8 10V7a4 4 0 018 0v3"
-                                    />
-                                </svg>
+                                ><use href="{{ \App\Support\Icono::url('i-660e321') }}"></use></svg>
 
                             @elseif ($item['icon'] === 'bell')
 
@@ -460,15 +392,7 @@
                                     fill="none"
                                     stroke="currentColor"
                                     stroke-width="1.6"
-                                >
-                                    <path
-                                        d="M18 8a6 6 0 00-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"
-                                    />
-
-                                    <path
-                                        d="M10 21h4"
-                                    />
-                                </svg>
+                                ><use href="{{ \App\Support\Icono::url('i-992e6c4') }}"></use></svg>
 
                             @else
 
@@ -479,19 +403,7 @@
                                     fill="none"
                                     stroke="currentColor"
                                     stroke-width="1.6"
-                                >
-                                    <circle
-                                        cx="12"
-                                        cy="12"
-                                        r="3"
-                                    />
-
-                                    <path
-                                        d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                                    />
-                                </svg>
+                                ><use href="{{ \App\Support\Icono::url('i-7ed7b69') }}"></use></svg>
 
                             @endif
                         </span>
@@ -518,11 +430,7 @@
                         fill="none"
                         stroke="currentColor"
                         stroke-width="1.8"
-                    >
-                        <path
-                            d="M5 12l4 4L19 6"
-                        />
-                    </svg>
+                    ><use href="{{ \App\Support\Icono::url('i-42997ad') }}"></use></svg>
                 </button>
 
             @endforeach
@@ -588,17 +496,7 @@
                         fill="none"
                         stroke="currentColor"
                         stroke-width="1.6"
-                    >
-                        <circle
-                            cx="12"
-                            cy="8"
-                            r="4"
-                        />
-
-                        <path
-                            d="M5 21c0-4 3-7 7-7s7 3 7 7"
-                        />
-                    </svg>
+                    ><use href="{{ \App\Support\Icono::url('i-871b7a5') }}"></use></svg>
 
                 @elseif ($item['icon'] === 'lock')
 
@@ -609,19 +507,7 @@
                         fill="none"
                         stroke="currentColor"
                         stroke-width="1.6"
-                    >
-                        <rect
-                            x="5"
-                            y="10"
-                            width="14"
-                            height="10"
-                            rx="2"
-                        />
-
-                        <path
-                            d="M8 10V7a4 4 0 018 0v3"
-                        />
-                    </svg>
+                    ><use href="{{ \App\Support\Icono::url('i-660e321') }}"></use></svg>
 
                 @elseif ($item['icon'] === 'bell')
 
@@ -632,15 +518,7 @@
                         fill="none"
                         stroke="currentColor"
                         stroke-width="1.6"
-                    >
-                        <path
-                            d="M18 8a6 6 0 00-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"
-                        />
-
-                        <path
-                            d="M10 21h4"
-                        />
-                    </svg>
+                    ><use href="{{ \App\Support\Icono::url('i-992e6c4') }}"></use></svg>
 
                 @else
 
@@ -651,19 +529,7 @@
                         fill="none"
                         stroke="currentColor"
                         stroke-width="1.6"
-                    >
-                        <circle
-                            cx="12"
-                            cy="12"
-                            r="3"
-                        />
-
-                        <path
-                            d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        />
-                    </svg>
+                    ><use href="{{ \App\Support\Icono::url('i-7ed7b69') }}"></use></svg>
 
                 @endif
 

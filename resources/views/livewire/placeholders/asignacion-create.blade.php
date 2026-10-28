@@ -84,12 +84,7 @@
                             fill="none"
                             stroke="currentColor"
                             stroke-width="1.7"
-                        >
-                            <circle cx="9" cy="8" r="3"/>
-                            <path d="M3 20c0-4 2-7 6-7s6 3 6 7"/>
-                            <path d="M18 7v6"/>
-                            <path d="M15 10h6"/>
-                        </svg>
+                        ><use href="{{ \App\Support\Icono::url('i-a66f8d6') }}"></use></svg>
 
                         Asignación
                     </button>
@@ -129,12 +124,7 @@
                             fill="none"
                             stroke="currentColor"
                             stroke-width="1.7"
-                        >
-                            <path d="M4 7h15"/>
-                            <path d="M16 4l3 3-3 3"/>
-                            <path d="M20 17H5"/>
-                            <path d="M8 14l-3 3 3 3"/>
-                        </svg>
+                        ><use href="{{ \App\Support\Icono::url('i-e5c8e79') }}"></use></svg>
 
                         Reasignación
                     </a>
@@ -249,26 +239,7 @@
                                 viewBox="0 0 24 24"
                                 fill="none"
                                 aria-hidden="true"
-                            >
-                                <circle
-                                    cx="12"
-                                    cy="12"
-                                    r="9"
-
-                                    stroke="currentColor"
-                                    stroke-width="2"
-
-                                    opacity="0.25"
-                                />
-
-                                <path
-                                    d="M21 12a9 9 0 0 0-9-9"
-
-                                    stroke="currentColor"
-                                    stroke-width="2"
-                                    stroke-linecap="round"
-                                />
-                            </svg>
+                            ><use href="{{ \App\Support\Icono::url('i-ef15586') }}"></use></svg>
                         </div>
                     </div>
                 </div>
@@ -487,9 +458,7 @@
                             fill="none"
                             stroke="currentColor"
                             stroke-width="1.5"
-                        >
-                            <path d="M6 9l6 6 6-6"/>
-                        </svg>
+                        ><use href="{{ \App\Support\Icono::url('i-abe9c4c') }}"></use></svg>
                     </div>
                 </div>
 
@@ -566,9 +535,7 @@
                             fill="none"
                             stroke="currentColor"
                             stroke-width="1.5"
-                        >
-                            <path d="M6 9l6 6 6-6"/>
-                        </svg>
+                        ><use href="{{ \App\Support\Icono::url('i-abe9c4c') }}"></use></svg>
                     </div>
                 </div>
 
@@ -645,9 +612,7 @@
                             fill="none"
                             stroke="currentColor"
                             stroke-width="1.5"
-                        >
-                            <path d="M6 9l6 6 6-6"/>
-                        </svg>
+                        ><use href="{{ \App\Support\Icono::url('i-abe9c4c') }}"></use></svg>
                     </div>
                 </div>
 
@@ -767,9 +732,7 @@
                             fill="none"
                             stroke="currentColor"
                             stroke-width="1.5"
-                        >
-                            <path d="M6 9l6 6 6-6"/>
-                        </svg>
+                        ><use href="{{ \App\Support\Icono::url('i-abe9c4c') }}"></use></svg>
                     </div>
                 </div>
 
@@ -914,26 +877,7 @@
                     viewBox="0 0 24 24"
                     fill="none"
                     aria-hidden="true"
-                >
-                    <circle
-                        cx="12"
-                        cy="12"
-                        r="9"
-
-                        stroke="currentColor"
-                        stroke-width="2"
-
-                        opacity="0.25"
-                    />
-
-                    <path
-                        d="M21 12a9 9 0 0 0-9-9"
-
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                    />
-                </svg>
+                ><use href="{{ \App\Support\Icono::url('i-ef15586') }}"></use></svg>
 
                 Cargando...
             </button>

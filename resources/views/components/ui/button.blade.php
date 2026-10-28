@@ -135,9 +135,7 @@
                 aria-hidden="true"
                 x-bind:class="{ 'opacity-0': ! ({{ $xSuccess }}) }"
             >
-                <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M5 12.5l4.5 4.5L19 7"/>
-                </svg>
+                <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-e1c3743') }}"></use></svg>
                 <span>{{ $successText }}</span>
             </span>
         @endif

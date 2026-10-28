@@ -32,10 +32,7 @@
             {{-- Duplicar equipo: de dónde vienen los datos copiados --}}
             <template x-if="data.duplicado?.origen">
                 <div role="status" class="flex items-start gap-3 rounded-lg border border-[var(--theme-primary-border)] bg-[var(--theme-primary-soft-subtle)] px-4 py-3">
-                    <svg class="mt-0.5 h-4 w-4 shrink-0 text-[var(--theme-primary)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <rect x="8" y="8" width="12" height="12" rx="2"/>
-                        <path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>
-                    </svg>
+                    <svg class="mt-0.5 h-4 w-4 shrink-0 text-[var(--theme-primary)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-b9ae114') }}"></use></svg>
                     <p class="text-xs leading-relaxed text-[var(--theme-text)]">
                         Copiamos los datos de <strong class="font-semibold text-[var(--theme-text-strong)]" x-text="data.duplicado.origen"></strong>.
                         Completa el nombre, el número de serie y los datos propios de este equipo.

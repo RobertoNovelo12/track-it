@@ -636,15 +636,7 @@
                         stroke="currentColor"
                         stroke-width="1.7"
                         stroke-linecap="round"
-                    >
-                        <circle
-                            cx="11"
-                            cy="11"
-                            r="7"
-                        />
-
-                        <path d="M20 20l-3.5-3.5"/>
-                    </svg>
+                    ><use href="{{ \App\Support\Icono::url('i-f6ba916') }}"></use></svg>
                 </div>
 
 
@@ -884,10 +876,7 @@
                             stroke="currentColor"
                             stroke-width="1.8"
                             stroke-linecap="round"
-                        >
-                            <path d="M12 5v14"/>
-                            <path d="M5 12h14"/>
-                        </svg>
+                        ><use href="{{ \App\Support\Icono::url('i-6aed230') }}"></use></svg>
 
                         Agregar
                     </button>

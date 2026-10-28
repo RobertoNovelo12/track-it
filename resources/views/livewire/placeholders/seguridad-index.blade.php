@@ -10,12 +10,7 @@
         {{-- Nuevos usuarios --}}
         <div class="bg-[var(--theme-surface)] border border-[var(--theme-primary-border)] rounded-lg p-4 flex items-center gap-4">
             <div class="w-12 h-12 shrink-0 rounded-lg flex items-center justify-center bg-[var(--theme-primary-soft)] text-[var(--theme-primary)]">
-                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-                    <circle cx="9" cy="8" r="3"/>
-                    <path d="M3 20c0-4 2-7 6-7s6 3 6 7"/>
-                    <path d="M18 7v6"/>
-                    <path d="M15 10h6"/>
-                </svg>
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><use href="{{ \App\Support\Icono::url('i-a66f8d6') }}"></use></svg>
             </div>
 
             <div class="min-w-0">
@@ -37,11 +32,7 @@
         {{-- Usuarios activos --}}
         <div class="bg-[var(--theme-surface)] border border-[var(--theme-success-border)] rounded-lg p-4 flex items-center gap-4">
             <div class="w-12 h-12 shrink-0 rounded-lg flex items-center justify-center bg-[var(--theme-success-soft)] text-[var(--theme-success)]">
-                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-                    <circle cx="9" cy="8" r="3"/>
-                    <path d="M3 20c0-4 2-7 6-7s6 3 6 7"/>
-                    <path d="M16 11l2 2 4-5"/>
-                </svg>
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><use href="{{ \App\Support\Icono::url('i-d0eabec') }}"></use></svg>
             </div>
 
             <div class="min-w-0">
@@ -63,12 +54,7 @@
         {{-- Pendientes --}}
         <div class="bg-[var(--theme-surface)] border border-[var(--theme-warning-border)] rounded-lg p-4 flex items-center gap-4">
             <div class="w-12 h-12 shrink-0 rounded-lg flex items-center justify-center bg-[var(--theme-warning-soft)] text-[var(--theme-warning)]">
-                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-                    <circle cx="9" cy="8" r="3"/>
-                    <path d="M3 20c0-4 2-7 6-7s6 3 6 7"/>
-                    <circle cx="18" cy="10" r="3"/>
-                    <path d="M18 8.5V10l1 1"/>
-                </svg>
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><use href="{{ \App\Support\Icono::url('i-2361b46') }}"></use></svg>
             </div>
 
             <div class="min-w-0">
@@ -90,11 +76,7 @@
         {{-- Roles --}}
         <div class="bg-[var(--theme-surface)] border border-[var(--theme-border-strong)] rounded-lg p-4 flex items-center gap-4">
             <div class="w-12 h-12 shrink-0 rounded-lg flex items-center justify-center bg-[var(--theme-surface-soft)] text-[var(--theme-text-strong)]">
-                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-                    <path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6l7-3z"/>
-                    <circle cx="12" cy="10" r="2"/>
-                    <path d="M9 16c.5-2 1.5-3 3-3s2.5 1 3 3"/>
-                </svg>
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><use href="{{ \App\Support\Icono::url('i-7ad5c3f') }}"></use></svg>
             </div>
 
             <div class="min-w-0">
@@ -160,10 +142,7 @@
                                 fill="none"
                                 stroke="currentColor"
                                 stroke-width="1.6"
-                            >
-                                <circle cx="11" cy="11" r="7"/>
-                                <path d="M20 20l-4-4"/>
-                            </svg>
+                            ><use href="{{ \App\Support\Icono::url('i-8bdcd83') }}"></use></svg>
 
                             <input
                                 type="search"
@@ -351,12 +330,7 @@
                             fill="none"
                             stroke="currentColor"
                             stroke-width="1.5"
-                        >
-                            <path d="M6 2h9l5 5v15H6z"/>
-                            <path d="M14 2v6h6"/>
-                            <path d="M9 13h6"/>
-                            <path d="M9 17h6"/>
-                        </svg>
+                        ><use href="{{ \App\Support\Icono::url('i-3964335') }}"></use></svg>
 
                         Bitácora de auditoría
                     </h2>
@@ -466,12 +440,7 @@
                         fill="none"
                         stroke="currentColor"
                         stroke-width="1.6"
-                    >
-                        <path d="M4 20V10"/>
-                        <path d="M10 20V4"/>
-                        <path d="M16 20v-7"/>
-                        <path d="M22 20V7"/>
-                    </svg>
+                    ><use href="{{ \App\Support\Icono::url('i-7f844ec') }}"></use></svg>
 
                     Resumen de la semana
                 </h2>
@@ -534,10 +503,7 @@
                         fill="none"
                         stroke="currentColor"
                         stroke-width="1.5"
-                    >
-                        <path d="M18 8a6 6 0 00-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/>
-                        <path d="M10 21h4"/>
-                    </svg>
+                    ><use href="{{ \App\Support\Icono::url('i-992e6c4') }}"></use></svg>
 
                     Alertas y seguridad
                 </h2>

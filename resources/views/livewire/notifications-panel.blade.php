@@ -256,9 +256,7 @@
                                     fill="none"
                                     stroke="currentColor"
                                     stroke-width="1.7"
-                                >
-                                    <path d="M5 12l4 4L19 6"/>
-                                </svg>
+                                ><use href="{{ \App\Support\Icono::url('i-42997ad') }}"></use></svg>
 
                                 Marcar todas
                             </span>
@@ -284,26 +282,7 @@
                                     fill="none"
 
                                     aria-hidden="true"
-                                >
-                                    <circle
-                                        cx="12"
-                                        cy="12"
-                                        r="9"
-
-                                        stroke="currentColor"
-                                        stroke-width="2"
-
-                                        opacity="0.25"
-                                    />
-
-                                    <path
-                                        d="M21 12a9 9 0 0 0-9-9"
-
-                                        stroke="currentColor"
-                                        stroke-width="2"
-                                        stroke-linecap="round"
-                                    />
-                                </svg>
+                                ><use href="{{ \App\Support\Icono::url('i-ef15586') }}"></use></svg>
 
                                 <span class="sr-only">
                                     Marcando notificaciones como leídas...
@@ -380,13 +359,7 @@
                                     fill="none"
                                     stroke="currentColor"
                                     stroke-width="1.7"
-                                >
-                                    <path d="M4 7h16"/>
-                                    <path d="M9 7V4h6v3"/>
-                                    <path d="M7 7l1 13h8l1-13"/>
-                                    <path d="M10 11v5"/>
-                                    <path d="M14 11v5"/>
-                                </svg>
+                                ><use href="{{ \App\Support\Icono::url('i-541945f') }}"></use></svg>
                             </span>
 
 
@@ -410,26 +383,7 @@
                                     fill="none"
 
                                     aria-hidden="true"
-                                >
-                                    <circle
-                                        cx="12"
-                                        cy="12"
-                                        r="9"
-
-                                        stroke="currentColor"
-                                        stroke-width="2"
-
-                                        opacity="0.25"
-                                    />
-
-                                    <path
-                                        d="M21 12a9 9 0 0 0-9-9"
-
-                                        stroke="currentColor"
-                                        stroke-width="2"
-                                        stroke-linecap="round"
-                                    />
-                                </svg>
+                                ><use href="{{ \App\Support\Icono::url('i-ef15586') }}"></use></svg>
 
                                 <span class="sr-only">
                                     Eliminando notificaciones...
@@ -497,12 +451,7 @@
                                 fill="none"
                                 stroke="currentColor"
                                 stroke-width="1.7"
-                            >
-                                <path d="M20 6v5h-5"/>
-                                <path d="M4 18v-5h5"/>
-                                <path d="M6.1 9A7 7 0 0118.7 6.7L20 11"/>
-                                <path d="M17.9 15A7 7 0 015.3 17.3L4 13"/>
-                            </svg>
+                            ><use href="{{ \App\Support\Icono::url('i-8f46ed7') }}"></use></svg>
                         </span>
 
 
@@ -527,26 +476,7 @@
                                 fill="none"
 
                                 aria-hidden="true"
-                            >
-                                <circle
-                                    cx="12"
-                                    cy="12"
-                                    r="9"
-
-                                    stroke="currentColor"
-                                    stroke-width="2"
-
-                                    opacity="0.25"
-                                />
-
-                                <path
-                                    d="M21 12a9 9 0 0 0-9-9"
-
-                                    stroke="currentColor"
-                                    stroke-width="2"
-                                    stroke-linecap="round"
-                                />
-                            </svg>
+                            ><use href="{{ \App\Support\Icono::url('i-ef15586') }}"></use></svg>
 
                             <span class="sr-only">
                                 Actualizando notificaciones...
@@ -597,10 +527,7 @@
                             fill="none"
                             stroke="currentColor"
                             stroke-width="1.7"
-                        >
-                            <path d="M6 6l12 12"/>
-                            <path d="M18 6L6 18"/>
-                        </svg>
+                        ><use href="{{ \App\Support\Icono::url('i-e0c3579') }}"></use></svg>
                     </button>
 
                 </div>
@@ -635,10 +562,7 @@
                         class="flex items-start gap-3 border-b border-[var(--theme-border)] bg-[var(--theme-warning-soft)] px-4 py-3.5 transition-opacity hover:opacity-90"
                     >
                         <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--theme-surface)] text-[var(--theme-warning)]">
-                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <circle cx="12" cy="8" r="4"/>
-                                <path d="M4 21a8 8 0 0 1 16 0"/>
-                            </svg>
+                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-4ec8301') }}"></use></svg>
                         </span>
 
                         <span class="min-w-0 flex-1">
@@ -653,7 +577,7 @@
 
                             <span class="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-[var(--theme-primary)]">
                                 Completar ahora
-                                <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+                                <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-352d1b3') }}"></use></svg>
                             </span>
                         </span>
                     </a>
@@ -689,10 +613,7 @@
                         description="Cuando tengas una nueva notificación aparecerá aquí."
                     >
                         <x-slot:icon>
-                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <path d="M18 8a6 6 0 00-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/>
-                                <path d="M10 21h4"/>
-                            </svg>
+                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-992e6c4') }}"></use></svg>
                         </x-slot:icon>
                     </x-ui.empty-state>
 
@@ -956,9 +877,7 @@
                                                         fill="none"
                                                         stroke="currentColor"
                                                         stroke-width="1.8"
-                                                    >
-                                                        <path d="M5 12l4 4L19 6"/>
-                                                    </svg>
+                                                    ><use href="{{ \App\Support\Icono::url('i-42997ad') }}"></use></svg>
 
                                                     Leída
                                                 </span>
@@ -996,9 +915,7 @@
                                                         fill="none"
                                                         stroke="currentColor"
                                                         stroke-width="1.8"
-                                                    >
-                                                        <path d="M9 6l6 6-6 6"/>
-                                                    </svg>
+                                                    ><use href="{{ \App\Support\Icono::url('i-352d1b3') }}"></use></svg>
                                                 </span>
 
                                             @endif
@@ -1073,13 +990,7 @@
                                                 fill="none"
                                                 stroke="currentColor"
                                                 stroke-width="1.7"
-                                            >
-                                                <path d="M4 7h16"/>
-                                                <path d="M9 7V4h6v3"/>
-                                                <path d="M7 7l1 13h8l1-13"/>
-                                                <path d="M10 11v5"/>
-                                                <path d="M14 11v5"/>
-                                            </svg>
+                                            ><use href="{{ \App\Support\Icono::url('i-541945f') }}"></use></svg>
                                         </span>
 
 
@@ -1103,26 +1014,7 @@
                                                 fill="none"
 
                                                 aria-hidden="true"
-                                            >
-                                                <circle
-                                                    cx="12"
-                                                    cy="12"
-                                                    r="9"
-
-                                                    stroke="currentColor"
-                                                    stroke-width="2"
-
-                                                    opacity="0.25"
-                                                />
-
-                                                <path
-                                                    d="M21 12a9 9 0 0 0-9-9"
-
-                                                    stroke="currentColor"
-                                                    stroke-width="2"
-                                                    stroke-linecap="round"
-                                                />
-                                            </svg>
+                                            ><use href="{{ \App\Support\Icono::url('i-ef15586') }}"></use></svg>
 
                                             <span class="sr-only">
                                                 Eliminando notificación...

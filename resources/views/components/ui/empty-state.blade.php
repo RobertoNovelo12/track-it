@@ -95,10 +95,7 @@
                     loading-text="Reintentando…"
                 >
                     <x-slot:icon>
-                        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <path d="M20 12a8 8 0 1 1-2.34-5.66L20 8.5"/>
-                            <path d="M20 4v4.5h-4.5"/>
-                        </svg>
+                        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-aa117c8') }}"></use></svg>
                     </x-slot:icon>
 
                     Reintentar

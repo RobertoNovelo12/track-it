@@ -525,10 +525,8 @@
     Datos: App\Services\DevolucionService::datosActa().
 ============================================================ --}}
 @php
-    $rutaLogoReporte = public_path('images/logo-grand-palladium.png');
-    $logoPalladiumPdf = is_file($rutaLogoReporte)
-        ? 'data:image/png;base64,' . base64_encode(file_get_contents($rutaLogoReporte))
-        : null;
+    // Logo reducido al tamaño impreso y sin transparencia (más rápido en dompdf).
+    $logoPalladiumPdf = app(\App\Services\ImagenPdfService::class)->archivoPublicoDataUri('images/logo-grand-palladium.png');
 
     $dato = static fn ($valor) => filled($valor) ? (string) $valor : '—';
     $fecha = static fn ($valor) => filled($valor) ? \Illuminate\Support\Carbon::parse($valor)->format('d/m/Y') : '—';

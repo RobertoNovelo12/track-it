@@ -331,9 +331,9 @@
         $bajasFormato ?? []
     );
 
-    $logo = public_path(
-        'images/logo-grand-palladium.png'
-    );
+    // Logo reducido al tamaño impreso y sin transparencia (más rápido en dompdf).
+    $logo = app(\App\Services\ImagenPdfService::class)
+        ->archivoPublicoDataUri('images/logo-grand-palladium.png');
 @endphp
 
 
@@ -442,7 +442,7 @@
     ============================================================ --}}
     <div class="page page-break">
 
-        @if (is_file($logo))
+        @if ($logo)
             <img
                 src="{{ $logo }}"
                 alt="Grand Palladium"
@@ -702,7 +702,7 @@
         "
     >
 
-        @if (is_file($logo))
+        @if ($logo)
             <img
                 src="{{ $logo }}"
                 alt="Grand Palladium"

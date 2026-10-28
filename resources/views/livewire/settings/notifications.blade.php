@@ -192,10 +192,7 @@
                     text-[var(--theme-primary)]
                 "
             >
-                <svg class="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <rect x="7" y="2.5" width="10" height="19" rx="2"/>
-                    <path d="M11 18.5h2"/>
-                </svg>
+                <svg class="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-b5fb2ca') }}"></use></svg>
             </div>
 
             <div class="min-w-0 flex-1">
@@ -372,12 +369,7 @@
                     fill="none"
                     stroke="currentColor"
                     stroke-width="1.6"
-                >
-                    <path d="M4 7h15"/>
-                    <path d="M16 4l3 3-3 3"/>
-                    <path d="M20 17H5"/>
-                    <path d="M8 14l-3 3 3 3"/>
-                </svg>
+                ><use href="{{ \App\Support\Icono::url('i-e5c8e79') }}"></use></svg>
             </div>
 
 
@@ -787,12 +779,7 @@
                     fill="none"
                     stroke="currentColor"
                     stroke-width="1.6"
-                >
-                    <circle cx="9" cy="8" r="3"/>
-                    <path d="M3 20c0-4 2-7 6-7s6 3 6 7"/>
-                    <circle cx="17" cy="9" r="2"/>
-                    <path d="M15.5 14.5c3.2.3 5.5 2.2 5.5 5.5"/>
-                </svg>
+                ><use href="{{ \App\Support\Icono::url('i-ba5884d') }}"></use></svg>
             </div>
 
 
@@ -1091,10 +1078,7 @@
                     fill="none"
                     stroke="currentColor"
                     stroke-width="1.6"
-                >
-                    <path d="M18 8a6 6 0 00-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/>
-                    <path d="M10 21h4"/>
-                </svg>
+                ><use href="{{ \App\Support\Icono::url('i-992e6c4') }}"></use></svg>
             </div>
 
 

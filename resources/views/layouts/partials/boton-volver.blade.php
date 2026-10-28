@@ -52,9 +52,7 @@
     aria-label="Volver"
     title="Volver"
 >
-    <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M15 6l-6 6 6 6"/>
-    </svg>
+    <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-d889af1') }}"></use></svg>
 
     @unless ($esMovilVolver)
         <span>Volver</span>

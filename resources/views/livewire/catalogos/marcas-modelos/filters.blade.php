@@ -57,15 +57,7 @@
                     stroke-width="1.7"
                     stroke-linecap="round"
                     stroke-linejoin="round"
-                >
-                    <circle
-                        cx="11"
-                        cy="11"
-                        r="7"
-                    />
-
-                    <path d="M20 20l-3.5-3.5"/>
-                </svg>
+                ><use href="{{ \App\Support\Icono::url('i-f6ba916') }}"></use></svg>
             </div>
 
 

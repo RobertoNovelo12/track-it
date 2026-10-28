@@ -19,7 +19,7 @@
         <div role="status" class="flex flex-col gap-3 rounded-xl border border-[var(--theme-success-border)] bg-[var(--theme-success-soft)] px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between">
             <div class="flex items-start gap-3">
                 <span class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--theme-surface)] text-[var(--theme-success)]" aria-hidden="true">
-                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg>
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><use href="{{ \App\Support\Icono::url('i-e1c3743') }}"></use></svg>
                 </span>
                 <div class="min-w-0">
                     <p class="text-sm font-semibold text-[var(--theme-text-strong)]">
@@ -39,7 +39,7 @@
                     rel="noopener"
                     class="inline-flex h-9 items-center gap-2 rounded-md bg-[var(--theme-primary)] px-3.5 text-xs font-medium text-white hover:bg-[var(--theme-primary-hover)]"
                 >
-                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-4515817') }}"></use></svg>
                     Acta de devolución
                 </a>
                 <a

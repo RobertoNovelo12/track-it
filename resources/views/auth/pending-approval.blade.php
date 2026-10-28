@@ -121,17 +121,7 @@
                 fill="none"
                 stroke="currentColor"
                 stroke-width="1.5"
-            >
-                <circle cx="12" cy="12" r="9"/>
-                <line x1="12" y1="10.5" x2="12" y2="16"/>
-                <circle
-                    cx="12"
-                    cy="7.5"
-                    r="0.9"
-                    fill="currentColor"
-                    stroke="none"
-                />
-            </svg>
+            ><use href="{{ \App\Support\Icono::url('i-775e0b7') }}"></use></svg>
 
 
             <p
@@ -173,10 +163,7 @@
                     fill="none"
                     stroke="currentColor"
                     stroke-width="1.4"
-                >
-                    <rect x="3" y="5" width="18" height="14" rx="2"/>
-                    <path d="M3 6.5l9 6 9-6"/>
-                </svg>
+                ><use href="{{ \App\Support\Icono::url('i-d214b23') }}"></use></svg>
 
 
                 <p

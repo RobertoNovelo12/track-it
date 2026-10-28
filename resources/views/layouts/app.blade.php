@@ -580,10 +580,7 @@ document.addEventListener(
                 "
             >
                 <div class="top-search relative flex h-10 items-center rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface)] transition-colors focus-within:border-[var(--theme-border-strong)]">
-                    <svg class="pointer-events-none absolute left-3 h-4 w-4 text-[var(--theme-text-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <circle cx="11" cy="11" r="7"/>
-                        <path d="M20 20l-4-4"/>
-                    </svg>
+                    <svg class="pointer-events-none absolute left-3 h-4 w-4 text-[var(--theme-text-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-8bdcd83') }}"></use></svg>
 
                     <input
                         x-ref="campo"
@@ -608,9 +605,7 @@ document.addEventListener(
                         aria-label="Limpiar búsqueda"
                         title="Limpiar"
                     >
-                        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true">
-                            <path d="M6 6l12 12M18 6L6 18"/>
-                        </svg>
+                        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-c00fbb2') }}"></use></svg>
                     </button>
 
                     {{-- Atajo (escritorio) --}}
@@ -626,10 +621,7 @@ document.addEventListener(
                         aria-label="Escanear código de barras"
                         title="Escanear código de barras"
                     >
-                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/>
-                            <path d="M8 9v6M11 9v6M13.5 9v6M16 9v6"/>
-                        </svg>
+                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-ca2436a') }}"></use></svg>
                     </button>
                 </div>
             </form>
@@ -736,10 +728,7 @@ document.addEventListener(
                         fill="none"
                         stroke="currentColor"
                         stroke-width="1.5"
-                    >
-                        <path d="M18 8a6 6 0 00-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/>
-                        <path d="M10 21h4"/>
-                    </svg>
+                    ><use href="{{ \App\Support\Icono::url('i-992e6c4') }}"></use></svg>
 
                     {{-- Punto de notificación --}}
                     <span
@@ -940,10 +929,7 @@ document.addEventListener(
                                 stroke-width="1.6"
                                 stroke-linecap="round"
                                 aria-hidden="true"
-                            >
-                                <circle cx="12" cy="8" r="4"/>
-                                <path d="M4 21c0-5 3-8 8-8s8 3 8 8"/>
-                            </svg>
+                            ><use href="{{ \App\Support\Icono::url('i-8464a27') }}"></use></svg>
                         </div>
 
 
@@ -968,9 +954,7 @@ document.addEventListener(
                             fill="none"
                             stroke="currentColor"
                             stroke-width="1.7"
-                        >
-                            <path d="M6 9l6 6 6-6"/>
-                        </svg>
+                        ><use href="{{ \App\Support\Icono::url('i-abe9c4c') }}"></use></svg>
 
                     </button>
 
@@ -1053,10 +1037,7 @@ document.addEventListener(
                                         fill="none"
                                         stroke="currentColor"
                                         stroke-width="1.5"
-                                    >
-                                        <circle cx="12" cy="8" r="4"/>
-                                        <path d="M4 21c0-5 3-8 8-8s8 3 8 8"/>
-                                    </svg>
+                                    ><use href="{{ \App\Support\Icono::url('i-8464a27') }}"></use></svg>
                                 </div>
 
 
@@ -1165,10 +1146,7 @@ document.addEventListener(
                                     fill="none"
                                     stroke="currentColor"
                                     stroke-width="1.5"
-                                >
-                                    <circle cx="12" cy="8" r="4"/>
-                                    <path d="M4 21c0-5 3-8 8-8s8 3 8 8"/>
-                                </svg>
+                                ><use href="{{ \App\Support\Icono::url('i-8464a27') }}"></use></svg>
 
                                 <span>Cuenta</span>
                             </a>
@@ -1208,10 +1186,7 @@ document.addEventListener(
                                     fill="none"
                                     stroke="currentColor"
                                     stroke-width="1.5"
-                                >
-                                    <path d="M18 8a6 6 0 00-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/>
-                                    <path d="M10 21h4"/>
-                                </svg>
+                                ><use href="{{ \App\Support\Icono::url('i-992e6c4') }}"></use></svg>
 
                                 <span class="flex-1 text-left">
                                     Notificaciones
@@ -1266,7 +1241,7 @@ document.addEventListener(
                                         x-text="({ light: 'Claro', dark: 'Oscuro', system: 'Sistema' })[theme] ?? 'Sistema'"
                                     >Sistema</span>
 
-                                    <svg class="w-4 h-4 shrink-0 text-[var(--theme-text-muted)] transition-transform duration-150" x-bind:class="modos && 'rotate-180'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                                    <svg class="w-4 h-4 shrink-0 text-[var(--theme-text-muted)] transition-transform duration-150" x-bind:class="modos && 'rotate-180'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-8fdbbcf') }}"></use></svg>
                                 </button>
 
                                 <div
@@ -1288,7 +1263,7 @@ document.addEventListener(
                                         >
                                             <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{!! $iconosModo[$claveModo] !!}</svg>
                                             <span class="flex-1 text-left">{{ $nombreModo }}</span>
-                                            <svg x-show="theme === @js($claveModo)" x-cloak class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l4 4L19 7"/></svg>
+                                            <svg x-show="theme === @js($claveModo)" x-cloak class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-e7e7dec') }}"></use></svg>
                                         </button>
                                     @endforeach
                                 </div>
@@ -1325,11 +1300,7 @@ document.addEventListener(
                                     fill="none"
                                     stroke="currentColor"
                                     stroke-width="1.5"
-                                >
-                                    <path
-                                        d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6l7-3z"
-                                    />
-                                </svg>
+                                ><use href="{{ \App\Support\Icono::url('i-518c3f4') }}"></use></svg>
 
                                 <span>Seguridad</span>
                             </a>
@@ -1364,11 +1335,7 @@ document.addEventListener(
                                     fill="none"
                                     stroke="currentColor"
                                     stroke-width="1.5"
-                                >
-                                    <circle cx="12" cy="12" r="9"/>
-                                    <path d="M9.8 9a2.4 2.4 0 114.4 1.3c-.7.9-2.2 1.2-2.2 2.7"/>
-                                    <path d="M12 17h.01"/>
-                                </svg>
+                                ><use href="{{ \App\Support\Icono::url('i-633a49c') }}"></use></svg>
 
                                 <span>Ayuda y soporte</span>
                                 </button>
@@ -1421,11 +1388,7 @@ document.addEventListener(
                                         fill="none"
                                         stroke="currentColor"
                                         stroke-width="1.5"
-                                    >
-                                        <path d="M10 17l5-5-5-5"/>
-                                        <path d="M15 12H3"/>
-                                        <path d="M14 4h7v16h-7"/>
-                                    </svg>
+                                    ><use href="{{ \App\Support\Icono::url('i-910a9f0') }}"></use></svg>
 
                                     <span>Cerrar sesión</span>
                                 </button>

@@ -641,9 +641,7 @@
                 stroke-width="1.5"
 
                 aria-hidden="true"
-            >
-                <path d="M6 9l6 6 6-6"/>
-            </svg>
+            ><use href="{{ \App\Support\Icono::url('i-abe9c4c') }}"></use></svg>
         </button>
     </div>
 

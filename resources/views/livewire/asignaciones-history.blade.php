@@ -80,10 +80,7 @@
                         fill="none"
                         stroke="currentColor"
                         stroke-width="1.6"
-                    >
-                        <circle cx="11" cy="11" r="7"/>
-                        <path d="M20 20l-4-4"/>
-                    </svg>
+                    ><use href="{{ \App\Support\Icono::url('i-8bdcd83') }}"></use></svg>
 
                     <input
                         id="history-search"
@@ -292,10 +289,7 @@
                     fill="none"
                     stroke="currentColor"
                     stroke-width="1.6"
-                >
-                    <path d="M4 4l16 16"/>
-                    <path d="M20 4L4 20"/>
-                </svg>
+                ><use href="{{ \App\Support\Icono::url('i-f37455f') }}"></use></svg>
 
                 Limpiar filtros
             </button>
@@ -331,10 +325,7 @@
                     fill="none"
                     stroke="currentColor"
                     stroke-width="1.7"
-                >
-                    <circle cx="11" cy="11" r="7"/>
-                    <path d="M20 20l-4-4"/>
-                </svg>
+                ><use href="{{ \App\Support\Icono::url('i-8bdcd83') }}"></use></svg>
 
                 <svg
                     wire:loading
@@ -342,23 +333,7 @@
                     class="w-4 h-4 animate-spin"
                     viewBox="0 0 24 24"
                     fill="none"
-                >
-                    <circle
-                        cx="12"
-                        cy="12"
-                        r="9"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        opacity="0.25"
-                    />
-
-                    <path
-                        d="M21 12a9 9 0 0 0-9-9"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                    />
-                </svg>
+                ><use href="{{ \App\Support\Icono::url('i-ef15586') }}"></use></svg>
 
                 Aplicar filtros
             </button>

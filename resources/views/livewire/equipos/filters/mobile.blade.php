@@ -163,10 +163,7 @@
             fill="none"
             stroke="currentColor"
             stroke-width="1.7"
-        >
-            <circle cx="11" cy="11" r="7"/>
-            <path d="M20 20l-4-4"/>
-        </svg>
+        ><use href="{{ \App\Support\Icono::url('i-8bdcd83') }}"></use></svg>
 
 
         <input
@@ -242,10 +239,7 @@
                     fill="none"
                     stroke="currentColor"
                     stroke-width="1.8"
-                >
-                    <path d="M6 6l12 12"/>
-                    <path d="M18 6L6 18"/>
-                </svg>
+                ><use href="{{ \App\Support\Icono::url('i-e0c3579') }}"></use></svg>
             </button>
 
         @endif
@@ -297,9 +291,7 @@
                 fill="none"
                 stroke="currentColor"
                 stroke-width="1.7"
-            >
-                <path d="M4 5h16l-6 7v5l-4 2v-7z"/>
-            </svg>
+            ><use href="{{ \App\Support\Icono::url('i-0e09bcb') }}"></use></svg>
 
 
             <span>
@@ -361,13 +353,7 @@
                 fill="none"
                 stroke="currentColor"
                 stroke-width="1.7"
-            >
-                <path d="M8 4v16"/>
-                <path d="M5 7l3-3 3 3"/>
-
-                <path d="M16 20V4"/>
-                <path d="M13 17l3 3 3-3"/>
-            </svg>
+            ><use href="{{ \App\Support\Icono::url('i-de0bcf2') }}"></use></svg>
 
 
             <span>
@@ -441,10 +427,7 @@
                         fill="none"
                         stroke="currentColor"
                         stroke-width="2"
-                    >
-                        <path d="M6 6l12 12"/>
-                        <path d="M18 6L6 18"/>
-                    </svg>
+                    ><use href="{{ \App\Support\Icono::url('i-e0c3579') }}"></use></svg>
 
                 </button>
 

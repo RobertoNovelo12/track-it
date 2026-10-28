@@ -270,10 +270,7 @@
                         fill="none"
                         stroke="currentColor"
                         stroke-width="1.7"
-                    >
-                        <path d="M6 6l12 12"/>
-                        <path d="M18 6L6 18"/>
-                    </svg>
+                    ><use href="{{ \App\Support\Icono::url('i-e0c3579') }}"></use></svg>
                 </button>
             </div>
 
@@ -498,19 +495,7 @@
                                     fill="none"
                                     stroke="currentColor"
                                     stroke-width="1.6"
-                                >
-                                    <rect
-                                        x="8"
-                                        y="8"
-                                        width="11"
-                                        height="11"
-                                        rx="2"
-                                    />
-
-                                    <path
-                                        d="M16 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2h2"
-                                    />
-                                </svg>
+                                ><use href="{{ \App\Support\Icono::url('i-279b3ad') }}"></use></svg>
 
 
                                 <svg
@@ -528,9 +513,7 @@
                                     fill="none"
                                     stroke="currentColor"
                                     stroke-width="1.8"
-                                >
-                                    <path d="M5 12l4 4L19 6"/>
-                                </svg>
+                                ><use href="{{ \App\Support\Icono::url('i-42997ad') }}"></use></svg>
                             </button>
                         </div>
                     </div>
@@ -716,16 +699,7 @@
                             fill="none"
                             stroke="currentColor"
                             stroke-width="1.6"
-                        >
-                            <circle
-                                cx="12"
-                                cy="12"
-                                r="9"
-                            />
-
-                            <path d="M12 11v6"/>
-                            <path d="M12 7h.01"/>
-                        </svg>
+                        ><use href="{{ \App\Support\Icono::url('i-b2675c0') }}"></use></svg>
 
 
                         <p
@@ -864,9 +838,7 @@
                                 fill="none"
                                 stroke="currentColor"
                                 stroke-width="1.8"
-                            >
-                                <path d="M5 12l4 4L19 6"/>
-                            </svg>
+                            ><use href="{{ \App\Support\Icono::url('i-42997ad') }}"></use></svg>
                         </div>
 
 
@@ -931,14 +903,7 @@
                         fill="none"
                         stroke="currentColor"
                         stroke-width="1.6"
-                    >
-                        <path
-                            d="M12 3L2.5 20h19L12 3z"
-                        />
-
-                        <path d="M12 9v5"/>
-                        <path d="M12 17h.01"/>
-                    </svg>
+                    ><use href="{{ \App\Support\Icono::url('i-9d1464c') }}"></use></svg>
 
 
                     <div
@@ -1045,19 +1010,7 @@
                         fill="none"
                         stroke="currentColor"
                         stroke-width="1.6"
-                    >
-                        <rect
-                            x="8"
-                            y="8"
-                            width="11"
-                            height="11"
-                            rx="2"
-                        />
-
-                        <path
-                            d="M16 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2h2"
-                        />
-                    </svg>
+                    ><use href="{{ \App\Support\Icono::url('i-279b3ad') }}"></use></svg>
 
 
                     <svg
@@ -1075,9 +1028,7 @@
                         fill="none"
                         stroke="currentColor"
                         stroke-width="1.8"
-                    >
-                        <path d="M5 12l4 4L19 6"/>
-                    </svg>
+                    ><use href="{{ \App\Support\Icono::url('i-42997ad') }}"></use></svg>
 
 
                     <span

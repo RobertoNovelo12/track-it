@@ -86,9 +86,7 @@
                 download
                 class="inline-flex items-center gap-1 text-[11px] font-medium text-[var(--theme-primary)] hover:text-[var(--theme-primary-hover)]"
             >
-                <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M12 3v12M7 10l5 5 5-5M4 21h16"/>
-                </svg>
+                <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-4515817') }}"></use></svg>
                 Descargar código de barras
             </a>
         @endif

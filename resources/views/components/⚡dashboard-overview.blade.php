@@ -1474,9 +1474,9 @@ new class extends Component
                         @if ($estiloKpi['insignia'])
                             <span class="inline-flex items-center gap-1 truncate rounded-md px-2 py-0.5 text-[10px] font-semibold {{ $estiloKpi['insignia'][1] }}">
                                 @if ($kpi['estado'] === 'ok')
-                                    <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>
+                                    <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-e1c3743') }}"></use></svg>
                                 @else
-                                    <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8v5M12 16.5v.5"/></svg>
+                                    <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-f15ba9c') }}"></use></svg>
                                 @endif
                                 {{ $estiloKpi['insignia'][0] }}
                             </span>
@@ -1487,7 +1487,7 @@ new class extends Component
                     <span class="mt-0.5 block truncate text-[11px] text-[var(--theme-text-muted)]">{{ $kpi['detalle'] }}</span>
                 </span>
 
-                <svg class="h-4 w-4 shrink-0 text-[var(--theme-text-muted)] opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+                <svg class="h-4 w-4 shrink-0 text-[var(--theme-text-muted)] opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-352d1b3') }}"></use></svg>
             </a>
         @endforeach
     </div>
@@ -1595,7 +1595,7 @@ new class extends Component
                                 <span class="min-w-0 flex-1 truncate text-xs text-[var(--theme-text)]">{{ $segmento['label'] }}</span>
                                 <span class="text-sm font-semibold tabular-nums text-[var(--theme-text-strong)]">{{ number_format($segmento['count']) }}</span>
                                 <span class="w-9 text-right text-[11px] tabular-nums text-[var(--theme-text-muted)]">{{ $segmento['porcentaje'] }}%</span>
-                                <svg class="h-3.5 w-3.5 shrink-0 text-[var(--theme-text-muted)] opacity-0 transition-opacity group-hover:opacity-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+                                <svg class="h-3.5 w-3.5 shrink-0 text-[var(--theme-text-muted)] opacity-0 transition-opacity group-hover:opacity-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-352d1b3') }}"></use></svg>
                             </a>
                         </li>
                     @endforeach

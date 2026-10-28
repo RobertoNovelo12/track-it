@@ -99,10 +99,7 @@
                             fill="none"
                             stroke="currentColor"
                             stroke-width="1.6"
-                        >
-                            <circle cx="11" cy="11" r="7"/>
-                            <path d="M20 20l-4-4"/>
-                        </svg>
+                        ><use href="{{ \App\Support\Icono::url('i-8bdcd83') }}"></use></svg>
 
 
                         {{-- Spinner mientras busca --}}

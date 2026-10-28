@@ -1139,10 +1139,7 @@
                                             stroke="currentColor"
                                             stroke-width="1.8"
                                             aria-hidden="true"
-                                        >
-                                            <path d="M6 2h8l4 4v16H6z"/>
-                                            <path d="M14 2v5h5M8 12h8M8 16h8"/>
-                                        </svg>
+                                        ><use href="{{ \App\Support\Icono::url('i-a5017c5') }}"></use></svg>
 
                                         {{-- Generando (el x-show va en un span normal: dentro
                                              de <x-ui.spinner> Blade no procesaría @js) --}}
@@ -1613,11 +1610,7 @@
 
                 >
 
-                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-
-                        <path d="M18 6 6 18M6 6l12 12"/>
-
-                    </svg>
+                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-4912eb5') }}"></use></svg>
 
                 </button>
 

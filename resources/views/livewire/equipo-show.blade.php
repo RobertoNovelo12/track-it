@@ -134,27 +134,7 @@
 
                         stroke-width="1.6"
 
-                    >
-
-                        <rect
-
-                            x="4"
-
-                            y="4"
-
-                            width="16"
-
-                            height="12"
-
-                            rx="1.5"
-
-                        />
-
-                        <path d="M8 20h8"/>
-
-                        <path d="M12 16v4"/>
-
-                    </svg>
+                    ><use href="{{ \App\Support\Icono::url('i-c3da008') }}"></use></svg>
 
                 </div>
 
@@ -314,10 +294,7 @@
                     wire:navigate.hover
                     class="flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-transparent bg-[var(--theme-primary)] px-4 text-sm font-medium text-white transition-colors hover:bg-[var(--theme-primary-hover)] sm:w-auto"
                 >
-                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M12 20h9"/>
-                        <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>
-                    </svg>
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-9c1aed9') }}"></use></svg>
 
                     @can('gestionar')
                         Editar
@@ -335,10 +312,7 @@
                     class="flex h-10 w-full shrink-0 items-center justify-center gap-2 rounded-lg border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-4 text-sm font-medium text-[var(--theme-text-muted)] transition-colors hover:text-[var(--theme-primary)] sm:w-auto"
                     title="Dar de alta un equipo parecido: copia tipo, marca, modelo, factura, hotel y especificaciones"
                 >
-                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <rect x="8" y="8" width="12" height="12" rx="2"/>
-                        <path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>
-                    </svg>
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-b9ae114') }}"></use></svg>
                     Duplicar
                 </a>
             @endcan
@@ -402,15 +376,7 @@
 
                     stroke-width="1.6"
 
-                >
-
-                    <path d="M12 3v12"/>
-
-                    <path d="M7 10l5 5 5-5"/>
-
-                    <path d="M4 21h16"/>
-
-                </svg>
+                ><use href="{{ \App\Support\Icono::url('i-12264a0') }}"></use></svg>
 
                 Exportar
             </a>
@@ -581,15 +547,7 @@
 
                     stroke-width="1.6"
 
-                >
-
-                    <circle cx="12" cy="12" r="9"/>
-
-                    <path d="M12 11v6"/>
-
-                    <path d="M12 7h.01"/>
-
-                </svg>
+                ><use href="{{ \App\Support\Icono::url('i-b2675c0') }}"></use></svg>
 
                 <h3
 
@@ -941,27 +899,7 @@
 
                     stroke-width="1.6"
 
-                >
-
-                    <rect
-
-                        x="4"
-
-                        y="5"
-
-                        width="16"
-
-                        height="12"
-
-                        rx="1.5"
-
-                    />
-
-                    <path d="M8 21h8"/>
-
-                    <path d="M12 17v4"/>
-
-                </svg>
+                ><use href="{{ \App\Support\Icono::url('i-acc57bb') }}"></use></svg>
 
                 <h3
 
@@ -1105,13 +1043,7 @@
 
                     stroke-width="1.6"
 
-                >
-
-                    <circle cx="12" cy="8" r="3"/>
-
-                    <path d="M6 21v-2a6 6 0 0112 0v2"/>
-
-                </svg>
+                ><use href="{{ \App\Support\Icono::url('i-62122f8') }}"></use></svg>
 
                 <h3
 
@@ -1274,7 +1206,7 @@
                         wire:navigate.hover
                         class="mt-4 inline-flex h-9 w-full items-center justify-center gap-2 rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 text-xs font-medium text-[var(--theme-text)] transition-colors hover:bg-[var(--theme-surface-soft)]"
                     >
-                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg>
+                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-3179dca') }}"></use></svg>
                         Devolver equipo
                     </a>
                 @endcan
@@ -1339,13 +1271,7 @@
 
                             stroke-width="1.6"
 
-                        >
-
-                            <circle cx="12" cy="8" r="3"/>
-
-                            <path d="M6 21v-2a6 6 0 0112 0v2"/>
-
-                        </svg>
+                        ><use href="{{ \App\Support\Icono::url('i-62122f8') }}"></use></svg>
 
                     </div>
 
@@ -1376,10 +1302,7 @@
         <section class="mb-4 rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 sm:mb-6 sm:p-5" aria-labelledby="equipo-programas-titulo">
             <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
                 <div class="flex items-center gap-2">
-                    <svg class="h-5 w-5 text-[var(--theme-text)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <rect x="3" y="4" width="18" height="14" rx="1.5"/>
-                        <path d="M3 8h18M7 12h4M7 15h6"/>
-                    </svg>
+                    <svg class="h-5 w-5 text-[var(--theme-text)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-9b5e439') }}"></use></svg>
                     <h3 id="equipo-programas-titulo" class="text-sm font-semibold text-[var(--theme-text-strong)] sm:text-base">
                         Programas instalados
                     </h3>
@@ -1445,7 +1368,7 @@
                                     class="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-md border border-[var(--theme-border-strong)] px-2.5 text-xs font-medium text-[var(--theme-text)] transition-colors hover:bg-[var(--theme-surface-soft)]"
                                     title="Abrir el enlace de descarga de {{ $programa['nombre'] }}"
                                 >
-                                    <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>
+                                    <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-dd8fce4') }}"></use></svg>
                                     Descargar
                                 </a>
                             @endif
@@ -1538,17 +1461,7 @@
 
                     stroke-width="1.6"
 
-                >
-
-                    <path d="M7 7h11"/>
-
-                    <path d="M15 4l3 3-3 3"/>
-
-                    <path d="M17 17H6"/>
-
-                    <path d="M9 14l-3 3 3 3"/>
-
-                </svg>
+                ><use href="{{ \App\Support\Icono::url('i-1fcd054') }}"></use></svg>
 
                 <h3
 
@@ -1872,17 +1785,7 @@
 
                     stroke-width="1.6"
 
-                >
-
-                    <path d="M14 6l4-4 4 4-4 4"/>
-
-                    <path d="M10 18l-4 4-4-4 4-4"/>
-
-                    <path d="M14 10L4 20"/>
-
-                    <path d="M20 4L10 14"/>
-
-                </svg>
+                ><use href="{{ \App\Support\Icono::url('i-11dfa48') }}"></use></svg>
 
                 <h3
 
@@ -2000,17 +1903,7 @@
 
                             stroke-width="1.6"
 
-                        >
-
-                            <path d="M14 6l4-4 4 4-4 4"/>
-
-                            <path d="M10 18l-4 4-4-4 4-4"/>
-
-                            <path d="M14 10L4 20"/>
-
-                            <path d="M20 4L10 14"/>
-
-                        </svg>
+                        ><use href="{{ \App\Support\Icono::url('i-11dfa48') }}"></use></svg>
 
                     </div>
 

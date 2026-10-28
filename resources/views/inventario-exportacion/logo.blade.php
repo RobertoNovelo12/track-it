@@ -1,1 +1,1 @@
-<img src="data:image/png;base64,{{ base64_encode(file_get_contents(public_path('images/logo-grand-palladium.png'))) }}" alt="Palladium Hotel Group" style="width: 155px; height: auto; margin-bottom: 9px;">
+<img src="{{ app(\App\Services\ImagenPdfService::class)->archivoPublicoDataUri('images/logo-grand-palladium.png') }}" alt="Palladium Hotel Group" style="width: 155px; height: auto; margin-bottom: 9px;">

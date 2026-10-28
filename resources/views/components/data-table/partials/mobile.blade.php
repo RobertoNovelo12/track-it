@@ -146,9 +146,7 @@
                             fill="none"
                             stroke="currentColor"
                             stroke-width="3"
-                        >
-                            <path d="M5 12l4 4L19 7"/>
-                        </svg>
+                        ><use href="{{ \App\Support\Icono::url('i-e7e7dec') }}"></use></svg>
                     </button>
                 @endif
 
@@ -223,11 +221,7 @@
                                 viewBox="0 0 24 24"
                                 fill="currentColor"
                                 aria-hidden="true"
-                            >
-                                <circle cx="12" cy="5" r="1.5"/>
-                                <circle cx="12" cy="12" r="1.5"/>
-                                <circle cx="12" cy="19" r="1.5"/>
-                            </svg>
+                            ><use href="{{ \App\Support\Icono::url('i-6f7d564') }}"></use></svg>
                         </button>
 
                         <div

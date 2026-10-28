@@ -53,12 +53,7 @@
                 fill="none"
                 stroke="currentColor"
                 stroke-width="1.6"
-            >
-                <circle cx="9" cy="8" r="3"/>
-                <path d="M3 20c0-4 2-7 6-7s6 3 6 7"/>
-                <path d="M18 7v6"/>
-                <path d="M15 10h6"/>
-            </svg>
+            ><use href="{{ \App\Support\Icono::url('i-a66f8d6') }}"></use></svg>
         </div>
 
 
@@ -139,11 +134,7 @@
                 fill="none"
                 stroke="currentColor"
                 stroke-width="1.6"
-            >
-                <circle cx="9" cy="8" r="3"/>
-                <path d="M3 20c0-4 2-7 6-7s6 3 6 7"/>
-                <path d="M16 11l2 2 4-5"/>
-            </svg>
+            ><use href="{{ \App\Support\Icono::url('i-d0eabec') }}"></use></svg>
         </div>
 
 
@@ -224,12 +215,7 @@
                 fill="none"
                 stroke="currentColor"
                 stroke-width="1.6"
-            >
-                <circle cx="9" cy="8" r="3"/>
-                <path d="M3 20c0-4 2-7 6-7s6 3 6 7"/>
-                <circle cx="18" cy="10" r="3"/>
-                <path d="M18 8.5V10l1 1"/>
-            </svg>
+            ><use href="{{ \App\Support\Icono::url('i-2361b46') }}"></use></svg>
         </div>
 
 
@@ -310,11 +296,7 @@
                 fill="none"
                 stroke="currentColor"
                 stroke-width="1.6"
-            >
-                <path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6l7-3z"/>
-                <circle cx="12" cy="10" r="2"/>
-                <path d="M9 16c.5-2 1.5-3 3-3s2.5 1 3 3"/>
-            </svg>
+            ><use href="{{ \App\Support\Icono::url('i-7ad5c3f') }}"></use></svg>
         </div>
 
 

@@ -63,11 +63,7 @@
                         fill="none"
                         stroke="currentColor"
                         stroke-width="1.5"
-                    >
-                        <path d="M12 3v12"/>
-                        <path d="M7 10l5 5 5-5"/>
-                        <path d="M4 21h16"/>
-                    </svg>
+                    ><use href="{{ \App\Support\Icono::url('i-12264a0') }}"></use></svg>
 
                     <span>Exportar</span>
                 </button>
@@ -173,10 +169,7 @@
                     fill="none"
                     stroke="currentColor"
                     stroke-width="1.5"
-                >
-                    <path d="M12 5v14"/>
-                    <path d="M5 12h14"/>
-                </svg>
+                ><use href="{{ \App\Support\Icono::url('i-6aed230') }}"></use></svg>
 
                 <span>Añadir</span>
             </a>
@@ -318,9 +311,7 @@
                         stroke="currentColor"
                         stroke-width="1.5"
                         aria-hidden="true"
-                    >
-                        <path d="m12 3 9 5-9 5-9-5 9-5Zm-9 9 9 5 9-5M3 16l9 5-9-5"/>
-                    </svg>
+                    ><use href="{{ \App\Support\Icono::url('i-2d2ab80') }}"></use></svg>
 
                     <span x-text="ids.length > 1 ? 'Baja múltiple (' + ids.length + ')' : 'Dar de baja'">
                         Dar de baja

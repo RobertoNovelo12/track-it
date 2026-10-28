@@ -206,10 +206,7 @@
                     stroke="currentColor"
                     stroke-width="1.8"
                     stroke-linecap="round"
-                >
-                    <path d="M6 6l12 12"/>
-                    <path d="M18 6L6 18"/>
-                </svg>
+                ><use href="{{ \App\Support\Icono::url('i-e0c3579') }}"></use></svg>
             </button>
         </div>
 
@@ -343,10 +340,7 @@
                             stroke="currentColor"
                             stroke-width="1.8"
                             stroke-linecap="round"
-                        >
-                            <path d="M12 5v14"/>
-                            <path d="M5 12h14"/>
-                        </svg>
+                        ><use href="{{ \App\Support\Icono::url('i-6aed230') }}"></use></svg>
 
                         Agregar
                     </button>
@@ -498,9 +492,7 @@
                                         stroke-width="1.8"
                                         stroke-linecap="round"
                                         stroke-linejoin="round"
-                                    >
-                                        <path d="M6 15l6-6 6 6"/>
-                                    </svg>
+                                    ><use href="{{ \App\Support\Icono::url('i-af587f0') }}"></use></svg>
                                 </button>
 
 
@@ -554,9 +546,7 @@
                                         stroke-width="1.8"
                                         stroke-linecap="round"
                                         stroke-linejoin="round"
-                                    >
-                                        <path d="M6 9l6 6 6-6"/>
-                                    </svg>
+                                    ><use href="{{ \App\Support\Icono::url('i-abe9c4c') }}"></use></svg>
                                 </button>
                             </div>
 
@@ -651,10 +641,7 @@
                                     stroke="currentColor"
                                     stroke-width="1.8"
                                     stroke-linecap="round"
-                                >
-                                    <path d="M6 6l12 12"/>
-                                    <path d="M18 6L6 18"/>
-                                </svg>
+                                ><use href="{{ \App\Support\Icono::url('i-e0c3579') }}"></use></svg>
                             </button>
 
                         </div>
@@ -705,10 +692,7 @@
                             stroke="currentColor"
                             stroke-width="1.8"
                             stroke-linecap="round"
-                        >
-                            <path d="M12 5v14"/>
-                            <path d="M5 12h14"/>
-                        </svg>
+                        ><use href="{{ \App\Support\Icono::url('i-6aed230') }}"></use></svg>
                     </div>
 
 
@@ -824,26 +808,7 @@
 
                         viewBox="0 0 24 24"
                         fill="none"
-                    >
-                        <circle
-                            cx="12"
-                            cy="12"
-                            r="9"
-
-                            stroke="currentColor"
-                            stroke-width="3"
-
-                            opacity=".25"
-                        />
-
-                        <path
-                            d="M21 12a9 9 0 00-9-9"
-
-                            stroke="currentColor"
-                            stroke-width="3"
-                            stroke-linecap="round"
-                        />
-                    </svg>
+                    ><use href="{{ \App\Support\Icono::url('i-607ce5b') }}"></use></svg>
 
 
                     <p

@@ -49,10 +49,7 @@
             </h2>
 
             <p class="mt-1 flex items-start gap-1.5 text-xs text-[var(--theme-text-muted)]">
-                <svg class="mt-px h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <rect x="5" y="11" width="14" height="9" rx="1.5"/>
-                    <path d="M8 11V8a4 4 0 0 1 8 0v3"/>
-                </svg>
+                <svg class="mt-px h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-a1db039') }}"></use></svg>
 
                 <span>
                     Estos datos los administra tu organización. Si alguno es incorrecto, solicita su actualización.
@@ -65,12 +62,7 @@
             @click="$dispatch('abrir-solicitud-cambio-organizacion')"
             class="inline-flex h-9 shrink-0 items-center justify-center gap-2 self-start rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 text-xs font-medium text-[var(--theme-text)] transition-colors hover:border-[var(--theme-primary-border)] hover:bg-[var(--theme-surface-soft)]"
         >
-            <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M4 7h11"/>
-                <path d="M12 3l4 4-4 4"/>
-                <path d="M20 17H9"/>
-                <path d="M12 13l-4 4 4 4"/>
-            </svg>
+            <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-36189df') }}"></use></svg>
 
             Solicitar cambio
         </button>

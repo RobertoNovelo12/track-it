@@ -297,10 +297,7 @@
 
                 stroke-linecap="round"
                 stroke-linejoin="round"
-            >
-                <path d="M15 6l-6 6 6 6"/>
-                <path d="M4 4v16"/>
-            </svg>
+            ><use href="{{ \App\Support\Icono::url('i-a79f932') }}"></use></svg>
         </button>
 
     </div>
@@ -361,17 +358,7 @@
 
             stroke-linecap="round"
             stroke-linejoin="round"
-        >
-            <circle
-                cx="11"
-                cy="11"
-                r="7"
-            />
-
-            <path
-                d="M20 20l-4-4"
-            />
-        </svg>
+        ><use href="{{ \App\Support\Icono::url('i-8bdcd83') }}"></use></svg>
     </button>
 
 
@@ -504,11 +491,7 @@
 
                             stroke-linecap="round"
                             stroke-linejoin="round"
-                        >
-                            <path d="M3 11.5L12 4l9 7.5"/>
-                            <path d="M5 10v10h14V10"/>
-                            <path d="M9 20v-6h6v6"/>
-                        </svg>
+                        ><use href="{{ \App\Support\Icono::url('i-59b21d1') }}"></use></svg>
 
                         @break
 
@@ -565,13 +548,7 @@
 
                             stroke-linecap="round"
                             stroke-linejoin="round"
-                        >
-                            <path d="M4 7h15"/>
-                            <path d="M16 4l3 3-3 3"/>
-
-                            <path d="M20 17H5"/>
-                            <path d="M8 14l-3 3 3 3"/>
-                        </svg>
+                        ><use href="{{ \App\Support\Icono::url('i-e5c8e79') }}"></use></svg>
 
                         @break
 
@@ -597,21 +574,7 @@
 
                             stroke-linecap="round"
                             stroke-linejoin="round"
-                        >
-                            <path
-                                d="
-                                    M14.7 6.3
-                                    a4 4 0 00-5.4 5.4
-                                    L3 18
-                                    v3
-                                    h3
-                                    l6.3-6.3
-                                    a4 4 0 005.4-5.4
-                                    l-2.5 2.5
-                                    -2-2z
-                                "
-                            />
-                        </svg>
+                        ><use href="{{ \App\Support\Icono::url('i-e7eee4e') }}"></use></svg>
 
                         @break
 
@@ -637,12 +600,7 @@
 
                             stroke-linecap="round"
                             stroke-linejoin="round"
-                        >
-                            <path d="M4 20h16"/>
-                            <path d="M7 17V9"/>
-                            <path d="M12 17V4"/>
-                            <path d="M17 17v-6"/>
-                        </svg>
+                        ><use href="{{ \App\Support\Icono::url('i-6a3320d') }}"></use></svg>
 
                         @break
 
@@ -668,19 +626,7 @@
 
                             stroke-linecap="round"
                             stroke-linejoin="round"
-                        >
-                            <path
-                                d="
-                                    M12 3
-                                    l7 3
-                                    v5
-                                    c0 5-3 8-7 10
-                                    -4-2-7-5-7-10
-                                    V6
-                                    l7-3z
-                                "
-                            />
-                        </svg>
+                        ><use href="{{ \App\Support\Icono::url('i-831c84a') }}"></use></svg>
 
                         @break
 
@@ -706,21 +652,7 @@
 
                             stroke-linecap="round"
                             stroke-linejoin="round"
-                        >
-                            <rect
-                                x="4"
-                                y="3"
-
-                                width="16"
-                                height="18"
-
-                                rx="2"
-                            />
-
-                            <path d="M8 8h8"/>
-                            <path d="M8 12h8"/>
-                            <path d="M8 16h5"/>
-                        </svg>
+                        ><use href="{{ \App\Support\Icono::url('i-9b73429') }}"></use></svg>
 
                         @break
 
@@ -799,9 +731,7 @@
                         stroke-linecap="round"
                         stroke-linejoin="round"
                         aria-hidden="true"
-                    >
-                        <path d="M6 9l6 6 6-6"/>
-                    </svg>
+                    ><use href="{{ \App\Support\Icono::url('i-abe9c4c') }}"></use></svg>
                 </button>
 
                 <div
@@ -915,11 +845,7 @@
                 transition-colors
             "
         >
-            <svg class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M12 4v11"/>
-                <path d="M7.5 10.5L12 15l4.5-4.5"/>
-                <path d="M5 19h14"/>
-            </svg>
+            <svg class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-746136f') }}"></use></svg>
 
             <span class="sidebar-label whitespace-nowrap">
                 Instalar aplicación
@@ -977,21 +903,7 @@
 
                 stroke-linecap="round"
                 stroke-linejoin="round"
-            >
-                <circle
-                    cx="12"
-                    cy="8"
-                    r="3.5"
-                />
-
-                <path
-                    d="
-                        M5 21
-                        c0-4.5 2.6-7 7-7
-                        s7 2.5 7 7
-                    "
-                />
-            </svg>
+            ><use href="{{ \App\Support\Icono::url('i-08d6c40') }}"></use></svg>
 
 
             <span
@@ -1083,11 +995,7 @@
 
                 stroke-linecap="round"
                 stroke-linejoin="round"
-            >
-                <path
-                    d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"
-                />
-            </svg>
+            ><use href="{{ \App\Support\Icono::url('i-0643b5f') }}"></use></svg>
 
 
             {{-- Sol --}}
@@ -1111,25 +1019,7 @@
 
                 stroke-linecap="round"
                 stroke-linejoin="round"
-            >
-                <circle
-                    cx="12"
-                    cy="12"
-                    r="4"
-                />
-
-                <path d="M12 2v2"/>
-                <path d="M12 20v2"/>
-
-                <path d="M4.93 4.93l1.41 1.41"/>
-                <path d="M17.66 17.66l1.41 1.41"/>
-
-                <path d="M2 12h2"/>
-                <path d="M20 12h2"/>
-
-                <path d="M4.93 19.07l1.41-1.41"/>
-                <path d="M17.66 6.34l1.41-1.41"/>
-            </svg>
+            ><use href="{{ \App\Support\Icono::url('i-48be45a') }}"></use></svg>
 
 
             <span
@@ -1200,25 +1090,7 @@
 
                 stroke-linecap="round"
                 stroke-linejoin="round"
-            >
-                <circle
-                    cx="12"
-                    cy="12"
-                    r="9"
-                />
-
-                <path
-                    d="
-                        M9.8 9
-                        a2.4 2.4 0 1 1 4.4 1.3
-                        c-.7.9-2.2 1.2-2.2 2.7
-                    "
-                />
-
-                <path
-                    d="M12 17h.01"
-                />
-            </svg>
+            ><use href="{{ \App\Support\Icono::url('i-88e8979') }}"></use></svg>
 
 
             <span

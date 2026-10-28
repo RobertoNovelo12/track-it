@@ -50,9 +50,7 @@
                     fill="none"
                     stroke="currentColor"
                     stroke-width="1.7"
-                >
-                    <path d="M15 6l-6 6 6 6"/>
-                </svg>
+                ><use href="{{ \App\Support\Icono::url('i-d889af1') }}"></use></svg>
 
                 Volver
             </a>
@@ -116,10 +114,7 @@
                         fill="none"
                         stroke="currentColor"
                         stroke-width="1.6"
-                    >
-                        <circle cx="11" cy="11" r="7"/>
-                        <path d="M20 20l-4-4"/>
-                    </svg>
+                    ><use href="{{ \App\Support\Icono::url('i-8bdcd83') }}"></use></svg>
 
                     <input
                         type="search"
@@ -320,10 +315,7 @@
                     fill="none"
                     stroke="currentColor"
                     stroke-width="1.6"
-                >
-                    <path d="M4 4l16 16"/>
-                    <path d="M20 4L4 20"/>
-                </svg>
+                ><use href="{{ \App\Support\Icono::url('i-f37455f') }}"></use></svg>
 
                 Limpiar filtros
             </button>
@@ -358,10 +350,7 @@
                     fill="none"
                     stroke="currentColor"
                     stroke-width="1.7"
-                >
-                    <circle cx="11" cy="11" r="7"/>
-                    <path d="M20 20l-4-4"/>
-                </svg>
+                ><use href="{{ \App\Support\Icono::url('i-8bdcd83') }}"></use></svg>
 
                 Aplicar filtros
             </button>

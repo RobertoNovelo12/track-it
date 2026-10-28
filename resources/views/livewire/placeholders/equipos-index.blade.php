@@ -31,10 +31,7 @@
                 stroke="currentColor"
                 stroke-width="1.7"
                 aria-hidden="true"
-            >
-                <circle cx="11" cy="11" r="7"/>
-                <path d="M20 20l-4-4"/>
-            </svg>
+            ><use href="{{ \App\Support\Icono::url('i-8bdcd83') }}"></use></svg>
 
             <input
                 type="text"
@@ -106,9 +103,7 @@
                     stroke="currentColor"
                     stroke-width="1.7"
                     aria-hidden="true"
-                >
-                    <path d="M4 5h16l-6 7v5l-4 2v-7z"/>
-                </svg>
+                ><use href="{{ \App\Support\Icono::url('i-0e09bcb') }}"></use></svg>
 
                 <span>
                     Filtros
@@ -151,13 +146,7 @@
                     stroke="currentColor"
                     stroke-width="1.7"
                     aria-hidden="true"
-                >
-                    <path d="M8 4v16"/>
-                    <path d="M5 7l3-3 3 3"/>
-
-                    <path d="M16 20V4"/>
-                    <path d="M13 17l3 3 3-3"/>
-                </svg>
+                ><use href="{{ \App\Support\Icono::url('i-de0bcf2') }}"></use></svg>
 
                 <span>
                     Ordenar
@@ -206,12 +195,7 @@
                     stroke="currentColor"
                     stroke-width="1.5"
                     aria-hidden="true"
-                >
-                    <path d="M4 6h16"/>
-                    <path d="M7 6v2a2 2 0 002 2h6a2 2 0 002-2V6"/>
-                    <path d="M4 18h16"/>
-                    <path d="M9 18v-2a2 2 0 012-2h2a2 2 0 012 2v2"/>
-                </svg>
+                ><use href="{{ \App\Support\Icono::url('i-61860e7') }}"></use></svg>
 
                 <span
                     class="
@@ -225,9 +209,7 @@
 
                 {{-- Flecha de plegar (gira si los filtros están plegados) --}}
                 <span class="ml-auto inline-flex h-8 w-8 items-center justify-center text-[var(--theme-text-muted)]" aria-hidden="true">
-                    <svg data-filtros-equipos-flecha class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M6 15l6-6 6 6"/>
-                    </svg>
+                    <svg data-filtros-equipos-flecha class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="{{ \App\Support\Icono::url('i-af587f0') }}"></use></svg>
                 </span>
             </div>
 
@@ -262,9 +244,7 @@
                             <span class="truncate">{{ $marcador }}</span>
 
                             @if ($esLista)
-                                <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-                                    <path d="M6 9l6 6 6-6"/>
-                                </svg>
+                                <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-abe9c4c') }}"></use></svg>
                             @endif
                         </div>
                     </div>
@@ -332,10 +312,7 @@
                         fill="none"
                         stroke="currentColor"
                         stroke-width="1.5"
-                    >
-                        <circle cx="11" cy="11" r="7"/>
-                        <path d="M20 20l-4-4"/>
-                    </svg>
+                    ><use href="{{ \App\Support\Icono::url('i-8bdcd83') }}"></use></svg>
 
                     Aplicar filtros
                 </button>

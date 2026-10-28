@@ -37,11 +37,7 @@
         aria-label="Equipos recibidos desde el teléfono"
         class="relative flex h-9 w-9 items-center justify-center rounded-lg text-[var(--theme-text-muted)] transition-colors hover:bg-[var(--theme-primary-soft)] hover:text-[var(--theme-primary)] aria-expanded:bg-[var(--theme-primary-soft)] aria-expanded:text-[var(--theme-primary)]"
     >
-        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <rect x="7" y="2.5" width="10" height="19" rx="2"/>
-            <path d="M11 18.5h2"/>
-            <path d="M3 9l2.5 2.5L3 14M21 9l-2.5 2.5L21 14"/>
-        </svg>
+        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-6debebe') }}"></use></svg>
 
         {{-- Contador (sobre el ícono, como el punto de notificaciones) --}}
         @if ($pendientes > 0)
@@ -106,7 +102,7 @@
                                     </p>
                                     @if (! empty($equipo['remitente']))
                                         <p class="mt-0.5 flex items-center gap-1 text-[11px] text-[var(--theme-primary)]">
-                                            <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                                            <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-7609405') }}"></use></svg>
                                             Enviado por {{ $equipo['remitente'] }}
                                         </p>
                                     @endif
@@ -153,7 +149,7 @@
                                 </p>
                                 @if (! empty($equipo['remitente']))
                                     <p class="mt-0.5 flex items-center gap-1 text-[11px] text-[var(--theme-primary)]">
-                                        <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                                        <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-7609405') }}"></use></svg>
                                         Enviado por {{ $equipo['remitente'] }}
                                     </p>
                                 @endif

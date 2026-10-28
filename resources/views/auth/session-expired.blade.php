@@ -82,16 +82,7 @@
                 fill="none"
                 stroke="currentColor"
                 stroke-width="1.3"
-            >
-                <circle
-                    cx="12"
-                    cy="12"
-                    r="8"
-                />
-
-                <path d="M12 7v5"/>
-                <path d="M12 12l3 1.5"/>
-            </svg>
+            ><use href="{{ \App\Support\Icono::url('i-463adb4') }}"></use></svg>
 
 
             {{-- Advertencia --}}
@@ -211,23 +202,7 @@
                 fill="none"
                 stroke="currentColor"
                 stroke-width="1.6"
-            >
-                <circle
-                    cx="12"
-                    cy="12"
-                    r="9"
-                />
-
-                <path d="M12 11v5"/>
-
-                <circle
-                    cx="12"
-                    cy="7.5"
-                    r=".7"
-                    fill="currentColor"
-                    stroke="none"
-                />
-            </svg>
+            ><use href="{{ \App\Support\Icono::url('i-c28fcf1') }}"></use></svg>
 
 
             <p
@@ -282,10 +257,7 @@
                 fill="none"
                 stroke="currentColor"
                 stroke-width="1.7"
-            >
-                <path d="M5 12h14"/>
-                <path d="M15 8l4 4-4 4"/>
-            </svg>
+            ><use href="{{ \App\Support\Icono::url('i-ab28778') }}"></use></svg>
         </a>
 
     </div>

@@ -568,13 +568,8 @@
 
 <body>
 @php
-    $logoOrganizacion = app(\App\Services\OrganizacionService::class)->logoContenido();
-    $rutaLogoReporte = public_path('images/logo-grand-palladium.png');
-    $logoPalladiumPdf = $logoOrganizacion
-        ? 'data:'.$logoOrganizacion['mime'].';base64,'.base64_encode($logoOrganizacion['contenido'])
-        : (is_file($rutaLogoReporte)
-        ? 'data:image/png;base64,' . base64_encode(file_get_contents($rutaLogoReporte))
-        : null);
+    // Logo de la organización (o el predeterminado), reducido y sin transparencia.
+    $logoPalladiumPdf = app(\App\Services\ImagenPdfService::class)->logoDataUri();
 @endphp
 
 

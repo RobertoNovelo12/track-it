@@ -718,9 +718,7 @@
                     fill="none"
                     stroke="currentColor"
                     stroke-width="2"
-                >
-                    <path d="M5 12l4 4L19 7"/>
-                </svg>
+                ><use href="{{ \App\Support\Icono::url('i-e7e7dec') }}"></use></svg>
             </div>
 
             <div class="min-w-0 flex-1">
@@ -805,11 +803,7 @@
                     fill="none"
                     stroke="currentColor"
                     stroke-width="2"
-                >
-                    <circle cx="12" cy="12" r="9"/>
-                    <path d="M12 8v5"/>
-                    <path d="M12 17h.01"/>
-                </svg>
+                ><use href="{{ \App\Support\Icono::url('i-b073057') }}"></use></svg>
             </div>
 
             <div class="min-w-0 flex-1">
@@ -923,12 +917,7 @@
                                 fill="none"
                                 stroke="currentColor"
                                 stroke-width="1.7"
-                            >
-                                <circle cx="9" cy="8" r="3"/>
-                                <path d="M3 20c0-4 2-7 6-7s6 3 6 7"/>
-                                <path d="M18 7v6"/>
-                                <path d="M15 10h6"/>
-                            </svg>
+                            ><use href="{{ \App\Support\Icono::url('i-a66f8d6') }}"></use></svg>
 
                             Asignación
                         </button>
@@ -971,12 +960,7 @@
                                 fill="none"
                                 stroke="currentColor"
                                 stroke-width="1.7"
-                            >
-                                <path d="M4 7h15"/>
-                                <path d="M16 4l3 3-3 3"/>
-                                <path d="M20 17H5"/>
-                                <path d="M8 14l-3 3 3 3"/>
-                            </svg>
+                            ><use href="{{ \App\Support\Icono::url('i-e5c8e79') }}"></use></svg>
 
                             Reasignación
                         </a>
@@ -1302,10 +1286,7 @@
                                 x-cloak
                                 class="mt-1.5 flex items-start gap-1.5 text-xs text-[var(--theme-warning)]"
                             >
-                                <svg class="mt-px h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                    <path d="M12 9v4M12 16.5v.5"/>
-                                    <path d="M10.3 3.9L2.6 17.3A2 2 0 0 0 4.3 20h15.4a2 2 0 0 0 1.7-2.7L13.7 3.9a2 2 0 0 0-3.4 0z"/>
-                                </svg>
+                                <svg class="mt-px h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-3861fbd') }}"></use></svg>
                                 <span>
                                     Este colaborador no tiene cuenta. La asignación se guardará y un
                                     administrador deberá crear su cuenta en Seguridad y roles.

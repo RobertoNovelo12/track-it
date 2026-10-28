@@ -85,9 +85,7 @@
                     stroke-width="2"
 
                     aria-hidden="true"
-                >
-                    <path d="M5 12l4 4L19 7"/>
-                </svg>
+                ><use href="{{ \App\Support\Icono::url('i-e7e7dec') }}"></use></svg>
             </div>
 
 
@@ -146,10 +144,7 @@
                     stroke-width="2"
 
                     aria-hidden="true"
-                >
-                    <path d="M6 6l12 12"/>
-                    <path d="M18 6L6 18"/>
-                </svg>
+                ><use href="{{ \App\Support\Icono::url('i-e0c3579') }}"></use></svg>
             </button>
 
         </div>

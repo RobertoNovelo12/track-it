@@ -119,9 +119,7 @@
                             fill="none"
                             stroke="currentColor"
                             stroke-width="1.8"
-                        >
-                            <path d="M6 15l6-6 6 6"/>
-                        </svg>
+                        ><use href="{{ \App\Support\Icono::url('i-af587f0') }}"></use></svg>
                     </button>
                 </th>
 
@@ -184,9 +182,7 @@
                             fill="none"
                             stroke="currentColor"
                             stroke-width="1.8"
-                        >
-                            <path d="M6 15l6-6 6 6"/>
-                        </svg>
+                        ><use href="{{ \App\Support\Icono::url('i-af587f0') }}"></use></svg>
                     </button>
                 </th>
 
@@ -265,9 +261,7 @@
                             fill="none"
                             stroke="currentColor"
                             stroke-width="1.8"
-                        >
-                            <path d="M6 15l6-6 6 6"/>
-                        </svg>
+                        ><use href="{{ \App\Support\Icono::url('i-af587f0') }}"></use></svg>
                     </button>
                 </th>
 
@@ -332,9 +326,7 @@
                             fill="none"
                             stroke="currentColor"
                             stroke-width="1.8"
-                        >
-                            <path d="M6 15l6-6 6 6"/>
-                        </svg>
+                        ><use href="{{ \App\Support\Icono::url('i-af587f0') }}"></use></svg>
                     </button>
                 </th>
 
@@ -399,9 +391,7 @@
                             fill="none"
                             stroke="currentColor"
                             stroke-width="1.8"
-                        >
-                            <path d="M6 15l6-6 6 6"/>
-                        </svg>
+                        ><use href="{{ \App\Support\Icono::url('i-af587f0') }}"></use></svg>
                     </button>
                 </th>
 
@@ -466,9 +456,7 @@
                             fill="none"
                             stroke="currentColor"
                             stroke-width="1.8"
-                        >
-                            <path d="M6 15l6-6 6 6"/>
-                        </svg>
+                        ><use href="{{ \App\Support\Icono::url('i-af587f0') }}"></use></svg>
                     </button>
                 </th>
 
@@ -746,10 +734,7 @@
                                     fill="none"
                                     stroke="currentColor"
                                     stroke-width="1.5"
-                                >
-                                    <path d="M4 20h4l11-11-4-4L4 16v4z"/>
-                                    <path d="M13.5 6.5l4 4"/>
-                                </svg>
+                                ><use href="{{ \App\Support\Icono::url('i-92e9684') }}"></use></svg>
                             </a>
 
 
@@ -788,11 +773,7 @@
                                         class="w-4 h-4"
                                         viewBox="0 0 24 24"
                                         fill="currentColor"
-                                    >
-                                        <circle cx="12" cy="5" r="1.5"/>
-                                        <circle cx="12" cy="12" r="1.5"/>
-                                        <circle cx="12" cy="19" r="1.5"/>
-                                    </svg>
+                                    ><use href="{{ \App\Support\Icono::url('i-6f7d564') }}"></use></svg>
                                 </button>
 
 

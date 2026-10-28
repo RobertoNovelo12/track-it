@@ -304,9 +304,7 @@
                 fill="none"
                 stroke="currentColor"
                 stroke-width="2"
-            >
-                <path d="M5 12l4 4L19 7"/>
-            </svg>
+            ><use href="{{ \App\Support\Icono::url('i-e7e7dec') }}"></use></svg>
         </div>
 
         <div class="min-w-0 flex-1">
@@ -332,9 +330,7 @@
                 fill="none"
                 stroke="currentColor"
                 stroke-width="2"
-            >
-                <path d="M6 6l12 12M18 6L6 18"/>
-            </svg>
+            ><use href="{{ \App\Support\Icono::url('i-c00fbb2') }}"></use></svg>
         </button>
     </div>
 
@@ -381,10 +377,7 @@
                         stroke="currentColor"
                         stroke-width="1.8"
                         aria-hidden="true"
-                    >
-                        <path d="M12 3 2 20h20L12 3Z"/>
-                        <path d="M12 10v4M12 17h.01"/>
-                    </svg>
+                    ><use href="{{ \App\Support\Icono::url('i-a049c21') }}"></use></svg>
 
                     <span>
                         <span class="font-semibold">
@@ -451,9 +444,7 @@
                                 stroke="currentColor"
                                 stroke-width="2.5"
                                 aria-hidden="true"
-                            >
-                                <path d="M5 12l4 4L19 7"/>
-                            </svg>
+                            ><use href="{{ \App\Support\Icono::url('i-e7e7dec') }}"></use></svg>
                         @endif
 
                         {{ $codigosCola[$idLote] ?? $idLote }}
@@ -525,11 +516,7 @@
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     aria-hidden="true"
-                >
-                    <path d="m12 3 9 5-9 5-9-5 9-5Z"/>
-                    <path d="m3 12 9 5 9-5"/>
-                    <path d="m3 16 9 5 9-5"/>
-                </svg>
+                ><use href="{{ \App\Support\Icono::url('i-0a879ac') }}"></use></svg>
 
                 {{-- ICONO CARGANDO --}}
 
@@ -542,16 +529,7 @@
                     stroke="currentColor"
                     stroke-width="2"
                     aria-hidden="true"
-                >
-                    <circle
-                        cx="12"
-                        cy="12"
-                        r="9"
-                        stroke-opacity=".25"
-                    />
-
-                    <path d="M21 12a9 9 0 0 0-9-9"/>
-                </svg>
+                ><use href="{{ \App\Support\Icono::url('i-5387e71') }}"></use></svg>
 
                 {{-- TEXTO NORMAL --}}
 
@@ -600,10 +578,7 @@
                         fill="none"
                         stroke="currentColor"
                         stroke-width="1.8"
-                    >
-                        <circle cx="12" cy="12" r="9"/>
-                        <path d="M12 10v6M12 7h.01"/>
-                    </svg>
+                    ><use href="{{ \App\Support\Icono::url('i-501b71d') }}"></use></svg>
 
                     <h2 class="text-base font-semibold text-[var(--theme-text-strong)]">
                         Información general
@@ -794,9 +769,7 @@
                                         fill="none"
                                         stroke="currentColor"
                                         stroke-width="1.7"
-                                    >
-                                        <path d="M12 16V4M7 9l5-5 5 5M4 20h16"/>
-                                    </svg>
+                                    ><use href="{{ \App\Support\Icono::url('i-5480bc2') }}"></use></svg>
 
                                     <span class="text-xs text-[var(--theme-text)]">
                                         Seleccionar fotografía
@@ -850,10 +823,7 @@
                     fill="none"
                     stroke="currentColor"
                     stroke-width="1.8"
-                >
-                    <circle cx="12" cy="12" r="9"/>
-                    <path d="M12 10v6M12 7h.01"/>
-                </svg>
+                ><use href="{{ \App\Support\Icono::url('i-501b71d') }}"></use></svg>
 
                 <div>
 

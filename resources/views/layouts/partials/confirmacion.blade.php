@@ -122,14 +122,8 @@
             --}}
             <div class="px-5 pt-5">
                 <div class="flex items-center gap-2">
-                    <svg x-show="peligro" class="h-4 w-4 shrink-0 text-[var(--theme-danger)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M12 3 2 20h20L12 3Z"/>
-                        <path d="M12 10v4M12 17h.01"/>
-                    </svg>
-                    <svg x-show="! peligro" class="h-4 w-4 shrink-0 text-[var(--theme-text-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <circle cx="12" cy="12" r="9"/>
-                        <path d="M12 11v5M12 8h.01"/>
-                    </svg>
+                    <svg x-show="peligro" class="h-4 w-4 shrink-0 text-[var(--theme-danger)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-a049c21') }}"></use></svg>
+                    <svg x-show="! peligro" class="h-4 w-4 shrink-0 text-[var(--theme-text-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-7eacb6d') }}"></use></svg>
 
                     <h2 id="confirmacion-titulo" class="text-[15px] font-semibold leading-snug text-[var(--theme-text-strong)]" x-text="titulo"></h2>
                 </div>

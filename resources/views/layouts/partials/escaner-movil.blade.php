@@ -354,9 +354,7 @@
                 class="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 hover:bg-white/20"
                 aria-label="Cerrar escáner"
             >
-                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-                    <path d="M6 6l12 12M18 6L6 18"/>
-                </svg>
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-c00fbb2') }}"></use></svg>
             </button>
         </div>
 
@@ -437,10 +435,7 @@
                 <div>
                     <div class="flex items-start gap-3">
                         <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--theme-warning-soft)] text-[var(--theme-warning)]">
-                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <path d="M12 9v4M12 17h.01"/>
-                                <path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/>
-                            </svg>
+                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-c5e848b') }}"></use></svg>
                         </span>
 
                         <div class="min-w-0">
@@ -487,7 +482,7 @@
                         class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[var(--theme-text-muted)] hover:bg-[var(--theme-surface-soft)]"
                         aria-label="Volver"
                     >
-                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-04172dc') }}"></use></svg>
                     </button>
 
                     <div class="min-w-0 flex-1">
@@ -524,7 +519,7 @@
                             x-bind:aria-selected="incluirme ? 'true' : 'false'"
                         >
                             <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--theme-primary-soft)] text-[var(--theme-primary)]">
-                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>
+                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-b8fb184') }}"></use></svg>
                             </span>
                             <span class="min-w-0 flex-1">
                                 <span class="block text-sm font-medium text-[var(--theme-text-strong)]">Mi PC</span>
@@ -535,7 +530,7 @@
                                 x-bind:class="incluirme ? 'border-[var(--theme-primary)] bg-[var(--theme-primary)] text-white' : 'border-[var(--theme-border-strong)] text-transparent'"
                                 aria-hidden="true"
                             >
-                                <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg>
+                                <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><use href="{{ \App\Support\Icono::url('i-e1c3743') }}"></use></svg>
                             </span>
                         </button>
                     </li>
@@ -563,7 +558,7 @@
                                     x-bind:class="estaElegido(persona.id) ? 'border-[var(--theme-primary)] bg-[var(--theme-primary)] text-white' : 'border-[var(--theme-border-strong)] text-transparent'"
                                     aria-hidden="true"
                                 >
-                                    <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg>
+                                    <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><use href="{{ \App\Support\Icono::url('i-e1c3743') }}"></use></svg>
                                 </span>
                             </button>
                         </li>
@@ -600,9 +595,7 @@
             {{-- Enviado (vuelve solo a la cámara) --}}
             <div x-show="estado === 'enviado'" class="flex items-center gap-3 py-2">
                 <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--theme-success-soft)] text-[var(--theme-success)]">
-                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M5 12.5l4.5 4.5L19 7"/>
-                    </svg>
+                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-e1c3743') }}"></use></svg>
                 </span>
 
                 <div class="min-w-0">

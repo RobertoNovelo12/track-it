@@ -20,10 +20,7 @@
         {{-- Cuenta para un colaborador sin cuenta (desde Seguridad y roles) --}}
         @if ($colaboradorNombre !== '')
             <div class="flex items-start gap-3 rounded-xl border border-[var(--theme-primary)] bg-[var(--theme-primary-soft)] px-4 py-3 text-sm text-[var(--theme-text-strong)]">
-                <svg class="mt-0.5 h-4 w-4 shrink-0 text-[var(--theme-primary)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1.5 1.5"/>
-                    <path d="M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1.5-1.5"/>
-                </svg>
+                <svg class="mt-0.5 h-4 w-4 shrink-0 text-[var(--theme-primary)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-be03452') }}"></use></svg>
 
                 <p>
                     Cuenta para <span class="font-semibold">{{ $colaboradorNombre }}</span>.
@@ -203,10 +200,7 @@
                             class="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-[var(--theme-text-muted)] hover:text-[var(--theme-text)]"
                             x-bind:aria-label="verPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
                         >
-                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/>
-                                <circle cx="12" cy="12" r="3"/>
-                            </svg>
+                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-e8719a2') }}"></use></svg>
                         </button>
                     </div>
 
@@ -238,9 +232,7 @@
                             title="Generar contraseña segura"
                             class="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 text-xs font-medium text-[var(--theme-text)] transition-colors hover:bg-[var(--theme-surface-soft)] disabled:opacity-60"
                         >
-                            <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <path d="M21 2l-2 2m-7.6 7.6a5.5 5.5 0 1 1-7.8 7.8 5.5 5.5 0 0 1 7.8-7.8zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
-                            </svg>
+                            <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-fccff8b') }}"></use></svg>
                             Generar
                         </button>
                     </div>

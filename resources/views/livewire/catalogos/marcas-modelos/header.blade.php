@@ -115,10 +115,7 @@
             stroke-width="1.8"
             stroke-linecap="round"
             stroke-linejoin="round"
-        >
-            <path d="M12 5v14"/>
-            <path d="M5 12h14"/>
-        </svg>
+        ><use href="{{ \App\Support\Icono::url('i-6aed230') }}"></use></svg>
 
         {{ $buttonLabel }}
     </a>

@@ -247,19 +247,7 @@ new class extends Component {
                 fill="none"
                 stroke="currentColor"
                 stroke-width="1.5"
-            >
-                <rect
-                    x="3"
-                    y="7"
-                    width="18"
-                    height="10"
-                    rx="1"
-                />
-
-                <path d="M7 14h1"/>
-                <path d="M11 14h1"/>
-                <path d="M15 14h1"/>
-            </svg>
+            ><use href="{{ \App\Support\Icono::url('i-4e76288') }}"></use></svg>
         </div>
 
 
@@ -364,21 +352,7 @@ new class extends Component {
                 fill="none"
                 stroke="currentColor"
                 stroke-width="1.5"
-            >
-                <circle
-                    cx="12"
-                    cy="8"
-                    r="3"
-                />
-
-                <path
-                    d="
-                        M5 20
-                        c0-4 2-7 7-7
-                        s7 3 7 7
-                    "
-                />
-            </svg>
+            ><use href="{{ \App\Support\Icono::url('i-93696c5') }}"></use></svg>
         </div>
 
 
@@ -483,18 +457,7 @@ new class extends Component {
                 fill="none"
                 stroke="currentColor"
                 stroke-width="1.5"
-            >
-                <path d="M12 3l10 18H2z"/>
-
-                <path d="M12 9v5"/>
-
-                <circle
-                    cx="12"
-                    cy="17"
-                    r=".6"
-                    fill="currentColor"
-                />
-            </svg>
+            ><use href="{{ \App\Support\Icono::url('i-4aff7ed') }}"></use></svg>
         </div>
 
 
@@ -599,11 +562,7 @@ new class extends Component {
                 fill="none"
                 stroke="currentColor"
                 stroke-width="1.5"
-            >
-                <path d="M4 7l8-4 8 4-8 4z"/>
-                <path d="M4 7v10l8 4 8-4V7"/>
-                <path d="M12 11v10"/>
-            </svg>
+            ><use href="{{ \App\Support\Icono::url('i-a1c5655') }}"></use></svg>
         </div>
 
 

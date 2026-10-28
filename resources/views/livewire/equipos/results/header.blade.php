@@ -198,22 +198,7 @@
                 stroke-linejoin="round"
 
                 aria-hidden="true"
-            >
-                <path
-                    d="
-                        M20 11
-                        a8 8 0 1 0-2.3 5.7
-                    "
-                />
-
-                <path
-                    d="
-                        M20 4
-                        v7
-                        h-7
-                    "
-                />
-            </svg>
+            ><use href="{{ \App\Support\Icono::url('i-31b31e3') }}"></use></svg>
 
         </button>
 

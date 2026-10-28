@@ -65,9 +65,7 @@
                     fill="none"
                     stroke="currentColor"
                     stroke-width="2"
-                >
-                    <path d="M5 12l4 4L19 7"/>
-                </svg>
+                ><use href="{{ \App\Support\Icono::url('i-e7e7dec') }}"></use></svg>
             </div>
 
             <div class="min-w-0 flex-1">
@@ -108,10 +106,7 @@
                     fill="none"
                     stroke="currentColor"
                     stroke-width="2"
-                >
-                    <path d="M6 6l12 12"/>
-                    <path d="M18 6L6 18"/>
-                </svg>
+                ><use href="{{ \App\Support\Icono::url('i-e0c3579') }}"></use></svg>
             </button>
         </div>
 
@@ -167,11 +162,7 @@
                     fill="none"
                     stroke="currentColor"
                     stroke-width="2"
-                >
-                    <path d="M12 8v5"/>
-                    <path d="M12 17h.01"/>
-                    <circle cx="12" cy="12" r="9"/>
-                </svg>
+                ><use href="{{ \App\Support\Icono::url('i-c96af83') }}"></use></svg>
             </div>
 
             <div class="min-w-0 flex-1">
@@ -212,10 +203,7 @@
                     fill="none"
                     stroke="currentColor"
                     stroke-width="2"
-                >
-                    <path d="M6 6l12 12"/>
-                    <path d="M18 6L6 18"/>
-                </svg>
+                ><use href="{{ \App\Support\Icono::url('i-e0c3579') }}"></use></svg>
             </button>
         </div>
 
@@ -255,11 +243,7 @@
                     fill="none"
                     stroke="currentColor"
                     stroke-width="1.6"
-                >
-                    <path d="M12 3v12"/>
-                    <path d="M7 10l5 5 5-5"/>
-                    <path d="M4 21h16"/>
-                </svg>
+                ><use href="{{ \App\Support\Icono::url('i-12264a0') }}"></use></svg>
 
                 Exportar ficha
             </a>
@@ -294,17 +278,7 @@
                     fill="none"
                     stroke="currentColor"
                     stroke-width="1.7"
-                >
-                    <rect
-                        x="5"
-                        y="5"
-                        width="14"
-                        height="14"
-                        rx="1.5"
-                    />
-                    <path d="M9 9l6 6"/>
-                    <path d="M15 9l-6 6"/>
-                </svg>
+                ><use href="{{ \App\Support\Icono::url('i-2d05a44') }}"></use></svg>
 
                 Dar de baja
             </a>
@@ -325,10 +299,7 @@
                     role="status"
                     class="mb-4 flex items-start gap-2 rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface-soft)] px-4 py-3 text-xs text-[var(--theme-text-muted)]"
                 >
-                    <svg class="mt-px h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <rect x="5" y="11" width="14" height="9" rx="1.5"/>
-                        <path d="M8 11V8a4 4 0 0 1 8 0v3"/>
-                    </svg>
+                    <svg class="mt-px h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-a1db039') }}"></use></svg>
 
                     <span>
                         Solo lectura: tu rol permite consultar la información del equipo, pero no modificarla.
@@ -371,10 +342,7 @@
                                     x-text="(data.tiposEquipo ?? []).find(opcion => String(opcion.value) === String(idTipoEquipo))?.label ?? 'Sin tipo'"
                                 ></span>
 
-                                <svg class="h-4 w-4 shrink-0 text-[var(--theme-text-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                    <rect x="5" y="11" width="14" height="9" rx="1.5"/>
-                                    <path d="M8 11V8a4 4 0 0 1 8 0v3"/>
-                                </svg>
+                                <svg class="h-4 w-4 shrink-0 text-[var(--theme-text-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-a1db039') }}"></use></svg>
                             </div>
 
                             <p class="mt-1 text-xs text-[var(--theme-text-muted)]">

@@ -215,10 +215,7 @@
                     'bg-[var(--theme-primary-soft)] text-[var(--theme-primary)]': aviso.tipo === 'info' || aviso.tipo === 'loading',
                 }"
             >
-                <svg x-show="aviso.tipo === 'loading'" class="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.4" opacity="0.25"/>
-                    <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
-                </svg>
+                <svg x-show="aviso.tipo === 'loading'" class="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-3ea787d') }}"></use></svg>
 
                 <svg x-show="aviso.tipo !== 'loading'" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path x-show="aviso.tipo === 'success'" d="M5 12.5l4.5 4.5L19 7"/>
@@ -251,9 +248,7 @@
                 class="-mr-1 -mt-0.5 rounded-[var(--radius-sm)] p-1 text-[var(--theme-text-muted)] transition-colors duration-[var(--motion-fast)] hover:bg-[var(--theme-surface-soft)] hover:text-[var(--theme-text)]"
                 aria-label="Cerrar aviso"
             >
-                <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-                    <path d="M6 6l12 12M18 6L6 18"/>
-                </svg>
+                <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-c00fbb2') }}"></use></svg>
             </button>
         </div>
     </template>

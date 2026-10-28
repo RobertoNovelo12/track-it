@@ -234,9 +234,7 @@
                 class="relative w-full min-h-[44px] flex items-center justify-center bg-[var(--theme-primary)] hover:bg-[var(--theme-primary-hover)] text-white font-medium tracking-wide text-sm rounded-md py-3 transition-colors disabled:opacity-80 disabled:cursor-wait">
                 <span id="registerNormalState" class="flex items-center justify-center gap-2">
                     CREAR CUENTA
-                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
-                    </svg>
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="{{ \App\Support\Icono::url('i-ff7bd3b') }}"></use></svg>
                 </span>
                 <span id="registerLoadingState" class="hidden absolute inset-0 items-center gap-2 justify-center">
                     <x-ui.spinner size="sm" /><span>Creando cuenta…</span>

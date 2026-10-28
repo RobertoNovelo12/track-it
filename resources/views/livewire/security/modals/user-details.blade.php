@@ -154,10 +154,7 @@
                     fill="none"
                     stroke="currentColor"
                     stroke-width="1.7"
-                >
-                    <path d="M6 6l12 12"/>
-                    <path d="M18 6L6 18"/>
-                </svg>
+                ><use href="{{ \App\Support\Icono::url('i-e0c3579') }}"></use></svg>
             </button>
         </div>
 
@@ -258,10 +255,7 @@
                         onclick="window.openResetPasswordFromDetails()"
                         class="mt-3 hidden h-9 items-center justify-center gap-2 rounded-md bg-[var(--theme-primary)] px-3 text-xs font-medium text-white transition-colors hover:bg-[var(--theme-primary-hover)]"
                     >
-                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <circle cx="8" cy="15" r="4"/>
-                            <path d="M10.85 12.15L19 4M18 5l2 2M15 8l2 2"/>
-                        </svg>
+                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-862f4e5') }}"></use></svg>
                         Restablecer contraseña
                     </button>
                 </div>
@@ -282,9 +276,7 @@
                         onclick="window.darDeBajaDesdeDetalles()"
                         class="mt-3 hidden h-9 items-center justify-center gap-2 rounded-md border border-transparent bg-[var(--theme-danger-soft)] px-3 text-xs font-medium text-[var(--theme-danger)] transition-opacity hover:opacity-80"
                     >
-                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0M17 8h5"/>
-                        </svg>
+                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-f81edf9') }}"></use></svg>
                         Dar de baja la cuenta
                     </button>
 

@@ -76,9 +76,7 @@
             fill="none"
             stroke="currentColor"
             stroke-width="1.5"
-        >
-            <path d="M15 6l-6 6 6 6"/>
-        </svg>
+        ><use href="{{ \App\Support\Icono::url('i-d889af1') }}"></use></svg>
 
         <span class="sm:hidden">
             Anterior
@@ -247,9 +245,7 @@
             fill="none"
             stroke="currentColor"
             stroke-width="1.5"
-        >
-            <path d="M9 6l6 6-6 6"/>
-        </svg>
+        ><use href="{{ \App\Support\Icono::url('i-352d1b3') }}"></use></svg>
 
         <span class="sm:hidden">
             Siguiente

@@ -49,10 +49,7 @@
                         x-on:click="$dispatch('abrir-restablecer-contrasena', @js(['id' => $solicitud['id'], 'nombre' => $solicitud['nombre'], 'username' => $solicitud['username']]))"
                         class="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-md bg-[var(--theme-primary)] px-3 text-xs font-medium text-white transition-colors hover:bg-[var(--theme-primary-hover)]"
                     >
-                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <circle cx="8" cy="15" r="4"/>
-                            <path d="M10.85 12.15L19 4M18 5l2 2M15 8l2 2"/>
-                        </svg>
+                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-862f4e5') }}"></use></svg>
                         Restablecer contraseña
                     </button>
                 </li>

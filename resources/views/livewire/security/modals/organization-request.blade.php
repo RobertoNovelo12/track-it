@@ -91,10 +91,7 @@
                 "
                 aria-label="Cerrar"
             >
-                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
-                    <path d="M6 6l12 12"/>
-                    <path d="M18 6L6 18"/>
-                </svg>
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><use href="{{ \App\Support\Icono::url('i-e0c3579') }}"></use></svg>
             </button>
         </div>
 

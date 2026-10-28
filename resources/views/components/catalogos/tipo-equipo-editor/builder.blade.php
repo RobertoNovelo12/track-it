@@ -394,14 +394,7 @@
                                     viewBox="0 0 24 24"
                                     fill="currentColor"
                                     aria-hidden="true"
-                                >
-                                    <circle cx="8" cy="5" r="1.35" />
-                                    <circle cx="16" cy="5" r="1.35" />
-                                    <circle cx="8" cy="12" r="1.35" />
-                                    <circle cx="16" cy="12" r="1.35" />
-                                    <circle cx="8" cy="19" r="1.35" />
-                                    <circle cx="16" cy="19" r="1.35" />
-                                </svg>
+                                ><use href="{{ \App\Support\Icono::url('i-735fa27') }}"></use></svg>
                             </div>
 
                             {{-- INFORMACIÓN --}}
@@ -569,9 +562,7 @@
                                         stroke-width="1.8"
                                         stroke-linecap="round"
                                         aria-hidden="true"
-                                    >
-                                        <path d="M5 12h14" />
-                                    </svg>
+                                    ><use href="{{ \App\Support\Icono::url('i-c4ce778') }}"></use></svg>
                                 </button>
                             </div>
                         </article>

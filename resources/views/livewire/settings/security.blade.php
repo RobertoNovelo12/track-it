@@ -54,17 +54,7 @@
                     fill="none"
                     stroke="currentColor"
                     stroke-width="1.6"
-                >
-                    <rect
-                        x="5"
-                        y="10"
-                        width="14"
-                        height="10"
-                        rx="2"
-                    />
-
-                    <path d="M8 10V7a4 4 0 018 0v3"/>
-                </svg>
+                ><use href="{{ \App\Support\Icono::url('i-660e321') }}"></use></svg>
             </div>
 
 
@@ -185,17 +175,7 @@
                     fill="none"
                     stroke="currentColor"
                     stroke-width="1.6"
-                >
-                    <circle
-                        cx="8"
-                        cy="15"
-                        r="3"
-                    />
-
-                    <path
-                        d="M10.2 12.8L18 5l1 1 1.5-1.5 2 2L21 8l1 1-7.8 7.8"
-                    />
-                </svg>
+                ><use href="{{ \App\Support\Icono::url('i-9f797f0') }}"></use></svg>
 
                 Cambiar contraseña
             </button>
@@ -266,15 +246,7 @@
                         fill="none"
                         stroke="currentColor"
                         stroke-width="1.6"
-                    >
-                        <path
-                            d="M12 3l7 3v5c0 4.8-2.8 8-7 10-4.2-2-7-5.2-7-10V6l7-3z"
-                        />
-
-                        <path
-                            d="M9.5 12l1.7 1.7L15 10"
-                        />
-                    </svg>
+                    ><use href="{{ \App\Support\Icono::url('i-0d45171') }}"></use></svg>
                 </div>
 
 
@@ -447,14 +419,7 @@
                             fill="none"
                             stroke="currentColor"
                             stroke-width="1.6"
-                        >
-                            <path
-                                d="M12 3l7 3v5c0 4.8-2.8 8-7 10-4.2-2-7-5.2-7-10V6l7-3z"
-                            />
-
-                            <path d="M12 8v6"/>
-                            <path d="M9 11h6"/>
-                        </svg>
+                        ><use href="{{ \App\Support\Icono::url('i-3f41e3d') }}"></use></svg>
 
                         Activar
                     </span>
@@ -550,17 +515,7 @@
                         fill="none"
                         stroke="currentColor"
                         stroke-width="1.6"
-                    >
-                        <circle
-                            cx="12"
-                            cy="12"
-                            r="3"
-                        />
-
-                        <path
-                            d="M4 12h2M18 12h2M12 4v2M12 18v2"
-                        />
-                    </svg>
+                    ><use href="{{ \App\Support\Icono::url('i-ed69dd5') }}"></use></svg>
 
                     Administrar
                 </button>
@@ -625,18 +580,7 @@
                     fill="none"
                     stroke="currentColor"
                     stroke-width="1.6"
-                >
-                    <rect
-                        x="3"
-                        y="4"
-                        width="18"
-                        height="13"
-                        rx="2"
-                    />
-
-                    <path d="M8 21h8"/>
-                    <path d="M12 17v4"/>
-                </svg>
+                ><use href="{{ \App\Support\Icono::url('i-757c7b6') }}"></use></svg>
             </div>
 
 
@@ -745,18 +689,7 @@
                     fill="none"
                     stroke="currentColor"
                     stroke-width="1.6"
-                >
-                    <rect
-                        x="3"
-                        y="4"
-                        width="18"
-                        height="13"
-                        rx="2"
-                    />
-
-                    <path d="M8 21h8"/>
-                    <path d="M12 17v4"/>
-                </svg>
+                ><use href="{{ \App\Support\Icono::url('i-757c7b6') }}"></use></svg>
 
 
                 <span>
@@ -902,23 +835,7 @@
                         fill="none"
                         stroke="currentColor"
                         stroke-width="1.6"
-                    >
-                        <rect
-                            x="3"
-                            y="4"
-                            width="13"
-                            height="16"
-                            rx="2"
-                        />
-
-                        <rect
-                            x="17"
-                            y="9"
-                            width="4"
-                            height="8"
-                            rx="1"
-                        />
-                    </svg>
+                    ><use href="{{ \App\Support\Icono::url('i-217da61') }}"></use></svg>
 
                     Ver dispositivos
                 </span>
@@ -945,26 +862,7 @@
                         fill="none"
 
                         aria-hidden="true"
-                    >
-                        <circle
-                            cx="12"
-                            cy="12"
-                            r="9"
-
-                            stroke="currentColor"
-                            stroke-width="2"
-
-                            opacity="0.25"
-                        />
-
-                        <path
-                            d="M21 12a9 9 0 0 0-9-9"
-
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                        />
-                    </svg>
+                    ><use href="{{ \App\Support\Icono::url('i-ef15586') }}"></use></svg>
 
                     <span class="sr-only">
                         Cargando dispositivos...
@@ -1049,11 +947,7 @@
                         fill="none"
                         stroke="currentColor"
                         stroke-width="1.6"
-                    >
-                        <path d="M10 17l5-5-5-5"/>
-                        <path d="M15 12H3"/>
-                        <path d="M14 4h5a2 2 0 012 2v12a2 2 0 01-2 2h-5"/>
-                    </svg>
+                    ><use href="{{ \App\Support\Icono::url('i-7bbad63') }}"></use></svg>
                 </x-slot:icon>
 
                 Cerrar en otros
@@ -1117,13 +1011,7 @@
                     fill="none"
                     stroke="currentColor"
                     stroke-width="1.6"
-                >
-                    <path
-                        d="M18 8a6 6 0 10-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"
-                    />
-
-                    <path d="M10 21h4"/>
-                </svg>
+                ><use href="{{ \App\Support\Icono::url('i-1e3d8a6') }}"></use></svg>
             </div>
 
 

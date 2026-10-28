@@ -72,12 +72,7 @@
             stroke="currentColor"
             stroke-width="1.5"
             aria-hidden="true"
-        >
-            <path d="M4 6h16"/>
-            <path d="M7 6v2a2 2 0 002 2h6a2 2 0 002-2V6"/>
-            <path d="M4 18h16"/>
-            <path d="M9 18v-2a2 2 0 012-2h2a2 2 0 012 2v2"/>
-        </svg>
+        ><use href="{{ \App\Support\Icono::url('i-61860e7') }}"></use></svg>
 
 
         <span
@@ -130,26 +125,7 @@
             fill="none"
 
             aria-hidden="true"
-        >
-            <circle
-                cx="12"
-                cy="12"
-                r="9"
-
-                stroke="currentColor"
-                stroke-width="2"
-
-                opacity="0.25"
-            />
-
-            <path
-                d="M21 12a9 9 0 0 0-9-9"
-
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-            />
-        </svg>
+        ><use href="{{ \App\Support\Icono::url('i-ef15586') }}"></use></svg>
 
         {{-- Filtros activos (solo con el panel plegado) --}}
         @if ($filtrosActivosEscritorio > 0)
@@ -183,9 +159,7 @@
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 aria-hidden="true"
-            >
-                <path d="M6 15l6-6 6 6"/>
-            </svg>
+            ><use href="{{ \App\Support\Icono::url('i-af587f0') }}"></use></svg>
         </button>
 
     </div>
@@ -473,15 +447,7 @@
                     stroke-width="1.5"
 
                     aria-hidden="true"
-                >
-                    <circle
-                        cx="11"
-                        cy="11"
-                        r="7"
-                    />
-
-                    <path d="M20 20l-4-4"/>
-                </svg>
+                ><use href="{{ \App\Support\Icono::url('i-8bdcd83') }}"></use></svg>
 
 
                 Aplicar filtros

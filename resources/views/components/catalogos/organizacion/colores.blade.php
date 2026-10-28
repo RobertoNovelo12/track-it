@@ -115,9 +115,7 @@
                         x-show="hex === @js($valor)"
                         class="absolute inset-0 m-auto h-4 w-4 text-white"
                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
-                    >
-                        <path d="M5 12.5l4.5 4.5L19 7"/>
-                    </svg>
+                    ><use href="{{ \App\Support\Icono::url('i-e1c3743') }}"></use></svg>
                 </button>
             @endforeach
         </div>
@@ -163,7 +161,7 @@
                             <span class="inline-flex items-center rounded-md border px-3 py-1.5 text-xs font-medium" style="background-color: var(--p-soft); border-color: var(--p); color: var(--p);">Filtro activo</span>
                             <span class="inline-flex items-center gap-2 text-xs">
                                 <span class="flex h-4 w-4 items-center justify-center rounded" style="background-color: var(--p);">
-                                    <svg class="h-3 w-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>
+                                    <svg class="h-3 w-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-e1c3743') }}"></use></svg>
                                 </span>
                                 Casilla marcada
                             </span>

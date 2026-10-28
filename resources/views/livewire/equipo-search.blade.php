@@ -43,9 +43,7 @@
                     fill="none"
                     stroke="currentColor"
                     stroke-width="1.7"
-                >
-                    <path d="M15 6l-6 6 6 6"/>
-                </svg>
+                ><use href="{{ \App\Support\Icono::url('i-d889af1') }}"></use></svg>
 
                 Inventario
             </a>
@@ -93,10 +91,7 @@
                     fill="none"
                     stroke="currentColor"
                     stroke-width="1.6"
-                >
-                    <circle cx="11" cy="11" r="7"/>
-                    <path d="M20 20l-4-4"/>
-                </svg>
+                ><use href="{{ \App\Support\Icono::url('i-8bdcd83') }}"></use></svg>
             </div>
 
 
@@ -231,9 +226,7 @@
                     fill="none"
                     stroke="currentColor"
                     stroke-width="1.7"
-                >
-                    <path d="M15 6l-6 6 6 6"/>
-                </svg>
+                ><use href="{{ \App\Support\Icono::url('i-d889af1') }}"></use></svg>
 
                 Inventario
             </a>
@@ -605,10 +598,7 @@
                                     fill="none"
                                     stroke="currentColor"
                                     stroke-width="1.6"
-                                >
-                                    <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"/>
-                                    <circle cx="12" cy="12" r="2.5"/>
-                                </svg>
+                                ><use href="{{ \App\Support\Icono::url('i-767101f') }}"></use></svg>
 
                                 Ver detalle
                             </a>
@@ -644,10 +634,7 @@
                                     fill="none"
                                     stroke="currentColor"
                                     stroke-width="1.6"
-                                >
-                                    <path d="M4 20h4l11-11a2.8 2.8 0 00-4-4L4 16v4z"/>
-                                    <path d="M13.5 6.5l4 4"/>
-                                </svg>
+                                ><use href="{{ \App\Support\Icono::url('i-aab4810') }}"></use></svg>
 
                                 Editar
                             </a>

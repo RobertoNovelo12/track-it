@@ -164,10 +164,7 @@
                     fill="none"
                     stroke="currentColor"
                     stroke-width="1.7"
-                >
-                    <path d="M6 6l12 12"/>
-                    <path d="M18 6L6 18"/>
-                </svg>
+                ><use href="{{ \App\Support\Icono::url('i-e0c3579') }}"></use></svg>
             </button>
 
         </div>
@@ -501,11 +498,7 @@
                         fill="none"
                         stroke="currentColor"
                         stroke-width="1.6"
-                    >
-                        <circle cx="12" cy="12" r="9"/>
-                        <path d="M12 11v6"/>
-                        <path d="M12 7h.01"/>
-                    </svg>
+                    ><use href="{{ \App\Support\Icono::url('i-b2675c0') }}"></use></svg>
 
 
                     <p

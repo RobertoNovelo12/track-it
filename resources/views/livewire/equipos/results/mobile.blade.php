@@ -93,9 +93,7 @@
                         fill="none"
                         stroke="currentColor"
                         stroke-width="3"
-                    >
-                        <path d="M5 12l4 4L19 7"/>
-                    </svg>
+                    ><use href="{{ \App\Support\Icono::url('i-e7e7dec') }}"></use></svg>
                 </button>
 
 
@@ -181,11 +179,7 @@
                             viewBox="0 0 24 24"
 
                             fill="currentColor"
-                        >
-                            <circle cx="12" cy="5" r="1.5"/>
-                            <circle cx="12" cy="12" r="1.5"/>
-                            <circle cx="12" cy="19" r="1.5"/>
-                        </svg>
+                        ><use href="{{ \App\Support\Icono::url('i-6f7d564') }}"></use></svg>
                     </button>
 
 
@@ -431,13 +425,7 @@
                 fill="none"
                 stroke="currentColor"
                 stroke-width="1.5"
-            >
-                <path d="M3 6h12"/>
-                <path d="M3 11h9"/>
-                <path d="M3 16h6"/>
-                <circle cx="17" cy="16" r="3"/>
-                <path d="M19.5 18.5L22 21"/>
-            </svg>
+            ><use href="{{ \App\Support\Icono::url('i-70a7629') }}"></use></svg>
 
 
             <p class="text-sm text-[var(--theme-text-muted)]">
