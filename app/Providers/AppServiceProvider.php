@@ -27,6 +27,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Las comprobaciones de esquema van en caché (App\Support\Esquema): al migrar se olvidan.
+        \Illuminate\Support\Facades\Event::listen(
+            \Illuminate\Database\Events\MigrationsEnded::class,
+            fn () => \App\Support\Esquema::olvidar()
+        );
+
         // El CSS ya se carga como stylesheet; evitar precargas redundantes al navegar con Livewire.
         \Illuminate\Support\Facades\Vite::usePreloadTagAttributes(
             fn ($src, $url): array|false => str_ends_with(parse_url($url, PHP_URL_PATH) ?? '', '.css') ? false : []

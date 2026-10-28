@@ -353,7 +353,7 @@ class UsuarioCreate extends Component
 
         $columnasRol = ['id_rol', 'nombre', 'descripcion'];
 
-        if (\Illuminate\Support\Facades\Schema::hasColumn('roles', 'nivel')) {
+        if (\App\Support\Esquema::tieneColumna('roles', 'nivel')) {
             $columnasRol[] = 'nivel';
         }
 

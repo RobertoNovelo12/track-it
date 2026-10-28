@@ -345,7 +345,7 @@ class DevolucionService
             return true;
         }
 
-        $existe = Schema::hasColumn('movimientos', 'recibido_por');
+        $existe = \App\Support\Esquema::tieneColumna('movimientos', 'recibido_por');
 
         if ($existe) {
             \Illuminate\Support\Facades\Cache::forever('trackit.movimientos.recibido_por.v1', true);

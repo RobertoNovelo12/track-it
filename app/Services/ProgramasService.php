@@ -47,10 +47,10 @@ class ProgramasService
             return true;
         }
 
-        $existe = Schema::hasTable('programas')
-            && Schema::hasTable('equipo_programa')
-            && Schema::hasTable('tipo_equipo_programa')
-            && Schema::hasColumn('tipos_equipo', 'incluye_programas');
+        $existe = \App\Support\Esquema::tieneTabla('programas')
+            && \App\Support\Esquema::tieneTabla('equipo_programa')
+            && \App\Support\Esquema::tieneTabla('tipo_equipo_programa')
+            && \App\Support\Esquema::tieneColumna('tipos_equipo', 'incluye_programas');
 
         if ($existe) {
             Cache::forever('trackit.programas.v1', true);

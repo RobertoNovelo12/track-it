@@ -36,7 +36,7 @@ class PushService
             return $this->disponible = class_exists(\Minishlink\WebPush\WebPush::class)
                 && filled(config('webpush.public_key'))
                 && filled(config('webpush.private_key'))
-                && Schema::hasTable('suscripciones_push');
+                && \App\Support\Esquema::tieneTabla('suscripciones_push');
         } catch (Throwable $exception) {
             report($exception);
 

@@ -304,7 +304,7 @@ new class extends Component
             'colorPrimario.regex' => 'Elige un color válido.',
         ]);
 
-        if (! \Illuminate\Support\Facades\Schema::hasColumn('configuracion_organizacion', 'color_primario')) {
+        if (! \App\Support\Esquema::tieneColumna('configuracion_organizacion', 'color_primario')) {
             $this->addError('colorPrimario', 'Falta ejecutar php artisan migrate para guardar los colores.');
 
             return;

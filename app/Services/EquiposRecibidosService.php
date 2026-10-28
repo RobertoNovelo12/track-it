@@ -59,7 +59,7 @@ class EquiposRecibidosService
             return true;
         }
 
-        $existe = Schema::hasTable('equipos_recibidos');
+        $existe = \App\Support\Esquema::tieneTabla('equipos_recibidos');
 
         if ($existe) {
             Cache::forever('trackit.equipos_recibidos.tabla.v1', true);
@@ -77,7 +77,7 @@ class EquiposRecibidosService
             return true;
         }
 
-        $existe = $this->disponible() && Schema::hasColumn('equipos_recibidos', 'codigo');
+        $existe = $this->disponible() && \App\Support\Esquema::tieneColumna('equipos_recibidos', 'codigo');
 
         if ($existe) {
             Cache::forever('trackit.equipos_recibidos.codigo.v1', true);
@@ -95,7 +95,7 @@ class EquiposRecibidosService
             return true;
         }
 
-        $existe = $this->disponible() && Schema::hasColumn('equipos_recibidos', 'id_remitente');
+        $existe = $this->disponible() && \App\Support\Esquema::tieneColumna('equipos_recibidos', 'id_remitente');
 
         if ($existe) {
             Cache::forever('trackit.equipos_recibidos.remitente.v1', true);
@@ -116,7 +116,7 @@ class EquiposRecibidosService
 
     public function destinatarios(int $idUsuarioActual): array
     {
-        $nivelDisponible = Schema::hasColumn('roles', 'nivel');
+        $nivelDisponible = \App\Support\Esquema::tieneColumna('roles', 'nivel');
 
         return DB::table('usuarios as u')
             ->join('estados_usuario as eu', 'eu.id_estado_usuario', '=', 'u.id_estado_usuario')

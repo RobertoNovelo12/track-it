@@ -102,7 +102,7 @@ class InventarioDocumentoService
                     ->leftJoin('departamentos as d', 'd.id_departamento', '=', 'a.id_departamento')
 
                     ->leftJoin('ubicaciones as ub', 'ub.id_ubicacion', '=', 'a.id_ubicacion')
-                    ->when(Schema::hasColumn('asignaciones', 'id_usuario'), function ($consulta) {
+                    ->when(\App\Support\Esquema::tieneColumna('asignaciones', 'id_usuario'), function ($consulta) {
                         $consulta->leftJoin('usuarios as usuario_asignado', 'usuario_asignado.id_usuario', '=', 'a.id_usuario');
                     })
                     ->leftJoin('catalogo_valores as ta', 'ta.id_valor', '=', 'a.id_tipo_asignacion')
@@ -110,7 +110,7 @@ class InventarioDocumentoService
                     ->orderByDesc('a.fecha_asignacion')
                     ->orderByDesc('a.id_asignacion')
                     ->get([
-                        ... (Schema::hasColumn('asignaciones', 'id_usuario') ? ['usuario_asignado.username as usuario_nombre', 'usuario_asignado.correo as usuario_correo'] : []),
+                        ... (\App\Support\Esquema::tieneColumna('asignaciones', 'id_usuario') ? ['usuario_asignado.username as usuario_nombre', 'usuario_asignado.correo as usuario_correo'] : []),
                         'ta.nombre as tipo_asignacion', 'a.observaciones', 'a.id_equipo', 'a.nombre_colaborador', 'a.numero_colaborador',
                         'a.fecha_asignacion', 'a.fecha_fin', 'a.id_asignacion',
                         'u.nombre as hotel_nombre', 'd.nombre as departamento_nombre',
@@ -287,7 +287,7 @@ class InventarioDocumentoService
 
         $tablas = [];
         foreach ($campos->where('origen_dato', 'tabla_tipo')->groupBy('tabla_destino') as $tabla => $grupo) {
-            if (!$this->identificador($tabla) || !Schema::hasTable($tabla) || !Schema::hasColumn($tabla, 'id_equipo')) {
+            if (!$this->identificador($tabla) || !\App\Support\Esquema::tieneTabla($tabla) || !\App\Support\Esquema::tieneColumna($tabla, 'id_equipo')) {
                 continue;
             }
             $idsTipo = $porTipo->only($grupo->pluck('id_tipo_equipo')->unique()->all())

@@ -38,7 +38,7 @@ class UbicacionOrganizacionalService
      */
     public static function equiposTienenUbicacion(): bool
     {
-        return self::$equiposConUbicacion ??= Schema::hasColumn('equipos', 'id_ubicacion');
+        return self::$equiposConUbicacion ??= \App\Support\Esquema::tieneColumna('equipos', 'id_ubicacion');
     }
 
     /*
@@ -283,7 +283,7 @@ class UbicacionOrganizacionalService
      */
     private function tieneEstructuraNueva(): bool
     {
-        return $this->estructuraNueva ??= Schema::hasColumn('ubicaciones', 'id_unidad')
-            && Schema::hasTable('departamento_ubicacion');
+        return $this->estructuraNueva ??= \App\Support\Esquema::tieneColumna('ubicaciones', 'id_unidad')
+            && \App\Support\Esquema::tieneTabla('departamento_ubicacion');
     }
 }

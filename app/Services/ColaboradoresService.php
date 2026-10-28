@@ -82,7 +82,7 @@ class ColaboradoresService
             return true;
         }
 
-        $existe = Schema::hasColumn('asignaciones', 'id_usuario');
+        $existe = \App\Support\Esquema::tieneColumna('asignaciones', 'id_usuario');
 
         if ($existe) {
             Cache::forever('trackit.asignaciones.id_usuario.v1', true);

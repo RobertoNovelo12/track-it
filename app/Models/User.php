@@ -146,7 +146,7 @@ class User extends Authenticatable
             $columnaNivel = \Illuminate\Support\Facades\Cache::get('roles.columna_nivel');
 
             if ($columnaNivel === null) {
-                $columnaNivel = \Illuminate\Support\Facades\Schema::hasColumn('roles', 'nivel');
+                $columnaNivel = \App\Support\Esquema::tieneColumna('roles', 'nivel');
 
                 \Illuminate\Support\Facades\Cache::put(
                     'roles.columna_nivel',

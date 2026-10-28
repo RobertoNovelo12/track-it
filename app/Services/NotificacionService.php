@@ -240,7 +240,7 @@ class NotificacionService
          */
         if (
             ($definicion['soloGestion'] ?? false)
-            && \Illuminate\Support\Facades\Schema::hasColumn('roles', 'nivel')
+            && \App\Support\Esquema::tieneColumna('roles', 'nivel')
         ) {
             $query->join('roles as rol_notificacion', 'rol_notificacion.id_rol', '=', 'u.id_rol')
                 ->where('rol_notificacion.activo', true)

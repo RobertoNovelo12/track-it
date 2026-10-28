@@ -313,7 +313,7 @@ class PreferenciasUsuarioService
         $existe = Cache::get('preferencias_usuario.tabla');
 
         if ($existe === null) {
-            $existe = Schema::hasTable('preferencias_usuario');
+            $existe = \App\Support\Esquema::tieneTabla('preferencias_usuario');
 
             Cache::put('preferencias_usuario.tabla', $existe, $existe ? now()->addMinutes(10) : now()->addMinute());
         }
@@ -334,7 +334,7 @@ class PreferenciasUsuarioService
         $existe = Cache::get('preferencias_usuario.accesibilidad');
 
         if ($existe === null) {
-            $existe = Schema::hasColumn('preferencias_usuario', 'tamano_texto');
+            $existe = \App\Support\Esquema::tieneColumna('preferencias_usuario', 'tamano_texto');
 
             Cache::put('preferencias_usuario.accesibilidad', $existe, $existe ? now()->addMinutes(10) : now()->addMinute());
         }
@@ -355,7 +355,7 @@ class PreferenciasUsuarioService
         $existe = Cache::get('preferencias_usuario.columnas_formulario');
 
         if ($existe === null) {
-            $existe = Schema::hasColumn('preferencias_usuario', 'columnas_formulario');
+            $existe = \App\Support\Esquema::tieneColumna('preferencias_usuario', 'columnas_formulario');
 
             Cache::put('preferencias_usuario.columnas_formulario', $existe, $existe ? now()->addMinutes(10) : now()->addMinute());
         }

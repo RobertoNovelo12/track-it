@@ -206,7 +206,7 @@ class ReporteBajasActaService
             return true;
         }
 
-        $existe = Schema::hasTable('baja_evidencias');
+        $existe = \App\Support\Esquema::tieneTabla('baja_evidencias');
 
         if ($existe) {
             Cache::forever('schema:baja_evidencias', true);

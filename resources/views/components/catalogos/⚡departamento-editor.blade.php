@@ -93,8 +93,8 @@ new class extends Component
 
     public function gestionaUbicaciones(): bool
     {
-        return Schema::hasTable('departamento_ubicacion')
-            && Schema::hasColumn('ubicaciones', 'id_unidad');
+        return \App\Support\Esquema::tieneTabla('departamento_ubicacion')
+            && \App\Support\Esquema::tieneColumna('ubicaciones', 'id_unidad');
     }
 
     /*

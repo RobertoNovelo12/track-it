@@ -114,9 +114,9 @@ new class extends Component
     /** ¿Ya se corrió la migración de tipos de ubicación? */
     public function listo(): bool
     {
-        return Schema::hasTable('tipos_ubicacion')
-            && Schema::hasColumn('ubicaciones', 'id_tipo_ubicacion')
-            && Schema::hasTable('departamento_ubicacion');
+        return \App\Support\Esquema::tieneTabla('tipos_ubicacion')
+            && \App\Support\Esquema::tieneColumna('ubicaciones', 'id_tipo_ubicacion')
+            && \App\Support\Esquema::tieneTabla('departamento_ubicacion');
     }
 
     /*

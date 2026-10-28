@@ -1665,7 +1665,7 @@ class AsignacionesIndex extends Component
             ],
             function (): array {
                 // Fecha de alta del equipo, si la tabla la registra.
-                $fechaAlta = \Illuminate\Support\Facades\Schema::hasColumn('equipos', 'fecha_registro')
+                $fechaAlta = \App\Support\Esquema::tieneColumna('equipos', 'fecha_registro')
                     ? 'e.fecha_registro'
                     : 'NULL';
 

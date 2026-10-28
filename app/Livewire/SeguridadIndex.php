@@ -1383,7 +1383,7 @@ class SeguridadIndex extends Component
         );
 
         // Cerrar sesiones abiertas de esa cuenta (sesiones en base de datos).
-        if (\Illuminate\Support\Facades\Schema::hasTable('sessions')) {
+        if (\App\Support\Esquema::tieneTabla('sessions')) {
             DB::table('sessions')->where('user_id', $id)->delete();
         }
 

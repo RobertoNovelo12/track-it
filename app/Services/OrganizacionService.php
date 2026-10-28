@@ -376,7 +376,7 @@ class OrganizacionService
         ];
 
         foreach (['logo_color_fondo', 'color_primario'] as $columnaNueva) {
-            if (array_key_exists($columnaNueva, $cambios) && ! Schema::hasColumn('configuracion_organizacion', $columnaNueva)) {
+            if (array_key_exists($columnaNueva, $cambios) && ! \App\Support\Esquema::tieneColumna('configuracion_organizacion', $columnaNueva)) {
                 unset($cambios[$columnaNueva]);
             }
         }
@@ -426,8 +426,8 @@ class OrganizacionService
                 'logo_escala',
                 'logo_modo_oscuro',
                 'actualizado_en',
-                ...(Schema::hasColumn('configuracion_organizacion', 'logo_color_fondo') ? ['logo_color_fondo'] : []),
-                ...(Schema::hasColumn('configuracion_organizacion', 'color_primario') ? ['color_primario'] : []),
+                ...(\App\Support\Esquema::tieneColumna('configuracion_organizacion', 'logo_color_fondo') ? ['logo_color_fondo'] : []),
+                ...(\App\Support\Esquema::tieneColumna('configuracion_organizacion', 'color_primario') ? ['color_primario'] : []),
             ]);
 
         if (! $fila) {
