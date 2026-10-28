@@ -44,6 +44,7 @@
         }"
 
         @click.outside="open = false"
+        @trackit-cerrar-menus.window="open = false"
 
         @keydown.escape.window="
             open = false

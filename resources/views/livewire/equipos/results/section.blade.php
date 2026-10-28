@@ -32,7 +32,7 @@
     result-singular="Equipo encontrado"
     result-plural="Equipos encontrados"
     empty-message="No se encontraron equipos con los filtros seleccionados."
-    min-width="1500px"
+    min-width="1375px"
 
     :columns="[
         [
@@ -93,15 +93,6 @@
             ]))),
             'default' => 'NA',
             'desktop' => false,
-        ],
-        [
-            'key' => 'direccion_ip',
-            'label' => 'Dirección IP',
-            'width' => '125px',
-            'sort' => 'direccion_ip',
-            'default' => 'NA',
-            'mobile' => 'filled',
-            'mobileLabel' => 'IP',
         ],
         [
             'key' => 'estado_nombre',

@@ -610,6 +610,7 @@
                                             x-cloak
 
                                             @click.outside="menuOpen = false"
+                                            @trackit-cerrar-menus.window="menuOpen = false"
 
                                             :style="'top:' + menuTop + 'px; left:' + menuLeft + 'px; z-index: 130;'"
 

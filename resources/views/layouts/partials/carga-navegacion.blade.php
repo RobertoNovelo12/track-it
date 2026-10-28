@@ -1,90 +1,100 @@
 {{-- ============================================================
-    ESQUELETO DE CARGA AL NAVEGAR
+    CARGA AL NAVEGAR Y AL CARGAR COMPONENTES (solo móvil)
     ------------------------------------------------------------
-    Al tocar un enlace con wire:navigate, si la página tarda más de
-    120 ms, el contenido se sustituye por un esqueleto animado para
-    que la respuesta se sienta inmediata. Al llegar la página nueva
-    desaparece solo. Estilos en línea (no requieren Vite).
+    - Escritorio: sin cambios. Mientras llega la página se ve la
+      barra de progreso y después el placeholder detallado de cada
+      componente Livewire.
+    - Móvil (< 768 px): un único spinner centrado.
+      · Al tocar un enlace wire:navigate, si tarda más de 120 ms,
+        el contenido se sustituye por el spinner.
+      · Los placeholders de componentes lazy (los que Livewire
+        marca con $wire.__lazyLoad) también se muestran como
+        spinner, para todas las pantallas sin tocar cada vista.
+    - Los menús (hojas del menú inferior, perfil) se cierran al
+      tocar la opción, sin esperar a que cargue la página.
+    Estilos en línea (no requieren Vite).
 ============================================================ --}}
 <style>
     #esqueletoNavegacion {
         display: none;
     }
 
-    html[data-navegando="true"] #esqueletoNavegacion {
-        display: block;
+    @keyframes trackit-girar {
+        to { transform: rotate(360deg); }
     }
 
-    html[data-navegando="true"] #contenido-principal > :not(#esqueletoNavegacion) {
-        display: none !important;
+    .trackit-spinner {
+        width: 2.25rem;
+        height: 2.25rem;
+        border-radius: 9999px;
+        border: 3px solid color-mix(in srgb, var(--theme-primary) 18%, transparent);
+        border-top-color: var(--theme-primary);
+        animation: trackit-girar 0.75s linear infinite;
     }
 
-    .esq-bloque {
-        border-radius: 0.5rem;
-        background: linear-gradient(
-            90deg,
-            var(--theme-surface-soft) 0%,
-            color-mix(in srgb, var(--theme-surface-soft) 60%, var(--theme-border) 40%) 50%,
-            var(--theme-surface-soft) 100%
-        );
-        background-size: 200% 100%;
-        animation: esq-brillo 1.2s ease-in-out infinite;
-    }
+    @media (max-width: 767.98px) {
+        /* Navegación entre páginas */
+        html[data-navegando="true"] #esqueletoNavegacion {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 60vh;
+        }
 
-    .esq-tarjeta {
-        padding: 1rem;
-        border: 1px solid var(--theme-border);
-        border-radius: 0.75rem;
-        background: var(--theme-surface);
-    }
+        html[data-navegando="true"] #contenido-principal > :not(#esqueletoNavegacion) {
+            display: none !important;
+        }
 
-    .esq-fila {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        padding: 0.75rem 0;
-        border-top: 1px solid var(--theme-border);
-    }
+        /* Placeholders de componentes lazy → spinner */
+        [x-init*="__lazyLoad"],
+        [x-intersect*="__lazyLoad"] {
+            position: relative;
+            min-height: 60vh;
+        }
 
-    .esq-fila:first-child {
-        border-top: 0;
-    }
+        [x-init*="__lazyLoad"] > *,
+        [x-intersect*="__lazyLoad"] > * {
+            display: none !important;
+        }
 
-    @keyframes esq-brillo {
-        from { background-position: 100% 0; }
-        to { background-position: -100% 0; }
+        [x-init*="__lazyLoad"]::after,
+        [x-intersect*="__lazyLoad"]::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 2.25rem;
+            height: 2.25rem;
+            margin: -1.125rem 0 0 -1.125rem;
+            border-radius: 9999px;
+            border: 3px solid color-mix(in srgb, var(--theme-primary) 18%, transparent);
+            border-top-color: var(--theme-primary);
+            animation: trackit-girar 0.75s linear infinite;
+        }
+
+        /* Si hay varios en la misma pantalla, solo gira el primero */
+        [x-init*="__lazyLoad"] ~ [x-init*="__lazyLoad"],
+        [x-intersect*="__lazyLoad"] ~ [x-intersect*="__lazyLoad"] {
+            min-height: 0;
+        }
+
+        [x-init*="__lazyLoad"] ~ [x-init*="__lazyLoad"]::after,
+        [x-intersect*="__lazyLoad"] ~ [x-intersect*="__lazyLoad"]::after {
+            display: none;
+        }
     }
 
     @media (prefers-reduced-motion: reduce) {
-        .esq-bloque { animation: none; }
+        .trackit-spinner,
+        [x-init*="__lazyLoad"]::after,
+        [x-intersect*="__lazyLoad"]::after {
+            animation-duration: 1.6s;
+        }
     }
 </style>
 
-<div id="esqueletoNavegacion" aria-hidden="true">
-    <div style="display: flex; flex-direction: column; gap: 1rem;">
-        {{-- Título y ruta --}}
-        <div class="esq-bloque" style="height: 1.5rem; width: min(14rem, 60%);"></div>
-        <div class="esq-bloque" style="height: 0.75rem; width: min(9rem, 40%);"></div>
-
-        {{-- Acciones --}}
-        <div style="display: flex; gap: 0.75rem; margin-top: 0.5rem;">
-            <div class="esq-bloque" style="height: 2.5rem; flex: 1; max-width: 10rem;"></div>
-            <div class="esq-bloque" style="height: 2.5rem; flex: 1; max-width: 10rem;"></div>
-        </div>
-
-        {{-- Tarjeta con filas --}}
-        <div class="esq-tarjeta">
-            @for ($fila = 0; $fila < 5; $fila++)
-                <div class="esq-fila">
-                    <div class="esq-bloque" style="height: 2.25rem; width: 2.25rem; flex-shrink: 0;"></div>
-                    <div style="flex: 1; display: flex; flex-direction: column; gap: 0.4rem;">
-                        <div class="esq-bloque" style="height: 0.8rem; width: {{ [72, 58, 66, 50, 62][$fila] }}%;"></div>
-                        <div class="esq-bloque" style="height: 0.65rem; width: {{ [40, 34, 46, 30, 38][$fila] }}%;"></div>
-                    </div>
-                </div>
-            @endfor
-        </div>
-    </div>
+<div id="esqueletoNavegacion" role="status" aria-label="Cargando">
+    <div class="trackit-spinner"></div>
 </div>
 
 <script>
@@ -106,8 +116,18 @@
             document.getElementById('contenido-principal')?.removeAttribute('aria-busy');
         };
 
-        document.addEventListener('livewire:navigate', () => {
-            terminar();
+        const alNavegar = (evento) => {
+            // Navegación cancelada (p. ej. cambios sin guardar): nada que mostrar.
+            if (evento.defaultPrevented) {
+                return;
+            }
+
+            // Cierra al instante hojas y menús desplegables abiertos.
+            window.dispatchEvent(new CustomEvent('trackit-cerrar-menus'));
+
+            if (! window.matchMedia('(max-width: 767.98px)').matches) {
+                return;
+            }
 
             temporizador = setTimeout(() => {
                 document.documentElement.setAttribute('data-navegando', 'true');
@@ -116,6 +136,13 @@
 
             // Por si la navegación se cancela o falla.
             limite = setTimeout(terminar, 10000);
+        };
+
+        document.addEventListener('livewire:navigate', (evento) => {
+            terminar();
+
+            // Se espera a que los demás oyentes decidan si cancelan.
+            setTimeout(() => alNavegar(evento), 0);
         });
 
         document.addEventListener('livewire:navigated', terminar);

@@ -808,6 +808,7 @@ document.addEventListener(
 
                         @click.outside="open = false"
                         @keydown.escape.window="open = false"
+                        @trackit-cerrar-menus.window="open = false"
 
                         class="relative"
                     >

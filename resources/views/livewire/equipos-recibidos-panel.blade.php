@@ -26,6 +26,7 @@
     x-data
     x-on:keydown.escape.window="$store.equiposRecibidos.abierto = false"
     x-on:click.outside="$store.equiposRecibidos.abierto = false"
+    x-on:trackit-cerrar-menus.window="$store.equiposRecibidos.abierto = false"
 >
     <button
         type="button"

@@ -184,6 +184,7 @@
                     <div
                         class="relative shrink-0"
                         @click.outside="menuOpen = false"
+                        @trackit-cerrar-menus.window="menuOpen = false"
                     >
 
                         <button

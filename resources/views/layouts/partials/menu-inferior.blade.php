@@ -598,6 +598,7 @@
     x-on:focusout.window="revisarTeclado()"
     x-on:keydown.escape.window="cerrar()"
     x-on:livewire:navigating.window="hoja = null; document.documentElement.style.overflow = ''"
+    x-on:trackit-cerrar-menus.window="hoja = null; document.documentElement.style.overflow = ''"
 >
 
     {{-- ========================================================

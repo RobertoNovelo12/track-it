@@ -363,7 +363,7 @@
 
     <x-ui.skeleton-table
         selectable
-        min-width="1500px"
+        min-width="1375px"
         :rows="max(5, min($placeholderPerPage, 8))"
         :columns="[
             ['label' => 'ID Equipo', 'width' => '140px'],
@@ -372,7 +372,6 @@
             ['label' => 'Marca', 'width' => '110px'],
             ['label' => 'Modelo', 'width' => '165px'],
             ['label' => 'Número de serie', 'width' => '175px'],
-            ['label' => 'Dirección IP', 'width' => '125px'],
             ['label' => 'Estado', 'width' => '125px', 'type' => 'status'],
             ['label' => app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['unidad_singular'] . ' / Departamento', 'width' => '225px'],
         ]"
