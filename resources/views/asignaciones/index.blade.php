@@ -6,7 +6,7 @@
 
 <div>
 
-    <livewire:asignaciones-index />
+    <livewire:asignaciones-index lazy />
 
 </div>
 

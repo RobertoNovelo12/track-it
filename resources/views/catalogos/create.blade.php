@@ -4,6 +4,6 @@
 
 @section('content')
 
-    <livewire:catalogos.crear-registro />
+    <livewire:catalogos.crear-registro lazy />
 
 @endsection

@@ -11,7 +11,7 @@
             mx-auto
         "
     >
-        <livewire:reasignacion-create />
+        <livewire:reasignacion-create lazy/>
     </div>
 
 @endsection 
