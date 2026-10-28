@@ -1369,6 +1369,15 @@ class EquipoCreate extends Component
         } catch (\Throwable) {
         }
 
+        // El detalle técnico (SQL, archivo, traza) solo llega al navegador en
+        // local (APP_DEBUG=true); en producción queda en los logs.
+        if (! config('app.debug')) {
+            return [
+                'ok' => false,
+                'message' => 'No se pudo guardar el equipo. Intenta de nuevo o contacta al administrador.',
+            ];
+        }
+
         return [
             'ok' => false,
             'message' => 'No se pudo guardar el equipo: ' . $error->getMessage(),

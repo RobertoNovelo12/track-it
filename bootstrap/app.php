@@ -48,6 +48,9 @@ return Application::configure(
             |
             */
 
+            // Cabeceras de seguridad en todas las páginas (app/Http/Middleware/CabecerasSeguridad).
+            $middleware->append(\App\Http\Middleware\CabecerasSeguridad::class);
+
             $middleware->alias([
                 'active.session' =>
                     EnsureActiveSession::class,

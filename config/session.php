@@ -169,7 +169,8 @@ return [
     |
     */
 
-    'secure' => env('SESSION_SECURE_COOKIE'),
+    // En producción (Render, siempre HTTPS) la cookie solo viaja cifrada.
+    'secure' => env('SESSION_SECURE_COOKIE', env('APP_ENV') === 'production' ? true : null),
 
     /*
     |--------------------------------------------------------------------------

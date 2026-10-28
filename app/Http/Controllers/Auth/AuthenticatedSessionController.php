@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
@@ -47,8 +49,35 @@ class AuthenticatedSessionController extends Controller
             'password' => [
                 'required',
                 'string',
+                'max:255',
             ],
         ]);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Límite de intentos (fuerza bruta)
+        |--------------------------------------------------------------------------
+        |
+        | - Por cuenta + IP: 5 intentos fallidos → espera de 5 minutos.
+        | - Por IP: 30 intentos fallidos en 15 minutos (varias cuentas
+        |   probadas desde el mismo lugar).
+        |
+        */
+
+        $llaveCuenta = 'login:'.sha1(Str::lower(trim($credentials['login'])).'|'.$request->ip());
+        $llaveIp = 'login-ip:'.sha1((string) $request->ip());
+
+        foreach ([[$llaveCuenta, 5], [$llaveIp, 30]] as [$llave, $maximo]) {
+            if (RateLimiter::tooManyAttempts($llave, $maximo)) {
+                $minutos = max(1, (int) ceil(RateLimiter::availableIn($llave) / 60));
+
+                throw ValidationException::withMessages([
+                    'login' => 'Demasiados intentos de inicio de sesión. Intenta de nuevo en '
+                        .$minutos.' '.($minutos === 1 ? 'minuto' : 'minutos').'.',
+                ]);
+            }
+        }
 
 
         /*
@@ -100,6 +129,9 @@ class AuthenticatedSessionController extends Controller
                 $user->getAuthPassword()
             )
         ) {
+            RateLimiter::hit($llaveCuenta, 300);
+            RateLimiter::hit($llaveIp, 900);
+
             throw ValidationException::withMessages([
                 'login' =>
                     'Las credenciales no coinciden con nuestros registros.',
@@ -112,6 +144,9 @@ class AuthenticatedSessionController extends Controller
         | Obtener estado del usuario
         |--------------------------------------------------------------------------
         */
+
+        // Contraseña correcta: se reinicia el contador de la cuenta.
+        RateLimiter::clear($llaveCuenta);
 
         $estado = DB::table('estados_usuario')
             ->where(
