@@ -851,23 +851,10 @@ class EquipoBajaMultiple extends Component
 
         $documento = $this->documento($equipos);
 
-        $logo = app(
-            \App\Services\OrganizacionService::class
-        )->logoContenido();
+        // Logo y fotos reducidos al tamaño en que se imprimen (más rápido en dompdf).
+        $imagenesPdf = app(\App\Services\ImagenPdfService::class);
 
-        $documento['logo'] = $logo
-            ? 'data:'
-                .$logo['mime']
-                .';base64,'
-                .base64_encode($logo['contenido'])
-            : 'data:image/png;base64,'
-                .base64_encode(
-                    file_get_contents(
-                        public_path(
-                            \App\Services\OrganizacionService::LOGO_PREDETERMINADO
-                        )
-                    )
-                );
+        $documento['logo'] = $imagenesPdf->logoDataUri();
 
         $documento['folio'] = 'BM-'
             .now('America/Cancun')->format('Ymd')
@@ -904,13 +891,11 @@ class EquipoBajaMultiple extends Component
 
                 $rutas[$campo] = $ruta;
 
-                $documento['fotos'][$titulo] =
-                    'data:'
-                    .Storage::disk('local')->mimeType($ruta)
-                    .';base64,'
-                    .base64_encode(
-                        Storage::disk('local')->get($ruta)
-                    );
+                $imagen = $imagenesPdf->dataUri($ruta, 900, 75);
+
+                if ($imagen !== null) {
+                    $documento['fotos'][$titulo] = $imagen;
+                }
             }
 
             $nombre = $documento['folio'].'.pdf';

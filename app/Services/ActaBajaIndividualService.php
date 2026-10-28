@@ -35,31 +35,14 @@ class ActaBajaIndividualService
     ): array {
         $organizacion = app(OrganizacionService::class);
 
-        $logo = $organizacion->logoContenido();
+        /*
+         * Logo y fotos reducidos al tamaño en que se imprimen (ver
+         * ImagenPdfService): dompdf tarda mucho con fotos de teléfono
+         * a resolución completa.
+         */
+        $imagenesPdf = app(ImagenPdfService::class);
 
-        $logoData = null;
-
-        if (
-            is_array($logo) &&
-            !empty($logo['contenido']) &&
-            !empty($logo['mime'])
-        ) {
-            $logoData = 'data:'
-                .$logo['mime']
-                .';base64,'
-                .base64_encode($logo['contenido']);
-        } else {
-            $rutaPredeterminada = public_path(
-                OrganizacionService::LOGO_PREDETERMINADO
-            );
-
-            if (is_file($rutaPredeterminada)) {
-                $logoData = 'data:image/png;base64,'
-                    .base64_encode(
-                        file_get_contents($rutaPredeterminada)
-                    );
-            }
-        }
+        $logoData = $imagenesPdf->logoDataUri();
 
         $imagenes = [];
 
@@ -71,19 +54,10 @@ class ActaBajaIndividualService
         ] as $clave => $etiqueta) {
             $ruta = $fotos[$clave] ?? null;
 
-            if (
-                $ruta &&
-                Storage::disk('local')->exists($ruta)
-            ) {
-                $imagenes[$etiqueta] = 'data:'
-                    .(
-                        Storage::disk('local')->mimeType($ruta)
-                        ?: 'image/jpeg'
-                    )
-                    .';base64,'
-                    .base64_encode(
-                        Storage::disk('local')->get($ruta)
-                    );
+            $imagen = $imagenesPdf->dataUri($ruta, 900, 75);
+
+            if ($imagen !== null) {
+                $imagenes[$etiqueta] = $imagen;
             }
         }
 
