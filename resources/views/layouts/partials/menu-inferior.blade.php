@@ -490,11 +490,7 @@
         },
 
         /*
-         * Al tocar: la sección se marca y la línea se desliza en ese
-         * momento; la página nueva llega con la línea ya en su lugar.
-         */
-        /*
-         * El menú persiste entre páginas (@persist en layouts/app):
+         * El menú persiste entre páginas (directiva persist en layouts/app):
          * al llegar una página nueva se marcan las opciones según su
          * ruta (#trackitRutaActual, fuera del menú, viene en cada página).
          */
@@ -527,6 +523,10 @@
             this.moverIndicador(this.itemActivo());
         },
 
+        /*
+         * Al tocar: la sección se marca y la línea se desliza en ese
+         * momento; la página nueva llega con la línea ya en su lugar.
+         */
         marcar(elemento) {
             if (! elemento) {
                 return;
