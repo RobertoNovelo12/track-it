@@ -1447,6 +1447,9 @@ document.addEventListener(
                 ======================================================== --}}
                 <main id="contenido-principal" tabindex="-1" class="p-6 outline-none">
 
+                    {{-- Esqueleto mientras carga la siguiente página (wire:navigate) --}}
+                    @include('layouts.partials.carga-navegacion')
+
                     {{-- Aviso fijo si faltan datos para recuperar la contraseña --}}
                     @include('layouts.partials.aviso-cuenta-incompleta')
 

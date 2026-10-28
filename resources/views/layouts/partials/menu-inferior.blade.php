@@ -176,16 +176,31 @@
         position: relative;
     }
 
-    .mi-item[data-activo="true"]::before {
-        content: "";
+    /*
+     * Marca superior: un solo indicador que se desliza hacia la
+     * sección tocada (antes de que cargue la página, así no se ve
+     * trabado). Sin JavaScript se queda oculto y el activo sigue
+     * marcado por color y peso.
+     */
+    .mi-indicador {
         position: absolute;
         top: 0;
-        left: 50%;
+        left: 0;
         width: 1.75rem;
         height: 3px;
-        transform: translateX(-50%);
         border-radius: 0 0 3px 3px;
         background: var(--theme-primary);
+        opacity: 0;
+        pointer-events: none;
+        transform: translateX(0);
+        transition:
+            transform 280ms cubic-bezier(0.22, 0.8, 0.24, 1),
+            opacity 150ms ease-out;
+        will-change: transform;
+    }
+
+    .mi-item {
+        transition: color 180ms ease-out;
     }
 
     /* Botón central: Escanear. */
@@ -403,6 +418,8 @@
     .mi-arriba { transform: translateY(0); }
 
     @media (prefers-reduced-motion: reduce) {
+        .mi-indicador,
+        .mi-item,
         .mi-barra,
         .mi-anim-entrar,
         .mi-anim-salir { transition: none; }
@@ -414,6 +431,71 @@
 
     x-data="{
         hoja: null,
+
+        init() {
+            // Posición inicial (sin animar) bajo la sección activa.
+            this.$nextTick(() => this.moverIndicador(this.itemActivo(), false));
+
+            const reubicar = () => this.moverIndicador(this.itemActivo(), false);
+            window.addEventListener('resize', reubicar, { passive: true });
+            document.addEventListener('livewire:navigating', () => window.removeEventListener('resize', reubicar), { once: true });
+        },
+
+        itemActivo() {
+            return this.$root.querySelector('.mi-barra .mi-item[data-activo=true]');
+        },
+
+        moverIndicador(elemento, animar = true) {
+            const indicador = this.$refs.indicador;
+
+            if (! indicador) {
+                return;
+            }
+
+            if (! elemento) {
+                indicador.style.opacity = '0';
+
+                return;
+            }
+
+            const barra = indicador.parentElement.getBoundingClientRect();
+            const caja = elemento.getBoundingClientRect();
+            const x = caja.left - barra.left + (caja.width - indicador.offsetWidth) / 2;
+
+            if (! animar) {
+                indicador.style.transition = 'none';
+            }
+
+            indicador.style.transform = 'translateX(' + x + 'px)';
+            indicador.style.opacity = '1';
+
+            if (! animar) {
+                indicador.offsetWidth;
+                indicador.style.transition = '';
+            }
+        },
+
+        /*
+         * Al tocar: la sección se marca y la línea se desliza en ese
+         * momento; la página nueva llega con la línea ya en su lugar.
+         */
+        marcar(elemento) {
+            if (! elemento) {
+                return;
+            }
+
+            this.$root.querySelectorAll('.mi-barra .mi-item').forEach((item) => {
+                item.dataset.activo = item === elemento ? 'true' : 'false';
+
+                if (item === elemento) {
+                    item.setAttribute('aria-current', 'page');
+                } else {
+                    item.removeAttribute('aria-current');
+                }
+            });
+
+            this.moverIndicador(elemento);
+        },
         teclado: false,
         inicioToque: null,
         origenFoco: null,
@@ -518,11 +600,13 @@
         x-bind:data-oculta="teclado ? 'true' : 'false'"
         x-bind:aria-hidden="teclado ? 'true' : 'false'"
     >
+        <span class="mi-indicador" x-ref="indicador" aria-hidden="true"></span>
 
         {{-- INICIO --}}
         <a
             href="{{ route('dashboard') }}"
             wire:navigate
+            x-on:click="marcar($el)"
             class="mi-item"
             data-activo="{{ request()->routeIs('dashboard') ? 'true' : 'false' }}"
             @if (request()->routeIs('dashboard')) aria-current="page" @endif
@@ -540,6 +624,7 @@
             <button
                 type="button"
                 class="mi-item"
+                x-ref="itemInventario"
                 data-activo="{{ $enInventario ? 'true' : 'false' }}"
                 @if ($enInventario) aria-current="page" @endif
                 aria-haspopup="dialog"
@@ -576,6 +661,7 @@
             <a
                 href="{{ route('asignaciones.index') }}"
                 wire:navigate
+                x-on:click="marcar($el)"
                 class="mi-item"
                 data-activo="{{ request()->routeIs('asignaciones.*') ? 'true' : 'false' }}"
                 @if (request()->routeIs('asignaciones.*')) aria-current="page" @endif
@@ -594,6 +680,7 @@
         <button
             type="button"
             class="mi-item"
+            x-ref="itemMas"
             data-activo="{{ $masActivo ? 'true' : 'false' }}"
             @if ($masActivo) aria-current="page" @endif
             aria-haspopup="dialog"
@@ -629,6 +716,7 @@
     @if (Route::has('equipos.index'))
         <div
             x-ref="hoja_inventario"
+            x-on:click="if ($event.target.closest('a[href]')) marcar($refs.itemInventario)"
             class="mi-hoja"
             role="dialog"
             aria-modal="true"
@@ -721,6 +809,7 @@
     ======================================================== --}}
     <div
         x-ref="hoja_mas"
+        x-on:click="if ($event.target.closest('a[href]')) marcar($refs.itemMas)"
         class="mi-hoja"
         role="dialog"
         aria-modal="true"
