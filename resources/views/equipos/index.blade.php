@@ -10,7 +10,7 @@
     @if (session('descargar_reporte'))
         <span
             x-data
-            x-init="window.location.assign(@js(route('reportes.download', session('descargar_reporte'))))"
+            x-init="window.trackitDescargar(@js(route('reportes.download', session('descargar_reporte'))))"
             hidden
             aria-hidden="true"
         ></span>

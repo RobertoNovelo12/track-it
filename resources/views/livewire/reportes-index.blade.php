@@ -1553,7 +1553,7 @@
                     ],
                     [
                         'label' => 'Descargar',
-                        'js' => 'window.location.href = ' . \Illuminate\Support\Js::from(route('reportes.download', $reporte)),
+                        'js' => 'window.trackitDescargar(' . \Illuminate\Support\Js::from(route('reportes.download', $reporte)) . ')',
                     ],
                     // Antes se borraba al instante; ahora va a la papelera (30 días).
                     \App\Support\PapeleraEntidades::accion('reporte', $reporte->id_reporte),

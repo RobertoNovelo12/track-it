@@ -383,6 +383,9 @@ document.addEventListener(
 
         @include('layouts.partials.volver-script')
 
+        {{-- Descargas que los gestores de descargas no capturan --}}
+        @include('layouts.partials.descargas-script')
+
         @include('layouts.partials.accesibilidad-script')
 
         @include('layouts.partials.cambios-sin-guardar')
