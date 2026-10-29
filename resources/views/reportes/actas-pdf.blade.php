@@ -520,8 +520,8 @@
 
 <body>
 @php
-    // Logo reducido al tamaño impreso y sin transparencia (más rápido en dompdf).
-    $logoPalladiumPdf = app(\App\Services\ImagenPdfService::class)->archivoPublicoDataUri('images/logo-grand-palladium.png');
+    // Logo actual de la organización (o el predeterminado), reducido y sin transparencia.
+    $logoPalladiumPdf = app(\App\Services\ImagenPdfService::class)->logoDataUri();
 @endphp
 
 

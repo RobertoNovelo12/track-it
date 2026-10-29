@@ -331,9 +331,9 @@
         $bajasFormato ?? []
     );
 
-    // Logo reducido al tamaño impreso y sin transparencia (más rápido en dompdf).
+    // Logo actual de la organización (o el predeterminado), reducido y sin transparencia.
     $logo = app(\App\Services\ImagenPdfService::class)
-        ->archivoPublicoDataUri('images/logo-grand-palladium.png');
+        ->logoDataUri();
 @endphp
 
 
