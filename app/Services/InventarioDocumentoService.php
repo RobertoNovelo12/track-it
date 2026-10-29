@@ -40,6 +40,7 @@ class InventarioDocumentoService
                 'equipo' => $equipos[0],
                 'generadoEn' => now(),
             ])->setPaper('letter', 'portrait');
+            $this->opcionesPdf($pdf);
 
             return response()->streamDownload(
                 static function () use ($pdf) { echo $pdf->output(); },
@@ -52,12 +53,26 @@ class InventarioDocumentoService
             'equipos' => $equipos,
             'generadoEn' => now(),
         ])->setPaper('letter', 'portrait');
+        $this->opcionesPdf($pdf);
 
         return response()->streamDownload(
             static function () use ($pdf) { echo $pdf->output(); },
             'inventario_equipos_' . $fecha . '.pdf',
             ['Content-Type' => 'application/pdf']
         );
+    }
+
+    /*
+     * Solo se incrustan en el PDF las letras que se usan (antes iba la
+     * fuente DejaVu completa: ~870 KB por archivo, aunque fuera 1 equipo).
+     */
+    private function opcionesPdf($pdf): void
+    {
+        $pdf->setOption([
+            'enable_font_subsetting' => true,
+            'enable_remote' => false,
+            'enable_php' => false,
+        ]);
     }
 
     public function preparar(Collection $filas): array
@@ -257,7 +272,15 @@ class InventarioDocumentoService
             return [];
         }
 
-        $campos = DB::table('tipo_equipo_campos as t')
+        /*
+         * Configuración de los tipos (campos, opciones y catálogo): cambia
+         * poco, así que va en la caché del módulo «catalogos», que se
+         * renueva al editar un tipo de equipo. Ahorra 3 consultas remotas.
+         */
+        $cache = app(SystemCacheService::class);
+        sort($tipos);
+
+        $campos = collect($cache->remember('catalogos', 'exportacion.campos', ['tipos' => $tipos], fn (): array => DB::table('tipo_equipo_campos as t')
             ->join('campos_equipo as c', 'c.id_campo', '=', 't.id_campo')
             ->whereIn('t.id_tipo_equipo', $tipos)
             ->where('t.visible', true)
@@ -267,15 +290,18 @@ class InventarioDocumentoService
                 't.id_tipo_equipo', 't.id_tipo_campo', 't.id_campo',
                 't.origen_dato', 't.tabla_destino', 't.columna_destino',
                 't.etiqueta', 'c.nombre as nombre_campo', 'c.tipo_control',
-            ]);
+            ])
+            ->all()));
 
-        $catalogos = DB::table('catalogo_valores')->pluck('nombre', 'id_valor')->all();
-        $opciones = DB::table('tipo_equipo_campo_opciones')
-            ->whereIn('id_tipo_campo', $campos->pluck('id_tipo_campo')->all())
+        $catalogos = $cache->rememberSimple('catalogos', 'exportacion.catalogo_valores', fn (): array => DB::table('catalogo_valores')->pluck('nombre', 'id_valor')->all());
+
+        $idsTipoCampo = $campos->pluck('id_tipo_campo')->map(fn ($id) => (int) $id)->sort()->values()->all();
+        $opciones = $cache->remember('catalogos', 'exportacion.opciones', ['campos' => $idsTipoCampo], fn (): array => DB::table('tipo_equipo_campo_opciones')
+            ->whereIn('id_tipo_campo', $idsTipoCampo)
             ->get(['id_tipo_campo', 'id_opcion', 'nombre'])
             ->groupBy('id_tipo_campo')
             ->map(fn ($grupo) => $grupo->pluck('nombre', 'id_opcion')->all())
-            ->all();
+            ->all());
 
         $atributos = collect();
         foreach (array_chunk($ids, 400) as $lote) {
