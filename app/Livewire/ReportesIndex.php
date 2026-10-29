@@ -1185,6 +1185,46 @@ class ReportesIndex extends Component
 
     }
 
+    /*
+     * Cifras generales para «Resumen» (debajo de los filtros). Se guardan
+     * un minuto para no consultar la base en cada carga.
+     */
+    public function resumenReportes(): array
+    {
+        return Cache::remember('reportes:resumen:v1', now()->addMinute(), function (): array {
+            $contar = function (string $tabla, ?\Closure $condicion = null): int {
+                try {
+                    if (! \App\Support\Esquema::tieneTabla($tabla)) {
+                        return 0;
+                    }
+
+                    $consulta = DB::table($tabla);
+
+                    if ($condicion) {
+                        $condicion($consulta);
+                    }
+
+                    return (int) $consulta->count();
+                } catch (Throwable $e) {
+                    report($e);
+
+                    return 0;
+                }
+            };
+
+            return [
+                'altas' => $contar('equipos'),
+                // Equipos distintos (una baja múltiple tiene una fila por equipo).
+                'bajas' => \App\Support\Esquema::tieneTabla('bajas') ? (int) DB::table('bajas')->distinct()->count('id_equipo') : 0,
+                'asignaciones' => $contar('asignaciones', fn ($q) => $q->whereNull('fecha_fin')),
+                // Reasignación = movimiento con asignación anterior y nueva.
+                'reasignaciones' => $contar('movimientos', fn ($q) => $q->whereNotNull('id_asignacion_anterior')->whereNotNull('id_asignacion_nueva')),
+                'mantenimientos' => $contar('mantenimientos'),
+                'reportes' => $contar('reportes_generados'),
+            ];
+        });
+    }
+
     public function render()
 
     {
