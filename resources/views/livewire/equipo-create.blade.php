@@ -396,10 +396,9 @@
                     sectionKey: 'adicional',
                 },
 
-                // Ubicación opcional en todos los tipos de equipo.
-                // Se guarda en equipos.id_ubicacion (sin exigir configurar el campo por tipo).
+                // Ubicación: solo si el tipo la agregó en su formulario
+                // (Tipos de equipo › Campos disponibles › Ubicación).
                 id_ubicacion: {
-                    alwaysVisible: true,
                     model: 'idUbicacion',
                     label: 'Ubicación',
                     type: 'select',

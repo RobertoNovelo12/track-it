@@ -888,9 +888,9 @@
                     sectionKey: 'adicional',
                 },
 
-                // Ubicación opcional en todos los tipos, también al editar.
+                // Ubicación: solo si el tipo la agregó en su formulario, o si
+                // el equipo ya tiene una guardada (para verla o cambiarla).
                 id_ubicacion: {
-                    alwaysVisible: true,
                     model: 'idUbicacion',
                     label: 'Ubicación',
                     type: 'select',
