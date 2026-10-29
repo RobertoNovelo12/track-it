@@ -1570,7 +1570,16 @@ class EquipoCreate extends Component
                 |--------------------------------------------------------------------------
                 */
 
-                if ($physical) {
+                /*
+                 * Solo si el tipo tiene campos guardados en esa tabla. Los
+                 * tipos creados con el formulario guardan sus campos en
+                 * atributos_equipo; sin esto se agregaba una fila vacía en
+                 * la tabla antigua que coincide con el número de su tipo.
+                 */
+                $usaTablaFisica = $physical && collect($definitions)
+                    ->contains(fn (array $field): bool => ($field['origen_dato'] ?? null) === 'tabla_tipo');
+
+                if ($usaTablaFisica) {
                     $row = [
                         'id_equipo' => $idEquipo,
                     ];
