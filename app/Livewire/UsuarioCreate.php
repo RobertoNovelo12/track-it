@@ -201,7 +201,7 @@ class UsuarioCreate extends Component
                         ->where(fn ($query) => $query->where('activo', true)),
                 ],
 
-                'password' => ['required', 'string', 'min:8', 'same:passwordConfirmation'],
+                'password' => ['required', 'string', ...\App\Support\PoliticaContrasena::reglas(), 'same:passwordConfirmation'],
                 'passwordConfirmation' => ['required', 'string'],
             ],
             [
@@ -225,7 +225,7 @@ class UsuarioCreate extends Component
                 'idRol.required' => 'Selecciona el rol.',
                 'idRol.exists' => 'El rol seleccionado no está disponible.',
                 'password.required' => 'Escribe una contraseña o genera una.',
-                'password.min' => 'La contraseña debe tener al menos 8 caracteres.',
+                ...\App\Support\PoliticaContrasena::mensajes('password'),
                 'password.same' => 'Las contraseñas no coinciden.',
                 'passwordConfirmation.required' => 'Confirma la contraseña.',
             ]

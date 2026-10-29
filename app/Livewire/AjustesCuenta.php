@@ -946,7 +946,8 @@ class AjustesCuenta extends Component
             'newPassword' => [
                 'required',
                 'string',
-                'min:8',
+                // Política única (App\Support\PoliticaContrasena).
+                ...\App\Support\PoliticaContrasena::reglas(),
             ],
 
             'newPasswordConfirmation' => [
@@ -961,8 +962,7 @@ class AjustesCuenta extends Component
             'newPassword.required' =>
                 'Ingresa una nueva contraseña.',
 
-            'newPassword.min' =>
-                'La nueva contraseña debe tener al menos 8 caracteres.',
+            ...\App\Support\PoliticaContrasena::mensajes('newPassword'),
 
             'newPasswordConfirmation.required' =>
                 'Confirma la nueva contraseña.',

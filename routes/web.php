@@ -47,6 +47,7 @@ Route::middleware([
     'active.session',
     'auth',
     'password.temporal',
+    'dosfactores.admin',
 ])->group(function () {
 
     /*

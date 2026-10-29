@@ -58,6 +58,10 @@ return Application::configure(
                 // Obliga a cambiar la contraseña temporal (restablecida por un administrador).
                 'password.temporal' =>
                     \App\Http\Middleware\ExigirCambioContrasena::class,
+
+                // Administradores: verificación en dos pasos obligatoria.
+                'dosfactores.admin' =>
+                    \App\Http\Middleware\ExigirDosFactoresAdmin::class,
             ]);
 
         }

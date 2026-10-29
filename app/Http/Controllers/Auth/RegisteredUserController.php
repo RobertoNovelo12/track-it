@@ -219,9 +219,8 @@ class RegisteredUserController extends Controller
             'password' => [
                 'required',
                 'string',
-                'min:8',
-                // Mayúscula, número, símbolo especial y sin espacios.
-                'regex:/^(?=.*\p{Lu})(?=.*[0-9])(?=.*[^\p{L}\p{N}\s])\S{8,}$/u',
+                // Política única (App\Support\PoliticaContrasena).
+                ...\App\Support\PoliticaContrasena::reglas(),
                 'confirmed',
             ],
         ];
@@ -276,8 +275,7 @@ class RegisteredUserController extends Controller
             'numero_colaborador.regex' => 'El número de colaborador debe contener únicamente dígitos (0-9).',
             'correo.email' => 'Introduce una dirección de correo válida.',
             'correo.regex' => 'El correo tiene caracteres no permitidos. Puedes usar letras, números, puntos, guiones, guion bajo y +.',
-            'password.min' => 'La contraseña debe tener al menos 8 caracteres.',
-            'password.regex' => 'La contraseña debe tener al menos 8 caracteres, una mayúscula, un número y un carácter especial, sin espacios.',
+            ...\App\Support\PoliticaContrasena::mensajes('password'),
             'password.confirmed' => 'La confirmación de contraseña no coincide.',
             'fecha_nacimiento.required' => 'Escribe tu fecha de nacimiento.',
             'fecha_nacimiento.date' => 'Escribe una fecha de nacimiento válida.',

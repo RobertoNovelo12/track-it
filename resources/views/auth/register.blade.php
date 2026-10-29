@@ -191,14 +191,14 @@
                     <div class="h-px flex-1 bg-[var(--theme-border)]"></div>
                 </div>
                 <p class="mt-2 text-[11px] text-[var(--theme-text-muted)]">
-                    Mínimo 8 caracteres, incluyendo una mayúscula, un número y un símbolo especial; sin espacios.
+                    Mínimo 10 caracteres, incluyendo mayúscula, minúscula, número y un símbolo especial; sin espacios.
                 </p>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                     <div class="relative">
                         <input id="password" type="password" name="password" placeholder="Contraseña"
-                            autocomplete="new-password" required minlength="8" class="{{ $campoClase }} pr-10">
+                            autocomplete="new-password" required minlength="10" class="{{ $campoClase }} pr-10">
                         <button type="button" data-password-toggle onclick="togglePassword('password', this)" aria-pressed="false"
                             class="absolute inset-y-0 right-3 flex items-center text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] transition-colors"
                             aria-label="Mostrar u ocultar contraseña">
@@ -213,7 +213,7 @@
                 <div>
                     <div class="relative">
                         <input id="password_confirmation" type="password" name="password_confirmation"
-                            placeholder="Confirmar contraseña" autocomplete="new-password" required minlength="8"
+                            placeholder="Confirmar contraseña" autocomplete="new-password" required minlength="10"
                             class="{{ $campoClase }} pr-10">
                         <button type="button" data-password-toggle onclick="togglePassword('password_confirmation', this)" aria-pressed="false"
                             class="absolute inset-y-0 right-3 flex items-center text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] transition-colors"
@@ -309,11 +309,11 @@
         }
         const password = form.querySelector('[name="password"]');
         const confirmacion = form.querySelector('[name="password_confirmation"]');
-        const formatoContrasena = /^(?=.*\p{Lu})(?=.*[0-9])(?=.*[^\p{L}\p{N}\s])\S{8,}$/u;
+        const formatoContrasena = /^(?=.*\p{Lu})(?=.*\p{Ll})(?=.*[0-9])(?=.*[^\p{L}\p{N}\s])\S{10,}$/u;
         const validarPassword = () => {
             if (password) password.setCustomValidity(
                 password.value && !formatoContrasena.test(password.value)
-                    ? 'Usa al menos 8 caracteres, una mayúscula, un número y un símbolo especial, sin espacios.' : ''
+                    ? 'Usa al menos 10 caracteres, con mayúscula, minúscula, número y un símbolo especial, sin espacios.' : ''
             );
             if (confirmacion) confirmacion.setCustomValidity(
                 confirmacion.value && confirmacion.value !== (password?.value ?? '') ? 'Las contraseñas no coinciden.' : ''

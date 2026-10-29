@@ -14,7 +14,7 @@
 
     <p class="mb-5 text-center text-xs leading-relaxed text-[var(--theme-text-muted)]">
         Entraste con una contraseña temporal. Para continuar, elige una nueva:
-        al menos 8 caracteres, una mayúscula, un número y un carácter especial, sin espacios.
+        al menos 10 caracteres, con mayúscula, minúscula, número y carácter especial, sin espacios.
     </p>
 
     <form method="POST" action="{{ route('password.cambiar.guardar') }}" class="space-y-4">
@@ -27,7 +27,7 @@
                 placeholder="Nueva contraseña"
                 autocomplete="new-password"
                 required
-                minlength="8"
+                minlength="10"
                 class="{{ $campoClase }}"
             >
 
@@ -43,7 +43,7 @@
                 placeholder="Confirmar nueva contraseña"
                 autocomplete="new-password"
                 required
-                minlength="8"
+                minlength="10"
                 class="{{ $campoClase }}"
             >
         </div>

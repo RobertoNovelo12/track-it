@@ -467,8 +467,8 @@
                             text-[var(--theme-text-muted)]
                         "
                     >
-                        Utiliza al menos 8 caracteres y una contraseña diferente
-                        a la actual.
+                        Al menos 10 caracteres, con mayúscula, minúscula, número y
+                        carácter especial, sin espacios, y diferente a la actual.
                     </p>
 
                 </div>

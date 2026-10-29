@@ -38,15 +38,12 @@ class CambioContrasenaController extends Controller
             'password' => [
                 'required',
                 'string',
-                'min:8',
-                // Misma política que el registro.
-                'regex:/^(?=.*\p{Lu})(?=.*[0-9])(?=.*[^\p{L}\p{N}\s])\S{8,}$/u',
+                // Política única (App\Support\PoliticaContrasena).
+                ...\App\Support\PoliticaContrasena::reglas(),
                 'confirmed',
             ],
-        ], [
+        ], \App\Support\PoliticaContrasena::mensajes('password') + [
             'password.required' => 'Escribe tu nueva contraseña.',
-            'password.min' => 'La contraseña debe tener al menos 8 caracteres.',
-            'password.regex' => 'La contraseña debe tener al menos 8 caracteres, una mayúscula, un número y un carácter especial, sin espacios.',
             'password.confirmed' => 'La confirmación de contraseña no coincide.',
         ]);
 

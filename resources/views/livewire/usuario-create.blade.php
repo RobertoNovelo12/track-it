@@ -207,7 +207,7 @@
                     @error('password')
                         <p class="{{ $error }}">{{ $message }}</p>
                     @else
-                        <p class="mt-1 text-xs text-[var(--theme-text-muted)]">Mínimo 8 caracteres.</p>
+                        <p class="mt-1 text-xs text-[var(--theme-text-muted)]">Mínimo 10 caracteres, con mayúscula, minúscula, número y carácter especial.</p>
                     @enderror
                 </div>
 
