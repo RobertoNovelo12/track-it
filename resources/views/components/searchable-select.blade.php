@@ -38,6 +38,13 @@
     'allowCustom' => false,
     'customPrefix' => 'texto:',
     'customHint' => 'sin cuenta',
+
+    /*
+     * Cuántas opciones se pintan al abrir; al llegar al final de la lista
+     * se agregan las siguientes. La búsqueda siempre revisa todas.
+     */
+    'pageSize' => 10,
+    'loadingText' => 'Cargando más…',
 ])
 
 @php
@@ -108,6 +115,10 @@
         allowCustom: @js((bool) $allowCustom),
         customPrefix: @js((string) $customPrefix),
 
+        porPagina: @js(max(1, (int) $pageSize)),
+        limite: @js(max(1, (int) $pageSize)),
+        cargandoMas: false,
+
         /*
         |--------------------------------------------------------------------------
         | Inicialización
@@ -123,6 +134,50 @@
                 if (!this.open) {
                     this.syncSelectedLabel();
                 }
+            });
+
+            // Nueva búsqueda: volver al primer lote y al inicio de la lista.
+            this.$watch('query', () => {
+                this.limite = this.porPagina;
+
+                if (this.$refs.lista) {
+                    this.$refs.lista.scrollTop = 0;
+                }
+            });
+        },
+
+        /*
+        |--------------------------------------------------------------------------
+        | Carga por lotes
+        |--------------------------------------------------------------------------
+        */
+
+        get visibles() {
+            return this.filtered.slice(0, this.limite);
+        },
+
+        get hayMas() {
+            return this.filtered.length > this.limite;
+        },
+
+        revisarScroll(evento) {
+            const nodo = evento.target;
+
+            if (nodo.scrollTop + nodo.clientHeight >= nodo.scrollHeight - 40) {
+                this.cargarMas();
+            }
+        },
+
+        cargarMas() {
+            if (!this.hayMas || this.cargandoMas) {
+                return;
+            }
+
+            this.cargandoMas = true;
+
+            requestAnimationFrame(() => {
+                this.limite += this.porPagina;
+                this.cargandoMas = false;
             });
         },
 
@@ -652,6 +707,8 @@
     <div
         x-show="open && !disabled"
         x-cloak
+        x-ref="lista"
+        @scroll.passive="revisarScroll($event)"
 
         class="
             absolute
@@ -728,7 +785,7 @@
         ======================================================== --}}
 
         <template
-            x-for="option in filtered"
+            x-for="option in visibles"
             :key="option.value"
         >
             <div
@@ -753,6 +810,20 @@
                 ])
             ></div>
         </template>
+
+        {{-- Quedan más opciones: se agregan al llegar aquí. --}}
+        <div
+            x-show="hayMas"
+            @class([
+                'flex items-center justify-center gap-2 text-[var(--theme-text-muted)]',
+                'px-3 py-2 text-xs' => $compact,
+                'px-3 py-2.5 text-xs' => ! $compact,
+            ])
+            role="status"
+        >
+            <span class="inline-block h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-[var(--theme-border-strong)] border-t-[var(--theme-primary)]" aria-hidden="true"></span>
+            <span>{{ $loadingText }}</span>
+        </div>
 
         {{-- ========================================================
             SIN RESULTADOS

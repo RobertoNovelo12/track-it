@@ -1486,7 +1486,7 @@ class EquipoCreate extends Component
                 $definitions,
                 $values,
                 $physical,
-                $codigoInventario,
+                &$codigoInventario,
                 $organizacion,
                 $programas
             ) {
@@ -1554,6 +1554,15 @@ class EquipoCreate extends Component
                         ],
                         'id_equipo'
                     );
+
+                // Si otro registro se adelantó, el código debe seguir al ID real.
+                if ($codigoInventario !== $this->codigoParaId((int) $idEquipo)) {
+                    $codigoInventario = $this->codigoParaId((int) $idEquipo);
+
+                    DB::table('equipos')
+                        ->where('id_equipo', $idEquipo)
+                        ->update(['codigo_inventario' => $codigoInventario]);
+                }
 
                 /*
                 |--------------------------------------------------------------------------
@@ -1801,30 +1810,41 @@ class EquipoCreate extends Component
 
     public function getCodigoInventarioPreviewProperty(): string
     {
-        $ultimo = DB::table('equipos')
-            ->max('id_equipo');
-
-        return 'ACT-'
-            . str_pad(
-                (string) (($ultimo ?? 0) + 1),
-                6,
-                '0',
-                STR_PAD_LEFT
-            );
+        return $this->codigoParaId($this->siguienteIdEquipo());
     }
 
     private function generarCodigoInventario(): string
     {
-        $ultimo = DB::table('equipos')
-            ->max('id_equipo');
+        return $this->codigoParaId($this->siguienteIdEquipo());
+    }
 
-        return 'ACT-'
-            . str_pad(
-                (string) (($ultimo ?? 0) + 1),
-                6,
-                '0',
-                STR_PAD_LEFT
-            );
+    private function codigoParaId(int $id): string
+    {
+        return 'ACT-' . str_pad((string) $id, 6, '0', STR_PAD_LEFT);
+    }
+
+    /*
+     * Siguiente ID según el contador de la base de datos (no el ID más
+     * alto existente): los IDs borrados o en la papelera nunca se
+     * reutilizan, así que el código tampoco se repite.
+     */
+    private function siguienteIdEquipo(): int
+    {
+        try {
+            $secuencia = DB::selectOne(
+                "select pg_get_serial_sequence('public.equipos', 'id_equipo') as nombre"
+            )?->nombre;
+
+            if ($secuencia) {
+                $estado = DB::selectOne('select last_value, is_called from ' . $secuencia);
+
+                return (int) $estado->last_value + ($estado->is_called ? 1 : 0);
+            }
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
+        return (int) DB::table('equipos')->max('id_equipo') + 1;
     }
 
     public function placeholder()
