@@ -200,14 +200,16 @@ class PapeleraConfirmar extends Component
             return;
         }
 
-        $this->dispatch(
-            'toast',
-            type: $movidos > 0 ? 'success' : 'warning',
-            title: $movidos > 0 ? 'Movidos a la papelera' : 'No se movió nada',
-            message: $movidos > 0
+        // La página se recarga: el aviso se muestra al llegar (sesión).
+        session()->flash('toast', [
+            'type' => $movidos > 0 ? 'success' : 'warning',
+            'title' => $movidos > 0 ? 'Movidos a la papelera' : 'No se movió nada',
+            'message' => $movidos > 0
                 ? ($movidos === 1 ? 'Se movió 1 elemento.' : 'Se movieron '.$movidos.' elementos.').' Se podrán restaurar durante '.PapeleraEntidades::DIAS.' días.'
                 : 'Los elementos cambiaron mientras tanto. Actualiza la página e intenta de nuevo.',
-        );
+        ]);
+
+        $this->dispatch('notificaciones-actualizadas');
 
         $this->abierto = false;
 
@@ -254,12 +256,14 @@ class PapeleraConfirmar extends Component
             return;
         }
 
-        $this->dispatch(
-            'toast',
-            type: 'success',
-            title: 'Movido a la papelera',
-            message: '«'.$this->etiqueta.'» se podrá restaurar durante '.PapeleraEntidades::DIAS.' días.',
-        );
+        // La página se recarga: el aviso se muestra al llegar (sesión).
+        session()->flash('toast', [
+            'type' => 'success',
+            'title' => 'Movido a la papelera',
+            'message' => '«'.$this->etiqueta.'» se podrá restaurar durante '.PapeleraEntidades::DIAS.' días.',
+        ]);
+
+        $this->dispatch('notificaciones-actualizadas');
 
         $this->abierto = false;
 

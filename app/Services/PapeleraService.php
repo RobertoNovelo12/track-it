@@ -117,7 +117,7 @@ class PapeleraService
         $hijos = $this->hijos($tipo, $def);
 
         try {
-            return DB::transaction(function () use ($tipo, $id, $def, $etiqueta, $principal, $hijos, $desasignar): int {
+            $idPapelera = DB::transaction(function () use ($tipo, $id, $def, $etiqueta, $principal, $hijos, $desasignar): int {
                 // 0. Devolución (cierra la asignación) para poder moverlo.
                 if ($desasignar) {
                     app(DevolucionService::class)->devolverParaPapelera([$id]);
@@ -167,6 +167,10 @@ class PapeleraService
 
                 return $idPapelera;
             });
+
+            $this->notificarMovidos($tipo, [$etiqueta]);
+
+            return $idPapelera;
         } catch (QueryException $e) {
             // Alguna relación que no está en las definiciones (llave foránea).
             if (($e->errorInfo[0] ?? null) === '23503') {
@@ -370,6 +374,8 @@ class PapeleraService
                         : count($movibles).' registros de tipo '.mb_strtolower($def['nombre']).' se movieron a la papelera.'
                 );
             });
+
+            $this->notificarMovidos($tipo, array_map(fn (int $id): string => $revision['etiquetas'][$id], $movibles));
         } catch (QueryException $e) {
             if (($e->errorInfo[0] ?? null) === '23503') {
                 throw new PapeleraException(
@@ -597,6 +603,50 @@ class PapeleraService
         }
 
         return $total > 0 ? 'Incluye '.$total.' registro(s) relacionados' : null;
+    }
+
+    /*
+     * Notificación (campana y push) a quienes administran la papelera.
+     * Nunca interrumpe la operación.
+     */
+    private function notificarMovidos(string $tipo, array $etiquetas): void
+    {
+        if ($etiquetas === []) {
+            return;
+        }
+
+        try {
+            $notificaciones = app(NotificacionService::class);
+            $def = PapeleraEntidades::de($tipo);
+
+            $categoria = match ($tipo) {
+                'usuario' => 'usuarios',
+                'mantenimiento' => 'mantenimientos',
+                'reporte' => 'reportes',
+                default => 'equipos',
+            };
+
+            $mensaje = count($etiquetas) === 1
+                ? $notificaciones->nombreActor().' movió a la papelera '.mb_strtolower($def['nombre']).' «'.$etiquetas[0].'».'
+                : $notificaciones->nombreActor().' movió a la papelera '.count($etiquetas).' registros de tipo '.mb_strtolower($def['nombre'])
+                    .': '.implode(', ', array_slice($etiquetas, 0, 3)).(count($etiquetas) > 3 ? ' y '.(count($etiquetas) - 3).' más.' : '.');
+
+            $destinatarios = $notificaciones->administradoresDeUsuarios() ?: [(int) auth()->id()];
+
+            if (! in_array((int) auth()->id(), $destinatarios, true)) {
+                $destinatarios[] = (int) auth()->id();
+            }
+
+            $notificaciones->notificar(
+                $categoria,
+                count($etiquetas) === 1 ? 'Movido a la papelera' : 'Movidos a la papelera',
+                $mensaje.' Se pueden restaurar durante '.PapeleraEntidades::DIAS.' días.',
+                route('papelera.index', [], false),
+                $destinatarios
+            );
+        } catch (\Throwable $e) {
+            report($e);
+        }
     }
 
     private function bitacora(string $accion, string $descripcion): void
