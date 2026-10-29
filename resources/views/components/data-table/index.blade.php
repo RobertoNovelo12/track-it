@@ -4,7 +4,8 @@
     Diseño tomado de la tabla de Equipos tecnológicos:
 
     - Escritorio: tabla con columnas fijas, ordenamiento,
-      acceso rápido al pasar el cursor (copiar / editar / detalle)
+      clic en el texto para Editar (o Ver detalle si no se puede
+      editar), botón Copiar junto al texto al pasar el cursor
       y menú de acciones por fila.
     - Móvil: cada registro se muestra como tarjeta.
     - Barra de resultados, cantidad por página y paginación.
@@ -39,7 +40,7 @@
                  o 'list' (value devuelve un arreglo y se muestran
                  etiquetas; el acceso rápido copia la lista).
     - strong     Resalta el texto (font-medium).
-    - popover    false para desactivar el acceso rápido en la celda.
+    - popover    false para que la celda no sea enlace ni muestre Copiar.
     - desktop    false para mostrar la columna solo en tarjetas.
     - mobile     false para ocultarla en tarjetas; 'filled' para
                  mostrarla solo si tiene valor.
@@ -52,7 +53,7 @@
 
     Acciones: closure fn ($row) => [
         'detail' => url|null,        // icono de ojo y "Detalle"
-        'edit'   => url|null,        // "Editar" del acceso rápido
+        'edit'   => url|null,        // destino del clic en el texto (si falta, usa detail)
         'menu'   => [                // menú de tres puntos
             ['label' => 'Editar', 'href' => url],
             ['label' => 'Dar de baja', 'href' => url, 'danger' => true],

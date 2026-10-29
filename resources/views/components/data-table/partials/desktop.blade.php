@@ -3,22 +3,9 @@
 ============================================================ --}}
 <div
     x-data="{
-        open: false,
-
-        label: '',
-        value: '',
-
-        editUrl: '#',
-        canEdit: true,
-        detailUrl: '#',
-
-        top: 0,
-        left: 0,
-
-        copied: false,
-
-        closeTimer: null,
-        copiedTimer: null,
+        /* Celda copiada recientemente (fila|columna) para mostrar la palomita. */
+        copiado: null,
+        copiadoTimer: null,
 
         toggleAll(source) {
             this.$root
@@ -28,70 +15,8 @@
                 });
         },
 
-        showPopover(element) {
-            this.cancelClose();
-
-            this.label = String(element.dataset.popoverLabel ?? '');
-            this.value = String(element.dataset.popoverValue ?? '');
-
-            this.editUrl = element.dataset.editUrl || '#';
-            this.canEdit = element.dataset.canEdit === '1';
-            this.detailUrl = element.dataset.detailUrl || '#';
-
-            this.copied = false;
-            this.open = true;
-
-            this.$nextTick(() => {
-                const rect = element.getBoundingClientRect();
-                const popover = this.$refs.cellPopover;
-
-                if (! popover) {
-                    return;
-                }
-
-                const gap = 8;
-                const width = popover.offsetWidth || 290;
-                const height = popover.offsetHeight || 120;
-
-                /* Horizontal: centrado sobre la celda, dentro de la ventana. */
-                let left = rect.left + (rect.width / 2) - (width / 2);
-
-                left = Math.max(12, Math.min(left, window.innerWidth - width - 12));
-
-                /* Vertical: el acceso rápido siempre aparece arriba. */
-                let top = rect.top - height - gap;
-
-                this.left = Math.max(12, left);
-                this.top = Math.max(12, top);
-            });
-        },
-
-        scheduleClose() {
-            this.cancelClose();
-
-            this.closeTimer = setTimeout(() => {
-                this.open = false;
-            }, 180);
-        },
-
-        cancelClose() {
-            if (! this.closeTimer) {
-                return;
-            }
-
-            clearTimeout(this.closeTimer);
-
-            this.closeTimer = null;
-        },
-
-        closePopover() {
-            this.cancelClose();
-
-            this.open = false;
-        },
-
-        async copyValue() {
-            const text = String(this.value ?? '');
+        async copiar(valor, clave) {
+            const text = String(valor ?? '');
 
             if (text === '') {
                 return;
@@ -114,32 +39,18 @@
                     textarea.remove();
                 }
 
-                this.copied = true;
+                this.copiado = clave;
 
-                if (this.copiedTimer) {
-                    clearTimeout(this.copiedTimer);
-                }
+                clearTimeout(this.copiadoTimer);
 
-                this.copiedTimer = setTimeout(() => {
-                    this.copied = false;
+                this.copiadoTimer = setTimeout(() => {
+                    this.copiado = null;
                 }, 1200);
             } catch (error) {
-                this.copied = false;
+                this.copiado = null;
             }
         }
     }"
-
-    @keydown.escape.window="closePopover()"
-    @resize.window="closePopover()"
-
-    {{--
-        El acceso rápido usa posición fija: al desplazar la página (o
-        cualquier contenedor) se cierra. Si el puntero se queda quieto
-        mientras la página se mueve, el navegador no siempre envía
-        mouseleave, y la ventana quedaba flotando sobre otros elementos.
-    --}}
-    @scroll.window.capture.passive="open && closePopover()"
-    @wheel.window.passive="open && closePopover()"
 
     class="
         hidden
@@ -155,7 +66,7 @@
         class="overflow-x-auto transition-opacity duration-[var(--motion-base)]"
         wire:loading.delay.class="opacity-60"
         @if (filled($loadingTarget ?? null)) wire:target="{{ $loadingTarget }}" @elseif (filled($loadingExcept ?? null)) wire:target.except="{{ $loadingExcept }}" @endif
-        @scroll="closePopover(); $dispatch('data-table-scroll')"
+        @scroll="$dispatch('data-table-scroll')"
     >
 
         <table
@@ -398,47 +309,76 @@
                                 $texto = $valor($row, $columna);
                             @endphp
 
+                            @php
+                                /*
+                                 * Clic en el texto: Editar; si no se puede editar
+                                 * (p. ej. equipo de baja), Ver detalle. Al pasar el
+                                 * cursor aparece «Copiar» junto al texto.
+                                 */
+                                $conAcceso = $columna['popover'] && $columna['type'] !== 'download';
+                                $enlace = $conAcceso
+                                    ? ($puedeEditar ? $editUrl : ($accionesFila['detail'] ?: null))
+                                    : null;
+                                $copiable = $conAcceso
+                                    && in_array($columna['type'], ['text', 'list'], true)
+                                    && ! $estaVacio($row, $columna);
+                                $claveCopia = $id . '|' . $columna['key'];
+                                $claseEnlace = 'rounded-sm hover:text-[var(--theme-primary)] hover:underline underline-offset-2 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--theme-primary)]';
+                            @endphp
+
                             <td
                                 @class([
-                                    'px-2.5 2xl:px-3 py-2.5 2xl:py-3 overflow-hidden',
+                                    'group/celda px-2.5 2xl:px-3 py-2.5 2xl:py-3 overflow-hidden',
                                     'text-[var(--theme-text)]' => $columna['type'] === 'text',
                                     'font-medium' => $columna['strong'],
                                 ])
                             >
-                                <div
-                                    @if ($columna['popover'])
-                                        data-popover-label="{{ $columna['label'] }}"
-                                        data-popover-value="{{ $texto }}"
-                                        data-edit-url="{{ $editUrl }}"
-                                        data-can-edit="{{ $puedeEditar ? '1' : '0' }}"
-                                        data-detail-url="{{ $detailUrl }}"
-
-                                        @mouseenter="showPopover($event.currentTarget)"
-                                        @mouseleave="scheduleClose()"
-                                    @endif
-
-                                    @class([
-                                        'truncate' => $columna['type'] === 'text',
-                                        'inline-flex' => $columna['type'] === 'status',
-                                        'flex gap-1 overflow-hidden' => $columna['type'] === 'list',
-                                        '-mx-1 px-1 py-1 rounded',
-                                        'cursor-pointer hover:bg-[var(--theme-surface-soft)] transition-colors' => $columna['popover'],
-                                    ])
-                                >
+                                <div class="flex min-w-0 items-center gap-1">
                                     @if ($columna['type'] === 'download')
                                         @include('components.data-table.partials.download')
                                     @elseif ($columna['type'] === 'status')
-                                        <x-status-badge :status="$texto" />
+                                        @if ($enlace)
+                                            <a href="{{ $enlace }}" wire:navigate.hover class="inline-flex rounded-sm hover:opacity-80">
+                                                <x-status-badge :status="$texto" />
+                                            </a>
+                                        @else
+                                            <span class="inline-flex"><x-status-badge :status="$texto" /></span>
+                                        @endif
                                     @elseif ($columna['type'] === 'list')
-                                        @forelse ($lista($row, $columna) as $elemento)
-                                            <span class="shrink-0 rounded-md border border-[var(--theme-border)] px-2 py-0.5 text-[11px] text-[var(--theme-text)] whitespace-nowrap">
-                                                {{ $elemento }}
-                                            </span>
-                                        @empty
+                                        @php $elementosLista = $lista($row, $columna); @endphp
+
+                                        @if ($elementosLista === [])
                                             <span class="truncate text-[var(--theme-text-muted)]">{{ $columna['default'] }}</span>
-                                        @endforelse
+                                        @else
+                                            <{{ $enlace ? 'a' : 'span' }}
+                                                @if ($enlace) href="{{ $enlace }}" wire:navigate.hover @endif
+                                                class="flex min-w-0 gap-1 overflow-hidden {{ $enlace ? 'rounded-sm hover:opacity-80' : '' }}"
+                                            >
+                                                @foreach ($elementosLista as $elemento)
+                                                    <span class="shrink-0 rounded-md border border-[var(--theme-border)] px-2 py-0.5 text-[11px] text-[var(--theme-text)] whitespace-nowrap">
+                                                        {{ $elemento }}
+                                                    </span>
+                                                @endforeach
+                                            </{{ $enlace ? 'a' : 'span' }}>
+                                        @endif
+                                    @elseif ($enlace)
+                                        <a href="{{ $enlace }}" wire:navigate.hover class="min-w-0 truncate {{ $claseEnlace }}">{{ $texto }}</a>
                                     @else
-                                        {{ $texto }}
+                                        <span class="min-w-0 truncate">{{ $texto }}</span>
+                                    @endif
+
+                                    @if ($copiable)
+                                        <button
+                                            type="button"
+                                            @click.stop="copiar(@js($texto), @js($claveCopia))"
+                                            class="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[var(--theme-text-muted)] opacity-0 transition-opacity hover:bg-[var(--theme-surface-soft)] hover:text-[var(--theme-text-strong)] focus-visible:opacity-100 group-hover/celda:opacity-100"
+                                            :class="copiado === @js($claveCopia) ? '!opacity-100 !text-[var(--theme-success,var(--theme-primary))]' : ''"
+                                            :aria-label="copiado === @js($claveCopia) ? 'Copiado' : 'Copiar'"
+                                            title="Copiar"
+                                        >
+                                            <svg x-show="copiado !== @js($claveCopia)" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-d8c0e16') }}"></use></svg>
+                                            <svg x-show="copiado === @js($claveCopia)" x-cloak class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+                                        </button>
                                     @endif
                                 </div>
                             </td>
@@ -663,262 +603,5 @@
 
     </div>
 
-
-    {{-- ============================================================
-        ACCESO RÁPIDO DE CELDA
-
-        La información superior no captura el puntero.
-        Únicamente los botones mantienen abierto el popover.
-    ============================================================ --}}
-    <div
-        x-ref="cellPopover"
-
-        x-show="open"
-        x-cloak
-
-        x-transition:enter="transition ease-out duration-100"
-        x-transition:enter-start="opacity-0 translate-y-1"
-        x-transition:enter-end="opacity-100 translate-y-0"
-        x-transition:leave="transition ease-in duration-75"
-        x-transition:leave-start="opacity-100"
-        x-transition:leave-end="opacity-0"
-
-        :style="'top:' + top + 'px; left:' + left + 'px;'"
-
-        class="
-            fixed
-            z-[120]
-
-            w-max
-            min-w-[180px]
-            max-w-[min(260px,calc(100vw-24px))]
-
-            bg-[var(--theme-surface)]
-
-            border
-            border-[var(--theme-border)]
-
-            rounded-lg
-
-            shadow-md
-
-            overflow-hidden
-
-            pointer-events-none
-        "
-    >
-
-        {{-- INFORMACIÓN SELECCIONADA --}}
-        <div class="px-2.5 pt-2 pb-1.5 pointer-events-none">
-
-            <div
-                class="
-                    text-[10px]
-                    font-medium
-
-                    uppercase
-                    tracking-wide
-
-                    text-[var(--theme-text-muted)]
-                "
-                x-text="label"
-            ></div>
-
-            <div
-                class="
-                    mt-0.5
-
-                    max-h-16
-
-                    overflow-hidden
-
-                    break-words
-
-                    text-xs
-                    font-medium
-                    leading-[1.125rem]
-
-                    text-[var(--theme-text-strong)]
-                "
-                x-text="value"
-            ></div>
-
-        </div>
-
-
-        {{-- ATAJOS --}}
-        <div
-            @mouseenter="cancelClose()"
-            @mouseleave="scheduleClose()"
-            @click.stop
-
-            class="
-                pointer-events-auto
-
-                flex
-                items-center
-
-                gap-0.5
-
-                p-1
-
-                border-t
-                border-[var(--theme-border)]
-
-                bg-[var(--theme-surface-soft)]
-            "
-        >
-
-            {{-- COPIAR --}}
-            <button
-                type="button"
-
-                @click="copyValue()"
-
-                class="
-                    h-7
-
-                    flex-1
-
-                    inline-flex
-                    items-center
-                    justify-center
-
-                    gap-1
-
-                    px-2
-
-                    whitespace-nowrap
-
-                    rounded-md
-
-                    text-[11px]
-                    font-medium
-
-                    text-[var(--theme-text)]
-
-                    hover:bg-[var(--theme-surface)]
-
-                    transition-colors
-                "
-            >
-                <svg
-                    class="w-3 h-3 shrink-0"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.6"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    aria-hidden="true"
-                ><use href="{{ \App\Support\Icono::url('i-d8c0e16') }}"></use></svg>
-
-                <span x-text="copied ? 'Copiado' : 'Copiar'"></span>
-            </button>
-
-
-            {{-- EDITAR --}}
-            <a
-                x-show="canEdit"
-                :href="editUrl"
-                wire:navigate.hover
-
-                @click="if (editUrl === '#') { $event.preventDefault(); }"
-
-                class="
-                    h-7
-
-                    flex-1
-
-                    inline-flex
-                    items-center
-                    justify-center
-
-                    gap-1
-
-                    px-2
-
-                    whitespace-nowrap
-
-                    rounded-md
-
-                    text-[11px]
-                    font-medium
-
-                    text-[var(--theme-text)]
-
-                    hover:bg-[var(--theme-surface)]
-
-                    transition-colors
-                "
-            >
-                <svg
-                    class="w-3 h-3 shrink-0"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.6"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    aria-hidden="true"
-                ><use href="{{ \App\Support\Icono::url('i-2be38e4') }}"></use></svg>
-
-                <span>Editar</span>
-            </a>
-
-
-            {{-- DETALLE --}}
-            <a
-                x-show="detailUrl !== '#'"
-                :href="detailUrl"
-
-                wire:navigate.hover
-
-                @click="if (detailUrl === '#') { $event.preventDefault(); }"
-
-                class="
-                    h-7
-
-                    flex-1
-
-                    inline-flex
-                    items-center
-                    justify-center
-
-                    gap-1
-
-                    px-2
-
-                    whitespace-nowrap
-
-                    rounded-md
-
-                    text-[11px]
-                    font-medium
-
-                    text-[var(--theme-primary)]
-
-                    hover:bg-[var(--theme-surface)]
-
-                    transition-colors
-                "
-            >
-                <svg
-                    class="w-3 h-3 shrink-0"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.6"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    aria-hidden="true"
-                ><use href="{{ \App\Support\Icono::url('i-41f2153') }}"></use></svg>
-
-                <span>Detalle</span>
-            </a>
-
-        </div>
-
-    </div>
 
 </div>
