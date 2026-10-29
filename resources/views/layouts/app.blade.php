@@ -1465,6 +1465,9 @@ document.addEventListener(
     {{-- Escáner de códigos de barras (se abre desde «Escanear» del menú inferior) --}}
     @include('layouts.partials.escaner-movil')
 
+    {{-- «Mover a la papelera»: confirmación global (App\Livewire\PapeleraConfirmar) --}}
+    <livewire:papelera-confirmar />
+
     <livewire:notifications-panel
         :initial-unread-count="$initialUnreadNotifications"
     />

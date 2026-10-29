@@ -163,9 +163,10 @@
 
             :actions="fn ($marca) => [
                 'edit' => $marca->editUrl,
-                'menu' => [
+                'menu' => array_values(array_filter([
                     ['label' => 'Editar', 'href' => $marca->editUrl],
-                ],
+                    \App\Support\PapeleraEntidades::accion('marca', $marca->id),
+                ])),
             ]"
         />
     @endif
@@ -207,9 +208,10 @@
 
             :actions="fn ($modelo) => [
                 'edit' => $modelo->editUrl,
-                'menu' => [
+                'menu' => array_values(array_filter([
                     ['label' => 'Editar', 'href' => $modelo->editUrl],
-                ],
+                    \App\Support\PapeleraEntidades::accion('modelo', $modelo->id),
+                ])),
             ]"
         />
     @endif

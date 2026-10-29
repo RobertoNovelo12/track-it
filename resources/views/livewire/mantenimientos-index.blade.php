@@ -249,7 +249,7 @@
             :actions="fn ($m) => [
                 'edit' => route('mantenimientos.edit', $m->id_mantenimiento),
                 'detail' => route('equipos.show', $m->id_equipo),
-                'menu' => [
+                'menu' => array_values(array_filter([
                     [
                         'label' => 'Editar',
                         'href' => route('mantenimientos.edit', $m->id_mantenimiento),
@@ -258,7 +258,8 @@
                         'label' => 'Ver equipo',
                         'href' => route('equipos.show', $m->id_equipo),
                     ],
-                ],
+                    \App\Support\PapeleraEntidades::accion('mantenimiento', $m->id_mantenimiento),
+                ])),
             ]"
         />
 </div>

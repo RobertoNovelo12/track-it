@@ -81,6 +81,13 @@
             'icon' => 'catalogos',
             'visible' => $puedeGestionar,
         ],
+        [
+            'label' => 'Papelera',
+            'route' => 'papelera.index',
+            'activo' => request()->routeIs('papelera.*'),
+            'icon' => 'papelera',
+            'visible' => $puedeAdministrar,
+        ],
     ], fn (array $opcion): bool => $opcion['visible'] && Route::has($opcion['route'])));
 
     $masActivo = collect($opcionesMas)->contains('activo', true)
@@ -899,6 +906,10 @@
 
                         @case('seguridad')
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-518c3f4') }}"></use></svg>
+                            @break
+
+                        @case('papelera')
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-papelera') }}"></use></svg>
                             @break
 
                         @case('catalogos')

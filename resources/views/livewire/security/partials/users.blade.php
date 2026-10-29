@@ -286,6 +286,7 @@
                         'label' => 'Ver detalles',
                         'js' => 'window.openUserDetailsModalFromButton({ dataset: { userId: ' . \Illuminate\Support\Js::from((string) $usuario->id_usuario) . ' } })',
                     ],
+                    \App\Support\PapeleraEntidades::accion('usuario', $usuario->id_usuario),
                 ])),
             ]"
         />

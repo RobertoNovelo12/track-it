@@ -131,7 +131,9 @@
         return [
             'detail' => route('equipos.show', $equipo->id_equipo),
             'edit' => $baja ? null : route('equipos.edit', $equipo->id_equipo),
-            'menu' => $baja ? [] : array_values(array_filter([
+            'menu' => $baja ? array_values(array_filter([
+                \App\Support\PapeleraEntidades::accion('equipo', $equipo->id_equipo),
+            ])) : array_values(array_filter([
                 [
                     'label' => 'Editar',
                     'href' => route('equipos.edit', $equipo->id_equipo),
@@ -146,6 +148,7 @@
                     'href' => route('equipos.baja', ['equipo' => $equipo->id_equipo]),
                     'danger' => true,
                 ] : null,
+                \App\Support\PapeleraEntidades::accion('equipo', $equipo->id_equipo),
             ])),
         ];
     }"

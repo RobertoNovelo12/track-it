@@ -116,6 +116,8 @@
             this.sugerenciasAbiertas = true;
             this.sugerenciasLista = [];
             this.sugerenciasHayMasLocal = false;
+            this.sugerenciasTerminoLocal = texto;
+            this.consultandoSugerencias = true;
             const version = ++this.consultaSugerenciasVersion;
             this.temporizadorSugerencias = setTimeout(() => {
                 if (version !== this.consultaSugerenciasVersion) return;
@@ -866,7 +868,7 @@
                             >
 
                             <div
-                                x-show="sugerenciasAbiertas && sugerenciasLista.length > 0"
+                                x-show="sugerenciasAbiertas && (sugerenciasLista.length > 0 || consultandoSugerencias || sugerenciasTerminoLocal !== '')"
                                 x-cloak
                                 x-on:scroll.passive="cargarMasSugerencias($event)"
                                 class="absolute inset-x-0 top-full z-50 mt-1 max-h-64 overflow-y-auto rounded-lg border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] shadow-xl"
@@ -881,8 +883,19 @@
                                         <span class="block truncate text-xs text-[var(--theme-text-muted)]" x-text="sugerencia.codigo + (sugerencia.serie ? ' · ' + sugerencia.serie : '')"></span>
                                     </button>
                                 </template>
-                                <div x-show="sugerenciasHayMasLocal" class="px-3 py-2 text-center text-xs text-[var(--theme-text-muted)]">
-                                    Desplázate para ver más equipos
+                                <div
+                                    x-show="consultandoSugerencias || sugerenciasHayMasLocal"
+                                    class="flex items-center justify-center gap-2 px-3 py-2.5 text-xs text-[var(--theme-text-muted)]"
+                                    role="status"
+                                >
+                                    <span class="inline-block h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-[var(--theme-border-strong)] border-t-[var(--theme-primary)]" aria-hidden="true"></span>
+                                    <span x-text="sugerenciasLista.length === 0 ? 'Buscando equipos…' : 'Cargando más equipos…'"></span>
+                                </div>
+                                <div
+                                    x-show="!consultandoSugerencias && sugerenciasLista.length === 0 && sugerenciasTerminoLocal !== ''"
+                                    class="px-3 py-2.5 text-center text-xs text-[var(--theme-text-muted)]"
+                                >
+                                    Sin resultados
                                 </div>
                             </div>
                         </div>
@@ -1533,7 +1546,7 @@
                 ],
             ]"
             :actions="fn ($reporte) => [
-                'menu' => [
+                'menu' => array_values(array_filter([
                     [
                         'label' => 'Ver reporte',
                         'js' => 'window.open(' . \Illuminate\Support\Js::from(route('reportes.show', $reporte)) . ', \'_blank\', \'noopener\')',
@@ -1542,12 +1555,9 @@
                         'label' => 'Descargar',
                         'js' => 'window.location.href = ' . \Illuminate\Support\Js::from(route('reportes.download', $reporte)),
                     ],
-                    [
-                        'label' => 'Eliminar',
-                        'js' => 'abrirModalEliminar(' . (int) $reporte->id_reporte . ')',
-                        'danger' => true,
-                    ],
-                ],
+                    // Antes se borraba al instante; ahora va a la papelera (30 días).
+                    \App\Support\PapeleraEntidades::accion('reporte', $reporte->id_reporte),
+                ])),
             ]"
         />
     </section>

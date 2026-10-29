@@ -118,6 +118,16 @@
             'icon' => 'catalogos',
             'permiso' => 'gestionar',
         ],
+
+        [
+            'label' => 'Papelera',
+            'url' => Route::has('papelera.index')
+                ? route('papelera.index')
+                : '#',
+            'active' => request()->routeIs('papelera.*'),
+            'icon' => 'papelera',
+            'permiso' => 'administrar',
+        ],
     ];
 
     /*
@@ -627,6 +637,14 @@
                             stroke-linecap="round"
                             stroke-linejoin="round"
                         ><use href="{{ \App\Support\Icono::url('i-831c84a') }}"></use></svg>
+
+                        @break
+
+
+                    {{-- Papelera --}}
+                    @case('papelera')
+
+                        <svg class="w-[18px] h-[18px] text-[var(--theme-text-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><use href="{{ \App\Support\Icono::url('i-papelera') }}"></use></svg>
 
                         @break
 

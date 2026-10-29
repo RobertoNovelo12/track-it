@@ -19,6 +19,15 @@ Artisan::command('inspire', function () {
 |
 */
 
+/*
+| Papelera: lo que cumple 30 días se elimina definitivamente.
+*/
+Schedule::command('trackit:vaciar-papelera')
+    ->dailyAt('03:30')
+    ->timezone('America/Mexico_City')
+    ->withoutOverlapping()
+    ->onOneServer();
+
 Schedule::command('notificaciones:mantenimientos')
     ->dailyAt('07:00')
     ->timezone('America/Mexico_City')

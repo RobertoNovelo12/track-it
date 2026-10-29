@@ -566,6 +566,16 @@ Route::middleware([
     |--------------------------------------------------------------------------
     */
 
+    /*
+    |--------------------------------------------------------------------------
+    | Papelera (solo administradores)
+    |--------------------------------------------------------------------------
+    */
+    Route::get(
+        '/papelera',
+        fn () => view('papelera.index')
+    )->name('papelera.index')->middleware('can:administrar');
+
     Route::get(
         '/ajustes',
         fn () => view('ajustes.index')
