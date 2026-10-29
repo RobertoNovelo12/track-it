@@ -6,11 +6,10 @@
     600 y 700) y solo el subconjunto latino: cubre el español
     (acentos, ñ, ¿ ¡, €) y pesa ~8 KB por archivo.
 
-    400 y 500 se precargan: son el texto normal y la mayoría de
-    etiquetas, lo primero que se pinta (LCP).
+    Sin <link rel="preload">: el service worker (public/sw.js) ya
+    entrega /fonts desde su caché y la precarga no se aprovechaba
+    (Chrome avisaba «preloaded but not used» y la bajaba dos veces).
 ============================================================ --}}
-<link rel="preload" href="{{ asset('fonts/poppins/poppins-latin-400-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="{{ asset('fonts/poppins/poppins-latin-500-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
 
 <style>
     @foreach ([400, 500, 600, 700] as $pesoPoppins)

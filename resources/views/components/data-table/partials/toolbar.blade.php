@@ -13,6 +13,7 @@
 @endphp
 
 <div
+    data-tabla-toolbar
     class="
         mb-3
         lg:mb-0
