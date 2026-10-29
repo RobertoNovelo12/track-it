@@ -21,12 +21,13 @@
         ======================================================== --}}
         @include('layouts.partials.boton-volver', ['destino' => url('/')])
 
-        {{-- Nuevo movimiento (un solo botón) --}}
-        <div class="w-full md:w-auto">
+        {{-- Nuevo movimiento (un solo botón). Etiqueta distinta (<p>) a la
+             real para que Livewire no la reutilice al terminar de cargar. --}}
+        <p class="w-full md:w-auto">
             <span class="inline-flex h-10 w-full items-center justify-center gap-2 rounded-md bg-[var(--theme-primary)] px-4 text-sm font-medium text-white opacity-80 md:w-auto">
                 Nuevo movimiento
             </span>
-        </div>
+        </p>
     </section>
 
 

@@ -189,7 +189,11 @@
         --}}
         {{-- El menú usa posición fija sobre toda la página (como los menús ⋮
              de las tablas): así ningún bloque de abajo lo tapa. --}}
+        {{-- wire:key: al cargar, Livewire lo crea nuevo en lugar de reutilizar
+             el botón de la pantalla de carga (si no, el menú quedaba sin
+             sus variables: «abierto is not defined»). --}}
         <div
+            wire:key="nuevo-movimiento-menu"
             x-data="{
                 abierto: false,
                 arriba: 0,
@@ -229,7 +233,7 @@
                 x-cloak
                 x-transition.opacity.duration.100ms
                 role="menu"
-                :style="'position: fixed; top: ' + arriba + 'px; left: ' + izquierda + 'px; width: ' + ancho + 'px; z-index: 130;'"
+                :style="{ position: 'fixed', top: arriba + 'px', left: izquierda + 'px', width: ancho + 'px', zIndex: 130 }"
                 class="overflow-hidden rounded-md border border-[var(--theme-border)] bg-[var(--theme-surface)] text-left shadow-lg shadow-[var(--theme-shadow)]"
             >
                 @foreach ([
