@@ -26,6 +26,12 @@
             'label' => 'Equipos',
         ],
         [
+            // Empresas que venden o dan servicio a los equipos.
+            'key' => 'proveedores',
+            'crumb' => 'Proveedores',
+            'label' => 'Proveedores',
+        ],
+        [
             'key' => 'marcas',
             'crumb' => 'Marcas',
             'label' => 'Marcas',
@@ -567,6 +573,17 @@
             <livewire:catalogos.tipos-equipo
                 :key="'administracion-tipos-equipo'"
                 :lazy="$diferir('equipos')"
+            />
+        </div>
+
+
+        {{-- ========================================================
+            PROVEEDORES
+        ======================================================== --}}
+        <div x-show="section === 'proveedores'" x-cloak>
+            <livewire:catalogos.proveedores
+                :key="'administracion-proveedores'"
+                :lazy="$diferir('proveedores')"
             />
         </div>
 

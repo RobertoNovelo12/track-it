@@ -253,6 +253,22 @@ class PapeleraEntidades
                 'ayuda' => 'Cambia esas ubicaciones a otro tipo o bórralas primero.',
             ],
 
+            'proveedor' => [
+                'tabla' => 'proveedores',
+                'llave' => 'id_proveedor',
+                'nombre' => 'Proveedor',
+                'etiqueta' => 't.nombre',
+                'permiso' => 'gestionar',
+                'bloqueos' => [
+                    ['equipos', 'id_proveedor = ?', 'equipo(s)'],
+                    ['mantenimientos', 'id_proveedor = ?', 'mantenimiento(s)'],
+                    ['marcas', 'id_proveedor_sugerido = ?', 'marca(s) que lo sugieren'],
+                    ['modelos', 'id_proveedor_sugerido = ?', 'modelo(s) que lo sugieren'],
+                ],
+                'ayuda' => 'Cambia el proveedor en esos registros (o desactívalo para que ya no se ofrezca) y vuelve a intentarlo.',
+                'hijos' => [],
+            ],
+
             'programa' => [
                 'tabla' => 'programas',
                 'llave' => 'id_programa',

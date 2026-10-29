@@ -453,6 +453,20 @@ Route::middleware([
     /*
      * Programas (software): alta y edición en página aparte.
      */
+    /*
+     * Proveedores (Administración › Proveedores): alta y edición en su
+     * propia página, como Programas.
+     */
+    Route::get(
+        '/catalogos/proveedores/nuevo',
+        fn () => view('catalogos.proveedores.create')
+    )->name('catalogos.proveedores.create')->middleware('can:gestionar');
+
+    Route::get(
+        '/catalogos/proveedores/{proveedor}/editar',
+        fn (int $proveedor) => view('catalogos.proveedores.edit', ['proveedorId' => $proveedor])
+    )->whereNumber('proveedor')->name('catalogos.proveedores.edit')->middleware('can:gestionar');
+
     Route::get(
         '/catalogos/programas/nuevo',
         fn () => view('catalogos.programas.create')
