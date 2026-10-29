@@ -305,7 +305,7 @@
                 {{-- Barra de avance (procesos en curso) --}}
                 <div
                     x-show="aviso.conBarra"
-                    class="mt-2.5 h-2 w-full overflow-hidden rounded-full bg-[var(--theme-surface-soft)]"
+                    class="mt-2.5 h-1.5 w-full overflow-hidden rounded-full bg-[var(--theme-surface-soft)]"
                     role="progressbar"
                     aria-label="Avance"
                     aria-valuemin="0"
