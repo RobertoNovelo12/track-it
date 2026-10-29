@@ -397,7 +397,37 @@ class PapeleraService
     |--------------------------------------------------------------------------
     */
 
-    public function restaurar(int $idPapelera): string
+    /*
+     * Varios a la vez: cada uno en su transacción (si uno no se puede, los
+     * demás sí se restauran) y la caché se actualiza una sola vez.
+     * Devuelve ['restaurados' => [etiquetas], 'errores' => [mensajes]].
+     */
+    public function restaurarVarios(array $idsPapelera): array
+    {
+        // Cada restauración son varias consultas a la base remota.
+        @set_time_limit(300);
+
+        $restaurados = [];
+        $errores = [];
+
+        try {
+            foreach (array_values(array_unique(array_filter(array_map('intval', $idsPapelera)))) as $id) {
+                try {
+                    $restaurados[] = $this->restaurar($id, refrescar: false);
+                } catch (PapeleraException $e) {
+                    $errores[] = $e->getMessage();
+                }
+            }
+        } finally {
+            if ($restaurados !== []) {
+                app(SystemCacheService::class)->refreshAll();
+            }
+        }
+
+        return ['restaurados' => $restaurados, 'errores' => $errores];
+    }
+
+    public function restaurar(int $idPapelera, bool $refrescar = true): string
     {
         $elemento = DB::table('papelera')->where('id_papelera', $idPapelera)->first();
 
@@ -447,7 +477,9 @@ class PapeleraService
 
             throw $e;
         } finally {
-            app(SystemCacheService::class)->refreshAll();
+            if ($refrescar) {
+                app(SystemCacheService::class)->refreshAll();
+            }
         }
 
         return (string) $elemento->etiqueta;
@@ -461,28 +493,57 @@ class PapeleraService
 
     public function eliminarDefinitivo(int $idPapelera, bool $automatico = false): void
     {
-        $elemento = DB::table('papelera')->where('id_papelera', $idPapelera)->first();
+        $this->eliminarDefinitivoVarios([$idPapelera], $automatico);
+    }
 
-        if (! $elemento) {
-            return;
+    /*
+     * Por lotes: tres consultas para todos (leer, borrar, bitácora), en
+     * lugar de tres por elemento. Con la base remota, 100 uno por uno
+     * pasaban de los 30 segundos. Devuelve cuántos se eliminaron.
+     */
+    public function eliminarDefinitivoVarios(array $idsPapelera, bool $automatico = false): int
+    {
+        $ids = array_values(array_unique(array_filter(array_map('intval', $idsPapelera), fn (int $id): bool => $id > 0)));
+
+        if ($ids === []) {
+            return 0;
         }
 
-        DB::table('papelera')->where('id_papelera', $idPapelera)->delete();
+        $total = 0;
 
-        foreach ((array) (json_decode((string) $elemento->archivos, true) ?: []) as $ruta) {
-            try {
-                if (is_string($ruta) && $ruta !== '') {
-                    Storage::disk('local')->delete($ruta);
-                }
-            } catch (\Throwable) {
-                // Un archivo que ya no existe no impide terminar.
+        foreach (array_chunk($ids, 500) as $lote) {
+            $elementos = DB::table('papelera')->whereIn('id_papelera', $lote)->get(['id_papelera', 'etiqueta', 'archivos']);
+
+            if ($elementos->isEmpty()) {
+                continue;
             }
+
+            DB::table('papelera')->whereIn('id_papelera', $elementos->pluck('id_papelera'))->delete();
+
+            $total += $elementos->count();
+
+            // Los archivos están en el disco local: borrarlos es inmediato.
+            foreach ($elementos as $elemento) {
+                foreach ((array) (json_decode((string) $elemento->archivos, true) ?: []) as $ruta) {
+                    try {
+                        if (is_string($ruta) && $ruta !== '') {
+                            Storage::disk('local')->delete($ruta);
+                        }
+                    } catch (\Throwable) {
+                        // Un archivo que ya no existe no impide terminar.
+                    }
+                }
+            }
+
+            // Bitácora: una fila por elemento, en una sola consulta.
+            $sufijo = $automatico ? ' (30 días en la papelera).' : '.';
+
+            $this->bitacoraVarios('ELIMINAR_DEFINITIVO', $elementos->map(
+                fn ($elemento): string => '«'.$elemento->etiqueta.'» se eliminó definitivamente'.$sufijo
+            )->all());
         }
 
-        $this->bitacora(
-            'ELIMINAR_DEFINITIVO',
-            '«'.$elemento->etiqueta.'» se eliminó definitivamente'.($automatico ? ' (30 días en la papelera).' : '.')
-        );
+        return $total;
     }
 
     public function purgarVencidos(): int
@@ -491,13 +552,9 @@ class PapeleraService
             return 0;
         }
 
-        $ids = DB::table('papelera')->where('expira_en', '<=', now())->pluck('id_papelera');
+        $ids = DB::table('papelera')->where('expira_en', '<=', now())->pluck('id_papelera')->all();
 
-        foreach ($ids as $id) {
-            $this->eliminarDefinitivo((int) $id, true);
-        }
-
-        return $ids->count();
+        return $this->eliminarDefinitivoVarios($ids, true);
     }
 
     /*
@@ -646,6 +703,28 @@ class PapeleraService
             );
         } catch (\Throwable $e) {
             report($e);
+        }
+    }
+
+    private function bitacoraVarios(string $accion, array $descripciones): void
+    {
+        if ($descripciones === []) {
+            return;
+        }
+
+        $ahora = now();
+        $usuario = auth()->id();
+
+        try {
+            DB::transaction(fn () => DB::table('bitacora_auditoria')->insert(array_map(fn (string $descripcion): array => [
+                'id_usuario' => $usuario,
+                'accion' => $accion,
+                'modulo' => 'Papelera',
+                'descripcion' => mb_substr($descripcion, 0, 250),
+                'fecha_hora' => $ahora,
+            ], array_values($descripciones))));
+        } catch (\Throwable) {
+            // La bitácora no debe impedir la operación.
         }
     }
 
