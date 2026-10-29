@@ -2216,7 +2216,7 @@ class TipoEquipoFormBuilderService
                 ]);
 
 
-        return $rows
+        $metadata = $rows
             ->groupBy(
                 'id_campo'
             )
@@ -2250,6 +2250,31 @@ class TipoEquipoFormBuilderService
                 }
             )
             ->all();
+
+        /*
+         * Campos del sistema que ningún tipo usa (p. ej. con el catálogo
+         * reiniciado): su destino guardado en campos_equipo.destino. Sin
+         * esto se guardarían como atributo suelto y no en su columna.
+         */
+        $faltantes = array_values(array_diff(array_map('intval', $fieldIds), array_map('intval', array_keys($metadata))));
+
+        if ($faltantes !== [] && \App\Support\Esquema::tieneColumna('campos_equipo', 'destino')) {
+            $destinos = DB::table('campos_equipo')
+                ->whereIn('id_campo', $faltantes)
+                ->where('es_sistema', true)
+                ->whereNotNull('destino')
+                ->pluck('destino', 'id_campo');
+
+            foreach ($destinos as $idCampo => $destino) {
+                $datos = json_decode((string) $destino);
+
+                if (is_object($datos) && filled($datos->origen_dato ?? null)) {
+                    $metadata[(int) $idCampo] = $datos;
+                }
+            }
+        }
+
+        return $metadata;
     }
 
 
