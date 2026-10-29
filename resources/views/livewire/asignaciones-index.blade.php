@@ -187,16 +187,34 @@
             Devolver. El Historial se abre desde la tarjeta «Movimientos
             recientes».
         --}}
+        {{-- El menú usa posición fija sobre toda la página (como los menús ⋮
+             de las tablas): así ningún bloque de abajo lo tapa. --}}
         <div
-            x-data="{ abierto: false }"
+            x-data="{
+                abierto: false,
+                arriba: 0,
+                izquierda: 0,
+                ancho: 320,
+                alternar(boton) {
+                    if (this.abierto) { this.abierto = false; return; }
+                    const r = boton.getBoundingClientRect();
+                    const movil = window.innerWidth < 768;
+                    this.ancho = movil ? r.width : 320;
+                    this.izquierda = movil ? r.left : Math.max(8, r.right - this.ancho);
+                    this.arriba = r.bottom + 8;
+                    this.abierto = true;
+                },
+            }"
             x-on:click.outside="abierto = false"
             x-on:keydown.escape.window="abierto = false"
             @trackit-cerrar-menus.window="abierto = false"
+            @scroll.window.passive="abierto = false"
+            @resize.window="abierto = false"
             class="relative w-full md:w-auto"
         >
             <button
                 type="button"
-                x-on:click="abierto = ! abierto"
+                x-on:click="alternar($el)"
                 :aria-expanded="abierto.toString()"
                 aria-haspopup="menu"
                 class="inline-flex h-10 w-full items-center justify-center gap-2 rounded-md bg-[var(--theme-primary)] px-4 text-sm font-medium text-white transition-colors hover:bg-[var(--theme-primary-hover)] md:w-auto"
@@ -211,7 +229,8 @@
                 x-cloak
                 x-transition.opacity.duration.100ms
                 role="menu"
-                class="absolute inset-x-0 top-full z-30 mt-2 overflow-hidden rounded-md border border-[var(--theme-border)] bg-[var(--theme-surface)] text-left shadow-lg shadow-[var(--theme-shadow)] md:inset-x-auto md:right-0 md:w-80"
+                :style="'position: fixed; top: ' + arriba + 'px; left: ' + izquierda + 'px; width: ' + ancho + 'px; z-index: 130;'"
+                class="overflow-hidden rounded-md border border-[var(--theme-border)] bg-[var(--theme-surface)] text-left shadow-lg shadow-[var(--theme-shadow)]"
             >
                 @foreach ([
                     ['ruta' => 'asignaciones.create', 'icono' => 'i-6aed230', 'titulo' => 'Asignar', 'texto' => 'Entregar un equipo disponible a una persona u hotel'],
