@@ -73,6 +73,12 @@
         wire:loading.remove
         wire:target="setSection"
     >
+      {{--
+          Clave por sección: al cambiar de pestaña Livewire reemplaza todo
+          el contenido. Sin ella, bloques con wire:ignore (p. ej. «En este
+          dispositivo» de Notificaciones) se quedaban en las otras pestañas.
+      --}}
+      <div wire:key="ajustes-seccion-{{ $section }}">
 
         @if ($section === 'cuenta')
 
@@ -95,6 +101,7 @@
 
         @endif
 
+      </div>
     </div>
 
 
