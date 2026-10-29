@@ -81,6 +81,46 @@ class DevolucionService
     }
 
     /*
+     * Responsable vigente de varios equipos en una sola consulta:
+     * [id_equipo => 'Nombre (núm.) · Hotel / Departamento'].
+     */
+    public function responsablesActivos(array $idsEquipo): array
+    {
+        $ids = array_values(array_unique(array_filter(array_map('intval', $idsEquipo), fn (int $id): bool => $id > 0)));
+
+        if ($ids === []) {
+            return [];
+        }
+
+        $filas = DB::select(
+            'SELECT DISTINCT ON (a.id_equipo) a.id_equipo, a.nombre_colaborador, a.numero_colaborador, '
+            .'u.nombre AS hotel, d.nombre AS departamento '
+            .'FROM public.asignaciones a '
+            .'LEFT JOIN public.unidades_organizativas u ON u.id_unidad = a.id_unidad '
+            .'LEFT JOIN public.departamentos d ON d.id_departamento = a.id_departamento '
+            .'WHERE a.fecha_fin IS NULL AND a.id_equipo = ANY(?::bigint[]) '
+            .'ORDER BY a.id_equipo, a.fecha_asignacion DESC',
+            ['{'.implode(',', $ids).'}']
+        );
+
+        $responsables = [];
+
+        foreach ($filas as $fila) {
+            $nombre = trim((string) $fila->nombre_colaborador) ?: 'Sin nombre';
+
+            if (filled($fila->numero_colaborador)) {
+                $nombre .= ' (núm. '.trim((string) $fila->numero_colaborador).')';
+            }
+
+            $lugar = implode(' / ', array_filter([trim((string) $fila->hotel), trim((string) $fila->departamento)]));
+
+            $responsables[(int) $fila->id_equipo] = $lugar !== '' ? $nombre.' · '.$lugar : $nombre;
+        }
+
+        return $responsables;
+    }
+
+    /*
      * Equipos con asignación activa (selector de la página Devolver).
      */
     public function equiposAsignados(): array

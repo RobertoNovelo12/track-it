@@ -3,10 +3,68 @@
     App\Livewire\PapeleraConfirmar · se abre con
     $dispatch('papelera-mover', { tipo, id })
 ============================================================ --}}
-<div>
+<div
+    {{--
+        La ventana se muestra al instante («Revisando…») mientras el
+        servidor consulta; luego se reemplaza por el resultado.
+    --}}
+    x-data="{ cargando: false, temporizador: null,
+        empezar() {
+            this.cargando = true;
+            clearTimeout(this.temporizador);
+            this.temporizador = setTimeout(() => this.cargando = false, 20000);
+        },
+        terminar() {
+            this.cargando = false;
+            clearTimeout(this.temporizador);
+        },
+    }"
+    @papelera-mover.window="empezar()"
+    @papelera-mover-varios.window="empezar()"
+    @papelera-sin-abrir.window="terminar()"
+>
+    <div
+        x-show="cargando"
+        x-cloak
+        x-on:keydown.escape.window="terminar()"
+        class="fixed inset-0 z-[210] flex items-center justify-center bg-black/60 px-4 py-6"
+        role="presentation"
+    >
+        <section
+            role="dialog"
+            aria-modal="true"
+            aria-busy="true"
+            aria-labelledby="papelera-cargando-titulo"
+            class="w-full max-w-md rounded-md border border-[var(--theme-border)] bg-[var(--theme-surface)] p-5 shadow-xl"
+        >
+            <div class="flex items-start justify-between gap-3">
+                <h2 id="papelera-cargando-titulo" class="text-base font-semibold text-[var(--theme-text-strong)]">Mover a la papelera</h2>
+
+                <button type="button" x-on:click="terminar(); $wire.cerrar()" class="rounded-md p-1 text-[var(--theme-text-muted)] hover:bg-[var(--theme-surface-soft)]" aria-label="Cerrar ventana">
+                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+                </button>
+            </div>
+
+            <div class="mt-5 flex items-center gap-3 text-sm text-[var(--theme-text-muted)]" role="status">
+                <span class="inline-block h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-[var(--theme-border-strong)] border-t-[var(--theme-primary)]" aria-hidden="true"></span>
+                Revisando si se puede mover…
+            </div>
+
+            <div class="mt-4 space-y-2" aria-hidden="true">
+                <div class="h-3 w-3/4 animate-pulse rounded bg-[var(--theme-surface-soft)]"></div>
+                <div class="h-3 w-1/2 animate-pulse rounded bg-[var(--theme-surface-soft)]"></div>
+            </div>
+
+            <div class="mt-6 flex justify-end">
+                <x-ui.button variant="secondary" x-on:click="terminar(); $wire.cerrar()">Cancelar</x-ui.button>
+            </div>
+        </section>
+    </div>
+
     @if ($abierto)
         <div
             x-data
+            x-init="terminar()"
             x-on:keydown.escape.window="$wire.cerrar()"
             x-on:click.self="$wire.cerrar()"
             class="fixed inset-0 z-[210] flex items-center justify-center bg-black/60 px-4 py-6"
@@ -63,9 +121,14 @@
                             {{ count($asignados) }} {{ count($asignados) === 1 ? 'tiene' : 'tienen' }} un responsable asignado:
                         </p>
 
-                        <ul class="mt-2 max-h-36 space-y-1 overflow-y-auto rounded-md border border-[var(--theme-border)] bg-[var(--theme-surface-soft)] px-4 py-3 text-sm text-[var(--theme-text)]">
-                            @foreach ($asignadosEtiquetas as $etiquetaAsignado)
-                                <li class="truncate">{{ $etiquetaAsignado }}</li>
+                        <ul class="mt-2 max-h-48 space-y-2 overflow-y-auto rounded-md border border-[var(--theme-border)] bg-[var(--theme-surface-soft)] px-4 py-3 text-sm text-[var(--theme-text)]">
+                            @foreach ($asignadosEtiquetas as $asignado)
+                                <li>
+                                    <span class="block truncate">{{ $asignado['etiqueta'] }}</span>
+                                    @if ($asignado['responsable'])
+                                        <span class="block truncate text-xs text-[var(--theme-text-muted)]">Asignado a {{ $asignado['responsable'] }}</span>
+                                    @endif
+                                </li>
                             @endforeach
                         </ul>
 
@@ -145,6 +208,13 @@
                         {{ $nombre }} <strong class="font-semibold text-[var(--theme-text-strong)]">«{{ $etiqueta }}»</strong>
                         tiene un responsable asignado.
                     </p>
+
+                    @if ($responsable)
+                        <div class="mt-3 rounded-md border border-[var(--theme-border)] bg-[var(--theme-surface-soft)] px-4 py-3">
+                            <span class="block text-[10px] font-medium uppercase tracking-wide text-[var(--theme-text-muted)]">Asignado a</span>
+                            <span class="mt-0.5 block text-sm font-medium text-[var(--theme-text-strong)]">{{ $responsable }}</span>
+                        </div>
+                    @endif
 
                     <p class="mt-2 text-xs text-[var(--theme-text-muted)]">
                         Se registrará su devolución (quedará «Disponible», sin responsable) y después se moverá a la papelera.
