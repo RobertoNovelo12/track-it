@@ -84,6 +84,35 @@ new class extends Component
 
         $resultado['programas'] = $servicio->configuracionTipo($this->tipoEquipoId);
 
+        $nombreTipo = (string) \Illuminate\Support\Facades\DB::table('tipos_equipo')
+            ->where('id_tipo_equipo', $this->tipoEquipoId)
+            ->value('nombre');
+
+        // Notificación (campana y push). No interrumpe el guardado.
+        try {
+            $notificaciones = app(\App\Services\NotificacionService::class);
+
+            $notificaciones->notificar(
+                'equipos',
+                'Formulario de tipo de equipo actualizado',
+                $notificaciones->nombreActor().' actualizó el formulario del tipo de equipo «'.$nombreTipo.'».',
+                route('catalogos.tipos-equipo.edit', $this->tipoEquipoId, false)
+            );
+
+            $this->dispatch('notificaciones-actualizadas');
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
+        // Al volver a la tabla de tipos se muestra el aviso (sesión).
+        session()->flash('toast', [
+            'type' => 'success',
+            'title' => 'Formulario guardado',
+            'message' => 'El formulario de «'.$nombreTipo.'» se guardó correctamente.',
+        ]);
+
+        $resultado['volver'] = route('catalogos.index', ['section' => 'equipos']);
+
         return $resultado;
     }
 

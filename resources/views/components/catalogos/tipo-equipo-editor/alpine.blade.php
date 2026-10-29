@@ -1303,6 +1303,19 @@
                     }
 
                     this.replaceData(result);
+                    this.hasChanges = false;
+
+                    // Volver a la tabla de tipos; el aviso de guardado se
+                    // muestra al llegar (lo deja el servidor en la sesión).
+                    if (result.volver) {
+                        window.trackitDescartarCambios?.();
+
+                        window.Livewire?.navigate
+                            ? window.Livewire.navigate(result.volver)
+                            : (window.location.href = result.volver);
+
+                        return;
+                    }
 
                     this.showToast(
                         'La configuración del formulario se guardó correctamente.',
