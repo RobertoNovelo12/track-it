@@ -27,7 +27,7 @@
     x-init="medir()"
     x-effect="seleccion.length > 0 && $nextTick(() => medir())"
     @resize.window="medir()"
-    :style="alto ? 'height: ' + alto + 'px;' : ''"
+    :style="alto ? { height: alto + 'px' } : {}"
     x-show="seleccion.length > 0"
     x-cloak
     x-transition:enter="transition ease-out duration-150"
