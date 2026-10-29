@@ -18,11 +18,14 @@
 
     Tipos: success | error | warning | info | loading
 
-    «loading» (proceso en curso) no se cierra solo y muestra un
-    indicador girando. trackitToast() devuelve su id para cambiarlo
-    cuando termine:
+    «loading» (proceso en curso) no se cierra solo y muestra una barra
+    de avance. El servidor no informa cuánto lleva: la barra avanza cada
+    vez más lento (sin llegar al final) y se llena al terminar.
+    trackitToast() devuelve su id para cambiarlo cuando termine:
         const id = window.trackitToast('loading', 'Esto puede tardar…', 'Generando PDF…');
         window.trackitToastActualizar(id, 'success', 'La descarga comenzó.', 'Archivo listo');
+    O para solo cerrarlo (la barra se llena y se va):
+        window.trackitToastTerminar(id);
     - Máximo 3 visibles; el más antiguo sale primero.
     - Éxito/info: 4 s. Error/advertencia: 7 s (más tiempo para leer).
     - Se pausan al pasar el cursor. Anunciados a lectores de pantalla.
@@ -43,6 +46,55 @@
 
             window.trackitToastActualizar = (id, type, message, title = null) =>
                 this.actualizar(id, { type, message, title });
+
+            window.trackitToastTerminar = (id) => this.terminar(id);
+        },
+
+        /*
+         * Barra de avance de «loading»: se acerca al 90 % cada vez más
+         * lento; al terminar se llena (100 %) y se queda un momento.
+         */
+        empezarAvance(aviso) {
+            aviso.progreso = 4;
+            aviso.conBarra = true;
+            clearInterval(aviso.avance);
+
+            aviso.avance = setInterval(() => {
+                const actual = this.buscar(aviso.id);
+
+                if (! actual || actual.tipo !== 'loading') {
+                    clearInterval(aviso.avance);
+
+                    return;
+                }
+
+                actual.progreso += (90 - actual.progreso) * 0.04;
+            }, 200);
+        },
+
+        completarAvance(aviso) {
+            clearInterval(aviso.avance);
+            aviso.avance = null;
+
+            if (! aviso.conBarra) return;
+
+            aviso.progreso = 100;
+
+            // La barra llena se ve un instante y luego se oculta.
+            setTimeout(() => {
+                const actual = this.buscar(aviso.id);
+
+                if (actual && actual.tipo !== 'loading') actual.conBarra = false;
+            }, 700);
+        },
+
+        terminar(id) {
+            const aviso = this.buscar(id);
+
+            if (! aviso) return;
+
+            this.completarAvance(aviso);
+            setTimeout(() => this.cerrar(id), 450);
         },
 
         agregar(detalle) {
@@ -74,9 +126,16 @@
                 restante: datos.accion ? 8000 : this.duracion(tipo),
                 timer: null,
                 inicio: 0,
+                progreso: 0,
+                conBarra: false,
+                avance: null,
             };
 
             this.avisos.push(aviso);
+
+            if (tipo === 'loading') {
+                this.empezarAvance(this.buscar(aviso.id));
+            }
 
             if (this.avisos.length > 3) {
                 // Un proceso en curso no se quita para hacer espacio.
@@ -102,7 +161,16 @@
 
             clearTimeout(aviso.timer);
             aviso.timer = null;
+
+            const eraCarga = aviso.tipo === 'loading';
+
             aviso.tipo = this.tipoValido(detalle.type);
+
+            if (aviso.tipo === 'loading' && ! eraCarga) {
+                this.empezarAvance(aviso);
+            } else if (eraCarga && aviso.tipo !== 'loading') {
+                this.completarAvance(aviso);
+            }
             aviso.titulo = detalle.title ?? this.titulos[aviso.tipo];
             aviso.mensaje = detalle.message ?? '';
             aviso.restante = this.duracion(aviso.tipo);
@@ -170,6 +238,7 @@
             if (! aviso) return;
 
             clearTimeout(aviso.timer);
+            clearInterval(aviso.avance);
             aviso.visible = false;
 
             setTimeout(() => {
@@ -215,7 +284,7 @@
                     'bg-[var(--theme-primary-soft)] text-[var(--theme-primary)]': aviso.tipo === 'info' || aviso.tipo === 'loading',
                 }"
             >
-                <svg x-show="aviso.tipo === 'loading'" class="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-3ea787d') }}"></use></svg>
+                <svg x-show="aviso.tipo === 'loading'" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19.5h14"/></svg>
 
                 <svg x-show="aviso.tipo !== 'loading'" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path x-show="aviso.tipo === 'success'" d="M5 12.5l4.5 4.5L19 7"/>
@@ -232,6 +301,23 @@
                     class="mt-0.5 text-xs leading-relaxed text-[var(--theme-text-muted)]"
                     x-text="aviso.mensaje"
                 ></p>
+
+                {{-- Barra de avance (procesos en curso) --}}
+                <div
+                    x-show="aviso.conBarra"
+                    class="mt-2.5 h-2 w-full overflow-hidden rounded-full bg-[var(--theme-surface-soft)]"
+                    role="progressbar"
+                    aria-label="Avance"
+                    aria-valuemin="0"
+                    aria-valuemax="100"
+                    :aria-valuenow="Math.round(aviso.progreso)"
+                >
+                    <div
+                        class="h-full rounded-full transition-[width] duration-300 ease-out motion-reduce:transition-none"
+                        :class="aviso.tipo === 'error' ? 'bg-[var(--theme-danger)]' : (aviso.tipo === 'loading' ? 'bg-[var(--theme-primary)]' : 'bg-[var(--theme-success)]')"
+                        :style="{ width: aviso.progreso + '%' }"
+                    ></div>
+                </div>
             </div>
 
             <button
