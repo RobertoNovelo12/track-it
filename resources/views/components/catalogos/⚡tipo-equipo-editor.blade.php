@@ -446,6 +446,14 @@ new class extends Component
             )
         "
 
+        {{--
+            Aviso de cambios sin guardar (layouts/partials/cambios-sin-guardar):
+            el editor mueve, agrega y quita campos sin escribir en inputs, así
+            que su propio indicador (hasChanges) marca o limpia el aviso.
+        --}}
+        data-avisar-cambios
+        x-effect="hasChanges ? $el.setAttribute('data-con-cambios', '') : $el.removeAttribute('data-con-cambios')"
+
         class="space-y-5"
     >
         {{-- TOAST --}}
