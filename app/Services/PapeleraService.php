@@ -62,7 +62,9 @@ class PapeleraService
             }
         }
 
-        foreach ($def['bloqueos'] as [$tabla, $condicion, $que]) {
+        foreach ($def['bloqueos'] as $bloqueo) {
+            [$tabla, $condicion, $que] = $bloqueo;
+
             if (! Esquema::tieneTabla($tabla)) {
                 continue;
             }
@@ -73,7 +75,7 @@ class PapeleraService
             )->n;
 
             if ($cantidad > 0) {
-                $bloqueos[] = ['que' => $que, 'cantidad' => $cantidad];
+                $bloqueos[] = ['que' => $que, 'cantidad' => $cantidad, 'resolver' => $bloqueo[3] ?? null];
             }
         }
 
@@ -86,7 +88,16 @@ class PapeleraService
     |--------------------------------------------------------------------------
     */
 
-    public function mover(string $tipo, int $id): int
+    /*
+     * ¿Todo lo que impide mover se puede resolver desde la papelera?
+     * (hoy: equipo asignado → «Desasignar y mover»).
+     */
+    public static function soloResolubles(array $bloqueos): bool
+    {
+        return $bloqueos !== [] && collect($bloqueos)->every(fn (array $b): bool => ($b['resolver'] ?? null) === 'desasignar');
+    }
+
+    public function mover(string $tipo, int $id, bool $desasignar = false): int
     {
         $def = PapeleraEntidades::de($tipo);
         $etiqueta = $this->etiqueta($tipo, $id);
@@ -96,8 +107,9 @@ class PapeleraService
         }
 
         $bloqueos = $this->bloqueos($tipo, $id);
+        $desasignar = $desasignar && $tipo === 'equipo' && self::soloResolubles($bloqueos);
 
-        if ($bloqueos !== []) {
+        if ($bloqueos !== [] && ! $desasignar) {
             throw PapeleraException::bloqueado($bloqueos, $def['ayuda']);
         }
 
@@ -105,7 +117,12 @@ class PapeleraService
         $hijos = $this->hijos($tipo, $def);
 
         try {
-            return DB::transaction(function () use ($tipo, $id, $def, $etiqueta, $principal, $hijos): int {
+            return DB::transaction(function () use ($tipo, $id, $def, $etiqueta, $principal, $hijos, $desasignar): int {
+                // 0. Devolución (cierra la asignación) para poder moverlo.
+                if ($desasignar) {
+                    app(DevolucionService::class)->devolverParaPapelera([$id]);
+                }
+
                 // 1. Copia: primero el registro principal y luego lo que le pertenece.
                 $bloques = [];
 
@@ -209,7 +226,9 @@ class PapeleraService
             $bloqueos[(int) auth()->id()][] = ['que' => 'Es tu propia cuenta', 'cantidad' => 0];
         }
 
-        foreach ($def['bloqueos'] as [$tabla, $condicion, $que]) {
+        foreach ($def['bloqueos'] as $bloqueo) {
+            [$tabla, $condicion, $que] = $bloqueo;
+
             if (! Esquema::tieneTabla($tabla)) {
                 continue;
             }
@@ -219,7 +238,7 @@ class PapeleraService
                 .'JOIN public."'.$tabla.'" ON ('.$this->condicionLote($condicion).') GROUP BY __g.__id',
                 [$lista]
             ) as $fila) {
-                $bloqueos[(int) $fila->__id][] = ['que' => $que, 'cantidad' => (int) $fila->n];
+                $bloqueos[(int) $fila->__id][] = ['que' => $que, 'cantidad' => (int) $fila->n, 'resolver' => $bloqueo[3] ?? null];
             }
         }
 
@@ -230,14 +249,34 @@ class PapeleraService
      * Mueve los que se pueden y devuelve cuántos fueron. Los que tienen
      * algo que depende de ellos (o ya no existen) se quedan igual.
      */
-    public function moverVarios(string $tipo, array $ids): int
+    public function moverVarios(string $tipo, array $ids, bool $desasignar = false): int
     {
         $def = PapeleraEntidades::de($tipo);
         $revision = $this->revisarVarios($tipo, $ids);
+        $desasignar = $desasignar && $tipo === 'equipo';
+
+        // Con «desasignar», también los que solo están asignados.
+        $porDesasignar = [];
 
         $movibles = array_values(array_filter(
             $this->idsLote($ids),
-            fn (int $id): bool => isset($revision['etiquetas'][$id]) && empty($revision['bloqueos'][$id])
+            function (int $id) use ($revision, $desasignar, &$porDesasignar): bool {
+                if (! isset($revision['etiquetas'][$id])) {
+                    return false;
+                }
+
+                if (empty($revision['bloqueos'][$id])) {
+                    return true;
+                }
+
+                if ($desasignar && self::soloResolubles($revision['bloqueos'][$id])) {
+                    $porDesasignar[] = $id;
+
+                    return true;
+                }
+
+                return false;
+            }
         ));
 
         if ($movibles === []) {
@@ -249,7 +288,12 @@ class PapeleraService
         $hijos = $this->hijos($tipo, $def);
 
         try {
-            DB::transaction(function () use ($tipo, $def, $revision, $movibles, $lista, $principal, $hijos): void {
+            DB::transaction(function () use ($tipo, $def, $revision, $movibles, $lista, $principal, $hijos, $porDesasignar): void {
+                // 0. Devolución de los asignados (cierra su asignación).
+                if ($porDesasignar !== []) {
+                    app(DevolucionService::class)->devolverParaPapelera($porDesasignar);
+                }
+
                 // 1. Copia agrupada por registro (primero el principal, luego lo suyo).
                 $bloquesPorId = [];
                 $vistas = [];

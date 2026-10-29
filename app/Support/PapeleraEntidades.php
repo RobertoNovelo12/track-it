@@ -56,7 +56,8 @@ class PapeleraEntidades
                 'etiqueta' => "TRIM(CONCAT(t.codigo_inventario, ' — ', COALESCE(t.nombre_equipo, '')))",
                 'permiso' => 'gestionar',
                 'bloqueos' => [
-                    ['asignaciones', 'id_equipo = ? AND fecha_fin IS NULL', 'responsable asignado'],
+                    // 4.º elemento: se puede resolver desde la papelera («Desasignar y mover»).
+                    ['asignaciones', 'id_equipo = ? AND fecha_fin IS NULL', 'responsable asignado', 'desasignar'],
                 ],
                 'ayuda' => 'Devuelve el equipo (menú › Devolver) y vuelve a intentarlo.',
                 // Las tablas de especificaciones (laptops, monitores…) se agregan solas: PapeleraService::hijos().

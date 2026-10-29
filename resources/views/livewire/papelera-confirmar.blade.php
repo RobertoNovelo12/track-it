@@ -20,7 +20,7 @@
             >
                 <div class="flex items-start justify-between gap-3">
                     <h2 id="papelera-titulo" class="text-base font-semibold text-[var(--theme-text-strong)]">
-                        @if ($varios)
+                        @if ($varios || ($desasignable && ! $error))
                             Mover a la papelera
                         @elseif ($bloqueos !== [])
                             No se puede borrar todavía
@@ -46,6 +46,8 @@
 
                     @if ($error)
                         <p class="mt-3 text-sm text-[var(--theme-text)]">{{ $error }}</p>
+                    @elseif ($nMovibles === 0 && $asignados !== [])
+                        <p class="mt-3 text-sm text-[var(--theme-text)]">Todos los seleccionados que se pueden mover tienen un responsable asignado.</p>
                     @elseif ($nMovibles > 0)
                         <p class="mt-3 text-sm text-[var(--theme-text)]">
                             Se {{ $nMovibles === 1 ? 'moverá' : 'moverán' }}
@@ -54,6 +56,22 @@
                         </p>
                     @else
                         <p class="mt-3 text-sm text-[var(--theme-text)]">Ninguno de los seleccionados se puede mover todavía.</p>
+                    @endif
+
+                    @if ($asignados !== [])
+                        <p class="mt-4 text-sm font-medium text-[var(--theme-text-strong)]">
+                            {{ count($asignados) }} {{ count($asignados) === 1 ? 'tiene' : 'tienen' }} un responsable asignado:
+                        </p>
+
+                        <ul class="mt-2 max-h-36 space-y-1 overflow-y-auto rounded-md border border-[var(--theme-border)] bg-[var(--theme-surface-soft)] px-4 py-3 text-sm text-[var(--theme-text)]">
+                            @foreach ($asignadosEtiquetas as $etiquetaAsignado)
+                                <li class="truncate">{{ $etiquetaAsignado }}</li>
+                            @endforeach
+                        </ul>
+
+                        <p class="mt-2 text-xs text-[var(--theme-text-muted)]">
+                            Con «Desasignar y mover» se registra su devolución (quedan «Disponible») y se mueven junto con los demás.
+                        </p>
                     @endif
 
                     @if ($noMovibles !== [])
@@ -87,22 +105,48 @@
                         </p>
                     @endif
 
-                    @if ($nMovibles > 0 && ! $error)
+                    @if (($nMovibles > 0 || $asignados !== []) && ! $error)
                         <p class="mt-3 text-xs text-[var(--theme-text-muted)]">
                             Un administrador podrá restaurarlos desde la Papelera durante {{ \App\Support\PapeleraEntidades::DIAS }} días; después se eliminan definitivamente.
                         </p>
                     @endif
 
                     <div class="mt-6 flex flex-wrap justify-end gap-3">
-                        @if ($nMovibles > 0 && ! $error)
+                        @if (($nMovibles > 0 || $asignados !== []) && ! $error)
                             <x-ui.button variant="secondary" wire:click="cerrar" disable-target="confirmarVarios">Cancelar</x-ui.button>
 
-                            <x-ui.button variant="danger-soft" wire:click="confirmarVarios" target="confirmarVarios" loading-text="Moviendo…">
-                                Mover {{ number_format($nMovibles) }} a la papelera
-                            </x-ui.button>
+                            @if ($nMovibles > 0)
+                                <x-ui.button :variant="$asignados !== [] ? 'secondary' : 'danger-soft'" wire:click="confirmarVarios(false)" target="confirmarVarios" loading-text="Moviendo…">
+                                    {{ $asignados !== [] ? 'Mover solo ' . number_format($nMovibles) : 'Mover ' . number_format($nMovibles) . ' a la papelera' }}
+                                </x-ui.button>
+                            @endif
+
+                            @if ($asignados !== [])
+                                <x-ui.button variant="danger-soft" wire:click="confirmarVarios(true)" target="confirmarVarios" loading-text="Moviendo…">
+                                    Desasignar y mover {{ number_format($nMovibles + count($asignados)) }}
+                                </x-ui.button>
+                            @endif
                         @else
                             <x-ui.button variant="secondary" wire:click="cerrar">Entendido</x-ui.button>
                         @endif
+                    </div>
+                @elseif ($desasignable && ! $error)
+                    <p class="mt-3 text-sm text-[var(--theme-text)]">
+                        {{ $nombre }} <strong class="font-semibold text-[var(--theme-text-strong)]">«{{ $etiqueta }}»</strong>
+                        tiene un responsable asignado.
+                    </p>
+
+                    <p class="mt-2 text-xs text-[var(--theme-text-muted)]">
+                        Se registrará su devolución (quedará «Disponible», sin responsable) y después se moverá a la papelera.
+                        Un administrador podrá restaurarlo durante {{ \App\Support\PapeleraEntidades::DIAS }} días.
+                    </p>
+
+                    <div class="mt-6 flex flex-wrap justify-end gap-3">
+                        <x-ui.button variant="secondary" wire:click="cerrar" disable-target="desasignarYConfirmar">Cancelar</x-ui.button>
+
+                        <x-ui.button variant="danger-soft" wire:click="desasignarYConfirmar" target="desasignarYConfirmar" loading-text="Moviendo…">
+                            Desasignar y mover a la papelera
+                        </x-ui.button>
                     </div>
                 @elseif ($bloqueos !== [])
                     <p class="mt-3 text-sm text-[var(--theme-text)]">

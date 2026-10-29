@@ -246,6 +246,69 @@ class DevolucionService
     }
 
     /*
+     * «Desasignar y mover a la papelera»: devolución de varios equipos a
+     * la vez, dentro de la transacción de la papelera (por eso no abre
+     * otra ni notifica). Cierra la asignación, registra el movimiento de
+     * devolución y deja el equipo «Disponible»: si se restaura, vuelve
+     * sin responsable y con su historial completo.
+     * Devuelve cuántos equipos se desasignaron.
+     */
+    public function devolverParaPapelera(array $idsEquipo): int
+    {
+        $ids = array_values(array_unique(array_filter(array_map('intval', $idsEquipo), fn (int $id): bool => $id > 0)));
+
+        if ($ids === []) {
+            return 0;
+        }
+
+        $ahora = now();
+
+        $cerradas = DB::select(
+            'UPDATE public.asignaciones SET fecha_fin = ? WHERE fecha_fin IS NULL AND id_equipo = ANY(?::bigint[]) '
+            .'RETURNING id_asignacion, id_equipo',
+            [$ahora, '{'.implode(',', $ids).'}']
+        );
+
+        if ($cerradas === []) {
+            return 0;
+        }
+
+        // La asignación más reciente de cada equipo.
+        $porEquipo = [];
+
+        foreach ($cerradas as $fila) {
+            $porEquipo[(int) $fila->id_equipo] = max($porEquipo[(int) $fila->id_equipo] ?? 0, (int) $fila->id_asignacion);
+        }
+
+        if ($idTipo = $this->idTipoMovimiento()) {
+            $movimientos = [];
+
+            foreach ($porEquipo as $idEquipo => $idAsignacion) {
+                $movimientos[] = [
+                    'id_equipo' => $idEquipo,
+                    'id_tipo_movimiento' => $idTipo,
+                    'id_asignacion_anterior' => $idAsignacion,
+                    'id_asignacion_nueva' => null,
+                    'motivo' => 'Equipo movido a la papelera',
+                    'observaciones' => null,
+                    'realizado_por' => auth()->id(),
+                    'fecha_hora' => $ahora,
+                ];
+            }
+
+            DB::table('movimientos')->insert($movimientos);
+        }
+
+        if ($idDisponible = $this->idEstadoDisponible()) {
+            DB::table('equipos')
+                ->whereIn('id_equipo', array_keys($porEquipo))
+                ->update(['id_estado_activo' => $idDisponible]);
+        }
+
+        return count($porEquipo);
+    }
+
+    /*
      * Baja de cuenta: devuelve todos los equipos asignados a ese usuario.
      * Devuelve los códigos de los equipos devueltos.
      */

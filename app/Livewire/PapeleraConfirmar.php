@@ -60,10 +60,19 @@ class PapeleraConfirmar extends Component
 
     public int $excedente = 0;
 
+    /* Solo está asignado: se ofrece «Desasignar y mover». */
+    public bool $desasignable = false;
+
+    /** @var array<int, int> (varios) asignados que se pueden desasignar */
+    public array $asignados = [];
+
+    /** @var array<int, string> */
+    public array $asignadosEtiquetas = [];
+
     #[On('papelera-mover')]
     public function abrir(string $tipo, int $id): void
     {
-        $this->reset('bloqueos', 'ayuda', 'error');
+        $this->reset();
 
         if (! PapeleraEntidades::existe($tipo)) {
             return;
@@ -85,7 +94,8 @@ class PapeleraConfirmar extends Component
             $this->error = 'Ese registro ya no existe. Actualiza la página.';
         } else {
             $this->bloqueos = $servicio->bloqueos($tipo, $id);
-            $this->ayuda = $this->bloqueos !== [] ? $def['ayuda'] : null;
+            $this->desasignable = $tipo === 'equipo' && PapeleraService::soloResolubles($this->bloqueos);
+            $this->ayuda = $this->bloqueos !== [] && ! $this->desasignable ? $def['ayuda'] : null;
         }
 
         $this->abierto = true;
@@ -127,6 +137,13 @@ class PapeleraConfirmar extends Component
                 continue;
             }
 
+            if (! empty($revision['bloqueos'][$id]) && $tipo === 'equipo' && PapeleraService::soloResolubles($revision['bloqueos'][$id])) {
+                $this->asignados[] = $id;
+                $this->asignadosEtiquetas[] = $revision['etiquetas'][$id];
+
+                continue;
+            }
+
             if (! empty($revision['bloqueos'][$id])) {
                 $this->noMovibles[] = [
                     'etiqueta' => $revision['etiquetas'][$id],
@@ -143,16 +160,18 @@ class PapeleraConfirmar extends Component
         $this->abierto = true;
     }
 
-    public function confirmarVarios(): void
+    public function confirmarVarios(bool $desasignar = false): void
     {
-        if (! $this->abierto || ! $this->varios || $this->movibles === []) {
+        $ids = $desasignar ? array_merge($this->movibles, $this->asignados) : $this->movibles;
+
+        if (! $this->abierto || ! $this->varios || $ids === []) {
             return;
         }
 
         Gate::authorize(PapeleraEntidades::de($this->tipo)['permiso']);
 
         try {
-            $movidos = app(PapeleraService::class)->moverVarios($this->tipo, $this->movibles);
+            $movidos = app(PapeleraService::class)->moverVarios($this->tipo, $ids, $desasignar);
         } catch (PapeleraException $e) {
             $this->error = $e->getMessage();
 
@@ -186,10 +205,25 @@ class PapeleraConfirmar extends Component
             return;
         }
 
+        $this->moverUno(false);
+    }
+
+    /* Equipo asignado: devolución y papelera en un solo paso. */
+    public function desasignarYConfirmar(): void
+    {
+        if (! $this->abierto || $this->varios || ! $this->desasignable || $this->error !== null) {
+            return;
+        }
+
+        $this->moverUno(true);
+    }
+
+    private function moverUno(bool $desasignar): void
+    {
         Gate::authorize(PapeleraEntidades::de($this->tipo)['permiso']);
 
         try {
-            app(PapeleraService::class)->mover($this->tipo, $this->idRegistro);
+            app(PapeleraService::class)->mover($this->tipo, $this->idRegistro, $desasignar);
         } catch (PapeleraException $e) {
             $this->bloqueos = $e->bloqueos;
             $this->ayuda = $e->ayuda;
