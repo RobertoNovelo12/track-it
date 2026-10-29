@@ -76,6 +76,14 @@
     'selectedKeys' => [],
     'selectionLimit' => null,
     'selectPageAction' => null,
+
+    /*
+     * Selección en el navegador (sin peticiones) que se conserva al
+     * cambiar de página. El componente padre (Alpine) debe tener:
+     * estaSeleccionado(id), alternarSeleccion(id, marcado, baja),
+     * paginaSeleccionada(ids) y alternarPagina(ids, marcado, bajas).
+     */
+    'selectionAlpine' => false,
     'highlightKey' => null,
 
     'sortField' => null,

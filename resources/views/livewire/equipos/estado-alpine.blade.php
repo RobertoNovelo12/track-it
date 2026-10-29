@@ -6,13 +6,103 @@
         avisoExportacion: null,
         exportacionSinDatos: false,
 
+        /*
+         * Selección de la tabla (escritorio y tarjetas). Vive en el navegador
+         * y se conserva al cambiar de página o de filtros; la barra de
+         * selección aparece mientras haya al menos uno.
+         */
+        seleccion: [],
+        seleccionBajas: [],
+        menuSeleccion: null,
+
+        estaSeleccionado(id) {
+            return this.seleccion.includes(String(id));
+        },
+
+        alternarSeleccion(id, marcado, baja = false) {
+            id = String(id);
+            this.seleccion = this.seleccion.filter(x => x !== id);
+            this.seleccionBajas = this.seleccionBajas.filter(x => x !== id);
+
+            if (marcado) {
+                this.seleccion.push(id);
+                if (baja) this.seleccionBajas.push(id);
+            }
+
+            if (this.seleccion.length === 0) this.menuSeleccion = null;
+        },
+
+        paginaSeleccionada(ids) {
+            return ids.length > 0 && ids.every(id => this.seleccion.includes(String(id)));
+        },
+
+        alternarPagina(ids, marcado, bajas = []) {
+            const deBaja = bajas.map(String);
+            ids.map(String).forEach(id => this.alternarSeleccion(id, marcado, deBaja.includes(id)));
+        },
+
+        limpiarSeleccion() {
+            this.seleccion = [];
+            this.seleccionBajas = [];
+            this.menuSeleccion = null;
+        },
+
+        abrirMenuSeleccion(nombre) {
+            this.menuSeleccion = this.menuSeleccion === nombre ? null : nombre;
+        },
+
+        /* Dar de baja: 1 = baja individual; 2 a 10 = conjunta o uno por uno. */
+        darDeBajaSeleccion(modo = null) {
+            const ids = [...this.seleccion];
+
+            if (ids.length === 0) return;
+
+            if (this.seleccionBajas.length > 0) {
+                window.trackitToast?.('warning', 'La selección incluye equipos que ya están dados de baja. Desmárcalos para continuar.', 'No se puede dar de baja');
+                return;
+            }
+
+            if (ids.length > 10) {
+                window.trackitToast?.('warning', 'Puedes dar de baja hasta 10 equipos a la vez. Desmarca ' + (ids.length - 10) + '.', 'Demasiados equipos');
+                return;
+            }
+
+            if (ids.length > 1 && modo === null) {
+                this.abrirMenuSeleccion('baja');
+                return;
+            }
+
+            this.menuSeleccion = null;
+
+            const destino = new URL(@js(route('equipos.baja-multiple')), window.location.origin);
+            destino.searchParams.set('equipos', ids.join(','));
+            if (modo) destino.searchParams.set('modo', modo);
+
+            window.Livewire?.navigate
+                ? Livewire.navigate(destino.toString())
+                : (window.location.href = destino.toString());
+        },
+
+        moverSeleccionAPapelera() {
+            this.menuSeleccion = null;
+
+            if (this.seleccion.length > 100) {
+                window.trackitToast?.('warning', 'Puedes mover hasta 100 equipos a la vez. Desmarca ' + (this.seleccion.length - 100) + '.', 'Demasiados equipos');
+                return;
+            }
+
+            this.$dispatch('papelera-mover-varios', { tipo: 'equipo', ids: this.seleccion.map(Number) });
+        },
+
+        exportarSeleccion(formato) {
+            this.menuSeleccion = null;
+            this.exportar(formato);
+        },
+
         async exportar(formato) {
             if (this.exportando) return;
-            const escritorio = [...this.$root.querySelectorAll('.row-checkbox:checked')]
-                .filter(el => el.getClientRects().length).map(el => el.value);
-            const movil = [...this.$root.querySelectorAll('[data-export-selected]')]
-                .filter(el => el.getClientRects().length).map(el => el.dataset.exportSelected);
-            const seleccion = [...new Set([...escritorio, ...movil])];
+            // Lo seleccionado en cualquier página (vacío = con los filtros).
+            const seleccion = [...this.seleccion];
             const nombre = formato === 'xlsx' ? 'Excel' : 'PDF';
 
             this.exportando = true;

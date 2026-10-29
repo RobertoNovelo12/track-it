@@ -13,11 +13,19 @@
         || strtoupper((string) ($equipo->estado_clave ?? '')) === 'BAJA';
 @endphp
 
+{{--
+    Acciones para lo seleccionado. En escritorio la barra se pone encima
+    de la barra de resultados de la tabla (mismo alto): no mueve nada.
+--}}
+<div class="relative">
+@include('livewire.equipos.results.barra-seleccion')
+
 <x-data-table
     :rows="$equipos"
     row-key="id_equipo"
     key-prefix="equipo"
     selectable
+    selection-alpine
     :row-decommissioned="$equipoDadoDeBaja"
 
     :sort-field="$sortField"
@@ -153,3 +161,4 @@
         ];
     }"
 />
+</div>

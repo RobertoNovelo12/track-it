@@ -20,7 +20,9 @@
             >
                 <div class="flex items-start justify-between gap-3">
                     <h2 id="papelera-titulo" class="text-base font-semibold text-[var(--theme-text-strong)]">
-                        @if ($bloqueos !== [])
+                        @if ($varios)
+                            Mover a la papelera
+                        @elseif ($bloqueos !== [])
                             No se puede borrar todavía
                         @elseif ($error)
                             No se pudo mover a la papelera
@@ -39,7 +41,70 @@
                     </button>
                 </div>
 
-                @if ($bloqueos !== [])
+                @if ($varios)
+                    @php $nMovibles = count($movibles); @endphp
+
+                    @if ($error)
+                        <p class="mt-3 text-sm text-[var(--theme-text)]">{{ $error }}</p>
+                    @elseif ($nMovibles > 0)
+                        <p class="mt-3 text-sm text-[var(--theme-text)]">
+                            Se {{ $nMovibles === 1 ? 'moverá' : 'moverán' }}
+                            <strong class="font-semibold text-[var(--theme-text-strong)]">{{ number_format($nMovibles) }}</strong>
+                            {{ $nMovibles === 1 ? 'elemento' : 'elementos' }} a la papelera.
+                        </p>
+                    @else
+                        <p class="mt-3 text-sm text-[var(--theme-text)]">Ninguno de los seleccionados se puede mover todavía.</p>
+                    @endif
+
+                    @if ($noMovibles !== [])
+                        <p class="mt-4 text-sm font-medium text-[var(--theme-text-strong)]">
+                            {{ count($noMovibles) }} {{ count($noMovibles) === 1 ? 'no se puede mover' : 'no se pueden mover' }} todavía:
+                        </p>
+
+                        <ul class="mt-2 max-h-48 space-y-2 overflow-y-auto rounded-md border border-[var(--theme-border)] bg-[var(--theme-surface-soft)] px-4 py-3 text-sm">
+                            @foreach ($noMovibles as $fila)
+                                <li>
+                                    <span class="block truncate text-[var(--theme-text)]">{{ $fila['etiqueta'] }}</span>
+                                    <span class="block text-xs text-[var(--theme-text-muted)]">{{ $fila['motivo'] }}</span>
+                                </li>
+                            @endforeach
+                        </ul>
+
+                        @if ($ayuda)
+                            <p class="mt-2 text-xs text-[var(--theme-text-muted)]">{{ $ayuda }}</p>
+                        @endif
+                    @endif
+
+                    @if ($noEncontrados > 0)
+                        <p class="mt-3 text-xs text-[var(--theme-text-muted)]">
+                            {{ $noEncontrados === 1 ? '1 ya no existe' : $noEncontrados.' ya no existen' }} (se borraron mientras tanto).
+                        </p>
+                    @endif
+
+                    @if ($excedente > 0)
+                        <p class="mt-3 text-xs text-[var(--theme-warning)]">
+                            Solo se revisaron los primeros {{ \App\Services\PapeleraService::MAXIMO_LOTE }}; los otros {{ $excedente }} no se tocan.
+                        </p>
+                    @endif
+
+                    @if ($nMovibles > 0 && ! $error)
+                        <p class="mt-3 text-xs text-[var(--theme-text-muted)]">
+                            Un administrador podrá restaurarlos desde la Papelera durante {{ \App\Support\PapeleraEntidades::DIAS }} días; después se eliminan definitivamente.
+                        </p>
+                    @endif
+
+                    <div class="mt-6 flex flex-wrap justify-end gap-3">
+                        @if ($nMovibles > 0 && ! $error)
+                            <x-ui.button variant="secondary" wire:click="cerrar" disable-target="confirmarVarios">Cancelar</x-ui.button>
+
+                            <x-ui.button variant="danger-soft" wire:click="confirmarVarios" target="confirmarVarios" loading-text="Moviendo…">
+                                Mover {{ number_format($nMovibles) }} a la papelera
+                            </x-ui.button>
+                        @else
+                            <x-ui.button variant="secondary" wire:click="cerrar">Entendido</x-ui.button>
+                        @endif
+                    </div>
+                @elseif ($bloqueos !== [])
                     <p class="mt-3 text-sm text-[var(--theme-text)]">
                         {{ $nombre }} <strong class="font-semibold text-[var(--theme-text-strong)]">«{{ $etiqueta }}»</strong>
                         todavía se usa en:

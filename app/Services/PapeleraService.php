@@ -166,6 +166,183 @@ class PapeleraService
 
     /*
     |--------------------------------------------------------------------------
+    | Varios a la vez (inventario: «Mover a la papelera» de la selección)
+    |--------------------------------------------------------------------------
+    |
+    | Todo por lotes: unas cuantas consultas por tabla para todos los ids,
+    | en lugar de repetir mover() por cada uno (con la base remota serían
+    | cientos de consultas). Cada registro queda como un elemento propio
+    | en la papelera, así se restauran o eliminan por separado.
+    |
+    */
+
+    public const MAXIMO_LOTE = 100;
+
+    /*
+     * ['etiquetas' => [id => texto], 'bloqueos' => [id => [['que'=>…, 'cantidad'=>n], …]]]
+     * Un id que no aparece en «etiquetas» ya no existe.
+     */
+    public function revisarVarios(string $tipo, array $ids): array
+    {
+        $def = PapeleraEntidades::de($tipo);
+        $ids = $this->idsLote($ids);
+
+        if ($ids === []) {
+            return ['etiquetas' => [], 'bloqueos' => []];
+        }
+
+        $lista = $this->listaPg($ids);
+        $etiquetas = [];
+
+        foreach (DB::select(
+            'SELECT t."'.$def['llave'].'" AS __id, '.$def['etiqueta'].' AS etiqueta FROM public."'.$def['tabla'].'" t '
+            .'WHERE t."'.$def['llave'].'" = ANY(?::bigint[])',
+            [$lista]
+        ) as $fila) {
+            $etiqueta = trim((string) $fila->etiqueta);
+            $etiquetas[(int) $fila->__id] = $etiqueta !== '' ? $etiqueta : $def['nombre'].' #'.$fila->__id;
+        }
+
+        $bloqueos = [];
+
+        if ($tipo === 'usuario' && in_array((int) auth()->id(), $ids, true)) {
+            $bloqueos[(int) auth()->id()][] = ['que' => 'Es tu propia cuenta', 'cantidad' => 0];
+        }
+
+        foreach ($def['bloqueos'] as [$tabla, $condicion, $que]) {
+            if (! Esquema::tieneTabla($tabla)) {
+                continue;
+            }
+
+            foreach (DB::select(
+                'SELECT __g.__id AS __id, COUNT(*) AS n FROM unnest(?::bigint[]) AS __g(__id) '
+                .'JOIN public."'.$tabla.'" ON ('.$this->condicionLote($condicion).') GROUP BY __g.__id',
+                [$lista]
+            ) as $fila) {
+                $bloqueos[(int) $fila->__id][] = ['que' => $que, 'cantidad' => (int) $fila->n];
+            }
+        }
+
+        return ['etiquetas' => $etiquetas, 'bloqueos' => $bloqueos];
+    }
+
+    /*
+     * Mueve los que se pueden y devuelve cuántos fueron. Los que tienen
+     * algo que depende de ellos (o ya no existen) se quedan igual.
+     */
+    public function moverVarios(string $tipo, array $ids): int
+    {
+        $def = PapeleraEntidades::de($tipo);
+        $revision = $this->revisarVarios($tipo, $ids);
+
+        $movibles = array_values(array_filter(
+            $this->idsLote($ids),
+            fn (int $id): bool => isset($revision['etiquetas'][$id]) && empty($revision['bloqueos'][$id])
+        ));
+
+        if ($movibles === []) {
+            return 0;
+        }
+
+        $lista = $this->listaPg($movibles);
+        $principal = [$def['tabla'], '"'.$def['llave'].'" = ?'];
+        $hijos = $this->hijos($tipo, $def);
+
+        try {
+            DB::transaction(function () use ($tipo, $def, $revision, $movibles, $lista, $principal, $hijos): void {
+                // 1. Copia agrupada por registro (primero el principal, luego lo suyo).
+                $bloquesPorId = [];
+                $vistas = [];
+
+                foreach (array_merge([$principal], $hijos) as [$tabla, $condicion]) {
+                    $porId = [];
+
+                    foreach (DB::select(
+                        'SELECT __g.__id AS __id, to_jsonb(t) AS fila FROM unnest(?::bigint[]) AS __g(__id) '
+                        .'JOIN public."'.$tabla.'" t ON ('.$this->condicionLote($condicion).')',
+                        [$lista]
+                    ) as $fila) {
+                        // Una fila que pertenece a dos registros se guarda solo una vez.
+                        $clave = $tabla.'|'.md5((string) $fila->fila);
+
+                        if (isset($vistas[$clave])) {
+                            continue;
+                        }
+
+                        $vistas[$clave] = true;
+                        $porId[(int) $fila->__id][] = json_decode((string) $fila->fila, true);
+                    }
+
+                    foreach ($porId as $id => $filas) {
+                        $bloquesPorId[$id][] = ['tabla' => $tabla, 'filas' => $filas];
+                    }
+                }
+
+                // 2. Quitar de sus tablas: al revés (primero lo que depende).
+                foreach (array_reverse($hijos) as [$tabla, $condicion]) {
+                    DB::delete(
+                        'DELETE FROM public."'.$tabla.'" WHERE EXISTS (SELECT 1 FROM unnest(?::bigint[]) AS __g(__id) WHERE '
+                        .$this->condicionLote($condicion).')',
+                        [$lista]
+                    );
+                }
+
+                DB::delete(
+                    'DELETE FROM public."'.$def['tabla'].'" WHERE "'.$def['llave'].'" = ANY(?::bigint[])',
+                    [$lista]
+                );
+
+                // 3. Un elemento de la papelera por registro.
+                $usuario = auth()->user();
+                $nombreUsuario = $usuario ? trim(($usuario->nombres ?? '').' '.($usuario->apellido_paterno ?? '')) : null;
+                $ahora = now();
+                $filasPapelera = [];
+
+                foreach ($movibles as $id) {
+                    $bloques = $bloquesPorId[$id] ?? [];
+
+                    $filasPapelera[] = [
+                        'tipo' => $tipo,
+                        'id_registro' => $id,
+                        'etiqueta' => mb_substr($revision['etiquetas'][$id], 0, 255),
+                        'detalle' => $this->detalle($bloques, $def),
+                        'datos' => json_encode($bloques, JSON_UNESCAPED_UNICODE),
+                        'archivos' => json_encode($this->archivos($bloques, $def), JSON_UNESCAPED_UNICODE),
+                        'eliminado_por' => $usuario?->getAuthIdentifier(),
+                        'eliminado_por_nombre' => $nombreUsuario,
+                        'eliminado_en' => $ahora,
+                        'expira_en' => $ahora->copy()->addDays(PapeleraEntidades::DIAS),
+                    ];
+                }
+
+                foreach (array_chunk($filasPapelera, 25) as $parte) {
+                    DB::table('papelera')->insert($parte);
+                }
+
+                $this->bitacora(
+                    'ELIMINAR',
+                    count($movibles) === 1
+                        ? $def['nombre'].' «'.$revision['etiquetas'][$movibles[0]].'» se movió a la papelera.'
+                        : count($movibles).' registros de tipo '.mb_strtolower($def['nombre']).' se movieron a la papelera.'
+                );
+            });
+        } catch (QueryException $e) {
+            if (($e->errorInfo[0] ?? null) === '23503') {
+                throw new PapeleraException(
+                    'Algunos todavía tienen registros que dependen de ellos. No se movió ninguno; intenta moverlos uno por uno para ver cuál es.'
+                );
+            }
+
+            throw $e;
+        } finally {
+            app(SystemCacheService::class)->refreshAll();
+        }
+
+        return count($movibles);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
     | Restaurar
     |--------------------------------------------------------------------------
     */
@@ -312,6 +489,30 @@ class PapeleraService
         }
 
         return array_merge($extra, $hijos);
+    }
+
+    /*
+     * Condición de un registro («id_equipo = ?») convertida para un lote:
+     * cada ? apunta al id de la lista (unnest … AS __g(__id)). Las
+     * condiciones vienen de PapeleraEntidades, nunca del usuario.
+     */
+    private function condicionLote(string $condicion): string
+    {
+        return str_replace('?', '__g.__id', $condicion);
+    }
+
+    private function idsLote(array $ids): array
+    {
+        return array_slice(
+            array_values(array_unique(array_filter(array_map('intval', $ids), fn (int $id): bool => $id > 0))),
+            0,
+            self::MAXIMO_LOTE
+        );
+    }
+
+    private function listaPg(array $ids): string
+    {
+        return '{'.implode(',', array_map('intval', $ids)).'}';
     }
 
     private function parametros(string $condicion, int $id): array

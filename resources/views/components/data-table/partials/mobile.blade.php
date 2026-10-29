@@ -46,7 +46,12 @@
 
         <article
             data-dado-de-baja="{{ $rowDecommissioned instanceof \Closure && $rowDecommissioned($row) ? '1' : '0' }}"
-            @if ($selectionModel)
+            @if ($selectionAlpine)
+                x-data="{ menuOpen: false,
+                    get selected() { return estaSeleccionado(@js((string) $id)); },
+                    set selected(value) { alternarSeleccion(@js((string) $id), value, @js($rowDecommissioned instanceof \Closure && $rowDecommissioned($row))); }
+                }"
+            @elseif ($selectionModel)
                 x-data="{ menuOpen: false,
                     get selected() { return $wire.get(@js($selectionModel)).map(String).includes(@js((string) $id)); },
                     set selected(value) {

@@ -119,7 +119,17 @@
                         <th class="px-4 2xl:px-5 py-3">
                             <input
                                 type="checkbox"
-                                @if ($selectionModel)
+                                @if ($selectionAlpine)
+                                    @php
+                                        $filasPagina = $registros->filter(fn ($r) => ! ($rowSelectable instanceof \Closure && ! $rowSelectable($r)));
+                                        $idsPagina = $filasPagina->map(fn ($r) => (string) $clave($r))->values()->all();
+                                        $bajasPagina = $filasPagina
+                                            ->filter(fn ($r) => $rowDecommissioned instanceof \Closure && $rowDecommissioned($r))
+                                            ->map(fn ($r) => (string) $clave($r))->values()->all();
+                                    @endphp
+                                    x-bind:checked="paginaSeleccionada(@js($idsPagina))"
+                                    @click="alternarPagina(@js($idsPagina), $event.target.checked, @js($bajasPagina))"
+                                @elseif ($selectionModel)
                                     wire:click="{{ $selectPageAction }}"
                                     @checked($registros->isNotEmpty() && ($registros->every(fn ($row) => in_array((string) $clave($row), $selectedKeys)) || ($selectionLimit && count($selectedKeys) >= $selectionLimit && $registros->contains(fn ($row) => in_array((string) $clave($row), $selectedKeys)))))
                                 @else
@@ -284,7 +294,10 @@
                                     data-dado-de-baja="{{ $rowDecommissioned instanceof \Closure && $rowDecommissioned($row) ? '1' : '0' }}"
                                     @disabled($rowSelectable instanceof \Closure && !$rowSelectable($row))
                                     value="{{ $id }}"
-                                    @if ($selectionModel)
+                                    @if ($selectionAlpine)
+                                        x-bind:checked="estaSeleccionado(@js((string) $id))"
+                                        @change="alternarSeleccion(@js((string) $id), $event.target.checked, @js($rowDecommissioned instanceof \Closure && $rowDecommissioned($row)))"
+                                    @elseif ($selectionModel)
                                         wire:model.live="{{ $selectionModel }}"
                                         @disabled($selectionLimit && count($selectedKeys) >= $selectionLimit && !in_array((string) $id, $selectedKeys))
                                     @endif
