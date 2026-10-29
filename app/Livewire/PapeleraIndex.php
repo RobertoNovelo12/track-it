@@ -133,17 +133,9 @@ class PapeleraIndex extends Component
     {
         Gate::authorize('administrar');
 
-        $servicio = app(PapeleraService::class);
-        $restaurados = [];
-        $errores = [];
-
-        foreach (array_unique(array_filter($ids)) as $id) {
-            try {
-                $restaurados[] = $servicio->restaurar((int) $id);
-            } catch (PapeleraException $e) {
-                $errores[] = $e->getMessage();
-            }
-        }
+        // Cada uno por separado (si uno falla, los demás se restauran);
+        // la caché se actualiza una sola vez al final.
+        ['restaurados' => $restaurados, 'errores' => $errores] = app(PapeleraService::class)->restaurarVarios($ids);
 
         $this->seleccionados = [];
 
@@ -167,19 +159,15 @@ class PapeleraIndex extends Component
     {
         Gate::authorize('administrar');
 
-        $servicio = app(PapeleraService::class);
-        $ids = array_unique(array_filter($ids));
-
-        foreach ($ids as $id) {
-            $servicio->eliminarDefinitivo((int) $id);
-        }
+        // Por lotes: unas cuantas consultas para todos, no tres por elemento.
+        $eliminados = app(PapeleraService::class)->eliminarDefinitivoVarios($ids);
 
         $this->seleccionados = [];
 
         $this->avisar(
-            count($ids) === 1
+            $eliminados === 1
                 ? 'Se eliminó definitivamente.'
-                : 'Se eliminaron definitivamente '.count($ids).' elementos.'
+                : 'Se eliminaron definitivamente '.$eliminados.' elementos.'
         );
     }
 

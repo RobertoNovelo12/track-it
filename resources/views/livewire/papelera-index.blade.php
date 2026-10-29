@@ -11,7 +11,20 @@
             const ids = this.eliminar;
             this.eliminar = null;
             if (! ids) return;
-            ids === 'seleccion' ? await $wire.eliminarSeleccion() : await $wire.eliminar(ids);
+
+            // Aviso con barra de avance mientras se elimina.
+            const cantidad = ids === 'seleccion' ? ($wire.seleccionados?.length ?? 0) : 1;
+            const aviso = window.trackitToast?.(
+                'loading',
+                'Esto puede tardar unos segundos.',
+                'Eliminando definitivamente ' + cantidad + (cantidad === 1 ? ' registro' : ' registros')
+            ) ?? null;
+
+            try {
+                ids === 'seleccion' ? await $wire.eliminarSeleccion() : await $wire.eliminar(ids);
+            } finally {
+                if (aviso) window.trackitToastTerminar?.(aviso);
+            }
         },
     }"
     x-on:papelera-pedir-eliminar.window="pedirEliminar($event.detail.id)"
