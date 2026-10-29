@@ -1285,12 +1285,6 @@
                             : null
                     );
 
-                    console.log('Diagnóstico del guardado:', JSON.stringify({
-                        tipoEsperado: this.tipo.id,
-                        respuestaUndefined: result === undefined,
-                        respuesta: result ?? null,
-                    }, null, 2));
-
                     if (
                         ! result
                         || ! Array.isArray(result.fields)
