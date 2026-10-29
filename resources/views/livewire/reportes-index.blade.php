@@ -660,7 +660,7 @@
 
     @endphp
 
-    <div class="mt-4 grid grid-cols-1 items-stretch gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)]">
+    <div class="mt-4">
 
         {{-- CONFIGURACIÓN --}}
 
@@ -739,95 +739,93 @@
 
                 x-on:submit="aplicarManualmente()"
 
-                class="grid gap-6 rounded-xl border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] p-4 sm:p-5 lg:grid-cols-[minmax(220px,0.85fr)_minmax(0,2fr)]"
+                class="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(380px,1fr)]"
 
             >
 
-                <div class="lg:col-span-2">
-
-                    <h2 class="text-sm font-semibold text-[var(--theme-text-strong)]">
-
-                        Configuración del reporte
-
-                    </h2>
-
-                </div>
-
-                {{-- TIPOS DE REPORTE --}}
-
-                <section>
-
-                    <div class="mb-3">
-
-                        <h3 class="text-sm font-semibold text-[var(--theme-text-strong)]">
-
-                            Tipos de reporte
-
-                        </h3>
-
-                        <p class="text-xs text-[var(--theme-text-muted)]">
-
-                            Selecciona un tipo de reporte.
-
-                        </p>
-
-                    </div>
-
-                    <div class="space-y-2">
+                {{-- TIPO DE REPORTE (pestañas, como Administración) + GENERAR --}}
+                <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between xl:col-span-2">
+                    <div class="min-w-0">
+                        <div class="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none]" role="tablist" aria-label="Tipo de reporte">
+                            @foreach ($tabs as $valor => $etiqueta)
+                                <button
+                                    type="button"
+                                    role="tab"
+                                    wire:key="selector-reporte-{{ $valor }}"
+                                    x-on:click="elegir(@js($valor))"
+                                    x-bind:aria-selected="(activo === @js($valor)).toString()"
+                                    x-bind:class="
+                                        activo === @js($valor)
+                                            ? 'border-[var(--theme-primary)] bg-[var(--theme-primary-soft)] text-[var(--theme-primary)]'
+                                            : 'border-[var(--theme-border)] bg-[var(--theme-surface)] text-[var(--theme-text-muted)] hover:border-[var(--theme-border-strong)] hover:bg-[var(--theme-surface-soft)] hover:text-[var(--theme-text)]'
+                                    "
+                                    class="inline-flex min-h-9 shrink-0 items-center justify-center whitespace-nowrap rounded-md border px-4 py-2 text-xs font-medium transition-colors duration-150"
+                                >
+                                    {{ $etiqueta }}
+                                </button>
+                            @endforeach
+                        </div>
 
                         @foreach ($tabs as $valor => $etiqueta)
-
-                            <button
-
-                                type="button"
-
-                                wire:key="selector-reporte-{{ $valor }}"
-
-                                x-on:click="elegir(@js($valor))"
-
-                                x-bind:aria-pressed="activo === @js($valor)"
-
-                                x-bind:class="
-
-                                    activo === @js($valor)
-
-                                        ? '!border-[var(--theme-primary-border-strong)] !bg-[var(--theme-primary-soft)]'
-
-                                        : ''
-
-                                "
-
-                                class="flex w-full items-center gap-3 rounded-lg border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-left transition-colors hover:border-[var(--theme-primary-border)]"
-
-                            >
-
-                                <span class="min-w-0">
-
-                                    <span class="block text-sm font-semibold text-[var(--theme-text-strong)]">
-
-                                        {{ $etiqueta }}
-
-                                    </span>
-
-                                    <span class="block text-xs text-[var(--theme-text-muted)]">
-
-                                        {{ $resumenes[$valor] }}
-
-                                    </span>
-
-                                </span>
-
-                            </button>
-
+                            <p x-show="activo === @js($valor)" @if ($valor !== $tipoSeleccionado) x-cloak @endif class="mt-2 text-xs text-[var(--theme-text-muted)]">
+                                {{ $resumenes[$valor] }}
+                            </p>
                         @endforeach
-
                     </div>
 
-                </section>
+                    {{-- GENERAR: un solo botón con PDF, Excel y CSV --}}
+                    <div
+                        wire:key="reportes-generar"
+                        x-data="{ abierto: false }"
+                        x-on:click.outside="abierto = false"
+                        x-on:keydown.escape.window="abierto = false"
+                        class="relative w-full shrink-0 md:w-auto"
+                    >
+                        <button
+                            type="button"
+                            x-on:click="abierto = ! abierto"
+                            x-bind:disabled="generando !== null"
+                            x-bind:aria-expanded="abierto.toString()"
+                            aria-haspopup="menu"
+                            class="inline-flex h-10 w-full items-center justify-center gap-2 rounded-md bg-[var(--theme-primary)] px-4 text-sm font-medium text-white transition-colors hover:bg-[var(--theme-primary-hover)] disabled:cursor-not-allowed disabled:opacity-70 md:w-auto"
+                        >
+                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-a5017c5') }}"></use></svg>
+                            <span x-text="generando !== null ? 'Generando…' : 'Generar reporte'">Generar reporte</span>
+                            <svg class="h-4 w-4 transition-transform" x-bind:class="abierto && 'rotate-180'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                        </button>
+
+                        <div
+                            x-show="abierto"
+                            x-cloak
+                            x-transition.opacity.duration.100ms
+                            role="menu"
+                            class="absolute right-0 top-full z-30 mt-2 w-full overflow-hidden rounded-md border border-[var(--theme-border)] bg-[var(--theme-surface)] text-left shadow-lg shadow-[var(--theme-shadow)] md:w-56"
+                        >
+                            @foreach ([
+                                'pdf' => ['PDF', 'Documento para imprimir o firmar', 'text-[var(--theme-text-muted)]'],
+                                'xlsx' => ['Excel', 'Hoja de cálculo editable', 'text-[var(--theme-text-muted)]'],
+                                'csv' => ['CSV', 'Datos separados por comas', 'text-[var(--theme-text-muted)]'],
+                            ] as $formato => [$nombre, $detalle, $color])
+                                <button
+                                    type="button"
+                                    role="menuitem"
+                                    x-on:click="abierto = false; generarArchivo(@js($formato))"
+                                    class="flex w-full items-start gap-3 border-b border-[var(--theme-border)] px-4 py-2.5 text-left transition-colors last:border-b-0 hover:bg-[var(--theme-surface-soft)]"
+                                >
+                                    <svg class="mt-0.5 h-4 w-4 shrink-0 {{ $color }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-a5017c5') }}"></use></svg>
+                                    <span class="min-w-0">
+                                        <span class="block text-sm font-medium text-[var(--theme-text-strong)]">{{ $nombre }}</span>
+                                        <span class="block text-xs text-[var(--theme-text-muted)]">{{ $detalle }}</span>
+                                    </span>
+                                </button>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
 
                 {{-- FILTROS --}}
 
-                <section class="min-w-0">
+                <section class="min-w-0 rounded-xl border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] p-4 sm:p-5">
 
                     <div class="mb-4">
 
@@ -1062,137 +1060,59 @@
 
                     </div>
 
-                    {{-- ACCIONES DE FILTROS --}}
-
-                    <div class="mt-4 flex flex-wrap items-center justify-end gap-3 border-t border-[var(--theme-border)] pt-4">
-
+                    {{-- La vista previa se actualiza sola al cambiar un filtro. --}}
+                    <div class="mt-3 flex justify-end">
                         <button
-
                             type="button"
-
                             wire:click="limpiarFiltros"
-
                             x-on:click="limpiarLocalmente()"
-
                             wire:loading.attr="disabled"
-
                             wire:target="limpiarFiltros"
-
-                            class="inline-flex h-10 items-center justify-center rounded-lg border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-5 text-sm font-semibold text-[var(--theme-text)] transition-colors hover:bg-[var(--theme-surface-soft)] disabled:opacity-60"
-
+                            class="rounded px-1 text-xs font-medium text-[var(--theme-primary)] hover:underline disabled:opacity-60"
                         >
-
-                            <span wire:loading.remove wire:target="limpiarFiltros">
-
-                                Limpiar filtros
-
-                            </span>
-
-                            <span wire:loading wire:target="limpiarFiltros">
-
-                                Limpiando…
-
-                            </span>
-
+                            <span wire:loading.remove wire:target="limpiarFiltros">Limpiar filtros</span>
+                            <span wire:loading wire:target="limpiarFiltros">Limpiando…</span>
                         </button>
-
-                        <x-ui.button
-                            type="submit"
-                            target="aplicarFiltros"
-                            loading-text="Aplicando…"
-                        >
-                            Aplicar filtros
-                        </x-ui.button>
-
-                    </div>
-
-                    {{-- BOTONES DE DESCARGA TRADICIONAL --}}
-
-                    <div class="mt-auto flex justify-end pt-4">
-
-                        <div class="flex flex-wrap items-center gap-2">
-
-                            @foreach ([
-
-                                'xlsx' => 'Excel',
-
-                                'pdf' => 'PDF',
-
-                                'csv' => 'CSV',
-
-                            ] as $formato => $nombre)
-
-                                {{--
-                                    Mismo estilo que los botones secundarios (x-ui.button):
-                                    fondo y borde neutros; el color solo identifica el
-                                    formato en el icono. Mientras genera, el spinner ocupa
-                                    el lugar del icono (el ancho no cambia).
-                                --}}
-                                <button
-                                    type="button"
-                                    x-on:click="generarArchivo(@js($formato))"
-                                    x-bind:disabled="generando !== null"
-                                    x-bind:aria-busy="generando === @js($formato) ? 'true' : 'false'"
-                                    class="inline-flex h-9 select-none items-center justify-center gap-2 whitespace-nowrap rounded-[var(--radius-md)] border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 text-xs font-medium text-[var(--theme-text)] transition-colors duration-[var(--motion-fast)] hover:bg-[var(--theme-surface-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--theme-primary)] disabled:cursor-not-allowed disabled:opacity-60"
-                                >
-                                    <span
-                                        @class([
-                                            'grid h-4 w-4 shrink-0 place-items-center',
-                                            'text-emerald-600 dark:text-emerald-400' => $formato === 'xlsx',
-                                            'text-red-600 dark:text-red-400' => $formato === 'pdf',
-                                            'text-[var(--theme-text-muted)]' => $formato === 'csv',
-                                        ])
-                                    >
-                                        {{-- Icono del formato --}}
-                                        <svg
-                                            x-show="generando !== @js($formato)"
-                                            class="col-start-1 row-start-1 h-4 w-4"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            stroke-width="1.8"
-                                            aria-hidden="true"
-                                        ><use href="{{ \App\Support\Icono::url('i-a5017c5') }}"></use></svg>
-
-                                        {{-- Generando (el x-show va en un span normal: dentro
-                                             de <x-ui.spinner> Blade no procesaría @js) --}}
-                                        <span
-                                            x-show="generando === @js($formato)"
-                                            x-cloak
-                                            class="col-start-1 row-start-1 inline-flex text-[var(--theme-primary)]"
-                                        >
-                                            <x-ui.spinner size="sm" />
-                                        </span>
-                                    </span>
-
-                                    <span>{{ $nombre }}</span>
-                                </button>
-
-                            @endforeach
-
-                        </div>
-
                     </div>
 
                 </section>
 
-            </form>
+                {{-- RESUMEN (debajo de los filtros): cifras generales del sistema --}}
+                @php $resumen = $this->resumenReportes(); @endphp
 
-        </div>
+                <section class="min-w-0 rounded-xl border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] p-4 sm:p-5">
+                    <h3 class="text-sm font-semibold text-[var(--theme-text-strong)]">Resumen</h3>
+                    <p class="text-xs text-[var(--theme-text-muted)]">Totales registrados en el sistema.</p>
 
-        {{-- VISTA PREVIA --}}
+                    <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                        @foreach ([
+                            ['Equipos dados de alta', $resumen['altas']],
+                            ['Equipos dados de baja', $resumen['bajas']],
+                            ['Asignaciones activas', $resumen['asignaciones']],
+                            ['Reasignaciones', $resumen['reasignaciones']],
+                            ['Mantenimientos', $resumen['mantenimientos']],
+                            ['Reportes generados', $resumen['reportes']],
+                        ] as [$nombreCifra, $valorCifra])
+                            <div class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] px-4 py-3.5">
+                                <p class="text-2xl font-semibold leading-tight tabular-nums text-[var(--theme-text-strong)]">{{ number_format($valorCifra) }}</p>
+                                <p class="mt-1 text-xs text-[var(--theme-text-muted)]">{{ $nombreCifra }}</p>
+                            </div>
+                        @endforeach
+                    </div>
+                </section>
+
+            {{-- VISTA PREVIA --}}
 
         <aside
-
-            class="relative min-w-0 h-[650px] overflow-hidden rounded-xl border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] p-4 xl:h-auto xl:self-stretch"
-
+            wire:key="reportes-vista-previa"
+            class="relative h-[640px] min-w-0 overflow-hidden rounded-xl border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] p-4 xl:col-start-2 xl:row-span-2 xl:row-start-2 xl:h-auto xl:min-h-[760px]"
         >
 
-            <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
 
                 <h2 class="text-sm font-semibold text-[var(--theme-text-strong)]">
 
-                    Vista rápida del documento final
+                    Vista previa del documento
 
                 </h2>
 
@@ -1213,6 +1133,42 @@
                 aria-label="Vista previa desplazable del documento"
 
             >
+
+                {{--
+                    HOJA TAMAÑO CARTA (como se genera el PDF): siempre 816 px de
+                    ancho (8.5 in a 96 dpi) y se reduce en escala para caber en la
+                    columna, sin cambiar sus proporciones. El alto del contenedor
+                    sigue al de la hoja ya reducida.
+                --}}
+                <div
+                    x-data="{
+                        escala: 1,
+                        alto: null,
+                        izquierda: 0,
+                        medir() {
+                            const disponible = this.$el.clientWidth;
+                            if (! disponible) return;
+                            this.escala = Math.min(1, disponible / 816);
+                            this.izquierda = Math.max(0, (disponible - 816) / 2);
+                            this.alto = Math.ceil(this.$refs.hoja.scrollHeight * this.escala);
+                        },
+                    }"
+                    x-init="
+                        $nextTick(() => medir());
+                        const observador = new ResizeObserver(() => medir());
+                        observador.observe($el);
+                        observador.observe($refs.hoja);
+                    "
+                    :style="alto ? { height: alto + 'px' } : {}"
+                    class="relative w-full overflow-hidden"
+                >
+                    <div
+                        x-ref="hoja"
+                        :style="{ transform: 'scale(' + escala + ')', left: izquierda + 'px' }"
+                        style="width: 816px; min-height: 1056px; transform-origin: top left;"
+                        class="absolute top-0 bg-white shadow-md"
+                    >
+
 
                 {{-- VISTA VACÍA INSTANTÁNEA --}}
 
@@ -1460,9 +1416,18 @@
 
                 </div>
 
+            
+                    </div>
+                </div>
             </div>
 
         </aside>
+
+            </form>
+
+        </div>
+
+        
 
     </div>
 
