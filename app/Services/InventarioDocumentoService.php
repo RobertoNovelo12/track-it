@@ -106,7 +106,7 @@ class InventarioDocumentoService
                         'mo.nombre as modelo_nombre', 'es.nombre as estado_nombre',
                         'es.clave as estado_clave', 'co.nombre as condicion_nombre',
                         'u.nombre as hotel_nombre', 'dep.nombre as departamento_nombre',
-                        'u.nombre as area_nombre', 'ub.nombre as ubicacion_nombre',
+                        'ub.nombre as ubicacion_nombre',
                         'pr.nombre as proveedor_nombre',
                     ])->get()
             );
@@ -129,7 +129,7 @@ class InventarioDocumentoService
                         'ta.nombre as tipo_asignacion', 'a.observaciones', 'a.id_equipo', 'a.nombre_colaborador', 'a.numero_colaborador',
                         'a.fecha_asignacion', 'a.fecha_fin', 'a.id_asignacion',
                         'u.nombre as hotel_nombre', 'd.nombre as departamento_nombre',
-                        'u.nombre as area_nombre', 'ub.nombre as ubicacion_nombre',
+                        'ub.nombre as ubicacion_nombre',
                     ])
             );
 
@@ -214,7 +214,6 @@ class InventarioDocumentoService
                 'ultimo_responsable' => $this->texto($ultima?->nombre_colaborador),
                 'hotel' => $this->texto($actual && !$deBaja ? ($actual->hotel_nombre ?: $e->hotel_nombre) : $e->hotel_nombre),
                 'departamento' => $this->texto($actual && !$deBaja ? ($actual->departamento_nombre ?: $e->departamento_nombre) : $e->departamento_nombre),
-                'area' => $this->texto($actual && !$deBaja ? ($actual->area_nombre ?: $e->area_nombre) : $e->area_nombre),
                 'ubicacion' => $this->texto($ubicacionActual),
                 'fecha_asignacion' => $this->texto($actual?->fecha_asignacion),
                 'fecha_baja' => $this->texto($bajas->get($id)?->fecha_baja),

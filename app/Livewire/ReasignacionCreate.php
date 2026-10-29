@@ -153,7 +153,7 @@ class ReasignacionCreate extends Component
             (string) $actual->id_tipo_asignacion;
 
         $this->unidadDepartamentoActual =
-            $this->buildAreaDepartmentLabel(
+            $this->buildHotelDepartmentLabel(
                 $actual->unidad_nombre ?? null,
                 $actual->departamento_nombre ?? null
             );
@@ -876,7 +876,7 @@ class ReasignacionCreate extends Component
                                     (string) $equipo->id_tipo_asignacion,
 
                                 'unidadDepartamento' =>
-                                    $this->buildAreaDepartmentLabel(
+                                    $this->buildHotelDepartmentLabel(
                                         $equipo->unidad_nombre
                                             ?? null,
                                         $equipo->departamento_nombre
@@ -1065,16 +1065,16 @@ class ReasignacionCreate extends Component
     |--------------------------------------------------------------------------
     */
 
-    private function buildAreaDepartmentLabel(
-        ?string $area,
+    private function buildHotelDepartmentLabel(
+        ?string $hotel,
         ?string $departamento
     ): string {
         /*
-         * $area recibe ahora el nombre del hotel.
+         * $hotel recibe ahora el nombre del hotel.
          */
-        $area =
+        $hotel =
             trim(
-                (string) $area
+                (string) $hotel
             );
 
         $departamento =
@@ -1083,11 +1083,11 @@ class ReasignacionCreate extends Component
             );
 
         if (
-            $area !== ''
+            $hotel !== ''
             && $departamento !== ''
         ) {
             return
-                $area
+                $hotel
                 . ' / '
                 . $departamento;
         }
@@ -1096,8 +1096,8 @@ class ReasignacionCreate extends Component
             return $departamento;
         }
 
-        if ($area !== '') {
-            return $area;
+        if ($hotel !== '') {
+            return $hotel;
         }
 
         return 'Sin hotel / departamento';

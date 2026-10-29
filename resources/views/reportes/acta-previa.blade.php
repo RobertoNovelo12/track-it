@@ -13,9 +13,9 @@
         ($equipo['modelo'] ?? '')
     );
 
-    $areaNuevo = implode(' / ', array_unique(array_filter([
+    $hotelNuevo = implode(' / ', array_unique(array_filter([
         $nuevo['departamento'] ?? null,
-        $nuevo['area'] ?? null,
+        $nuevo['hotel'] ?? null,
     ])));
 @endphp
 
@@ -280,7 +280,7 @@
                     <span class="value">
                         {{ $dato(implode(' / ', array_filter([
                             $anterior['departamento'] ?? null,
-                            $anterior['area'] ?? null,
+                            $anterior['hotel'] ?? null,
                         ]))) }}
                     </span>
                 </div>
@@ -336,7 +336,7 @@
                 <div class="field">
                     <span class="label">Nuevo hotel</span>
                     <span class="value">
-                        {{ $dato($nuevo['area'] ?? null) }}
+                        {{ $dato($nuevo['hotel'] ?? null) }}
                     </span>
                 </div>
                 <div class="field">
@@ -394,7 +394,7 @@
                 <div class="field">
                     <span class="label">Departamento / Hotel</span>
                     <span class="value">
-                        {{ $dato($areaNuevo) }}
+                        {{ $dato($hotelNuevo) }}
                     </span>
                 </div>
                 <div class="field">

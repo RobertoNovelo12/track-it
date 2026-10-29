@@ -26,7 +26,7 @@ class MantenimientosIndex extends Component
     public string $equipo = '';
     public string $fechaDesde = '';
     public string $fechaHasta = '';
-    public string $areaDepartamento = '';
+    public string $hotelDepartamento = '';
     public string $numeroSerie = '';
 
     /*
@@ -45,7 +45,7 @@ class MantenimientosIndex extends Component
     public string $filtroEquipo = '';
     public string $filtroFechaDesde = '';
     public string $filtroFechaHasta = '';
-    public string $filtroAreaDepartamento = '';
+    public string $filtroHotelDepartamento = '';
     public string $filtroNumeroSerie = '';
 
     public int $perPage = 10;
@@ -100,7 +100,7 @@ class MantenimientosIndex extends Component
         $this->filtroEquipo = trim($this->equipo);
         $this->filtroFechaDesde = $this->fechaDesde;
         $this->filtroFechaHasta = $this->fechaHasta;
-        $this->filtroAreaDepartamento = $this->areaDepartamento;
+        $this->filtroHotelDepartamento = $this->hotelDepartamento;
         $this->filtroNumeroSerie = trim($this->numeroSerie);
 
         $this->resetPage();
@@ -115,7 +115,7 @@ class MantenimientosIndex extends Component
             'equipo',
             'fechaDesde',
             'fechaHasta',
-            'areaDepartamento',
+            'hotelDepartamento',
             'numeroSerie',
 
             'filtroTipo',
@@ -124,7 +124,7 @@ class MantenimientosIndex extends Component
             'filtroEquipo',
             'filtroFechaDesde',
             'filtroFechaHasta',
-            'filtroAreaDepartamento',
+            'filtroHotelDepartamento',
             'filtroNumeroSerie',
         ]);
 
@@ -356,11 +356,11 @@ class MantenimientosIndex extends Component
         |--------------------------------------------------------------------------
         */
 
-        if ($this->filtroAreaDepartamento !== '') {
+        if ($this->filtroHotelDepartamento !== '') {
             [$tipoFiltro, $id] = array_pad(
                 explode(
                     ':',
-                    $this->filtroAreaDepartamento,
+                    $this->filtroHotelDepartamento,
                     2
                 ),
                 2,
@@ -414,7 +414,7 @@ class MantenimientosIndex extends Component
                 'serie' => $this->filtroNumeroSerie,
                 'desde' => $this->filtroFechaDesde,
                 'hasta' => $this->filtroFechaHasta,
-                'area_departamento' => $this->filtroAreaDepartamento,
+                'hotel_departamento' => $this->filtroHotelDepartamento,
                 'orden' => $columnaOrden,
                 'direccion' => $direccion,
                 'per_page' => $perPage,

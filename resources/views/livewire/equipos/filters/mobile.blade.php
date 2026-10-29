@@ -105,14 +105,14 @@
         ];
     }
 
-    if ($area) {
-        $item = collect($areas)->first(
+    if ($hotelFiltro) {
+        $item = collect($hotelesFiltro)->first(
             fn ($item) =>
-                (string) $item['id_unidad'] === (string) $area
+                (string) $item['id_unidad'] === (string) $hotelFiltro
         );
 
         $activeFilters[] = [
-            'property' => 'area',
+            'property' => 'hotelFiltro',
             'label' => $item['nombre'] ?? app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['unidad_singular'],
         ];
     }

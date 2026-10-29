@@ -30,7 +30,7 @@ class EquipoBajaMultiple extends Component
     public ?string $numeroSerie = null;
     public ?string $numeroFactura = null;
     public ?string $estado = null;
-    public ?string $area = null;
+    public ?string $hotelFiltro = null;
     public ?string $situacion = null;
     public ?string $serviceTag = null;
     public ?string $direccionIp = null;
@@ -186,7 +186,7 @@ class EquipoBajaMultiple extends Component
                 'numeroSerie',
                 'numeroFactura',
                 'estado',
-                'area',
+                'hotelFiltro',
                 'situacion',
                 'serviceTag',
                 'direccionIp',
@@ -208,7 +208,7 @@ class EquipoBajaMultiple extends Component
             'numeroSerie',
             'numeroFactura',
             'estado',
-            'area',
+            'hotelFiltro',
             'situacion',
             'serviceTag',
             'direccionIp',
@@ -1116,7 +1116,7 @@ class EquipoBajaMultiple extends Component
                 'marcas' => $mostrarSeleccion ? $this->getMarcas() : collect(),
                 'modelos' => $mostrarSeleccion ? $this->getModelos() : collect(),
                 'estados' => $mostrarSeleccion ? $this->getEstados() : collect(),
-                'areas' => $mostrarSeleccion ? $this->getAreas() : collect(),
+                'hotelesFiltro' => $mostrarSeleccion ? $this->getHotelesFiltro() : collect(),
 
                 'camposTipoFiltros' => $mostrarSeleccion && $this->tipoActivo
                     ? $this->getCamposFiltrables(

@@ -43,7 +43,7 @@
                     'collaborator' => $usuario->numero_colaborador ?: 'Sin asignar',
                     'position' => $usuario->puesto ?: 'Sin asignar',
                     'role' => $usuario->rol_nombre ?: 'Sin rol',
-                    'area' => $usuario->area_nombre ?: 'Sin asignar',
+                    'hotel' => $usuario->hotel_nombre ?: 'Sin asignar',
                     'department' => $usuario->departamento_nombre ?: 'Sin asignar',
                     'status' => $usuario->estado_nombre ?: 'Sin estado',
                     'registered' => $usuario->fecha_registro
@@ -326,7 +326,7 @@
 
                     <div class="px-3 py-2.5 flex items-start justify-between gap-4">
                         <span class="text-xs text-[var(--theme-text-muted)]">Hotel</span>
-                        <span id="user-details-area" class="text-xs text-right text-[var(--theme-text)]">—</span>
+                        <span id="user-details-hotel" class="text-xs text-right text-[var(--theme-text)]">—</span>
                     </div>
 
                     <div class="px-3 py-2.5 flex items-start justify-between gap-4">
@@ -417,7 +417,7 @@
         setText('user-details-collaborator', user.collaborator);
         setText('user-details-position', user.position);
         setText('user-details-role', user.role, 'Sin rol');
-        setText('user-details-area', user.area);
+        setText('user-details-hotel', user.hotel);
         setText('user-details-department', user.department);
 
         // Contraseña: solo se restablece con una solicitud verificada vigente.

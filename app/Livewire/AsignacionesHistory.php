@@ -260,14 +260,14 @@ class AsignacionesHistory extends Component
             )
 
             /*
-             * 'area' contiene ahora el hotel (se conserva el alias
+             * 'hotel' contiene ahora el hotel (se conserva el alias
              * porque ambas consultas se unen con UNION).
              */
             ->selectRaw("
                 COALESCE(
                     unidad.nombre,
                     ''
-                ) as area
+                ) as hotel
             ")
 
             ->selectRaw(
@@ -537,14 +537,14 @@ class AsignacionesHistory extends Component
             )
 
             /*
-             * 'area' contiene ahora el hotel (se conserva el alias
+             * 'hotel' contiene ahora el hotel (se conserva el alias
              * porque ambas consultas se unen con UNION).
              */
             ->selectRaw("
                 COALESCE(
                     unidad.nombre,
                     ''
-                ) as area
+                ) as hotel
             ")
 
             ->selectRaw(
@@ -665,7 +665,7 @@ class AsignacionesHistory extends Component
                         )
 
                         ->orWhereRaw(
-                            "LOWER(COALESCE(history.area, '')) LIKE ?",
+                            "LOWER(COALESCE(history.hotel, '')) LIKE ?",
                             [$like]
                         )
 
@@ -832,4 +832,4 @@ class AsignacionesHistory extends Component
             ]
         );
     }
-}
+}

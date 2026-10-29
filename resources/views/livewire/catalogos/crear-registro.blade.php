@@ -449,9 +449,9 @@
                             <x-searchable-select
                                 wire-model="idUnidadUsoComun"
                                 :options="$unidades
-                                    ->map(fn ($area) => [
-                                        'value' => $area->id_unidad,
-                                        'label' => $area->nombre,
+                                    ->map(fn ($hotel) => [
+                                        'value' => $hotel->id_unidad,
+                                        'label' => $hotel->nombre,
                                     ])
                                     ->values()
                                     ->all()"

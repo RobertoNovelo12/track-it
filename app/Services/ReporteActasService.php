@@ -68,8 +68,8 @@ class ReporteActasService
                 'a.id_ubicacion'
             )
             ->leftJoin(
-                'sedes as sede_area',
-                'sede_area.id_sede',
+                'sedes as sede_hotel',
+                'sede_hotel.id_sede',
                 '=',
                 'ar.id_sede'
             )
@@ -93,10 +93,10 @@ class ReporteActasService
                 'a.fecha_asignacion',
                 'a.fecha_fin',
                 'a.observaciones',
-                'ar.nombre as area_directa',
+                'ar.nombre as hotel_directo',
                 'dep.nombre as departamento',
                 'ub.nombre as ubicacion',
-                'sede_area.nombre as sede_directa',
+                'sede_hotel.nombre as sede_directa',
                 'sede_ubicacion.nombre as sede_ubicacion',
                 'tipo.nombre as tipo_asignacion',
             ]);
@@ -105,7 +105,7 @@ class ReporteActasService
             return null;
         }
 
-        $area = $registro->area_directa;
+        $hotel = $registro->hotel_directo;
 
         $sede = $registro->sede_directa
             ?: $registro->sede_ubicacion;
@@ -115,7 +115,7 @@ class ReporteActasService
             'nombre' => $registro->nombre_colaborador,
             'numero' => $registro->numero_colaborador,
             'sede' => $sede,
-            'area' => $area,
+            'hotel' => $hotel,
             'departamento' => $registro->departamento,
             'ubicacion' => $registro->ubicacion,
             'tipo' => $registro->tipo_asignacion,
@@ -252,7 +252,7 @@ class ReporteActasService
             'observaciones' => $movimiento->observaciones,
 
             'sede_anterior' => $anterior['sede'] ?? null,
-            'area_anterior' => $anterior['area'] ?? null,
+            'hotel_anterior' => $anterior['hotel'] ?? null,
 
             'departamento_anterior' =>
                 $anterior['departamento'] ?? null,
@@ -261,7 +261,7 @@ class ReporteActasService
                 $anterior['ubicacion'] ?? null,
 
             'sede_nueva' => $nuevo['sede'] ?? null,
-            'area_nueva' => $nuevo['area'] ?? null,
+            'hotel_nuevo' => $nuevo['hotel'] ?? null,
 
             'departamento_nuevo' =>
                 $nuevo['departamento'] ?? null,

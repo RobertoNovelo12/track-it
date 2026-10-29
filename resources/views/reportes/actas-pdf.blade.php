@@ -555,21 +555,21 @@
 
 
 
-        $areaAnterior = implode(' / ', array_unique(array_filter([
+        $hotelAnterior = implode(' / ', array_unique(array_filter([
 
             $anterior['departamento'] ?? null,
 
-            $anterior['area'] ?? null,
+            $anterior['hotel'] ?? null,
 
         ])));
 
 
 
-        $areaNuevo = implode(' / ', array_unique(array_filter([
+        $hotelNuevo = implode(' / ', array_unique(array_filter([
 
             $nuevo['departamento'] ?? null,
 
-            $nuevo['area'] ?? null,
+            $nuevo['hotel'] ?? null,
 
         ])));
 
@@ -728,7 +728,7 @@
 
                         <div class="valor">
 
-                            {{ $dato($areaAnterior) }}
+                            {{ $dato($hotelAnterior) }}
 
                         </div>
 
@@ -856,7 +856,7 @@
 
                         <div class="valor">
 
-                            {{ $dato($nuevo['area'] ?? null) }}
+                            {{ $dato($nuevo['hotel'] ?? null) }}
 
                         </div>
 
@@ -992,7 +992,7 @@
 
                         <div class="valor">
 
-                            {{ $dato($areaNuevo) }}
+                            {{ $dato($hotelNuevo) }}
 
                         </div>
 

@@ -1040,7 +1040,7 @@ class SeguridadIndex extends Component
                 'r.nombre as rol_nombre',
                 'eu.clave as estado_clave',
                 'eu.nombre as estado_nombre',
-                'uo.nombre as area_nombre',
+                'uo.nombre as hotel_nombre',
                 'd.nombre as departamento_nombre',
                 'uo.nombre as unidad_nombre',
             ])

@@ -332,9 +332,9 @@
                     {{-- HOTEL (unidad organizativa) --}}
                     <x-searchable-select
                         :label="app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['unidad_singular']"
-                        wire-model="area"
+                        wire-model="hotelFiltro"
                         :options="
-                            collect($areas)->map(
+                            collect($hotelesFiltro)->map(
                                 fn ($a) => [
                                     'value' => $a['id_unidad'],
                                     'label' => $a['nombre'],

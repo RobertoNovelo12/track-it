@@ -23,7 +23,7 @@
         |--------------------------------------------------------------------------
         */
 
-        $totalPorArea = collect($equiposPorArea)->sum('total');
+        $totalPorHotel = collect($equiposPorHotel)->sum('total');
 
         $chartColors = [
             '#247BA0',
@@ -40,10 +40,10 @@
 
         $start = 0;
 
-        foreach ($equiposPorArea as $index => $item) {
+        foreach ($equiposPorHotel as $index => $item) {
 
-            $percentage = $totalPorArea > 0
-                ? ((int) $item->total / $totalPorArea) * 100
+            $percentage = $totalPorHotel > 0
+                ? ((int) $item->total / $totalPorHotel) * 100
                 : 0;
 
             $end = $start + $percentage;
@@ -849,7 +849,7 @@
             </div>
 
 
-            @if ($totalPorArea > 0)
+            @if ($totalPorHotel > 0)
 
                 <div
                     class="
@@ -924,7 +924,7 @@
                                     text-[var(--theme-text-strong)]
                                 "
                             >
-                                {{ number_format($totalPorArea) }}
+                                {{ number_format($totalPorHotel) }}
                             </span>
 
                             <span
@@ -956,7 +956,7 @@
                         "
                     >
 
-                        @foreach ($equiposPorArea as $index => $item)
+                        @foreach ($equiposPorHotel as $index => $item)
 
                             @php
                                 $color =
@@ -994,7 +994,7 @@
                                         text-[var(--theme-text-muted)]
                                     "
                                 >
-                                    {{ $item->area }}
+                                    {{ $item->hotel }}
                                 </span>
 
 

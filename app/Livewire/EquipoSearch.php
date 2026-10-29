@@ -122,8 +122,8 @@ class EquipoSearch extends Component
 
 
             ->leftJoin(
-                'unidades_organizativas as area_directa',
-                'area_directa.id_unidad',
+                'unidades_organizativas as hotel_directo',
+                'hotel_directo.id_unidad',
                 '=',
                 'e.id_unidad'
             )
@@ -160,9 +160,9 @@ class EquipoSearch extends Component
 
                             THEN CASE
 
-                                WHEN area_directa.nombre IS NOT NULL
+                                WHEN hotel_directo.nombre IS NOT NULL
 
-                                    THEN area_directa.nombre
+                                    THEN hotel_directo.nombre
                                         || ' / '
                                         || dep.nombre
 
@@ -170,7 +170,7 @@ class EquipoSearch extends Component
 
                             END
 
-                        ELSE area_directa.nombre
+                        ELSE hotel_directo.nombre
 
                     END,
 

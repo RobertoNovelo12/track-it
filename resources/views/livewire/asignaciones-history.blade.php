@@ -415,7 +415,7 @@
                 'key' => 'ubicacion_texto',
                 'label' => 'Ubicación',
                 'width' => '260px',
-                'value' => fn ($registro) => collect([$registro->area, $registro->departamento, $registro->ubicacion])->filter()->implode(' · '),
+                'value' => fn ($registro) => collect([$registro->hotel, $registro->departamento, $registro->ubicacion])->filter()->implode(' · '),
                 'default' => 'Sin ubicación',
             ],
             [

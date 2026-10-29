@@ -1101,7 +1101,7 @@ class AsignacionesIndex extends Component
     |--------------------------------------------------------------------------
     */
 
-    private function getEquiposPorArea()
+    private function getEquiposPorHotel()
     {
         $cache =
             $this->systemCache();
@@ -1138,10 +1138,10 @@ class AsignacionesIndex extends Component
                     /*
                      * Agrupado por hotel: el de la asignación y, si no
                      * lo tiene (registros anteriores), el del equipo.
-                     * La clave 'area' se conserva por compatibilidad
+                     * La clave 'hotel' se conserva por compatibilidad
                      * con la vista.
                      */
-                    $areaExpression = "
+                    $hotelExpression = "
                         COALESCE(
                             unidad_asig.nombre,
                             unidad_equipo.nombre,
@@ -1180,8 +1180,8 @@ class AsignacionesIndex extends Component
                         )
 
                         ->selectRaw(
-                            $areaExpression
-                            . ' as area'
+                            $hotelExpression
+                            . ' as hotel'
                         )
 
                         ->selectRaw(
@@ -1189,7 +1189,7 @@ class AsignacionesIndex extends Component
                         )
 
                         ->groupByRaw(
-                            $areaExpression
+                            $hotelExpression
                         )
 
                         ->orderByDesc(
@@ -1202,9 +1202,9 @@ class AsignacionesIndex extends Component
                             function ($item): array {
 
                                 return [
-                                    'area' =>
+                                    'hotel' =>
                                         (string) (
-                                            $item->area
+                                            $item->hotel
                                             ?? 'Sin hotel'
                                         ),
 
@@ -1229,7 +1229,7 @@ class AsignacionesIndex extends Component
         /*
         * El Blade actual trabaja con:
         *
-        * $item->area
+        * $item->hotel
         * $item->total
         *
         * por eso reconstruimos objetos después del cache.
@@ -1246,9 +1246,9 @@ class AsignacionesIndex extends Component
 
 
                     return (object) [
-                        'area' =>
+                        'hotel' =>
                             (string) (
-                                $item['area']
+                                $item['hotel']
                                 ?? 'Sin hotel'
                             ),
 
@@ -1873,7 +1873,7 @@ class AsignacionesIndex extends Component
     |--------------------------------------------------------------------------
     */
 
-    private function getAreas(): array
+    private function getHoteles(): array
     {
         return $this->systemCache()
             ->rememberSimple(
@@ -1901,13 +1901,13 @@ class AsignacionesIndex extends Component
                         ])
 
                         ->map(
-                            fn ($area) => [
+                            fn ($hotel) => [
                                 'value' =>
                                     (string)
-                                    $area->id_unidad,
+                                    $hotel->id_unidad,
 
                                 'label' =>
-                                    $area->nombre,
+                                    $hotel->nombre,
                             ]
                         )
 
@@ -1935,7 +1935,7 @@ class AsignacionesIndex extends Component
                 'asignaciones.departamentos.v2',
 
                 [
-                    'area' =>
+                    'hotel' =>
                         $this->idUnidadAsignar,
                 ],
 
@@ -1993,7 +1993,7 @@ class AsignacionesIndex extends Component
                 'asignaciones.ubicaciones.v2',
 
                 [
-                    'area' =>
+                    'hotel' =>
                         $this->idUnidadAsignar,
                 ],
 
@@ -2121,8 +2121,8 @@ class AsignacionesIndex extends Component
                  * Gráfica y actividad
                  */
 
-                'equiposPorArea' =>
-                    $this->getEquiposPorArea(),
+                'equiposPorHotel' =>
+                    $this->getEquiposPorHotel(),
 
                 'actividad' =>
                     $this->getActividad(),
@@ -2138,8 +2138,8 @@ class AsignacionesIndex extends Component
                 'equiposDisponibles' =>
                     $this->getEquiposDisponibles(),
 
-                'areas' =>
-                    $this->getAreas(),
+                'hoteles' =>
+                    $this->getHoteles(),
 
                 'departamentos' =>
                     $this->getDepartamentos(),

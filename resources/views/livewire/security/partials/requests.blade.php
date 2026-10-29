@@ -135,7 +135,6 @@
                                     'numero_colaborador' => 'Número de colaborador',
                                     'puesto' => 'Puesto',
                                     'rol' => 'Rol',
-                                    'area' => 'Hotel',
                                     'hotel' => app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['unidad_singular'],
                                     'departamento' => 'Departamento',
                                     default => ucfirst(
@@ -325,7 +324,6 @@
                             'numero_colaborador' => 'Número de colaborador',
                             'puesto' => 'Puesto',
                             'rol' => 'Rol',
-                            'area' => 'Hotel',
                             'hotel' => app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['unidad_singular'],
                             'departamento' => 'Departamento',
                             default => ucfirst(

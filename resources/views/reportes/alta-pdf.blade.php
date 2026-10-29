@@ -738,7 +738,7 @@
 
                     <span class="valor">
 
-                        {{ $dato($alta['area'] ?? null) }}
+                        {{ $dato($alta['hotel'] ?? null) }}
 
                     </span>
 

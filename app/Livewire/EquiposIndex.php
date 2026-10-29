@@ -168,8 +168,8 @@ class EquiposIndex extends Component
     #[Url]
     public ?string $estado = null;
 
-    #[Url]
-    public ?string $area = null;
+    #[Url(as: 'hotel')]
+    public ?string $hotelFiltro = null;
 
     /*
      * Situación operativa (accesos de la Vista general):
@@ -234,7 +234,7 @@ class EquiposIndex extends Component
                     'serviceTag',
                     'direccionIp',
                     'estado',
-                    'area',
+                    'hotelFiltro',
                     'situacion',
                     'programa',
                     'camposTipo',
@@ -425,7 +425,7 @@ class EquiposIndex extends Component
         $this->serviceTag = null;
         $this->direccionIp = null;
         $this->estado = null;
-        $this->area = null;
+        $this->hotelFiltro = null;
         $this->situacion = null;
         $this->programa = null;
 
@@ -550,10 +550,10 @@ class EquiposIndex extends Component
                     )
                 ),
 
-            'area' =>
+            'hotel' =>
                 trim(
                     (string) (
-                        $this->area
+                        $this->hotelFiltro
                         ?? ''
                     )
                 ),
@@ -899,11 +899,11 @@ class EquiposIndex extends Component
 
                 /*
                 |--------------------------------------------------------------------------
-                | ÁREA DEL DEPARTAMENTO
+                | DEPARTAMENTO PRINCIPAL
                 |--------------------------------------------------------------------------
                 |
-                | EquipoEdit ya espera departamento_area_id cuando el equipo
-                | pertenece a un departamento.
+                | EquipoEdit espera el departamento principal cuando el
+                | equipo pertenece a un subdepartamento.
                 |
                 */
 
@@ -1162,8 +1162,8 @@ class EquiposIndex extends Component
 
     public function mount(?int $unidadPredeterminada = null): void
     {
-        if ($unidadPredeterminada && blank($this->area)) {
-            $this->area = (string) $unidadPredeterminada;
+        if ($unidadPredeterminada && blank($this->hotelFiltro)) {
+            $this->hotelFiltro = (string) $unidadPredeterminada;
         }
     }
 
@@ -1391,8 +1391,8 @@ class EquiposIndex extends Component
                 'estados' =>
                     $this->getEstados(),
 
-                'areas' =>
-                    $this->getAreas(),
+                'hotelesFiltro' =>
+                    $this->getHotelesFiltro(),
 
                 'camposTipoFiltros' =>
                     trim((string) ($this->tipoActivo ?? '')) !== ''

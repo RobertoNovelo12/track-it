@@ -8,7 +8,7 @@
      */
     $filtrosActivosEscritorio = collect([
         $tipoActivo, $nombreEquipo, $marca, $modelo, $numeroSerie,
-        $numeroFactura, $estado, $area, $situacion, $serviceTag, $direccionIp, $programa ?? null,
+        $numeroFactura, $estado, $hotelFiltro, $situacion, $serviceTag, $direccionIp, $programa ?? null,
     ])->filter(fn ($valor) => filled($valor))->count()
         + collect($camposTipo ?? [])->filter(fn ($valor) => filled($valor) && ! is_array($valor))->count();
 @endphp
@@ -104,7 +104,7 @@
                 serviceTag,
                 direccionIp,
                 estado,
-                area,
+                hotelFiltro,
                 situacion,
                 programa,
                 resetFilters
@@ -307,9 +307,9 @@
         {{-- HOTEL (unidad organizativa) --}}
         <x-searchable-select
             :label="app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['unidad_singular']"
-            wire-model="area"
+            wire-model="hotelFiltro"
             :options="
-                collect($areas)->map(
+                collect($hotelesFiltro)->map(
                     fn ($a) => [
                         'value' => $a['id_unidad'],
                         'label' => $a['nombre'],

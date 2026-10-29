@@ -101,7 +101,7 @@ class ReporteAltasActaService
                 'p.nombre as proveedor',
                 'estado.nombre as estado',
                 'condicion.nombre as condicion',
-                'ar.nombre as area_directa',
+                'ar.nombre as hotel_directo',
                 'dep.nombre as departamento',
             ])
             ->get()
@@ -178,8 +178,8 @@ class ReporteAltasActaService
                     'responsable' =>
                         $responsable->nombre_colaborador ?? null,
 
-                    'area' =>
-                        $equipo->area_directa,
+                    'hotel' =>
+                        $equipo->hotel_directo,
 
                     'departamento' => $equipo->departamento,
                     'comentarios' => $equipo->comentarios,

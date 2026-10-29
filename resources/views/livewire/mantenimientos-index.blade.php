@@ -96,7 +96,7 @@
             {{-- Departamento --}}
             <x-searchable-select
                 label="Departamento"
-                wire-model="areaDepartamento"
+                wire-model="hotelDepartamento"
                 :options="collect($departamentos)->map(fn ($item) => [
                     'value' => 'departamento:' . $item->id_departamento,
                     'label' => $item->nombre,

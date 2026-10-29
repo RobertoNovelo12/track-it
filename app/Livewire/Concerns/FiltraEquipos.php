@@ -96,10 +96,10 @@ trait FiltraEquipos
             );
 
 
-        $area =
+        $hotel =
             trim(
                 (string) (
-                    $this->area
+                    $this->hotelFiltro
                     ?? ''
                 )
             );
@@ -252,26 +252,26 @@ trait FiltraEquipos
         */
 
         $query->when(
-            $area !== '',
+            $hotel !== '',
             function (
                 Builder $q
             ) use (
-                $area
+                $hotel
             ): void {
-                $areaId =
-                    (int) $area;
+                $idHotel =
+                    (int) $hotel;
 
 
                 $q->where(
                     function (
                         Builder $sub
                     ) use (
-                        $areaId
+                        $idHotel
                     ): void {
                         $sub
                             ->where(
                                 'e.id_unidad',
-                                $areaId
+                                $idHotel
                             );
                     }
                 );
@@ -712,7 +712,7 @@ trait FiltraEquipos
         );
     }
 
-    private function getAreas(): array
+    private function getHotelesFiltro(): array
     {
         return app(SystemCacheService::class)->rememberSimple(
             'catalogos',
