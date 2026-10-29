@@ -299,6 +299,12 @@ Route::middleware([
         fn () => view('asignaciones.create')
     )->name('asignaciones.create')->middleware('can:gestionar');
 
+    // Varios equipos a una persona o a un departamento (?equipos=1,2,3).
+    Route::get(
+        '/asignaciones/asignar-varios',
+        fn () => view('asignaciones.varios')
+    )->name('asignaciones.varios')->middleware('can:gestionar');
+
     /*
     |--------------------------------------------------------------------------
     | Reasignar equipo

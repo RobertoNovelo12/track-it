@@ -83,6 +83,31 @@
                 : (window.location.href = destino.toString());
         },
 
+        /* Asignar varios: página propia con los equipos ya elegidos. */
+        asignarSeleccion() {
+            this.menuSeleccion = null;
+
+            if (this.seleccion.length === 0) return;
+
+            if (this.seleccionBajas.length > 0) {
+                window.trackitToast?.('warning', 'La selección incluye equipos dados de baja. Desmárcalos para asignar.', 'No se puede asignar');
+                return;
+            }
+
+            if (this.seleccion.length > 50) {
+                window.trackitToast?.('warning', 'Puedes asignar hasta 50 equipos a la vez. Desmarca ' + (this.seleccion.length - 50) + '.', 'Demasiados equipos');
+                return;
+            }
+
+            const destino = new URL(@js(route('asignaciones.varios')), window.location.origin);
+            destino.searchParams.set('equipos', this.seleccion.join(','));
+            destino.searchParams.set('volver', 'inventario');
+
+            window.Livewire?.navigate
+                ? Livewire.navigate(destino.toString())
+                : (window.location.href = destino.toString());
+        },
+
         moverSeleccionAPapelera() {
             this.menuSeleccion = null;
 

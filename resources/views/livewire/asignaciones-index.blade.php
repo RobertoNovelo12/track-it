@@ -238,6 +238,7 @@
             >
                 @foreach ([
                     ['ruta' => 'asignaciones.create', 'icono' => 'i-6aed230', 'titulo' => 'Asignar', 'texto' => 'Entregar un equipo disponible a una persona u hotel'],
+                    ['ruta' => 'asignaciones.varios', 'icono' => 'i-6aed230', 'titulo' => 'Asignar varios', 'texto' => 'Varios equipos a una misma persona o departamento'],
                     ['ruta' => 'asignaciones.reassign', 'icono' => 'i-e5c8e79', 'titulo' => 'Reasignar', 'texto' => 'Pasar un equipo asignado a otra persona u hotel'],
                     ['ruta' => 'asignaciones.devolver', 'icono' => 'i-3179dca', 'titulo' => 'Devolver', 'texto' => 'Recibir un equipo y dejarlo disponible'],
                 ] as $opcion)

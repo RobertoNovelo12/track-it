@@ -2,8 +2,8 @@
     BARRA DE SELECCIÓN (inventario)
     ------------------------------------------------------------
     Solo aparece cuando hay equipos marcados (en cualquier página).
-    Escritorio: encima de la tabla, con los botones a la vista.
-    Móvil: fija abajo, sobre el menú inferior, con «Acciones».
+    Escritorio: encima de la tabla. Móvil: fija abajo, sobre el menú.
+    Solo dos botones: «Asignar» y «Acciones» (exportar, baja, papelera).
     El estado y las acciones están en equipos/estado-alpine.
 ============================================================ --}}
 @php
@@ -62,81 +62,37 @@
         </p>
 
         {{-- ====================================================
-            ESCRITORIO: botones a la vista
+            ASIGNAR (principal) + ACCIONES (el resto, en un menú)
+            Escritorio: el menú abre hacia abajo. Móvil: hacia arriba,
+            porque la barra está pegada abajo.
         ===================================================== --}}
-        <div class="hidden items-center gap-2 lg:flex">
-
-            {{-- EXPORTAR --}}
-            <div class="relative">
-                <button type="button" x-on:click="abrirMenuSeleccion('exportar')" class="{{ $botonBarra }}" :aria-expanded="(menuSeleccion === 'exportar').toString()" :disabled="exportando">
-                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-12264a0') }}"></use></svg>
-                    Exportar
-                </button>
-
-                <div x-show="menuSeleccion === 'exportar'" x-cloak x-transition.opacity.duration.100ms role="menu" class="{{ $menuFlotante }} right-0 top-full mt-2 !w-44">
-                    <button type="button" role="menuitem" x-on:click="exportarSeleccion('pdf')" class="{{ $itemMenu }}">Exportar a PDF</button>
-                    <button type="button" role="menuitem" x-on:click="exportarSeleccion('xlsx')" class="{{ $itemMenu }}">Exportar a Excel</button>
-                </div>
-            </div>
-
-            {{-- DAR DE BAJA --}}
-            @if ($puedeDarDeBaja)
-                <div class="relative">
-                    <button
-                        type="button"
-                        x-on:click="darDeBajaSeleccion()"
-                        :aria-expanded="seleccion.length > 1 ? (menuSeleccion === 'baja').toString() : null"
-                        :title="seleccionBajas.length > 0 ? 'La selección incluye equipos que ya están dados de baja' : ''"
-                        class="{{ $botonBarra }}"
-                        :class="seleccionBajas.length > 0 && 'opacity-50'"
-                    >
-                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-2d2ab80') }}"></use></svg>
-                        <span x-text="seleccion.length > 1 ? 'Dar de baja (' + seleccion.length + ')' : 'Dar de baja'">Dar de baja</span>
-                        <svg x-show="seleccion.length > 1" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
-                    </button>
-
-                    <div x-show="menuSeleccion === 'baja'" x-cloak x-transition.opacity.duration.100ms role="menu" class="{{ $menuFlotante }} right-0 top-full mt-2">
-                        <button type="button" role="menuitem" x-on:click="darDeBajaSeleccion('conjunta')" class="{{ $itemMenu }}">
-                            Dar de baja a todos
-                            <span class="block text-xs text-[var(--theme-text-muted)]">Un solo formulario y una acta</span>
-                        </button>
-                        <button type="button" role="menuitem" x-on:click="darDeBajaSeleccion('lote')" class="{{ $itemMenu }}">
-                            Baja uno por uno
-                            <span class="block text-xs text-[var(--theme-text-muted)]">Pasa al siguiente al confirmar</span>
-                        </button>
-                    </div>
-                </div>
-            @endif
-
-            {{-- PAPELERA --}}
-            @if ($puedePapelera)
-                <button
-                    type="button"
-                    x-on:click="moverSeleccionAPapelera()"
-                    class="inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap rounded-md bg-[var(--theme-danger-soft)] px-3 text-sm font-medium text-[var(--theme-danger)] transition-opacity hover:opacity-80"
-                >
-                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-papelera') }}"></use></svg>
-                    Mover a la papelera
-                </button>
-            @endif
-        </div>
-
-        {{-- ====================================================
-            MÓVIL: un solo botón con las acciones
-        ===================================================== --}}
-        <div class="relative lg:hidden">
+        @if ($puedeDarDeBaja)
             <button
                 type="button"
-                x-on:click="abrirMenuSeleccion('movil')"
-                :aria-expanded="(menuSeleccion === 'movil' || menuSeleccion === 'baja').toString()"
-                class="inline-flex h-9 items-center justify-center gap-1.5 rounded-md bg-[var(--theme-primary)] px-3.5 text-sm font-medium text-white transition-colors hover:bg-[var(--theme-primary-hover)]"
+                x-on:click="asignarSeleccion()"
+                :class="seleccionBajas.length > 0 && 'opacity-50'"
+                :title="seleccionBajas.length > 0 ? 'La selección incluye equipos dados de baja' : 'Asignar a una persona o a un departamento'"
+                class="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-md bg-[var(--theme-primary)] px-3 text-sm font-medium text-white transition-colors hover:bg-[var(--theme-primary-hover)]"
+            >
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-6aed230') }}"></use></svg>
+                <span>Asignar<span class="hidden sm:inline" x-text="seleccion.length > 1 ? ' (' + seleccion.length + ')' : ''"></span></span>
+            </button>
+        @endif
+
+        <div class="relative shrink-0">
+            <button
+                type="button"
+                x-on:click="abrirMenuSeleccion(menuSeleccion === 'baja' ? 'baja' : 'acciones')"
+                :aria-expanded="(menuSeleccion === 'acciones' || menuSeleccion === 'baja').toString()"
+                aria-haspopup="menu"
+                class="{{ $botonBarra }}"
             >
                 Acciones
-                <svg class="h-3.5 w-3.5 rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                <svg class="h-3.5 w-3.5 transition-transform" :class="(menuSeleccion === 'acciones' || menuSeleccion === 'baja') && 'rotate-180'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
             </button>
 
-            {{-- Se abre hacia arriba: la barra está pegada abajo. --}}
-            <div x-show="menuSeleccion === 'movil'" x-cloak x-transition.opacity.duration.100ms role="menu" class="{{ $menuFlotante }} bottom-full right-0 mb-2">
+            {{-- Menú principal --}}
+            <div x-show="menuSeleccion === 'acciones'" x-cloak x-transition.opacity.duration.100ms role="menu" class="{{ $menuFlotante }} right-0 bottom-full mb-2 lg:bottom-auto lg:top-full lg:mb-0 lg:mt-2">
                 <button type="button" role="menuitem" x-on:click="exportarSeleccion('pdf')" :disabled="exportando" class="{{ $itemMenu }}">Exportar a PDF</button>
                 <button type="button" role="menuitem" x-on:click="exportarSeleccion('xlsx')" :disabled="exportando" class="{{ $itemMenu }}">Exportar a Excel</button>
 
@@ -153,8 +109,8 @@
                 @endif
             </div>
 
-            {{-- Baja múltiple (móvil): conjunta o uno por uno. --}}
-            <div x-show="menuSeleccion === 'baja'" x-cloak x-transition.opacity.duration.100ms role="menu" class="{{ $menuFlotante }} bottom-full right-0 mb-2">
+            {{-- Baja de varios: conjunta o uno por uno --}}
+            <div x-show="menuSeleccion === 'baja'" x-cloak x-transition.opacity.duration.100ms role="menu" class="{{ $menuFlotante }} right-0 bottom-full mb-2 lg:bottom-auto lg:top-full lg:mb-0 lg:mt-2">
                 <button type="button" role="menuitem" x-on:click="darDeBajaSeleccion('conjunta')" class="{{ $itemMenu }}">
                     Dar de baja a todos
                     <span class="block text-xs text-[var(--theme-text-muted)]">Un solo formulario y una acta</span>

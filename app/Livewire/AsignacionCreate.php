@@ -622,7 +622,7 @@ class AsignacionCreate extends Component
     |--------------------------------------------------------------------------
     */
 
-    private function getEquiposDisponibles(): array
+    protected function getEquiposDisponibles(): array
     {
         return DB::table('equipos as e')
             ->leftJoin(
@@ -759,7 +759,7 @@ class AsignacionCreate extends Component
     |--------------------------------------------------------------------------
     */
 
-    private function getTiposAsignacion(): array
+    protected function getTiposAsignacion(): array
     {
         if ($this->tiposAsignacionRequestCache !== null) {
             return $this->tiposAsignacionRequestCache;
@@ -918,7 +918,7 @@ class AsignacionCreate extends Component
         );
     }
 
-    private function nullableInt(mixed $value): ?int
+    protected function nullableInt(mixed $value): ?int
     {
         if (
             $value === null
@@ -932,7 +932,7 @@ class AsignacionCreate extends Component
             : null;
     }
 
-    private function nullableString(mixed $value): ?string
+    protected function nullableString(mixed $value): ?string
     {
         if (
             $value === null
