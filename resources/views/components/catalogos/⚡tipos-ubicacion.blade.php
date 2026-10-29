@@ -181,14 +181,15 @@ new class extends Component
 
         :actions="fn ($t) => [
             'edit' => route('catalogos.tipos-ubicacion.edit', ['tipo' => $t->id_tipo_ubicacion]),
-            'menu' => [
+            'menu' => array_values(array_filter([
                 ['label' => 'Editar', 'href' => route('catalogos.tipos-ubicacion.edit', ['tipo' => $t->id_tipo_ubicacion])],
                 [
                     'label' => $t->activo ? 'Desactivar' : 'Activar',
                     'click' => 'alternar(' . (int) $t->id_tipo_ubicacion . ')',
                     'danger' => (bool) $t->activo,
                 ],
-            ],
+                \App\Support\PapeleraEntidades::accion('tipo_ubicacion', $t->id_tipo_ubicacion),
+            ])),
         ]"
     />
 </div>

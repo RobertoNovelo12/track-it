@@ -945,7 +945,7 @@ new class extends Component
 
         :actions="fn ($tipo) => [
             'edit' => route('catalogos.tipos-equipo.edit', ['tipoEquipo' => $tipo->id_tipo_equipo]),
-            'menu' => [
+            'menu' => array_values(array_filter([
                 [
                     'label' => 'Editar formulario',
                     'href' => route('catalogos.tipos-equipo.edit', ['tipoEquipo' => $tipo->id_tipo_equipo]),
@@ -958,7 +958,8 @@ new class extends Component
                         'descripcion' => $tipo->descripcion ?? '',
                     ]).')',
                 ],
-            ],
+                \App\Support\PapeleraEntidades::accion('tipo_equipo', $tipo->id_tipo_equipo),
+            ])),
         ]"
     />
 

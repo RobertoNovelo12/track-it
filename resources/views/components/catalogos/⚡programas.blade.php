@@ -280,6 +280,7 @@ new class extends Component
                             'click' => 'alternarPrograma(' . (int) $p->id_programa . ')',
                             'danger' => (bool) $p->activo,
                         ],
+                        \App\Support\PapeleraEntidades::accion('programa', $p->id_programa),
                     ])),
                 ]"
             />

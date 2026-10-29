@@ -658,12 +658,13 @@ new class extends Component
 
             :actions="fn ($hotel) => [
                 'edit' => route('catalogos.hoteles.edit', ['hotel' => $hotel->id_unidad]),
-                'menu' => [
+                'menu' => array_values(array_filter([
                     [
                         'label' => 'Editar',
                         'href' => route('catalogos.hoteles.edit', ['hotel' => $hotel->id_unidad]),
                     ],
-                ],
+                    \App\Support\PapeleraEntidades::accion('hotel', $hotel->id_unidad),
+                ])),
             ]"
         />
     @endif

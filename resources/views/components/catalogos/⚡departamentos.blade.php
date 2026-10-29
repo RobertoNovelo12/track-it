@@ -339,12 +339,13 @@ new class extends Component
 
         :actions="fn ($d) => [
             'edit' => route('catalogos.departamentos.edit', ['departamento' => $d->id_departamento]),
-            'menu' => [
+            'menu' => array_values(array_filter([
                 [
                     'label' => 'Editar',
                     'href' => route('catalogos.departamentos.edit', ['departamento' => $d->id_departamento]),
                 ],
-            ],
+                \App\Support\PapeleraEntidades::accion('departamento', $d->id_departamento),
+            ])),
         ]"
     />
 </div>
