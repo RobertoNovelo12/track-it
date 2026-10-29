@@ -182,178 +182,59 @@
         ======================================================== --}}
         @include('layouts.partials.boton-volver', ['destino' => url('/')])
 
+        {{--
+            NUEVO MOVIMIENTO: un solo botón con Asignar, Reasignar y
+            Devolver. El Historial se abre desde la tarjeta «Movimientos
+            recientes».
+        --}}
         <div
-            class="
-                {{-- Móvil: los cuatro botones en dos filas del mismo ancho --}}
-                grid
-                grid-cols-2
-                gap-2
-
-                sm:flex
-                sm:flex-wrap
-                sm:items-center
-
-                xl:justify-end
-            "
+            x-data="{ abierto: false }"
+            x-on:click.outside="abierto = false"
+            x-on:keydown.escape.window="abierto = false"
+            @trackit-cerrar-menus.window="abierto = false"
+            class="relative w-full md:w-auto"
         >
-
-            {{-- ASIGNAR --}}
-            <a
-                href="{{ route('asignaciones.create') }}"
-                wire:navigate.hover
-                class="
-                    h-9
-                    px-2
-                    sm:px-4
-
-                    inline-flex
-                    items-center
-                    justify-center
-                    gap-1.5
-                    sm:gap-2
-
-                    rounded-md
-
-                    bg-[var(--theme-primary)]
-                    hover:bg-[var(--theme-primary-hover)]
-
-                    text-sm
-                    font-medium
-                    text-white
-
-                    transition-colors
-                "
+            <button
+                type="button"
+                x-on:click="abierto = ! abierto"
+                :aria-expanded="abierto.toString()"
+                aria-haspopup="menu"
+                class="inline-flex h-10 w-full items-center justify-center gap-2 rounded-md bg-[var(--theme-primary)] px-4 text-sm font-medium text-white transition-colors hover:bg-[var(--theme-primary-hover)] md:w-auto"
             >
-                <svg
-                    class="w-4 h-4"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.7"
-                ><use href="{{ \App\Support\Icono::url('i-6aed230') }}"></use></svg>
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-6aed230') }}"></use></svg>
+                Nuevo movimiento
+                <svg class="h-4 w-4 transition-transform" :class="abierto && 'rotate-180'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
 
-                Asignar
-            </a>
-
-
-            {{-- REASIGNAR --}}
-            <a
-                href="{{ route('asignaciones.reassign') }}"
-                wire:navigate.hover
-                class="
-                    h-9
-                    px-2
-                    sm:px-4
-
-                    inline-flex
-                    items-center
-                    justify-center
-                    gap-1.5
-                    sm:gap-2
-
-                    rounded-md
-
-                    bg-[var(--theme-surface)]
-
-                    border
-                    border-[var(--theme-border-strong)]
-
-                    text-sm
-                    font-medium
-                    text-[var(--theme-text)]
-
-                    hover:bg-[var(--theme-surface-soft)]
-                    hover:border-[var(--theme-primary-border)]
-
-                    transition-colors
-                "
+            <div
+                x-show="abierto"
+                x-cloak
+                x-transition.opacity.duration.100ms
+                role="menu"
+                class="absolute inset-x-0 top-full z-30 mt-2 overflow-hidden rounded-md border border-[var(--theme-border)] bg-[var(--theme-surface)] text-left shadow-lg shadow-[var(--theme-shadow)] md:inset-x-auto md:right-0 md:w-80"
             >
-                <svg
-                    class="w-4 h-4"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.6"
-                ><use href="{{ \App\Support\Icono::url('i-e5c8e79') }}"></use></svg>
-
-                Reasignar
-            </a>
-
-
-            {{-- DEVOLVER (desasignar) --}}
-            <a
-                href="{{ route('asignaciones.devolver') }}"
-                wire:navigate.hover
-                class="
-                    h-9
-                    px-2
-                    sm:px-4
-                    inline-flex
-                    items-center
-                    justify-center
-                    gap-1.5
-                    sm:gap-2
-                    rounded-md
-                    bg-[var(--theme-surface)]
-                    border
-                    border-[var(--theme-border-strong)]
-                    text-sm
-                    font-medium
-                    text-[var(--theme-text)]
-                    hover:bg-[var(--theme-surface-soft)]
-                    hover:border-[var(--theme-primary-border)]
-                    transition-colors
-                "
-            >
-                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-3179dca') }}"></use></svg>
-
-                Devolver
-            </a>
-
-            {{-- HISTORIAL --}}
-            <a
-                href="{{ route('asignaciones.history') }}"
-                wire:navigate.hover
-                class="
-                    h-9
-                    px-2
-                    sm:px-4
-
-                    inline-flex
-                    items-center
-                    justify-center
-                    gap-1.5
-                    sm:gap-2
-
-                    rounded-md
-
-                    bg-[var(--theme-surface)]
-
-                    border
-                    border-[var(--theme-border-strong)]
-
-                    text-sm
-                    font-medium
-                    text-[var(--theme-text)]
-
-                    hover:bg-[var(--theme-surface-soft)]
-                    hover:border-[var(--theme-primary-border)]
-
-                    transition-colors
-                "
-            >
-                <svg
-                    class="w-4 h-4"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.6"
-                ><use href="{{ \App\Support\Icono::url('i-172bef0') }}"></use></svg>
-
-                Historial
-            </a>
-
-            </div> {{-- CIERRA ACCIONES SUPERIORES --}}
+                @foreach ([
+                    ['ruta' => 'asignaciones.create', 'icono' => 'i-6aed230', 'titulo' => 'Asignar', 'texto' => 'Entregar un equipo disponible a una persona u hotel'],
+                    ['ruta' => 'asignaciones.reassign', 'icono' => 'i-e5c8e79', 'titulo' => 'Reasignar', 'texto' => 'Pasar un equipo asignado a otra persona u hotel'],
+                    ['ruta' => 'asignaciones.devolver', 'icono' => 'i-3179dca', 'titulo' => 'Devolver', 'texto' => 'Recibir un equipo y dejarlo disponible'],
+                ] as $opcion)
+                    <a
+                        href="{{ route($opcion['ruta']) }}"
+                        wire:navigate.hover
+                        role="menuitem"
+                        class="flex items-start gap-3 border-b border-[var(--theme-border)] px-4 py-3 transition-colors last:border-b-0 hover:bg-[var(--theme-surface-soft)]"
+                    >
+                        <span class="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[var(--theme-primary-soft)] text-[var(--theme-primary)]">
+                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url($opcion['icono']) }}"></use></svg>
+                        </span>
+                        <span class="min-w-0">
+                            <span class="block text-sm font-medium text-[var(--theme-text-strong)]">{{ $opcion['titulo'] }}</span>
+                            <span class="mt-0.5 block text-xs text-[var(--theme-text-muted)]">{{ $opcion['texto'] }}</span>
+                        </span>
+                    </a>
+                @endforeach
+            </div>
+        </div>
 
             </section> {{-- CIERRA ENCABEZADO --}}
 
