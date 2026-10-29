@@ -153,6 +153,7 @@
             :rows="$mantenimientos"
             row-key="id_mantenimiento"
             key-prefix="mantenimiento"
+            bulk-trash="mantenimiento"
             selectable
 
             :sort-field="$sortField"

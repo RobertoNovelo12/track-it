@@ -227,6 +227,7 @@ new class extends Component
                 :rows="$programas"
                 row-key="id_programa"
                 key-prefix="programa"
+                bulk-trash="programa"
 
                 :sort-field="$sortField"
                 :sort-direction="$sortDirection"

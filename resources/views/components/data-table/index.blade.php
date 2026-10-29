@@ -84,6 +84,14 @@
      * paginaSeleccionada(ids) y alternarPagina(ids, marcado, bajas).
      */
     'selectionAlpine' => false,
+
+    /*
+     * Selección con «Mover a la papelera» (tipo de PapeleraEntidades,
+     * p. ej. 'marca'). Activa los checks, guarda la selección en el
+     * navegador (entre páginas) y muestra la barra de selección.
+     * Solo si el usuario tiene permiso para ese tipo.
+     */
+    'bulkTrash' => null,
     'highlightKey' => null,
 
     'sortField' => null,
@@ -206,6 +214,15 @@
 
     $tieneAcciones = $actions instanceof \Closure;
 
+    $papeleraLote = filled($bulkTrash)
+        && \App\Support\PapeleraEntidades::existe($bulkTrash)
+        && \Illuminate\Support\Facades\Gate::allows(\App\Support\PapeleraEntidades::de($bulkTrash)['permiso']);
+
+    if ($papeleraLote) {
+        $selectable = true;
+        $selectionAlpine = true;
+    }
+
     $totalColumnas = $columnasEscritorio->count()
         + ($selectable ? 1 : 0)
         + ($tieneAcciones ? 1 : 0);
@@ -222,6 +239,28 @@
     ]) }}
     wire:key="data-table-{{ $keyPrefix }}"
     data-data-table
+    @if ($papeleraLote)
+        {{-- Selección propia de la tabla (bulk-trash): misma API que Inventario. --}}
+        x-data="{
+            seleccion: [],
+            estaSeleccionado(id) { return this.seleccion.includes(String(id)); },
+            alternarSeleccion(id, marcado) {
+                id = String(id);
+                this.seleccion = this.seleccion.filter(x => x !== id);
+                if (marcado) this.seleccion.push(id);
+            },
+            paginaSeleccionada(ids) { return ids.length > 0 && ids.every(id => this.seleccion.includes(String(id))); },
+            alternarPagina(ids, marcado) { ids.map(String).forEach(id => this.alternarSeleccion(id, marcado)); },
+            limpiarSeleccion() { this.seleccion = []; },
+            moverSeleccionAPapelera() {
+                if (this.seleccion.length > 100) {
+                    window.trackitToast?.('warning', 'Puedes mover hasta 100 a la vez. Desmarca ' + (this.seleccion.length - 100) + '.', 'Demasiados elementos');
+                    return;
+                }
+                this.$dispatch('papelera-mover-varios', { tipo: @js($bulkTrash), ids: this.seleccion.map(Number) });
+            },
+        }"
+    @endif
     {{-- Densidad elegida en Ajustes › Preferencias --}}
     data-densidad="{{ app(\App\Services\PreferenciasUsuarioService::class)->valor('densidad') }}"
 >
@@ -248,6 +287,10 @@
     ======================================================== --}}
     @if ($toolbar)
         @include('components.data-table.partials.toolbar')
+    @endif
+
+    @if ($papeleraLote)
+        @include('components.data-table.partials.barra-papelera')
     @endif
 
 

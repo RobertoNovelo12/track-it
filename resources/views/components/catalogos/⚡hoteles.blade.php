@@ -609,6 +609,7 @@ new class extends Component
             :rows="$hoteles"
             row-key="id_unidad"
             key-prefix="hotel"
+            bulk-trash="hotel"
 
             :sort-field="$sortField"
             :sort-direction="$sortDirection"

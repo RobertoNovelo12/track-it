@@ -921,6 +921,7 @@ new class extends Component
         :rows="$tipos"
         row-key="id_tipo_equipo"
         key-prefix="tipo-equipo"
+        bulk-trash="tipo_equipo"
 
         :sort-field="$sortField"
         :sort-direction="$sortDirection"

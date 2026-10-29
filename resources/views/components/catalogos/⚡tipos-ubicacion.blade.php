@@ -145,6 +145,7 @@ new class extends Component
         :rows="$tipos"
         row-key="id_tipo_ubicacion"
         key-prefix="tipo-ubicacion"
+        bulk-trash="tipo_ubicacion"
 
         :sort-field="$sortField"
         :sort-direction="$sortDirection"

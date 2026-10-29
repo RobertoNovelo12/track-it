@@ -1483,6 +1483,7 @@
             :rows="$historial"
             row-key="id_reporte"
             key-prefix="reporte"
+            bulk-trash="reporte"
             page-name="historialPage"
             per-page-model="perPage"
             :per-page-options="[10, 25, 50]"

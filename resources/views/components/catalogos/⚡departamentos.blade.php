@@ -267,6 +267,7 @@ new class extends Component
         :rows="$departamentos"
         row-key="id_departamento"
         key-prefix="departamento"
+        bulk-trash="departamento"
 
         :sort-field="$sortField"
         :sort-direction="$sortDirection"

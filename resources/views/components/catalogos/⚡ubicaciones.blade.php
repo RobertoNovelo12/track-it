@@ -322,6 +322,7 @@ new class extends Component
                 :rows="$ubicaciones"
                 row-key="id_ubicacion"
                 key-prefix="ubicacion"
+                bulk-trash="ubicacion"
 
                 :sort-field="$sortField"
                 :sort-direction="$sortDirection"

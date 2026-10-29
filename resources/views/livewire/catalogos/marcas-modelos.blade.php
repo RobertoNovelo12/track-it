@@ -136,6 +136,7 @@
             :rows="$marcas"
             row-key="id"
             key-prefix="marca"
+            bulk-trash="marca"
 
             :sort-field="$sortFieldMarcas"
             :sort-direction="$sortMarcas"
@@ -180,6 +181,7 @@
             :rows="$modelos"
             row-key="id"
             key-prefix="modelo"
+            bulk-trash="modelo"
 
             :sort-field="$sortFieldModelos"
             :sort-direction="$sortModelos"
