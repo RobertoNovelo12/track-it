@@ -111,21 +111,31 @@
                         </p>
                     @endif
 
-                    <div class="mt-6 flex flex-wrap justify-end gap-3">
-                        @if (($nMovibles > 0 || $asignados !== []) && ! $error)
+                    {{-- Con dos opciones de mover (3 botones): uno debajo de otro, a todo
+                         lo ancho, la principal arriba. Si no, en una fila a la derecha. --}}
+                    <div @class([
+                        'mt-6 flex gap-3',
+                        'flex-col' => $nMovibles > 0 && $asignados !== [] && ! $error,
+                        'flex-wrap justify-end' => ! ($nMovibles > 0 && $asignados !== [] && ! $error),
+                    ])>
+                        @if ($nMovibles > 0 && $asignados !== [] && ! $error)
+                            <x-ui.button variant="danger-soft" class="w-full justify-center" wire:click="confirmarVarios(true)" target="confirmarVarios" loading-text="Moviendo…">
+                                Desasignar y mover {{ number_format($nMovibles + count($asignados)) }}
+                            </x-ui.button>
+
+                            <x-ui.button variant="secondary" class="w-full justify-center" wire:click="confirmarVarios(false)" target="confirmarVarios" loading-text="Moviendo…">
+                                Mover solo {{ number_format($nMovibles) }} (sin los asignados)
+                            </x-ui.button>
+
+                            <button type="button" wire:click="cerrar" wire:loading.attr="disabled" wire:target="confirmarVarios" class="h-9 w-full rounded-md text-sm font-medium text-[var(--theme-text-muted)] transition-colors hover:bg-[var(--theme-surface-soft)] hover:text-[var(--theme-text)]">
+                                Cancelar
+                            </button>
+                        @elseif (($nMovibles > 0 || $asignados !== []) && ! $error)
                             <x-ui.button variant="secondary" wire:click="cerrar" disable-target="confirmarVarios">Cancelar</x-ui.button>
 
-                            @if ($nMovibles > 0)
-                                <x-ui.button :variant="$asignados !== [] ? 'secondary' : 'danger-soft'" wire:click="confirmarVarios(false)" target="confirmarVarios" loading-text="Moviendo…">
-                                    {{ $asignados !== [] ? 'Mover solo ' . number_format($nMovibles) : 'Mover ' . number_format($nMovibles) . ' a la papelera' }}
-                                </x-ui.button>
-                            @endif
-
-                            @if ($asignados !== [])
-                                <x-ui.button variant="danger-soft" wire:click="confirmarVarios(true)" target="confirmarVarios" loading-text="Moviendo…">
-                                    Desasignar y mover {{ number_format($nMovibles + count($asignados)) }}
-                                </x-ui.button>
-                            @endif
+                            <x-ui.button variant="danger-soft" wire:click="confirmarVarios({{ $asignados !== [] ? 'true' : 'false' }})" target="confirmarVarios" loading-text="Moviendo…">
+                                {{ $asignados !== [] ? 'Desasignar y mover ' . number_format(count($asignados)) : 'Mover ' . number_format($nMovibles) . ' a la papelera' }}
+                            </x-ui.button>
                         @else
                             <x-ui.button variant="secondary" wire:click="cerrar">Entendido</x-ui.button>
                         @endif
