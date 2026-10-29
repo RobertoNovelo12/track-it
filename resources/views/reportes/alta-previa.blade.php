@@ -178,7 +178,7 @@
     <article class="alta-vista">
         <img
             class="logo-palladium-izquierda"
-            src="{{ app(\App\Services\OrganizacionService::class)->logoUrl() }}"
+            src="{{ app(\App\Services\OrganizacionService::class)->logoDocumentosUrl() }}"
             alt="Palladium Hotel Group"
         >
 

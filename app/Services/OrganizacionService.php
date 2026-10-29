@@ -29,10 +29,16 @@ class OrganizacionService
     /*
      * Logotipo de Track IT: el predeterminado de la interfaz (menú,
      * hoja «Más», inicio de sesión). Es el que queda al pulsar
-     * «Restaurar logotipo predeterminado». Los documentos (actas, PDF)
-     * siguen usando LOGO_PREDETERMINADO.
+     * «Restaurar logotipo predeterminado».
      */
     public const LOGO_INTERFAZ = 'images/track-it/track-it-logo.svg';
+
+    /*
+     * Mismo logotipo de Track IT en PNG para los documentos (dompdf no
+     * dibuja bien SVG). Lo usan los PDF y sus vistas previas cuando no
+     * hay un logotipo personalizado, así coinciden con la interfaz.
+     */
+    public const LOGO_DOCUMENTOS = 'images/track-it/track-it-logo-documentos.png';
 
     public const LOGO_INTERFAZ_OSCURO = 'images/track-it/track-it-logo-oscuro.svg';
 
@@ -256,6 +262,17 @@ class OrganizacionService
     /*
      * Logotipo de la interfaz: el personalizado o, si no hay, Track IT.
      */
+    /*
+     * Logotipo de documentos (vistas previas de reportes): el
+     * personalizado o, si no hay, el de Track IT.
+     */
+    public function logoDocumentosUrl(): string
+    {
+        return $this->logoPersonalizado()
+            ? $this->logoUrl()
+            : asset(self::LOGO_DOCUMENTOS);
+    }
+
     public function logoInterfazUrl(): string
     {
         return $this->logoPersonalizado()

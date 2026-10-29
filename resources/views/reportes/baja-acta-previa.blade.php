@@ -395,7 +395,7 @@
 
         {{-- ENCABEZADO --}}
 
-        <img class="logo-palladium-izquierda" src="{{ app(\App\Services\OrganizacionService::class)->logoUrl() }}" alt="Palladium Hotel Group">
+        <img class="logo-palladium-izquierda" src="{{ app(\App\Services\OrganizacionService::class)->logoDocumentosUrl() }}" alt="Palladium Hotel Group">
         <div class="institucion">
 
             {{ app(\App\Services\OrganizacionService::class)->nombre() }} | CONTROL DE ACTIVOS TI

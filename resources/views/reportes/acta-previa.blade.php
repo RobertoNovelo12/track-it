@@ -210,7 +210,7 @@
 
         <img
             class="logo"
-            src="{{ app(\App\Services\OrganizacionService::class)->logoUrl() }}"
+            src="{{ app(\App\Services\OrganizacionService::class)->logoDocumentosUrl() }}"
             alt="Palladium Hotel Group"
         >
 

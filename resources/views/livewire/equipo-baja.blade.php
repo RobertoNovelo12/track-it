@@ -870,7 +870,7 @@
                         {{-- LOGO --}}
 
                         <img
-                            src="{{ app(\App\Services\OrganizacionService::class)->logoUrl() }}"
+                            src="{{ app(\App\Services\OrganizacionService::class)->logoDocumentosUrl() }}"
                             alt="{{ app(\App\Services\OrganizacionService::class)->nombre() }}"
                             style="max-width:150px; max-height:45px; margin-bottom:8px;"
                         >

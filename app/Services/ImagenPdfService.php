@@ -157,7 +157,7 @@ class ImagenPdfService
 
     /*
      * Logo de la organización (Administración › Organización) o, si no
-     * hay, el predeterminado.
+     * hay, el de Track IT (el mismo que muestra la interfaz).
      */
     public function logoDataUri(int $anchoMaximo = 480): ?string
     {
@@ -174,7 +174,7 @@ class ImagenPdfService
             );
         }
 
-        return $this->archivoPublicoDataUri(OrganizacionService::LOGO_PREDETERMINADO, $anchoMaximo);
+        return $this->archivoPublicoDataUri(OrganizacionService::LOGO_DOCUMENTOS, $anchoMaximo);
     }
 
     /*

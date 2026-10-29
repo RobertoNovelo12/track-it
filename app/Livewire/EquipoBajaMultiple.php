@@ -748,7 +748,7 @@ class EquipoBajaMultiple extends Component
         );
 
         return [
-            'logo' => $organizacion->logoUrl(),
+            'logo' => $organizacion->logoDocumentosUrl(),
             'organizacion' => $organizacion->nombre(),
             'solicitante' => $this->solicitante,
 
