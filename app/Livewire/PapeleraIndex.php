@@ -114,9 +114,10 @@ class PapeleraIndex extends Component
         $this->restaurarVarios([$id]);
     }
 
-    public function restaurarSeleccion(): void
+    /* La selección vive en el navegador (Alpine) y llega aquí. */
+    public function restaurarSeleccion(array $ids = []): void
     {
-        $this->restaurarVarios(array_map('intval', $this->seleccionados));
+        $this->restaurarVarios(array_map('intval', $ids));
     }
 
     public function eliminar(int $id): void
@@ -124,9 +125,9 @@ class PapeleraIndex extends Component
         $this->eliminarVarios([$id]);
     }
 
-    public function eliminarSeleccion(): void
+    public function eliminarSeleccion(array $ids = []): void
     {
-        $this->eliminarVarios(array_map('intval', $this->seleccionados));
+        $this->eliminarVarios(array_map('intval', array_slice($ids, 0, 500)));
     }
 
     private function restaurarVarios(array $ids): void
