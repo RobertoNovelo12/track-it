@@ -239,12 +239,11 @@ class EditarRegistro extends Component
     {
         if ($this->tipo === 'modelo') {
             $this->saveModelo();
-
-            return;
+        } else {
+            $this->saveMarca();
         }
 
-
-        $this->saveMarca();
+        $this->refrescarCatalogos();
     }
 
 
@@ -1354,5 +1353,18 @@ class EditarRegistro extends Component
                     $totalModelos,
             ]
         );
+    }
+
+    /*
+     * Tras crear o editar: la tabla de Marcas/Modelos y los formularios de
+     * equipos guardan estos catálogos en caché; sin esto, el registro nuevo
+     * solo aparecía al buscarlo.
+     */
+    private function refrescarCatalogos(): void
+    {
+        app(\App\Services\SystemCacheService::class)->refreshModule('catalogos');
+
+        \Illuminate\Support\Facades\Cache::forget('form.marcas.v2');
+        \Illuminate\Support\Facades\Cache::forget('form.modelos.all.v2');
     }
 }

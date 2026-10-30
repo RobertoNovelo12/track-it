@@ -216,6 +216,8 @@ class CrearRegistro extends Component
             ];
         });
 
+        $this->refrescarCatalogos();
+
         return [
             'ok' => true,
             'message' => "La marca {$created['nombre']} se creó correctamente con el código {$created['codigo']}.",
@@ -367,6 +369,8 @@ class CrearRegistro extends Component
                 'nombre' => $nombre,
             ];
         });
+
+        $this->refrescarCatalogos();
 
         return [
             'ok' => true,
@@ -622,5 +626,18 @@ class CrearRegistro extends Component
             'contactoProveedor' => $contactoProveedor,
             'paisOrigenModelo' => $paisOrigenModelo,
         ]);
+    }
+
+    /*
+     * Tras crear o editar: la tabla de Marcas/Modelos y los formularios de
+     * equipos guardan estos catálogos en caché; sin esto, el registro nuevo
+     * solo aparecía al buscarlo.
+     */
+    private function refrescarCatalogos(): void
+    {
+        app(\App\Services\SystemCacheService::class)->refreshModule('catalogos');
+
+        \Illuminate\Support\Facades\Cache::forget('form.marcas.v2');
+        \Illuminate\Support\Facades\Cache::forget('form.modelos.all.v2');
     }
 }
