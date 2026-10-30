@@ -92,7 +92,17 @@
             const boton = botonDe(contenedor);
 
             if (boton) {
-                boton.click();
+                /*
+                 * Igual que con el ratón: primero sale del campo donde está
+                 * el cursor (un selector con buscador abierto se cierra y
+                 * confirma su valor) y después se pulsa «Guardar». Sin esto,
+                 * el selector con foco volvía a mostrar su valor tras limpiar
+                 * el formulario hasta que respondía el servidor.
+                 */
+                document.activeElement?.blur?.();
+                document.body.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+                requestAnimationFrame(() => boton.click());
 
                 return;
             }

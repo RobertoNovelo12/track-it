@@ -130,7 +130,16 @@
                 this.syncSelectedLabel();
             });
 
-            this.$watch('selected', () => {
+            this.$watch('selected', (valor) => {
+                // Vaciado desde fuera (p. ej. limpiar el formulario tras
+                // guardar): se borra aunque la lista siga abierta.
+                if (valor === null || valor === undefined || valor === '') {
+                    this.open = false;
+                    this.syncSelectedLabel();
+
+                    return;
+                }
+
                 if (!this.open) {
                     this.syncSelectedLabel();
                 }
