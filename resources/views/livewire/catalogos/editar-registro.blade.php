@@ -450,7 +450,8 @@
                     @endif
 
 
-                    {{-- SITIO WEB --}}
+                    {{-- SITIO WEB: solo marcas (el modelo usa el de su marca) --}}
+                    @if ($tipo === 'marca')
                     <div class="min-w-0">
 
                         <label
@@ -485,7 +486,7 @@
                         @enderror
 
                     </div>
-
+                    @endif
 
                     {{-- DESCRIPCIÓN --}}
                     <div

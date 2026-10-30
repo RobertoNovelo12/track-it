@@ -214,10 +214,11 @@
                             ></p>
                         </div>
 
+                        {{-- Tipo: completa la fila (Marca · Tipo) --}}
                         <div
                             x-show="recordType === 'modelo'"
                             x-cloak
-                            class="min-w-0"
+                            class="min-w-0 xl:col-span-2"
                         >
                             <x-searchable-select
                                 wire-model="idTipoEquipo"
@@ -270,35 +271,9 @@
                         </div>
 
 
-                        {{-- PAÍS HEREDADO DEL MODELO (se calcula aquí al elegir la marca) --}}
-                        <div
-                            x-data="{
-                                paisPorMarca: @js($marcas->mapWithKeys(fn ($m) => [
-                                    (string) $m->id_marca => $paisesOrigen->firstWhere('id_valor', $m->id_pais_origen)?->nombre ?? 'La marca no tiene país de origen',
-                                ])),
-                            }"
-                            x-show="recordType === 'modelo'"
-                            x-cloak
-                            class="min-w-0"
-                        >
-                            <label class="mb-1.5 block text-xs text-[var(--theme-text-muted)]">
-                                País de origen
-                            </label>
-
-                            <input
-                                id="catalog-model-country"
-                                type="text"
-                                x-bind:value="paisPorMarca[String($wire.idMarca ?? '')] ?? 'Se toma de la marca seleccionada'"
-                                readonly
-                                class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)] cursor-not-allowed"
-                            >
-                        </div>
-
-                        {{-- SITIO WEB: completa la fila (2 columnas en marca, 3 en modelo) --}}
-                        <div
-                            class="min-w-0"
-                            x-bind:class="recordType === 'modelo' ? 'md:col-span-2 xl:col-span-3' : 'md:col-span-2'"
-                        >
+                        {{-- SITIO WEB: solo marcas (el modelo usa el de su marca y su país) --}}
+                        @if ($tipoRegistro === 'marca')
+                        <div class="min-w-0 md:col-span-2">
                             <label
                                 for="catalog-web"
                                 class="mb-1.5 block text-xs text-[var(--theme-text-muted)]"
@@ -321,6 +296,7 @@
                                 class="mt-1 text-xs text-[var(--theme-danger)]"
                             ></p>
                         </div>
+                        @endif
 
                         {{-- DESCRIPCIÓN --}}
                         <div class="min-w-0 xl:col-span-3">
