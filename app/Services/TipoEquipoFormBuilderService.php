@@ -1065,6 +1065,106 @@ class TipoEquipoFormBuilderService
                             );
 
 
+                        /*
+
+
+                         * Sin duplicados: si este tipo ya tiene un campo propio con la
+
+
+                         * misma etiqueta y el mismo control, se actualiza ese en lugar de
+
+
+                         * crear otro (clave «…_2»). Pasaba al volver a guardar después de
+
+
+                         * un guardado que sí se hizo pero cuya respuesta no llegó.
+
+
+                         */
+
+
+                        $relacionExistente = DB::table('tipo_equipo_campos as tec')
+
+
+                            ->join('campos_equipo as ce', 'ce.id_campo', '=', 'tec.id_campo')
+
+
+                            ->where('tec.id_tipo_equipo', $tipoEquipoId)
+
+
+                            ->where('ce.es_sistema', false)
+
+
+                            ->where('ce.tipo_control', $type)
+
+
+                            ->whereRaw('LOWER(TRIM(COALESCE(tec.etiqueta, ce.nombre))) = LOWER(TRIM(?))', [$label])
+
+
+                            ->orderBy('tec.id_tipo_campo')
+
+
+                            ->value('tec.id_tipo_campo');
+
+
+
+                        if ($relacionExistente !== null) {
+
+
+                            DB::table('tipo_equipo_campos')
+
+
+                                ->where('id_tipo_campo', $relacionExistente)
+
+
+                                ->update([
+
+
+                                    'id_seccion' => $idSeccion,
+
+
+                                    'seccion' => $legacySection,
+
+
+                                    'visible' => true,
+
+
+                                    'obligatorio' => (bool) ($field['obligatorio'] ?? false),
+
+
+                                    'orden' => $order,
+
+
+                                ]);
+
+
+
+                            if ($type === 'select') {
+
+
+                                $this->persistCustomOptions(
+
+
+                                    (int) $relacionExistente,
+
+
+                                    $field['custom_options'] ?? []
+
+
+                                );
+
+
+                            }
+
+
+
+                            continue;
+
+
+                        }
+
+
+
                         $idCampo =
                             DB::table(
                                 'campos_equipo'
