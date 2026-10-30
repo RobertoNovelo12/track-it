@@ -78,12 +78,18 @@
         ============================================================ --}}
         <x-form.page-header
             :volver="false"
-            title="Nueva marca o modelo"
-            :crumbs="[
-                ['label' => 'Administración', 'href' => route('catalogos.index')],
-                ['label' => 'Marcas y modelos', 'href' => route('catalogos.index', ['section' => 'marcas'])],
-                ['label' => 'Nuevo registro'],
-            ]"
+            :title="$tipoRegistro === 'modelo' ? 'Nuevo modelo' : 'Nueva marca'"
+            :crumbs="$tipoRegistro === 'modelo'
+                ? [
+                    ['label' => 'Administración', 'href' => route('catalogos.index')],
+                    ['label' => 'Modelos', 'href' => route('catalogos.index', ['section' => 'modelos'])],
+                    ['label' => 'Nuevo modelo'],
+                ]
+                : [
+                    ['label' => 'Administración', 'href' => route('catalogos.index')],
+                    ['label' => 'Marcas', 'href' => route('catalogos.index', ['section' => 'marcas'])],
+                    ['label' => 'Nueva marca'],
+                ]"
         />
 
         {{-- ============================================================
@@ -103,27 +109,8 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
 
-                        {{-- TIPO DE REGISTRO --}}
-                        <div class="min-w-0">
-                            <label
-                                class="mb-1.5 block text-xs text-[var(--theme-text-muted)]"
-                            >
-                                Tipo de registro *
-                            </label>
-
-                            {{-- Lista con buscador del proyecto; al cambiar se ejecuta changeRecordType() --}}
-                            <div x-init="$watch('recordType', valor => changeRecordType(valor))">
-                                <x-searchable-select
-                                    x-model="recordType"
-                                    :options="[
-                                        ['value' => 'marca', 'label' => 'Marca'],
-                                        ['value' => 'modelo', 'label' => 'Modelo'],
-                                    ]"
-                                    placeholder="Tipo de registro"
-                                    :show-clear="false"
-                                />
-                            </div>
-                        </div>
+                        {{-- Tipo (marca o modelo): lo decide el botón «Añadir marca» /
+                             «Añadir modelo» (?tipo=); ya no se elige aquí. --}}
 
                         {{-- CÓDIGO INTERNO --}}
                         <div class="min-w-0">

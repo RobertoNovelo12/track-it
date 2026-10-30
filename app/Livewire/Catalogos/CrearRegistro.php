@@ -51,6 +51,15 @@ class CrearRegistro extends Component
     | Cambio de tipo
     |--------------------------------------------------------------------------
     */
+    /*
+     * Marca o modelo: llega de «Añadir marca» / «Añadir modelo»
+     * (catalogos.create?tipo=modelo). El formulario ya no deja cambiarlo.
+     */
+    public function mount(string $tipo = 'marca'): void
+    {
+        $this->tipoRegistro = $tipo === 'modelo' ? 'modelo' : 'marca';
+    }
+
     public function updatedTipoRegistro(string $value): void
     {
         if (! in_array($value, ['marca', 'modelo'], true)) {

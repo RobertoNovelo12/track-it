@@ -130,8 +130,10 @@ class Encabezado
             ]],
             'catalogos.create' => ['Administración', [
                 self::miga('Administración', 'catalogos.index'),
-                self::miga('Marcas y modelos', 'catalogos.index', ['section' => 'marcas']),
-                self::miga('Nuevo registro'),
+                request()->query('tipo') === 'modelo'
+                    ? self::miga('Modelos', 'catalogos.index', ['section' => 'modelos'])
+                    : self::miga('Marcas', 'catalogos.index', ['section' => 'marcas']),
+                self::miga(request()->query('tipo') === 'modelo' ? 'Nuevo modelo' : 'Nueva marca'),
             ]],
             'catalogos.edit' => ['Administración', [
                 self::miga('Administración', 'catalogos.index'),

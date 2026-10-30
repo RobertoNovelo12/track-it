@@ -72,7 +72,7 @@
         @endif
 
         <x-slot:actions>
-            <x-admin.action-button :href="route('catalogos.create')">
+            <x-admin.action-button :href="route('catalogos.create', ['tipo' => $vista === 'modelos' ? 'modelo' : 'marca'])">
                 {{ $vista === 'marcas' ? 'Añadir marca' : ($vista === 'modelos' ? 'Añadir modelo' : 'Añadir') }}
             </x-admin.action-button>
         </x-slot:actions>

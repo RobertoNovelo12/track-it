@@ -82,7 +82,7 @@
         ACCIÓN
     ======================================================== --}}
     <a
-        href="{{ route('catalogos.create') }}"
+        href="{{ route('catalogos.create', ['tipo' => ($vista ?? '') === 'modelos' ? 'modelo' : 'marca']) }}"
 
         class="
             h-9
