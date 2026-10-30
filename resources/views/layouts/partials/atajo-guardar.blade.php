@@ -9,7 +9,7 @@
       (también los que están fuera del <form> con form="id").
     - Si no hay qué guardar, el atajo no hace nada y el navegador
       no abre «Buscar» ni «Guardar página».
-    - Al pasar el cursor por el botón se ve «Guardar registro (Ctrl+G)».
+    - Al pasar el cursor por el botón se ve «Guardar (Ctrl+G)».
 ============================================================ --}}
 <script>
     (() => {
@@ -70,9 +70,8 @@
             boton.dataset.pistaAtajo = '1';
             boton.setAttribute('aria-keyshortcuts', esMac ? 'Meta+G' : 'Control+G');
 
-            const texto = (boton.getAttribute('title') || boton.innerText || 'Guardar').replace(/\s+/g, ' ').trim();
-
-            boton.setAttribute('title', `${texto} (${teclas})`);
+            // Texto fijo: el del botón puede incluir «Guardando…» oculto.
+            boton.setAttribute('title', `Guardar (${teclas})`);
         };
 
         document.addEventListener('pointerover', ponerPista, true);
