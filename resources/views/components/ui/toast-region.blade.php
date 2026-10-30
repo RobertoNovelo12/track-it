@@ -273,7 +273,7 @@
 
     id="trackitToastRegion"
 
-    class="pointer-events-none fixed inset-x-4 top-[max(1rem,env(safe-area-inset-top))] z-[200] flex flex-col items-start gap-2 sm:inset-x-auto sm:left-6 sm:top-6"
+    class="trackit-avisos pointer-events-none flex flex-col items-start gap-2"
     aria-live="polite"
     aria-atomic="false"
 >
@@ -281,7 +281,7 @@
         <div
             x-show="aviso.visible"
             x-transition:enter="transition ease-out duration-[220ms]"
-            x-transition:enter-start="opacity-0 -translate-y-2"
+            x-transition:enter-start="opacity-0 translate-y-2"
             x-transition:enter-end="opacity-100 translate-y-0"
             x-transition:leave="transition ease-in duration-[160ms]"
             x-transition:leave-start="opacity-100"
@@ -293,18 +293,13 @@
             :role="aviso.tipo === 'error' ? 'alert' : 'status'"
             :aria-busy="aviso.tipo === 'loading' ? 'true' : 'false'"
 
-            class="pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-[var(--radius-lg)] border-2 bg-[var(--theme-surface)] px-4 py-3.5 shadow-2xl theme-shadow-xl"
-            :class="{
-                'trackit-temblar': aviso.temblar,
-                'border-[var(--theme-success)]': aviso.tipo === 'success',
-                'border-[var(--theme-danger)]': aviso.tipo === 'error',
-                'border-[var(--theme-warning)]': aviso.tipo === 'warning',
-                'border-[var(--theme-primary)]': aviso.tipo === 'info' || aviso.tipo === 'loading',
-            }"
+            class="trackit-aviso pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-[var(--radius-lg)] bg-[var(--theme-surface)] px-4 py-3 theme-shadow-xl"
+            :data-tipo="aviso.tipo"
+            :class="aviso.temblar && 'trackit-temblar'"
         >
             {{-- Icono por tipo --}}
             <span
-                class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full"
+                class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full"
                 :class="{
                     'bg-[var(--theme-success-soft)] text-[var(--theme-success)]': aviso.tipo === 'success',
                     'bg-[var(--theme-danger-soft)] text-[var(--theme-danger)]': aviso.tipo === 'error',
@@ -369,6 +364,38 @@
 </div>
 
 <style>
+    /*
+     * Posición y borde escritos aquí (no como clases de Tailwind) para que
+     * funcionen sin volver a compilar los estilos (npm run build).
+     */
+    .trackit-avisos {
+        position: fixed;
+        z-index: 200;
+        top: max(1rem, env(safe-area-inset-top, 0px));
+        left: 1rem;
+        right: 1rem;
+    }
+
+    @media (min-width: 640px) {
+        .trackit-avisos {
+            top: 1.5rem;
+            left: 1.5rem;
+            right: auto;
+            width: 24rem;
+        }
+    }
+
+    .trackit-aviso {
+        border: 2px solid var(--theme-border);
+        box-shadow: 0 18px 40px -12px rgba(0, 0, 0, 0.45), 0 4px 12px -4px rgba(0, 0, 0, 0.25);
+    }
+
+    .trackit-aviso[data-tipo="success"] { border-color: var(--theme-success); }
+    .trackit-aviso[data-tipo="error"] { border-color: var(--theme-danger); }
+    .trackit-aviso[data-tipo="warning"] { border-color: var(--theme-warning); }
+    .trackit-aviso[data-tipo="info"],
+    .trackit-aviso[data-tipo="loading"] { border-color: var(--theme-primary); }
+
     /* Temblor horizontal corto al aparecer un aviso. */
     @keyframes trackit-temblar {
         0%, 100% { transform: translateX(0); }
