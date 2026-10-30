@@ -79,7 +79,17 @@
             window.Livewire?.navigate ? window.Livewire.navigate(url) : (location.href = url);
         };
 
+        /*
+         * Justo antes de salir se guarda la dirección tal como está en ese
+         * momento: las pestañas de Administración cambian ?section= sin
+         * navegar (replaceState), y sin esto «Volver» regresaba a la
+         * pestaña con la que se entró (Equipos).
+         */
+        const recordarActual = () => escribir('trackit.volver.actual', sinHash(location.href));
+
         registrar();
         document.addEventListener('livewire:navigated', registrar);
+        document.addEventListener('livewire:navigate', recordarActual);
+        window.addEventListener('pagehide', recordarActual);
     })();
 </script>
