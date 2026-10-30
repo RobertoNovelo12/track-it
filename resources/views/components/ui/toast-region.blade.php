@@ -129,6 +129,7 @@
                 progreso: 0,
                 conBarra: false,
                 avance: null,
+                temblar: false,
             };
 
             this.avisos.push(aviso);
@@ -143,7 +144,11 @@
                 this.cerrar(antiguo.id);
             }
 
-            this.$nextTick(() => this.reanudar(aviso.id));
+            this.$nextTick(() => {
+                this.reanudar(aviso.id);
+
+                if (tipo !== 'loading') this.sacudir(aviso.id);
+            });
 
             return aviso.id;
         },
@@ -177,7 +182,23 @@
 
             this.reanudar(id);
 
+            if (aviso.tipo !== 'loading') this.sacudir(id);
+
             return id;
+        },
+
+        /* Temblor corto para que el aviso se note (se omite con «reducir movimiento»). */
+        sacudir(id) {
+            const aviso = this.buscar(id);
+
+            if (! aviso) return;
+
+            aviso.temblar = false;
+
+            requestAnimationFrame(() => {
+                aviso.temblar = true;
+                setTimeout(() => { aviso.temblar = false; }, 650);
+            });
         },
 
         titulos: {
@@ -252,7 +273,7 @@
 
     id="trackitToastRegion"
 
-    class="pointer-events-none fixed inset-x-4 bottom-4 z-[200] flex flex-col items-end gap-2 sm:inset-x-auto sm:right-6 sm:bottom-6"
+    class="pointer-events-none fixed inset-x-4 top-[max(1rem,env(safe-area-inset-top))] z-[200] flex flex-col items-start gap-2 sm:inset-x-auto sm:left-6 sm:top-6"
     aria-live="polite"
     aria-atomic="false"
 >
@@ -260,7 +281,7 @@
         <div
             x-show="aviso.visible"
             x-transition:enter="transition ease-out duration-[220ms]"
-            x-transition:enter-start="opacity-0 translate-y-2"
+            x-transition:enter-start="opacity-0 -translate-y-2"
             x-transition:enter-end="opacity-100 translate-y-0"
             x-transition:leave="transition ease-in duration-[160ms]"
             x-transition:leave-start="opacity-100"
@@ -272,11 +293,18 @@
             :role="aviso.tipo === 'error' ? 'alert' : 'status'"
             :aria-busy="aviso.tipo === 'loading' ? 'true' : 'false'"
 
-            class="pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-[var(--radius-lg)] border border-[var(--theme-border)] bg-[var(--theme-surface)] px-4 py-3 theme-shadow-xl"
+            class="pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-[var(--radius-lg)] border-2 bg-[var(--theme-surface)] px-4 py-3.5 shadow-2xl theme-shadow-xl"
+            :class="{
+                'trackit-temblar': aviso.temblar,
+                'border-[var(--theme-success)]': aviso.tipo === 'success',
+                'border-[var(--theme-danger)]': aviso.tipo === 'error',
+                'border-[var(--theme-warning)]': aviso.tipo === 'warning',
+                'border-[var(--theme-primary)]': aviso.tipo === 'info' || aviso.tipo === 'loading',
+            }"
         >
             {{-- Icono por tipo --}}
             <span
-                class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full"
+                class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full"
                 :class="{
                     'bg-[var(--theme-success-soft)] text-[var(--theme-success)]': aviso.tipo === 'success',
                     'bg-[var(--theme-danger-soft)] text-[var(--theme-danger)]': aviso.tipo === 'error',
@@ -339,3 +367,25 @@
         </div>
     </template>
 </div>
+
+<style>
+    /* Temblor horizontal corto al aparecer un aviso. */
+    @keyframes trackit-temblar {
+        0%, 100% { transform: translateX(0); }
+        15% { transform: translateX(-7px) rotate(-1deg); }
+        30% { transform: translateX(6px) rotate(1deg); }
+        45% { transform: translateX(-5px); }
+        60% { transform: translateX(4px); }
+        75% { transform: translateX(-2px); }
+    }
+
+    .trackit-temblar {
+        animation: trackit-temblar 0.6s ease-in-out;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .trackit-temblar {
+            animation: none;
+        }
+    }
+</style>

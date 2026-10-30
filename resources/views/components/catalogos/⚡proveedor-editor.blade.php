@@ -119,6 +119,22 @@ new class extends Component
 
         app(\App\Services\SystemCacheService::class)->refreshModule('catalogos');
 
+        // Notificación (campana y push). No interrumpe el guardado.
+        try {
+            $notificaciones = app(\App\Services\NotificacionService::class);
+
+            $notificaciones->notificar(
+                'equipos',
+                $esNuevo ? 'Proveedor agregado' : 'Proveedor actualizado',
+                $notificaciones->nombreActor().($esNuevo ? ' agregó el proveedor «' : ' actualizó el proveedor «').$datos['nombre'].'».',
+                route('catalogos.index', ['section' => 'proveedores'], false)
+            );
+
+            $this->dispatch('notificaciones-actualizadas');
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
         session()->flash('toast', [
             'type' => 'success',
             'message' => $esNuevo
