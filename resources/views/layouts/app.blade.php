@@ -1990,7 +1990,7 @@ document.addEventListener(
         wire:navigate, así un aviso emitido antes de cambiar de página
         sigue visible.
     --}}
-    @persist('avisos-globales')
+    @persist('avisos-globales-v2')
         <x-ui.toast-region />
 
         {{-- Ventana de confirmación del sistema ($dispatch('confirmar', {...})) --}}

@@ -26,6 +26,17 @@ class Fecha
         return app(PreferenciasUsuarioService::class)->fechaHora($valor, $vacio);
     }
 
+    /*
+     * Solo el día (d/m/Y) en la zona horaria del usuario. Para fechas con
+     * hora guardadas en UTC: de noche en México ya serían «mañana».
+     */
+    public static function dia(mixed $valor, ?string $vacio = null): ?string
+    {
+        $completo = self::conHora($valor, '');
+
+        return $completo === '' ? $vacio : substr($completo, 0, 10);
+    }
+
     public static function hora(mixed $valor, string $vacio = '—'): string
     {
         return app(PreferenciasUsuarioService::class)->hora($valor, $vacio);

@@ -269,14 +269,31 @@
                             ></p>
                         </div>
 
-                        <div
-                            x-show="recordType === 'marca'"
-                            x-cloak
-                            class="hidden xl:block"
-                        ></div>
 
-                        {{-- SITIO WEB --}}
-                        <div class="min-w-0">
+                        {{-- PAÍS HEREDADO DEL MODELO --}}
+                        <div
+                            x-show="recordType === 'modelo'"
+                            x-cloak
+                            class="min-w-0"
+                        >
+                            <label class="mb-1.5 block text-xs text-[var(--theme-text-muted)]">
+                                País de origen
+                            </label>
+
+                            <input
+                                id="catalog-model-country"
+                                type="text"
+                                value="{{ $paisOrigenModelo ?: 'Se toma de la marca seleccionada' }}"
+                                readonly
+                                class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)] cursor-not-allowed"
+                            >
+                        </div>
+
+                        {{-- SITIO WEB: completa la fila (2 columnas en marca, 3 en modelo) --}}
+                        <div
+                            class="min-w-0"
+                            x-bind:class="recordType === 'modelo' ? 'md:col-span-2 xl:col-span-3' : 'md:col-span-2'"
+                        >
                             <label
                                 for="catalog-web"
                                 class="mb-1.5 block text-xs text-[var(--theme-text-muted)]"
@@ -300,25 +317,6 @@
                             ></p>
                         </div>
 
-                        {{-- PAÍS HEREDADO DEL MODELO --}}
-                        <div
-                            x-show="recordType === 'modelo'"
-                            x-cloak
-                            class="min-w-0"
-                        >
-                            <label class="mb-1.5 block text-xs text-[var(--theme-text-muted)]">
-                                País de origen
-                            </label>
-
-                            <input
-                                id="catalog-model-country"
-                                type="text"
-                                value="{{ $paisOrigenModelo ?: 'Se toma de la marca seleccionada' }}"
-                                readonly
-                                class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)] cursor-not-allowed"
-                            >
-                        </div>
-
                         {{-- DESCRIPCIÓN --}}
                         <div class="min-w-0 xl:col-span-3">
                             <label
@@ -332,7 +330,8 @@
                                 id="catalog-description"
                                 wire:model="descripcion"
                                 rows="3"
-                                placeholder="Descripción de esta marca o modelo"
+                                x-bind:placeholder="recordType === 'modelo' ? 'Descripción de este modelo' : 'Descripción de esta marca'"
+                                placeholder="{{ $tipoRegistro === 'modelo' ? 'Descripción de este modelo' : 'Descripción de esta marca' }}"
                                 class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)] resize-y"
                             ></textarea>
 

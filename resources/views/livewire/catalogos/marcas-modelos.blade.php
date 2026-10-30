@@ -29,9 +29,8 @@
         transition-colors
     ';
 
-    $fecha = fn ($valor) => filled($valor)
-        ? \Illuminate\Support\Carbon::parse($valor)->format('d/m/Y')
-        : null;
+    // En la zona horaria del usuario (se guardan en UTC).
+    $fecha = fn ($valor) => \App\Support\Fecha::dia($valor);
 
     $estadoTexto = fn ($registro) => $registro->activo ? 'Activo' : 'Inactivo';
 @endphp

@@ -273,7 +273,7 @@
 
     id="trackitToastRegion"
 
-    class="trackit-avisos pointer-events-none flex flex-col items-start gap-2"
+    class="trackit-avisos pointer-events-none flex flex-col items-end gap-2"
     aria-live="polite"
     aria-atomic="false"
 >
@@ -379,22 +379,17 @@
     @media (min-width: 640px) {
         .trackit-avisos {
             top: 1.5rem;
-            left: 1.5rem;
-            right: auto;
+            left: auto;
+            right: 1.5rem;
             width: 24rem;
         }
     }
 
+    /* Borde neutro (formal); el tipo se distingue por el ícono. */
     .trackit-aviso {
-        border: 2px solid var(--theme-border);
+        border: 1px solid var(--theme-border-strong, var(--theme-border));
         box-shadow: 0 18px 40px -12px rgba(0, 0, 0, 0.45), 0 4px 12px -4px rgba(0, 0, 0, 0.25);
     }
-
-    .trackit-aviso[data-tipo="success"] { border-color: var(--theme-success); }
-    .trackit-aviso[data-tipo="error"] { border-color: var(--theme-danger); }
-    .trackit-aviso[data-tipo="warning"] { border-color: var(--theme-warning); }
-    .trackit-aviso[data-tipo="info"],
-    .trackit-aviso[data-tipo="loading"] { border-color: var(--theme-primary); }
 
     /* Temblor horizontal corto al aparecer un aviso. */
     @keyframes trackit-temblar {
