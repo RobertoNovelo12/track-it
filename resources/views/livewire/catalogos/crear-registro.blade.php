@@ -270,8 +270,13 @@
                         </div>
 
 
-                        {{-- PAÍS HEREDADO DEL MODELO --}}
+                        {{-- PAÍS HEREDADO DEL MODELO (se calcula aquí al elegir la marca) --}}
                         <div
+                            x-data="{
+                                paisPorMarca: @js($marcas->mapWithKeys(fn ($m) => [
+                                    (string) $m->id_marca => $paisesOrigen->firstWhere('id_valor', $m->id_pais_origen)?->nombre ?? 'La marca no tiene país de origen',
+                                ])),
+                            }"
                             x-show="recordType === 'modelo'"
                             x-cloak
                             class="min-w-0"
@@ -283,7 +288,7 @@
                             <input
                                 id="catalog-model-country"
                                 type="text"
-                                value="{{ $paisOrigenModelo ?: 'Se toma de la marca seleccionada' }}"
+                                x-bind:value="paisPorMarca[String($wire.idMarca ?? '')] ?? 'Se toma de la marca seleccionada'"
                                 readonly
                                 class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)] cursor-not-allowed"
                             >
@@ -411,8 +416,19 @@
                             ></p>
                         </div>
 
-                        {{-- CONTACTO --}}
-                        <div class="min-w-0">
+                        {{-- CONTACTO: se calcula aquí al elegir proveedor. Antes dependía
+                             de que el servidor volviera a dibujar el campo, y tras guardar
+                             y limpiar el formulario a veces ya no se actualizaba. --}}
+                        <div
+                            class="min-w-0"
+                            x-data="{
+                                contactos: @js($proveedores->mapWithKeys(fn ($p) => [
+                                    (string) $p->id_proveedor => collect([$p->contacto, $p->telefono, $p->correo])
+                                        ->filter(fn ($v) => filled($v))
+                                        ->implode(' · ') ?: 'Sin información de contacto',
+                                ])),
+                            }"
+                        >
                             <label class="mb-1.5 block text-xs text-[var(--theme-text-muted)]">
                                 Contacto de proveedor
                             </label>
@@ -420,7 +436,7 @@
                             <input
                                 id="catalog-provider-contact"
                                 type="text"
-                                value="{{ $contactoProveedor ?: 'Selecciona un proveedor' }}"
+                                x-bind:value="contactos[String($wire.idProveedorSugerido ?? '')] ?? 'Selecciona un proveedor'"
                                 readonly
                                 class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)] cursor-not-allowed"
                             >
