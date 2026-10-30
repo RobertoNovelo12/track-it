@@ -112,6 +112,42 @@
                         {{-- Tipo (marca o modelo): lo decide el botón «Añadir marca» /
                              «Añadir modelo» (?tipo=); ya no se elige aquí. --}}
 
+                        {{-- NOMBRE --}}
+                        <div class="min-w-0">
+                            <label
+                                for="catalog-name"
+                                class="mb-1.5 block text-xs text-[var(--theme-text-muted)]"
+                            >
+                                <span
+                                    x-text="
+                                        recordType === 'modelo'
+                                            ? 'Nombre del modelo'
+                                            : 'Nombre de la marca'
+                                    "
+                                ></span>
+                                *
+                            </label>
+
+                            <input
+                                id="catalog-name"
+                                type="text"
+                                wire:model="nombre"
+                                :placeholder="
+                                    recordType === 'modelo'
+                                        ? 'Ej. Latitude 5440'
+                                        : 'Ej. Apple'
+                                "
+                                class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)]"
+                            >
+
+                            <p
+                                x-show="fieldError('nombre')"
+                                x-cloak
+                                x-text="fieldError('nombre')"
+                                class="mt-1 text-xs text-[var(--theme-danger)]"
+                            ></p>
+                        </div>
+
                         {{-- CÓDIGO INTERNO --}}
                         <div class="min-w-0">
                             <label class="mb-1.5 block text-xs text-[var(--theme-text-muted)]">
@@ -147,42 +183,6 @@
                                     Activo
                                 </span>
                             </div>
-                        </div>
-
-                        {{-- NOMBRE --}}
-                        <div class="min-w-0">
-                            <label
-                                for="catalog-name"
-                                class="mb-1.5 block text-xs text-[var(--theme-text-muted)]"
-                            >
-                                <span
-                                    x-text="
-                                        recordType === 'modelo'
-                                            ? 'Nombre del modelo'
-                                            : 'Nombre de la marca'
-                                    "
-                                ></span>
-                                *
-                            </label>
-
-                            <input
-                                id="catalog-name"
-                                type="text"
-                                wire:model="nombre"
-                                :placeholder="
-                                    recordType === 'modelo'
-                                        ? 'Ej. Latitude 5440'
-                                        : 'Ej. Apple'
-                                "
-                                class="w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)]"
-                            >
-
-                            <p
-                                x-show="fieldError('nombre')"
-                                x-cloak
-                                x-text="fieldError('nombre')"
-                                class="mt-1 text-xs text-[var(--theme-danger)]"
-                            ></p>
                         </div>
 
                         {{-- ====================================================

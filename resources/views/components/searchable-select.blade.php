@@ -449,6 +449,22 @@
         |--------------------------------------------------------------------------
         */
 
+        /*
+         * Enter en el buscador: si se escribió algo, elige la primera
+         * coincidencia; si no, no hace nada (antes enviaba el formulario).
+         */
+        elegirConEnter() {
+            if (this.disabled || String(this.query ?? '').trim() === '') {
+                return;
+            }
+
+            const primera = this.filtered[0];
+
+            if (primera) {
+                this.pick(primera.value, primera.label);
+            }
+        },
+
         pick(value, label) {
             if (this.disabled) {
                 return;
@@ -607,8 +623,11 @@
             "
 
             @input="handleInput()"
+            {{-- Enter nunca envía el formulario: elige la opción buscada. --}}
             @if ($allowCustom)
                 @keydown.enter.prevent="commitTyped()"
+            @else
+                @keydown.enter.prevent="elegirConEnter()"
             @endif
 
             :disabled="disabled"
