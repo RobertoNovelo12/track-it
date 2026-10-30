@@ -237,13 +237,32 @@ class EditarRegistro extends Component
 
     public function save(): void
     {
+        $versionAntes = $this->successVersion;
+
         if ($this->tipo === 'modelo') {
             $this->saveModelo();
         } else {
             $this->saveMarca();
         }
 
+        // Validación fallida (addError + return): se queda en el formulario.
+        if ($this->successVersion === $versionAntes) {
+            return;
+        }
+
         $this->refrescarCatalogos();
+
+        // Guardado: vuelve a la tabla de su sección con el aviso.
+        session()->flash('toast', [
+            'type' => 'success',
+            'title' => $this->tipo === 'modelo' ? 'Modelo actualizado' : 'Marca actualizada',
+            'message' => $this->successMessage,
+        ]);
+
+        $this->redirect(
+            route('catalogos.index', ['section' => $this->tipo === 'modelo' ? 'modelos' : 'marcas']),
+            navigate: true
+        );
     }
 
 
