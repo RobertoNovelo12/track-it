@@ -390,6 +390,9 @@ document.addEventListener(
 
         @include('layouts.partials.cambios-sin-guardar')
 
+        {{-- Ctrl+G / Ctrl+S: guardar el formulario en pantalla --}}
+        @include('layouts.partials.atajo-guardar')
+
         @include('layouts.partials.formatos-campos')
 
         @include('layouts.partials.mensajes-error')
