@@ -1374,7 +1374,9 @@ class EquipoCreate extends Component
         if (! config('app.debug')) {
             return [
                 'ok' => false,
-                'message' => 'No se pudo guardar el equipo. Intenta de nuevo o contacta al administrador.',
+                // No es un dato mal capturado (esos se marcan en su campo):
+                // falló el servidor. Puede que sí se haya guardado.
+                'message' => 'Error del servidor al guardar el equipo (no es por los datos que capturaste). Búscalo en Inventario por su número de serie antes de reintentar, por si sí se guardó.',
             ];
         }
 
@@ -1441,6 +1443,12 @@ class EquipoCreate extends Component
                 'childData' => [
                     'array',
                 ],
+            ],
+            [
+                // Mensaje claro para el caso más común: el equipo ya existe.
+                'numeroSerie.unique' => 'Ya hay un equipo registrado con el número de serie «'
+                    . (string) ($payload['numeroSerie'] ?? '')
+                    . '». Búscalo en Inventario antes de volver a darlo de alta.',
             ]
         )->validate();
 

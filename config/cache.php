@@ -131,6 +131,12 @@ return [
     |
     */
 
-    'serializable_classes' => false,
+    /*
+     * stdClass: las filas de la base (DB::table()->get()) que se guardan en
+     * caché. Con «false» volvían como __PHP_Incomplete_Class y la segunda
+     * exportación (o el guardado) fallaba con «incomplete object».
+     * stdClass no tiene métodos, así que no abre la puerta a ataques.
+     */
+    'serializable_classes' => [\stdClass::class],
 
 ];
