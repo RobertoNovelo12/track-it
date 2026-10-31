@@ -63,7 +63,7 @@ class ActaBajaIndividualService
 
         $documento = [
             'folio' => $folio,
-            'numero_ticket' => 'GPRVM-'.$datos['numeroTicket'],
+            'numero_ticket' => trim((string) $datos['numeroTicket']),
             'logo' => $logoData,
             'organizacion' => $organizacion->nombre(),
             'equipo' => $equipo,

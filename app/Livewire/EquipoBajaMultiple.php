@@ -781,7 +781,7 @@ class EquipoBajaMultiple extends Component
                 ->all(),
 
             'folio' => 'Por asignar',
-            'numero_ticket' => $this->numeroTicket !== '' ? 'GPRVM-'.$this->numeroTicket : 'Por capturar',
+            'numero_ticket' => trim($this->numeroTicket) !== '' ? trim($this->numeroTicket) : 'Por capturar',
             'fotos' => [],
             'firmas' => $this->nombresFirmas(),
         ];
@@ -829,7 +829,7 @@ class EquipoBajaMultiple extends Component
             'fechaBaja' => [
                 'required', 'date_format:Y-m-d'
             ],
-            'numeroTicket' => ['required', 'regex:/^[0-9]+$/', 'max:20'],
+            'numeroTicket' => ['required', 'string', 'max:26'], // texto libre (columna de 26)
             'motivoBaja' => [
                 'required', 'string', 'max:500'
             ],
@@ -1037,7 +1037,7 @@ class EquipoBajaMultiple extends Component
     protected function mensajesValidacion(): array
     {
         return [
-            'numeroTicket.regex' => 'Ingresa solo los números del tiket, sin el prefijo GPRVM-.',
+            'numeroTicket.max' => 'El número de tiket puede tener hasta 26 caracteres.',
             'required' =>
                 'Este campo es obligatorio.',
             'integer' =>

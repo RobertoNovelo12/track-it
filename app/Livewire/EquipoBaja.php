@@ -552,7 +552,7 @@ class EquipoBaja extends Component
         Gate::authorize('gestionar');
 
         $validated = $this->validate([
-            'numeroTicket' => ['required', 'regex:/^[0-9]+$/', 'max:20'],
+            'numeroTicket' => ['required', 'string', 'max:26'], // texto libre (columna de 26)
             'motivoBaja' => [
                 'required',
                 'string',
@@ -579,7 +579,7 @@ class EquipoBaja extends Component
             ...$this->reglasFirmas(),
         ], [
             'numeroTicket.required' => 'Ingresa el número de tiket.',
-            'numeroTicket.regex' => 'Ingresa solo los números del tiket, sin el prefijo GPRVM-.',
+            'numeroTicket.max' => 'El número de tiket puede tener hasta 26 caracteres.',
             'numeroTicket.max' => 'El número de tiket no debe superar 20 dígitos.',
             'motivoBaja.required' =>
                 'Ingresa el motivo de la baja.',
@@ -760,7 +760,7 @@ class EquipoBaja extends Component
                 $idBaja = DB::table('bajas')
                     ->insertGetId([
                         'folio' => $folio,
-                        'numero_ticket' => 'GPRVM-'.$validated['numeroTicket'],
+                        'numero_ticket' => trim($validated['numeroTicket']),
 
                         'id_equipo' =>
                             $this->equipoId,

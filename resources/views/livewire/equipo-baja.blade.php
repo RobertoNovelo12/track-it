@@ -918,7 +918,7 @@
                                 </span>
 
                                 <span class="valor">
-                                    {{ $numeroTicket !== '' ? 'GPRVM-'.$numeroTicket : 'Por capturar' }}
+                                    {{ trim($numeroTicket) !== '' ? trim($numeroTicket) : 'Por capturar' }}
                                 </span>
 
                             </div>
