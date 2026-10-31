@@ -255,6 +255,9 @@ class EquipoEdit extends Component
 
         Cache::forget($this->editBaseCacheKey());
 
+        // Tabla de Inventario (caché por módulo).
+        app(\App\Services\SystemCacheService::class)->refreshModule('equipos');
+
         $version = (int) Cache::get(
 
             self::TABLE_CACHE_VERSION_KEY,
