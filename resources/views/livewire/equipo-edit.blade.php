@@ -427,8 +427,8 @@
 
                                 {{-- SÍ / NO --}}
                                 <template x-if="field.type === 'boolean'">
-                                    {{-- Interruptor Sí/No (mismo estilo que Ajustes › Notificaciones), en una caja de la altura de los demás campos --}}
-                                    <label class="flex h-10 w-full cursor-pointer items-center gap-3 rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 text-sm text-[var(--theme-text)] transition-colors hover:bg-[var(--theme-surface-soft)] focus-within:border-[var(--theme-primary)]">
+                                    {{-- Interruptor Sí/No (mismo estilo que Ajustes › Notificaciones), sin caja; misma altura que los demás campos para alinear --}}
+                                    <label class="inline-flex h-10 w-fit cursor-pointer select-none items-center gap-3 text-sm text-[var(--theme-text)]">
                                         <input
                                             type="checkbox"
                                             :id="'equipment-' + field.key"
