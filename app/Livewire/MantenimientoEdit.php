@@ -583,6 +583,7 @@ class MantenimientoEdit extends Component
 
         // Listado de Mantenimientos en caché: mostrar el cambio de inmediato.
         app(\App\Services\SystemCacheService::class)->refreshModule('mantenimientos');
+        app(\App\Services\SystemCacheService::class)->refreshModule('dashboard');
 
 
         if ($estadoAnterior !== (int) $validated['estadoMantenimiento']) {

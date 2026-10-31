@@ -516,6 +516,10 @@ class AsignacionCreate extends Component
                 }
             );
 
+        // Inventario, Movimientos y el dashboard guardan sus datos en caché.
+        app(\App\Services\SystemCacheService::class)->refreshModule('equipos');
+        app(\App\Services\SystemCacheService::class)->refreshModule('dashboard');
+
         $notificaciones = app(\App\Services\NotificacionService::class);
 
         $notificaciones->notificar(

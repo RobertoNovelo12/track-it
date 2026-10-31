@@ -1717,6 +1717,7 @@ class EquipoCreate extends Component
         // La tabla de Inventario guarda sus páginas en caché: sin esto el
         // equipo nuevo solo aparecía al aplicar un filtro.
         app(\App\Services\SystemCacheService::class)->refreshModule('equipos');
+        app(\App\Services\SystemCacheService::class)->refreshModule('dashboard');
 
         $notificaciones = app(\App\Services\NotificacionService::class);
 

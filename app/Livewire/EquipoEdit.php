@@ -257,6 +257,7 @@ class EquipoEdit extends Component
 
         // Tabla de Inventario (caché por módulo).
         app(\App\Services\SystemCacheService::class)->refreshModule('equipos');
+        app(\App\Services\SystemCacheService::class)->refreshModule('dashboard');
 
         $version = (int) Cache::get(
 
