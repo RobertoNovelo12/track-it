@@ -427,17 +427,22 @@
 
                                 {{-- SÍ / NO --}}
                                 <template x-if="field.type === 'boolean'">
-                                    <label class="inline-flex items-center gap-2 text-sm text-[var(--theme-text)]">
+                                    {{-- Interruptor Sí/No (mismo estilo que Ajustes › Notificaciones), en una caja de la altura de los demás campos --}}
+                                    <label class="flex h-10 w-full cursor-pointer items-center gap-3 rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 text-sm text-[var(--theme-text)] transition-colors hover:bg-[var(--theme-surface-soft)] focus-within:border-[var(--theme-primary)]">
                                         <input
                                             type="checkbox"
                                             :id="'equipment-' + field.key"
                                             x-model="fieldValues(field)[field.model]"
                                         x-bind:readonly="!field.child && field.model === 'propietario'"
                                             @change="clearValidationError(errorKey(field))"
-                                            class="rounded border-[var(--theme-border-strong)] text-[var(--theme-primary)]"
+                                            class="peer sr-only"
                                         >
 
+                                        <span aria-hidden="true" class="relative block h-6 w-11 shrink-0 rounded-full bg-[var(--theme-border)] transition-colors duration-200 peer-checked:bg-[var(--theme-primary)] after:content-[''] after:absolute after:top-1/2 after:left-0.5 after:h-5 after:w-5 after:-translate-y-1/2 after:rounded-full after:bg-white after:shadow-sm after:transition-transform after:duration-200 peer-checked:after:translate-x-5"></span>
+
                                         <span
+                                            class="font-medium"
+                                            :class="fieldValues(field)[field.model] ? 'text-[var(--theme-primary)]' : 'text-[var(--theme-text-muted)]'"
                                             x-text="fieldValues(field)[field.model] ? 'Sí' : 'No'"
                                         ></span>
                                     </label>
