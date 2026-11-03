@@ -577,6 +577,14 @@
 
 @foreach ($bajas as $baja)
 
+    {{-- Baja múltiple conjunta: su acta con todos los equipos (ReporteBajasActaService::conjuntas). --}}
+    @if (! empty($baja['conjunta']))
+        <div style="page-break-after: {{ $loop->last ? 'auto' : 'always' }};">
+            @include('reportes.partials.baja-multiple-documento', ['documento' => $baja['documento']])
+        </div>
+        @continue
+    @endif
+
 
 
     @php

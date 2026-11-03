@@ -1316,11 +1316,18 @@
 
                         @else
 
-                            @include('reportes.baja-acta-previa', [
+                            @if (! empty($previewDocument['conjunta']))
+                                {{-- Baja múltiple conjunta: su acta con todos los equipos. --}}
+                                @include('reportes.partials.baja-multiple-documento', [
+                                    'documento' => $previewDocument['documento'],
+                                ])
+                            @else
+                                @include('reportes.baja-acta-previa', [
 
-                                'baja' => $previewDocument
+                                    'baja' => $previewDocument
 
-                            ])
+                                ])
+                            @endif
 
                         @endif
 

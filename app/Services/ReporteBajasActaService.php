@@ -67,6 +67,7 @@ class ReporteBajasActaService
             ->whereIn('b.id_baja', $ids->all())
             ->select([
                 'b.id_baja',
+                'b.id_equipo',
                 'b.folio',
                 'b.numero_ticket',
                 'b.fecha_baja',
@@ -119,6 +120,8 @@ class ReporteBajasActaService
 
                 return [
                     'id' => $id,
+                    'id_equipo' => (int) $baja->id_equipo,
+                    'fecha_baja' => $baja->fecha_baja,
                     'folio' => $baja->folio,
                     'numero_ticket' => $baja->numero_ticket,
 
@@ -174,7 +177,112 @@ class ReporteBajasActaService
                 ];
             })
             ->filter()
-            ->values();
+            ->values()
+            ->pipe(fn (Collection $bajas) => $this->conjuntas($bajas, $miniaturas));
+    }
+
+    /*
+     * Bajas hechas juntas (baja múltiple conjunta): en lugar de un acta
+     * por equipo sale el acta conjunta con TODOS sus equipos, aunque se
+     * haya buscado solo uno de ellos. Esa acta se guardó al darlos de
+     * baja (reportes_generados, filtros.baja_multiple) con su selección,
+     * firmas y fotografías. Cada acta conjunta aparece una sola vez, en
+     * el lugar del primer equipo que le pertenece.
+     */
+    private function conjuntas(Collection $bajas, bool $miniaturas): Collection
+    {
+        if ($bajas->isEmpty()) {
+            return $bajas;
+        }
+
+        $fechas = $bajas->pluck('fecha_baja')
+            ->filter()
+            ->map(fn ($fecha) => Carbon::parse($fecha)->toDateString())
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($fechas === []) {
+            return $bajas;
+        }
+
+        try {
+            $reportes = DB::table('reportes_generados')
+                ->where('tipo_reporte', 'bajas')
+                ->whereIn(DB::raw('CAST(fecha_desde AS DATE)'), $fechas)
+                ->orderByDesc('id_reporte')
+                ->get(['id_reporte', 'filtros']);
+        } catch (\Throwable $error) {
+            report($error);
+
+            return $bajas;
+        }
+
+        // id_equipo => [id_reporte, documento]
+        $porEquipo = [];
+
+        foreach ($reportes as $reporte) {
+            $documento = (json_decode((string) $reporte->filtros, true) ?: [])['baja_multiple'] ?? null;
+
+            if (! is_array($documento) || empty($documento['equipos'])) {
+                continue;
+            }
+
+            foreach ($documento['equipos'] as $equipo) {
+                $idEquipo = (int) ($equipo['id_equipo'] ?? 0);
+
+                if ($idEquipo > 0 && ! isset($porEquipo[$idEquipo])) {
+                    $porEquipo[$idEquipo] = [(int) $reporte->id_reporte, $documento];
+                }
+            }
+        }
+
+        if ($porEquipo === []) {
+            return $bajas;
+        }
+
+        $imagenes = app(ImagenPdfService::class);
+        $vistos = [];
+        $resultado = [];
+
+        foreach ($bajas as $baja) {
+            $conjunta = $porEquipo[(int) ($baja['id_equipo'] ?? 0)] ?? null;
+
+            if ($conjunta === null) {
+                $resultado[] = $baja;
+
+                continue;
+            }
+
+            [$idReporte, $documento] = $conjunta;
+
+            if (isset($vistos[$idReporte])) {
+                continue;
+            }
+
+            $vistos[$idReporte] = true;
+
+            // Logotipo y fotografías como imágenes incrustadas (igual que al generarla).
+            $documento['logo'] = $imagenes->logoDataUri();
+            $rutas = $documento['fotos'] ?? [];
+            $documento['fotos'] = [];
+
+            foreach (['fotoFrontal' => 'Vista frontal', 'fotoTrasera' => 'Vista trasera', 'fotoLateral1' => 'Vista lateral 1', 'fotoLateral2' => 'Vista lateral 2'] as $campo => $titulo) {
+                $imagen = $imagenes->dataUri($rutas[$campo] ?? null, $miniaturas ? 320 : 900, $miniaturas ? 60 : 75);
+
+                if ($imagen !== null) {
+                    $documento['fotos'][$titulo] = $imagen;
+                }
+            }
+
+            $resultado[] = [
+                'conjunta' => true,
+                'id_reporte' => $idReporte,
+                'documento' => $documento,
+            ];
+        }
+
+        return collect($resultado);
     }
 
     private function fecha($fecha): ?string

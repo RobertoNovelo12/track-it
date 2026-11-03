@@ -95,7 +95,60 @@ class ReporteActasService
             $grupos[$clave]['referencias'][] = $acta['referencia'];
         }
 
-        return collect(array_values($grupos));
+        return $this->completarLotes(array_values($grupos));
+    }
+
+    private function claveLote(object $registro): string
+    {
+        return 'asignacion-'.md5(implode('|', [
+            $registro->asignado_por ?? '',
+            (string) ($registro->fecha_asignacion ?? ''),
+            $registro->id_usuario ?? '',
+            mb_strtolower(trim((string) ($registro->nombre_colaborador ?? ''))),
+            $registro->id_unidad ?? '',
+            $registro->id_departamento ?? '',
+            $registro->id_ubicacion ?? '',
+            $registro->id_tipo_asignacion ?? '',
+        ]));
+    }
+
+    /*
+     * Si el equipo buscado se asignó junto con otros, el acta lleva a
+     * todos los del lote, no solo al que coincidió con los filtros.
+     * Una sola consulta: asignaciones con esas mismas fechas y horas.
+     */
+    private function completarLotes(array $actas): Collection
+    {
+        $fechas = collect($actas)
+            ->where('tipo', 'asignaciones')
+            ->pluck('fecha_lote')
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($fechas === []) {
+            return collect($actas);
+        }
+
+        $porLote = DB::table('asignaciones')
+            ->whereIn('fecha_asignacion', $fechas)
+            ->orderBy('id_asignacion')
+            ->get()
+            ->groupBy(fn ($fila) => $this->claveLote($fila));
+
+        return collect($actas)->map(function (array $acta) use ($porLote) {
+            $miembros = $porLote->get($acta['lote'] ?? '');
+
+            if (! $miembros || $miembros->count() <= count($acta['referencias'] ?? [])) {
+                return $acta;
+            }
+
+            $acta['referencias'] = $miembros->pluck('id_asignacion')->map(fn ($id) => (int) $id)->all();
+            $acta['equipos'] = $miembros->map(fn ($fila) => $this->equipo((int) $fila->id_equipo))->values()->all();
+
+            return $acta;
+        });
     }
 
     private function responsable(?int $id): ?array
@@ -265,16 +318,8 @@ class ReporteActasService
             'observaciones' => $registro->observaciones,
 
             // Clave del lote (ver agrupar()).
-            'lote' => 'asignacion-'.md5(implode('|', [
-                $registro->asignado_por ?? '',
-                (string) ($registro->fecha_asignacion ?? ''),
-                $registro->id_usuario ?? '',
-                mb_strtolower(trim((string) ($registro->nombre_colaborador ?? ''))),
-                $registro->id_unidad ?? '',
-                $registro->id_departamento ?? '',
-                $registro->id_ubicacion ?? '',
-                $registro->id_tipo_asignacion ?? '',
-            ])),
+            'lote' => $this->claveLote($registro),
+            'fecha_lote' => $registro->fecha_asignacion ?? null,
         ];
     }
 
