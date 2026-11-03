@@ -275,6 +275,36 @@ Route::middleware([
         ->whereNumber('reporte')
         ->name('reportes.download')->middleware('can:gestionar');
 
+    /*
+     * Acta de asignación o reasignación de movimientos concretos
+     * (?tipo=asignaciones|reasignaciones&ids=1,2,3). Se descarga sola al
+     * terminar de asignar, asignar varios o reasignar; las asignaciones
+     * hechas juntas salen en una sola acta.
+     */
+    Route::get('/reportes/acta-movimiento', function (\Illuminate\Http\Request $request) {
+        $tipo = (string) $request->query('tipo');
+        $ids = array_filter(explode(',', (string) $request->query('ids', '')), 'ctype_digit');
+
+        abort_unless(in_array($tipo, ['asignaciones', 'reasignaciones'], true) && $ids !== [], 404);
+
+        $actas = app(\App\Services\ReporteActasService::class)->porIds($tipo, array_slice($ids, 0, 200));
+
+        abort_if($actas->isEmpty(), 404);
+
+        $codigos = collect($actas->first()['equipos'] ?? [])->pluck('codigo')->filter();
+        $nombre = ($tipo === 'asignaciones' ? 'acta-asignacion' : 'acta-reasignacion')
+            .'-'.($codigos->count() === 1 ? $codigos->first() : $codigos->count().'-equipos')
+            .'-'.now()->format('Ymd-His').'.pdf';
+
+        return \Barryvdh\DomPDF\Facade\Pdf::loadView('reportes.actas-pdf', [
+            'actas' => $actas,
+            'tipoActa' => $tipo,
+            'filtros' => [],
+            'generadoPor' => app(\App\Services\NotificacionService::class)->nombreActor(),
+            'generadoEn' => now(),
+        ])->setPaper('letter', 'portrait')->download($nombre);
+    })->name('reportes.acta-movimiento')->middleware('can:gestionar');
+
 
     /*
     |--------------------------------------------------------------------------

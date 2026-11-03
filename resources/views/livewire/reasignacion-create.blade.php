@@ -601,6 +601,13 @@
                         || 'El equipo fue reasignado correctamente.'
                     );
 
+                    // Acta del movimiento: se descarga sola (layouts/partials/descargas-script).
+                    if (result.acta) {
+                        window.trackitDescargar
+                            ? window.trackitDescargar(result.acta)
+                            : window.open(result.acta, '_blank');
+                    }
+
                     setTimeout(() => {
                         const url =
                             this.$root.dataset.indexUrl;

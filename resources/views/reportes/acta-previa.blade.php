@@ -5,6 +5,10 @@
     $nuevo = $acta['nuevo'] ?? [];
     $equipo = $acta['equipo'] ?? [];
 
+        // Una o varias (asignación de varios equipos al mismo destino).
+        $equiposActa = array_values(array_filter($acta['equipos'] ?? [$equipo]));
+        $hostsActa = implode(', ', array_unique(array_filter(array_column($equiposActa, 'host'))));
+
     $dato = static fn ($valor) =>
         filled($valor) ? (string) $valor : '—';
 
@@ -293,7 +297,7 @@
                 <div class="field">
                     <span class="label">Host del equipo</span>
                     <span class="value">
-                        {{ $dato($equipo['host'] ?? null) }}
+                        {{ $dato($hostsActa) }}
                     </span>
                 </div>
                 <div class="field">
@@ -357,7 +361,7 @@
                 <div class="field">
                     <span class="label">Host del equipo</span>
                     <span class="value">
-                        {{ $dato($equipo['host'] ?? null) }}
+                        {{ $dato($hostsActa) }}
                     </span>
                 </div>
                 <div class="field">
@@ -423,19 +427,24 @@
                 </tr>
             </thead>
             <tbody>
+                @foreach ($equiposActa as $equipoFila)
+                    @php
+                        $marcaModeloFila = trim(($equipoFila['marca'] ?? '') . ' ' . ($equipoFila['modelo'] ?? ''));
+                    @endphp
                 <tr>
-                    <td>{{ $dato($equipo['codigo'] ?? null) }}</td>
+                    <td>{{ $dato($equipoFila['codigo'] ?? null) }}</td>
                     <td>
-                        {{ $dato($equipo['nombre'] ?? null) }}
-                        @if ($marcaModelo !== '')
+                        {{ $dato($equipoFila['nombre'] ?? null) }}
+                        @if ($marcaModeloFila !== '')
                             <div class="secondary">
-                                {{ $marcaModelo }}
+                                {{ $marcaModeloFila }}
                             </div>
                         @endif
                     </td>
-                    <td>{{ $dato($equipo['serie'] ?? null) }}</td>
-                    <td>{{ $dato($equipo['condicion'] ?? null) }}</td>
+                    <td>{{ $dato($equipoFila['serie'] ?? null) }}</td>
+                    <td>{{ $dato($equipoFila['condicion'] ?? null) }}</td>
                 </tr>
+                @endforeach
             </tbody>
         </table>
 

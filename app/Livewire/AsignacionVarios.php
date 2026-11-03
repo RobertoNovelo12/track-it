@@ -235,7 +235,23 @@ class AsignacionVarios extends AsignacionCreate
                     : ''),
         ]);
 
-        return ['ok' => true, 'total' => $total, 'volver' => $this->volverA];
+        // Acta única con todos los equipos (mismo lote: misma fecha y hora).
+        $idsAsignacion = DB::table('asignaciones')
+            ->whereIn('id_equipo', $ids)
+            ->where('fecha_asignacion', $fecha)
+            ->whereNull('fecha_fin')
+            ->orderBy('id_asignacion')
+            ->pluck('id_asignacion')
+            ->implode(',');
+
+        return [
+            'ok' => true,
+            'total' => $total,
+            'volver' => $this->volverA,
+            'acta' => $idsAsignacion !== ''
+                ? route('reportes.acta-movimiento', ['tipo' => 'asignaciones', 'ids' => $idsAsignacion], false)
+                : null,
+        ];
     }
 
     /*

@@ -721,6 +721,9 @@ class ReasignacionCreate extends Component
         return [
             'ok' => true,
 
+            // Acta de reasignación: se descarga sola al terminar.
+            'acta' => route('reportes.acta-movimiento', ['tipo' => 'reasignaciones', 'ids' => $resultado['idMovimiento']], false),
+
             'message' =>
                 $colaborador['sin_cuenta']
                     ? 'El equipo fue reasignado. «' . $colaborador['nombre'] . '» no tiene cuenta: un administrador deberá crearla en Seguridad y roles.'

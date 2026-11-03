@@ -537,6 +537,10 @@
 
         $equipo = $acta['equipo'] ?? [];
 
+        // Una o varias (asignación de varios equipos al mismo destino).
+        $equiposActa = array_values(array_filter($acta['equipos'] ?? [$equipo]));
+        $hostsActa = implode(', ', array_unique(array_filter(array_column($equiposActa, 'host'))));
+
 
 
         $dato = static fn ($valor) =>
@@ -756,7 +760,7 @@
 
                         <div class="valor">
 
-                            {{ $dato($equipo['host'] ?? null) }}
+                            {{ $dato($hostsActa) }}
 
                         </div>
 
@@ -908,7 +912,7 @@
 
                         <div class="valor">
 
-                            {{ $dato($equipo['host'] ?? null) }}
+                            {{ $dato($hostsActa) }}
 
                         </div>
 
@@ -1052,19 +1056,23 @@
 
             <tbody>
 
+                @foreach ($equiposActa as $equipoFila)
+                    @php
+                        $marcaModeloFila = trim(($equipoFila['marca'] ?? '') . ' ' . ($equipoFila['modelo'] ?? ''));
+                    @endphp
                 <tr>
 
-                    <td>{{ $dato($equipo['codigo'] ?? null) }}</td>
+                    <td>{{ $dato($equipoFila['codigo'] ?? null) }}</td>
 
                     <td>
 
-                        {{ $dato($equipo['nombre'] ?? null) }}
+                        {{ $dato($equipoFila['nombre'] ?? null) }}
 
-                        @if ($marcaModelo !== '')
+                        @if ($marcaModeloFila !== '')
 
                             <div class="equipo-secundario">
 
-                                {{ $marcaModelo }}
+                                {{ $marcaModeloFila }}
 
                             </div>
 
@@ -1072,11 +1080,12 @@
 
                     </td>
 
-                    <td>{{ $dato($equipo['serie'] ?? null) }}</td>
+                    <td>{{ $dato($equipoFila['serie'] ?? null) }}</td>
 
-                    <td>{{ $dato($equipo['condicion'] ?? null) }}</td>
+                    <td>{{ $dato($equipoFila['condicion'] ?? null) }}</td>
 
                 </tr>
+                @endforeach
 
             </tbody>
 

@@ -28,7 +28,7 @@ class ReporteActasService
             $consulta->limit(max(1, $limite));
         }
 
-        return $consulta
+        $actas = $consulta
             ->get()
             ->map(function ($registro) use ($tipo) {
                 $id = (int) $registro->registro_id;
@@ -39,6 +39,63 @@ class ReporteActasService
             })
             ->filter()
             ->values();
+
+        return $this->agrupar($actas);
+    }
+
+    /*
+     * Actas de movimientos concretos (al terminar de asignar o
+     * reasignar se descarga su acta). Con varias asignaciones hechas
+     * juntas sale una sola acta con todos los equipos.
+     */
+    public function porIds(string $tipo, array $ids): Collection
+    {
+        $ids = collect($ids)
+            ->map(fn ($id) => (int) $id)
+            ->filter(fn (int $id) => $id > 0)
+            ->unique()
+            ->values();
+
+        if (! in_array($tipo, ['asignaciones', 'reasignaciones'], true) || $ids->isEmpty()) {
+            return collect();
+        }
+
+        $actas = $ids
+            ->map(fn (int $id) => $tipo === 'asignaciones'
+                ? $this->asignacion($id)
+                : $this->reasignacion($id))
+            ->filter()
+            ->values();
+
+        return $this->agrupar($actas);
+    }
+
+    /*
+     * Une en una sola acta las asignaciones de un mismo lote: mismo
+     * responsable o departamento, misma ubicación, mismo tipo, misma
+     * persona que asignó y misma fecha y hora (así las guarda
+     * «Asignar varios»). Cada acta lleva 'equipos' (uno o varios).
+     */
+    private function agrupar(Collection $actas): Collection
+    {
+        $grupos = [];
+
+        foreach ($actas as $acta) {
+            $clave = $acta['lote'] ?? ('unico-'.($acta['tipo'] ?? '').'-'.($acta['referencia'] ?? spl_object_id((object) $acta)));
+
+            if (! isset($grupos[$clave])) {
+                $acta['equipos'] = [$acta['equipo']];
+                $acta['referencias'] = [$acta['referencia']];
+                $grupos[$clave] = $acta;
+
+                continue;
+            }
+
+            $grupos[$clave]['equipos'][] = $acta['equipo'];
+            $grupos[$clave]['referencias'][] = $acta['referencia'];
+        }
+
+        return collect(array_values($grupos));
     }
 
     private function responsable(?int $id): ?array
@@ -206,6 +263,18 @@ class ReporteActasService
             'nuevo' => $responsable,
             'motivo' => null,
             'observaciones' => $registro->observaciones,
+
+            // Clave del lote (ver agrupar()).
+            'lote' => 'asignacion-'.md5(implode('|', [
+                $registro->asignado_por ?? '',
+                (string) ($registro->fecha_asignacion ?? ''),
+                $registro->id_usuario ?? '',
+                mb_strtolower(trim((string) ($registro->nombre_colaborador ?? ''))),
+                $registro->id_unidad ?? '',
+                $registro->id_departamento ?? '',
+                $registro->id_ubicacion ?? '',
+                $registro->id_tipo_asignacion ?? '',
+            ])),
         ];
     }
 

@@ -133,6 +133,13 @@
 
                 if (aviso) window.trackitToastTerminar?.(aviso);
 
+                // Una sola acta con todos los equipos; se descarga sola.
+                if (resultado?.acta) {
+                    window.trackitDescargar
+                        ? window.trackitDescargar(resultado.acta)
+                        : window.open(resultado.acta, '_blank');
+                }
+
                 // El aviso de éxito se muestra al llegar (sesión).
                 window.Livewire?.navigate
                     ? Livewire.navigate(resultado?.volver ?? @js(route('asignaciones.index')))

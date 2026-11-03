@@ -537,6 +537,9 @@ class AsignacionCreate extends Component
         return [
             'ok' => true,
 
+            // Acta de asignación: se descarga sola al terminar.
+            'acta' => route('reportes.acta-movimiento', ['tipo' => 'asignaciones', 'ids' => $resultado['idAsignacion']], false),
+
             'message' =>
                 $colaborador['sin_cuenta']
                     ? 'El equipo fue asignado. «' . $colaborador['nombre'] . '» no tiene cuenta: un administrador deberá crearla en Seguridad y roles.'
