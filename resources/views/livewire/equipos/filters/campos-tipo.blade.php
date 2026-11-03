@@ -20,7 +20,9 @@
     <div
         wire:key="filtros-tipo-{{ $variante ?? 'escritorio' }}-{{ $tipoActivo }}"
         @class([
-            'ui-fade-in',
+            // relative z-20: la animación de entrada crea su propia capa; sin
+            // esto las listas desplegables quedaban detrás de «Situación».
+            'ui-fade-in relative z-20',
             'mb-4 rounded-md border border-dashed border-[var(--theme-border-strong)] p-4' => ! $esMovil,
             'space-y-5 border-t border-[var(--theme-border)] pt-5' => $esMovil,
         ])

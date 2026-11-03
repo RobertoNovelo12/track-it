@@ -256,6 +256,31 @@ class EquiposIndex extends Component
     |
     */
 
+    /*
+     * Campos de filtro del tipo elegido. Las listas (select / Sí-No) se
+     * enlazan con $wire.entangle('camposTipo.<id>'), y Livewire no puede
+     * enlazar una clave que no existe: sin esto el filtro elegido nunca
+     * llegaba al servidor (ni a la URL). Se crea la clave con null, que
+     * no filtra ni se agrega a la URL.
+     */
+    private function prepararCamposTipo(): array
+    {
+        if (trim((string) ($this->tipoActivo ?? '')) === '') {
+            return [];
+        }
+
+        $campos = $this->getCamposFiltrables((int) $this->tipoActivo);
+
+        foreach ($campos as $campo) {
+            if (in_array($campo['control'], ['select', 'boolean'], true)
+                && ! array_key_exists($campo['id'], $this->camposTipo)) {
+                $this->camposTipo[$campo['id']] = null;
+            }
+        }
+
+        return $campos;
+    }
+
     public function updatedTipoActivo(): void
     {
         $this->camposTipo = [];
@@ -1395,9 +1420,7 @@ class EquiposIndex extends Component
                     $this->getHotelesFiltro(),
 
                 'camposTipoFiltros' =>
-                    trim((string) ($this->tipoActivo ?? '')) !== ''
-                        ? $this->getCamposFiltrables((int) $this->tipoActivo)
-                        : [],
+                    $this->prepararCamposTipo(),
                 // Filtro «Programa instalado» (vacío si no hay programas).
                 // Sólo para tipos que «Incluyen programas».
                 'programasFiltro' =>
