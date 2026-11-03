@@ -41,7 +41,6 @@ new class extends Component
         'colores',
         'correo',
         'registro',
-        'soporte',
         'sedes',
     ];
 
@@ -79,11 +78,6 @@ new class extends Component
      * Registro
      */
     public array $camposRegistro = [];
-
-    /*
-     * Contacto de soporte que muestra el Centro de ayuda (/ayuda).
-     */
-    public array $soporte = [];
 
     /*
      * Sedes
@@ -156,8 +150,6 @@ new class extends Component
         $this->dominios = $config['dominios_correo'];
 
         $this->camposRegistro = $config['campos_registro'];
-
-        $this->soporte = $this->organizacion()->soporte();
     }
 
     public function setTab(string $tab): void
@@ -431,37 +423,6 @@ new class extends Component
     | Datos de registro
     |--------------------------------------------------------------------------
     */
-
-    public function guardarSoporte(): void
-    {
-        abort_unless(auth()->check(), 403);
-
-        $this->message = '';
-        $this->resetValidation();
-
-        $datos = $this->validate([
-            'soporte.equipo' => ['required', 'string', 'max:80'],
-            'soporte.integrantes' => ['nullable', 'string', 'max:160'],
-            'soporte.correo' => ['required', 'email', 'max:150'],
-            'soporte.telefono' => ['nullable', 'string', 'max:40'],
-            'soporte.horario' => ['required', 'string', 'max:80'],
-        ], [
-            'soporte.equipo.required' => 'Escribe el nombre del equipo de soporte.',
-            'soporte.correo.required' => 'Escribe el correo de soporte.',
-            'soporte.correo.email' => 'Escribe un correo válido.',
-            'soporte.horario.required' => 'Escribe el horario de atención.',
-        ])['soporte'];
-
-        $datos = array_map(fn ($valor) => trim((string) ($valor ?? '')), $datos);
-
-        $this->organizacion()->actualizar(['soporte' => $datos]);
-
-        $this->soporte = $this->organizacion()->soporte();
-
-        $this->registrarBitacora('Se actualizó el contacto de soporte del Centro de ayuda.');
-
-        $this->dispatch('toast', type: 'success', message: 'Contacto de soporte guardado correctamente.');
-    }
 
     public function guardarRegistro(): void
     {
@@ -747,7 +708,6 @@ new class extends Component
         'colores' => 'Colores',
         'correo' => 'Dominio de correo',
         'registro' => 'Datos de registro',
-        'soporte' => 'Soporte',
         'sedes' => 'Sedes',
     ];
 
@@ -1335,45 +1295,6 @@ new class extends Component
                     class="w-full sm:w-auto"
                 >
                     Guardar datos de registro
-                </x-ui.button>
-            </div>
-        </form>
-    @endif
-
-    {{-- ============================================================
-        SOPORTE (contacto del Centro de ayuda)
-    ============================================================ --}}
-    @if ($tab === 'soporte')
-        <form wire:submit="guardarSoporte" data-avisar-cambios class="space-y-5">
-            <p class="text-sm text-[var(--theme-text-muted)]">
-                Estos datos aparecen en <a href="{{ route('ayuda') }}" wire:navigate class="font-medium text-[var(--theme-primary)] hover:underline">Ayuda</a>, en la sección de contacto.
-            </p>
-
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                @foreach ([
-                    'equipo' => ['Nombre del equipo *', 'text', 'Ej. Team Track-IT'],
-                    'integrantes' => ['Integrantes', 'text', 'Ej. Jorge Novelo y Alan Colli'],
-                    'correo' => ['Correo de soporte *', 'email', 'soporte@empresa.com'],
-                    'telefono' => ['Teléfono, extensión o WhatsApp', 'text', 'Opcional'],
-                    'horario' => ['Horario de atención *', 'text', 'Ej. 24/7 o lunes a viernes de 9:00 a 18:00'],
-                ] as $clave => [$etiqueta, $tipo, $ejemplo])
-                    <div class="min-w-0">
-                        <label for="soporte-{{ $clave }}" class="mb-1.5 block text-xs text-[var(--theme-text-muted)]">{{ $etiqueta }}</label>
-                        <input id="soporte-{{ $clave }}" type="{{ $tipo }}" wire:model="soporte.{{ $clave }}" placeholder="{{ $ejemplo }}" class="{{ $inputClass }}">
-                        @error('soporte.'.$clave) <p class="mt-1 text-xs text-[var(--theme-danger)]">{{ $message }}</p> @enderror
-                    </div>
-                @endforeach
-            </div>
-
-            <div class="flex justify-end border-t border-[var(--theme-border)] pt-4">
-                <x-ui.button
-                    type="submit"
-                    target="guardarSoporte"
-                    size="lg"
-                    loading-text="Guardando…"
-                    class="w-full sm:w-auto"
-                >
-                    Guardar contacto de soporte
                 </x-ui.button>
             </div>
         </form>

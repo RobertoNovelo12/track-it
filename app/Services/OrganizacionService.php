@@ -44,18 +44,6 @@ class OrganizacionService
 
     public const NOMBRE_PREDETERMINADO = 'Grand Palladium Hotels & Resorts';
 
-    /*
-     * Contacto de soporte del Centro de ayuda (Administración ›
-     * Organización › Soporte). Estos son los valores mientras no se edite.
-     */
-    public const SOPORTE_PREDETERMINADO = [
-        'equipo' => 'Team Track-IT',
-        'integrantes' => 'Jorge Novelo y Alan Colli',
-        'correo' => 'trackit.ayuda@gmail.com',
-        'telefono' => '',
-        'horario' => '24/7',
-    ];
-
     public const ESCALA_MINIMA = 50;
 
     public const ESCALA_MAXIMA = 160;
@@ -402,10 +390,9 @@ class OrganizacionService
             'logo_modo_oscuro',
             'logo_color_fondo',
             'color_primario',
-            'soporte',
         ];
 
-        foreach (['logo_color_fondo', 'color_primario', 'soporte'] as $columnaNueva) {
+        foreach (['logo_color_fondo', 'color_primario'] as $columnaNueva) {
             if (array_key_exists($columnaNueva, $cambios) && ! \App\Support\Esquema::tieneColumna('configuracion_organizacion', $columnaNueva)) {
                 unset($cambios[$columnaNueva]);
             }
@@ -413,7 +400,7 @@ class OrganizacionService
 
         $datos = array_intersect_key($cambios, array_flip($permitidas));
 
-        foreach (['dominios_correo', 'campos_registro', 'soporte'] as $json) {
+        foreach (['dominios_correo', 'campos_registro'] as $json) {
             if (array_key_exists($json, $datos)) {
                 $datos[$json] = json_encode($datos[$json]);
             }
@@ -458,7 +445,6 @@ class OrganizacionService
                 'actualizado_en',
                 ...(\App\Support\Esquema::tieneColumna('configuracion_organizacion', 'logo_color_fondo') ? ['logo_color_fondo'] : []),
                 ...(\App\Support\Esquema::tieneColumna('configuracion_organizacion', 'color_primario') ? ['color_primario'] : []),
-                ...(\App\Support\Esquema::tieneColumna('configuracion_organizacion', 'soporte') ? ['soporte'] : []),
             ]);
 
         if (! $fila) {
@@ -494,7 +480,6 @@ class OrganizacionService
             'color_primario' => preg_match('/^#[0-9A-Fa-f]{6}$/', (string) ($fila->color_primario ?? ''))
                 ? strtoupper($fila->color_primario)
                 : null,
-            'soporte' => $this->normalizarSoporte(json_decode($fila->soporte ?? '{}', true) ?: []),
             'actualizado_en' => $fila->actualizado_en,
         ];
     }
@@ -512,34 +497,17 @@ class OrganizacionService
             'logo_modo_oscuro' => 'blanco',
             'logo_color_fondo' => self::COLOR_FONDO_PREDETERMINADO,
             'color_primario' => null,
-            'soporte' => self::SOPORTE_PREDETERMINADO,
             'actualizado_en' => null,
         ];
     }
 
     /*
-     * Contacto de soporte con los valores predeterminados para lo que
-     * no se haya capturado.
+     * Contacto de soporte del Centro de ayuda: datos del proveedor del
+     * sistema (config/soporte.php). No se editan desde la aplicación.
      */
     public function soporte(): array
     {
-        return $this->configuracion()['soporte'] ?? self::SOPORTE_PREDETERMINADO;
-    }
-
-    private function normalizarSoporte(array $guardado): array
-    {
-        $soporte = [];
-
-        foreach (self::SOPORTE_PREDETERMINADO as $clave => $defecto) {
-            $valor = trim((string) ($guardado[$clave] ?? ''));
-
-            // El teléfono es opcional: vacío se queda vacío si ya se guardó.
-            $soporte[$clave] = $valor !== '' || ($clave === 'telefono' && array_key_exists($clave, $guardado))
-                ? $valor
-                : $defecto;
-        }
-
-        return $soporte;
+        return array_map(fn ($valor) => trim((string) $valor), (array) config('soporte'));
     }
 
     private function normalizarCampos(array $guardados): array

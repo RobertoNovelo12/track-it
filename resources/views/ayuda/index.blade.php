@@ -209,13 +209,6 @@
                     <dd class="font-medium text-[var(--theme-text)]">{{ $soporte['horario'] }}</dd>
                 </div>
             </dl>
-
-            @can('administrar')
-                <p class="mt-4 text-xs text-[var(--theme-text-muted)]">
-                    Puedes cambiar estos datos en
-                    <a href="{{ route('catalogos.index', ['section' => 'organizacion']) }}" wire:navigate class="text-[var(--theme-primary)] hover:underline">Administración › Organización › Soporte</a>.
-                </p>
-            @endcan
         </section>
     </div>
 
