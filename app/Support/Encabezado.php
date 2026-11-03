@@ -56,6 +56,10 @@ class Encabezado
                 self::miga('Inventario', 'equipos.index'),
                 self::miga('Nuevo equipo'),
             ]],
+            'equipos.importar' => ['Inventario', [
+                self::miga('Inventario', 'equipos.index'),
+                self::miga('Importar CSV'),
+            ]],
             'equipos.show' => ['Inventario', [
                 self::miga('Inventario', 'equipos.index'),
                 self::miga('Detalle'),

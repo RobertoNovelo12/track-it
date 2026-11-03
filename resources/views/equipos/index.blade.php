@@ -125,54 +125,85 @@
                     >
                         Exportar a Excel
                     </a>
+
+                    {{-- CSV con el formato de importación (se puede editar y volver a importar). --}}
+                    <a
+                        href="#"
+                        onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('exportar-inventario', {detail: {formato: 'csv'}}))"
+                        class="
+                            block
+                            px-4
+                            py-2.5
+                            text-sm
+                            text-[var(--theme-text)]
+                            hover:bg-[var(--theme-surface-soft)]
+                            hover:text-[var(--theme-primary)]
+                            transition-colors
+                        "
+                    >
+                        Exportar a CSV
+                    </a>
                 </div>
             </div>
 
             @can('gestionar')
 
-            {{-- AÑADIR --}}
+            {{-- AÑADIR: agregar un equipo o importar varios desde CSV --}}
             {{-- Si hay un tipo filtrado, el alta abre con ese tipo. --}}
-            <a
-                href="{{ Route::has('equipos.create')
-                    ? route('equipos.create')
-                    : '#'
-                }}"
-                x-data
-                x-on:click="
-                    const tipo = new URLSearchParams(window.location.search).get('tipo_activo');
-                    const destino = new URL($el.getAttribute('href'), window.location.origin);
-                    destino.searchParams.delete('tipo');
-                    if (tipo) destino.searchParams.set('tipo', tipo);
-                    $el.href = destino.toString();
-                "
-                class="
-                    flex
-                    flex-1
-                    justify-center
-                    sm:flex-none
-                    items-center
-                    gap-2
-                    bg-[var(--theme-primary)]
-                    hover:bg-[var(--theme-primary-hover)]
-                    rounded-md
-                    px-4
-                    py-2
-                    text-sm
-                    font-medium
-                    text-white
-                    transition-colors
-                "
+            <div
+                class="relative flex flex-1 sm:flex-none"
+                x-data="{ abierto: false }"
+                x-on:click.outside="abierto = false"
+                x-on:keydown.escape.window="abierto = false"
             >
-                <svg
-                    class="w-4 h-4"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.5"
-                ><use href="{{ \App\Support\Icono::url('i-6aed230') }}"></use></svg>
+                <button
+                    type="button"
+                    x-on:click="abierto = ! abierto"
+                    x-bind:aria-expanded="abierto.toString()"
+                    aria-haspopup="menu"
+                    class="flex flex-1 items-center justify-center gap-2 rounded-md bg-[var(--theme-primary)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--theme-primary-hover)] sm:flex-none"
+                >
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><use href="{{ \App\Support\Icono::url('i-6aed230') }}"></use></svg>
+                    <span>Añadir</span>
+                    <svg class="h-4 w-4 transition-transform" x-bind:class="abierto && 'rotate-180'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
 
-                <span>Añadir</span>
-            </a>
+                <div
+                    x-show="abierto"
+                    x-cloak
+                    role="menu"
+                    class="absolute right-0 top-full z-20 mt-2 w-56 overflow-hidden rounded-md border border-[var(--theme-border)] bg-[var(--theme-surface)] text-left shadow-lg shadow-[var(--theme-shadow)]"
+                >
+                    <a
+                        href="{{ route('equipos.create') }}"
+                        wire:navigate
+                        role="menuitem"
+                        x-on:click="
+                            abierto = false;
+                            const tipo = new URLSearchParams(window.location.search).get('tipo_activo');
+                            const destino = new URL($el.getAttribute('href'), window.location.origin);
+                            destino.searchParams.delete('tipo');
+                            if (tipo) destino.searchParams.set('tipo', tipo);
+                            $el.href = destino.toString();
+                        "
+                        class="block px-4 py-2.5 text-sm text-[var(--theme-text)] transition-colors hover:bg-[var(--theme-surface-soft)] hover:text-[var(--theme-primary)]"
+                    >
+                        <span class="block font-medium">Agregar equipo</span>
+                        <span class="block text-xs text-[var(--theme-text-muted)]">Capturar uno en el formulario</span>
+                    </a>
+
+                    <a
+                        href="{{ route('equipos.importar') }}"
+                        wire:navigate
+                        role="menuitem"
+                        x-on:click="abierto = false"
+                        class="block border-t border-[var(--theme-border)] px-4 py-2.5 text-sm text-[var(--theme-text)] transition-colors hover:bg-[var(--theme-surface-soft)] hover:text-[var(--theme-primary)]"
+                    >
+                        <span class="block font-medium">Importar CSV</span>
+                        <span class="block text-xs text-[var(--theme-text-muted)]">Dar de alta varios desde un archivo</span>
+                    </a>
+                </div>
+            </div>
 
             {{--
                 Dar de baja, baja múltiple y mover a la papelera están en la

@@ -128,7 +128,7 @@
             if (this.exportando) return;
             // Lo seleccionado en cualquier página (vacío = con los filtros).
             const seleccion = [...this.seleccion];
-            const nombre = formato === 'xlsx' ? 'Excel' : 'PDF';
+            const nombre = formato === 'xlsx' ? 'Excel' : (formato === 'csv' ? 'CSV' : 'PDF');
 
             this.exportando = true;
             this.exportacionSinDatos = false;

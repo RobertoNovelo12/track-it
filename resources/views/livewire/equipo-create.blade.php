@@ -46,9 +46,18 @@
             <section class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 sm:p-6">
                 <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <div class="min-w-0 flex-1">
-                        <h2 class="mb-4 text-sm font-semibold text-[var(--theme-text-strong)]">
-                            Tipo de equipo
-                        </h2>
+                        <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
+                            <h2 class="text-sm font-semibold text-[var(--theme-text-strong)]">
+                                Tipo de equipo
+                            </h2>
+
+                            {{-- Llenar desde CSV: la primera fila del archivo (plantilla de Tipos de equipo). --}}
+                            <label class="inline-flex cursor-pointer items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-[var(--theme-primary)] transition-colors hover:bg-[var(--theme-primary-soft-subtle)]">
+                                <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3m0 0-4 4m4-4 4 4M5 21h14"/></svg>
+                                <span x-text="leyendoCsv ? 'Leyendo…' : 'Llenar desde CSV'">Llenar desde CSV</span>
+                                <input type="file" accept=".csv,text/csv" class="sr-only" x-on:change="llenarDesdeCsv($event)" x-bind:disabled="leyendoCsv">
+                            </label>
+                        </div>
 
                         <div class="max-w-lg">
                             <x-searchable-select
@@ -984,6 +993,59 @@
                 this.$nextTick(() => {
                     this.suspendDependencies = false;
                 });
+            },
+
+            leyendoCsv: false,
+
+            /*
+             * «Llenar desde CSV»: el servidor lee la primera fila con las
+             * mismas reglas de la importación y la carga como «Duplicar».
+             */
+            async llenarDesdeCsv(evento) {
+                const archivo = evento.target.files?.[0];
+                evento.target.value = '';
+
+                if (! archivo || this.leyendoCsv) return;
+
+                if (archivo.size > 2 * 1024 * 1024) {
+                    window.trackitToast?.('error', 'El archivo no puede pasar de 2 MB.', 'No se pudo leer el CSV');
+                    return;
+                }
+
+                this.leyendoCsv = true;
+
+                try {
+                    const resultado = await $wire.leerCsvFormulario(await archivo.text());
+
+                    if (! resultado?.ok) {
+                        window.trackitToast?.('error', resultado?.message || 'No se pudo leer el archivo.', 'No se pudo leer el CSV');
+                        return;
+                    }
+
+                    this.suspendDependencies = true;
+                    this.values = {
+                        ...this.emptyValues(),
+                        ...resultado.base,
+                        ...(resultado.childData ?? {}),
+                    };
+                    this.errors = {};
+                    this.programas = this.programasPredeterminados(resultado.base.idTipoEquipo);
+                    this.$nextTick(() => { this.suspendDependencies = false; });
+
+                    const extra = resultado.total > 1
+                        ? ' Se usó la primera fila; para dar de alta todas usa Inventario › Añadir › Importar CSV.'
+                        : '';
+
+                    if ((resultado.errores ?? []).length) {
+                        window.trackitToast?.('warning', resultado.errores.slice(0, 4).join(' ') + extra, 'Revisa algunos datos');
+                    } else {
+                        window.trackitToast?.('success', 'Revisa los datos y guarda.' + extra, 'Formulario llenado');
+                    }
+                } catch (error) {
+                    window.trackitToast?.('error', window.trackitMensajeError(error, 'leer el CSV'), 'No se pudo leer el CSV');
+                } finally {
+                    this.leyendoCsv = false;
+                }
             },
 
             restoreSnapshot(payload) {

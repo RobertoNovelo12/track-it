@@ -95,6 +95,7 @@
             <div x-show="menuSeleccion === 'acciones'" x-cloak x-transition.opacity.duration.100ms role="menu" class="{{ $menuFlotante }} right-0 bottom-full mb-2 lg:bottom-auto lg:top-full lg:mb-0 lg:mt-2">
                 <button type="button" role="menuitem" x-on:click="exportarSeleccion('pdf')" :disabled="exportando" class="{{ $itemMenu }}">Exportar a PDF</button>
                 <button type="button" role="menuitem" x-on:click="exportarSeleccion('xlsx')" :disabled="exportando" class="{{ $itemMenu }}">Exportar a Excel</button>
+                <button type="button" role="menuitem" x-on:click="exportarSeleccion('csv')" :disabled="exportando" class="{{ $itemMenu }}">Exportar a CSV</button>
 
                 @if ($puedeDarDeBaja)
                     <button type="button" role="menuitem" x-on:click="darDeBajaSeleccion()" class="{{ $itemMenu }} border-t border-[var(--theme-border)]" :class="seleccionBajas.length > 0 && 'opacity-50'">

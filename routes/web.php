@@ -165,6 +165,12 @@ Route::middleware([
         fn () => view('equipos.create')
     )->name('equipos.create')->middleware('can:gestionar');
 
+    // Inventario › Añadir › Importar CSV (App\Livewire\EquiposImportar).
+    Route::get(
+        '/equipos/importar',
+        fn () => view('equipos.importar')
+    )->name('equipos.importar')->middleware('can:gestionar');
+
 
     /*
     |--------------------------------------------------------------------------
@@ -411,6 +417,14 @@ Route::middleware([
             'tipoEquipo'
         )
         ->name('catalogos.tipos-equipo.edit')->middleware('can:gestionar');
+
+    // Plantilla CSV del tipo (encabezados de su formulario) para llenar e importar.
+    Route::get(
+        '/catalogos/tipos-equipo/{tipoEquipo}/plantilla-csv',
+        fn (int $tipoEquipo) => app(\App\Livewire\EquiposImportar::class)->plantillaCsv($tipoEquipo)
+    )
+        ->whereNumber('tipoEquipo')
+        ->name('catalogos.tipos-equipo.plantilla-csv')->middleware('can:gestionar');
 
 
     /*

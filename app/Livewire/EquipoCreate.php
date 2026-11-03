@@ -13,6 +13,9 @@ use Livewire\Component;
 
 class EquipoCreate extends Component
 {
+    // CSV: plantilla por tipo, «Llenar desde CSV», importación y exportación.
+    use \App\Livewire\Concerns\EquiposCsv;
+
     // Información general.
     public string $nombreEquipo = '';
     public string $host = '';
@@ -1387,7 +1390,7 @@ class EquipoCreate extends Component
         ];
     }
 
-    private function guardarEquipo(array $payload): array
+    protected function guardarEquipo(array $payload): array
     {
         // Permiso por rol (ver AppServiceProvider).
         \Illuminate\Support\Facades\Gate::authorize('gestionar');
@@ -1727,19 +1730,22 @@ class EquipoCreate extends Component
         app(\App\Services\SystemCacheService::class)->refreshModule('equipos');
         app(\App\Services\SystemCacheService::class)->refreshModule('dashboard');
 
-        $notificaciones = app(\App\Services\NotificacionService::class);
+        // Al importar CSV se manda un solo aviso al final (EquiposImportar).
+        if (! $this->importandoCsv) {
+            $notificaciones = app(\App\Services\NotificacionService::class);
 
-        $notificaciones->notificar(
-            'equipos',
-            'Nuevo equipo registrado',
-            $notificaciones->nombreActor()
-                . ' dio de alta el equipo '
-                . $notificaciones->etiquetaEquipo((int) $idEquipo)
-                . '.',
-            route('equipos.show', (int) $idEquipo, false)
-        );
+            $notificaciones->notificar(
+                'equipos',
+                'Nuevo equipo registrado',
+                $notificaciones->nombreActor()
+                    . ' dio de alta el equipo '
+                    . $notificaciones->etiquetaEquipo((int) $idEquipo)
+                    . '.',
+                route('equipos.show', (int) $idEquipo, false)
+            );
 
-        $this->dispatch('notificaciones-actualizadas');
+            $this->dispatch('notificaciones-actualizadas');
+        }
 
         // Si llegó desde el escáner como código no registrado, sale de la bandeja.
         try {

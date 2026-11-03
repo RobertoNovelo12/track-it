@@ -24,7 +24,7 @@ trait ExportaInventario
     public function exportarInventario(string $formato = 'pdf', array $seleccionados = [])
     {
         abort_unless(auth()->check(), 403);
-        abort_unless(in_array($formato, ['pdf', 'xlsx'], true), 422);
+        abort_unless(in_array($formato, ['pdf', 'xlsx', 'csv'], true), 422);
 
         $ids = collect($seleccionados)
             ->filter(fn ($id) => filter_var($id, FILTER_VALIDATE_INT) !== false && (int) $id > 0)
@@ -48,6 +48,13 @@ trait ExportaInventario
         if ($filas->isEmpty()) {
             $this->dispatch('inventario-exportacion-vacia');
             return null;
+        }
+
+        // CSV: mismo formato que la importación (Inventario › Añadir › Importar CSV).
+        if ($formato === 'csv') {
+            return app(\App\Livewire\EquiposImportar::class)->exportarCsv(
+                $filas->pluck('id_equipo')->map(fn ($id) => (int) $id)->all()
+            );
         }
 
         $equipos = app(InventarioDocumentoService::class)->preparar($filas);

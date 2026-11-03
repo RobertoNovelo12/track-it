@@ -959,6 +959,11 @@ new class extends Component
                         'descripcion' => $tipo->descripcion ?? '',
                     ]).')',
                 ],
+                [
+                    // Encabezados del formulario del tipo para llenar en Excel e importar.
+                    'label' => 'Descargar plantilla CSV',
+                    'js' => 'window.trackitDescargar('.\Illuminate\Support\Js::from(route('catalogos.tipos-equipo.plantilla-csv', $tipo->id_tipo_equipo)).')',
+                ],
                 \App\Support\PapeleraEntidades::accion('tipo_equipo', $tipo->id_tipo_equipo),
             ])),
         ]"
