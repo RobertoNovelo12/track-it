@@ -596,6 +596,16 @@ Route::middleware([
         fn () => view('papelera.index')
     )->name('papelera.index')->middleware('can:administrar');
 
+    /*
+    |--------------------------------------------------------------------------
+    | Centro de ayuda (todos los usuarios)
+    |--------------------------------------------------------------------------
+    */
+    Route::get(
+        '/ayuda',
+        fn () => view('ayuda.index')
+    )->name('ayuda');
+
     Route::get(
         '/ajustes',
         fn () => view('ajustes.index')

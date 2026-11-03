@@ -225,6 +225,10 @@ class Encabezado
                 self::miga('Ajustes', 'ajustes.index'),
             ]],
 
+            'ayuda' => ['Ayuda', [
+                self::miga('Centro de ayuda'),
+            ]],
+
             'ui.componentes' => ['Componentes', [
                 self::miga('Componentes'),
             ]],

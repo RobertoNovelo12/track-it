@@ -944,6 +944,25 @@
                 </a>
             @endif
 
+            {{-- AYUDA (Centro de ayuda) --}}
+            @if (Route::has('ayuda'))
+                @php
+                    $ayudaActiva = request()->routeIs('ayuda');
+                @endphp
+
+                <a
+                    href="{{ route('ayuda') }}"
+                    wire:navigate.hover
+                    class="mi-opcion"
+                    data-rutas="ayuda"
+                    data-activo="{{ $ayudaActiva ? 'true' : 'false' }}"
+                    @if ($ayudaActiva) aria-current="page" @endif
+                >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-88e8979') }}"></use></svg>
+                    Ayuda
+                </a>
+            @endif
+
             {{--
                 INSTALAR APLICACIÓN (ver layouts/partials/pwa-head):
                 botón si el navegador lo permite; en iPhone, los pasos.

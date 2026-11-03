@@ -1062,8 +1062,9 @@
         {{-- ====================================================
             AYUDA
         ==================================================== --}}
-        <button
-            type="button"
+        <a
+            href="{{ route('ayuda') }}"
+            wire:navigate.hover
 
             class="
                 sidebar-footer-link
@@ -1121,7 +1122,7 @@
                 Ayuda
             </span>
 
-        </button>
+        </a>
 
     </div>
 
