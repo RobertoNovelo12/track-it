@@ -553,6 +553,38 @@
                 "
             >
 
+                {{-- NOMBRE DEL EQUIPO (primer campo, igual que el formulario) --}}
+                <div>
+                    <label
+                        class="
+                            block mb-1.5
+                            text-xs
+                            text-[var(--theme-text-muted)]
+                        "
+                    >
+                        Nombre del equipo *
+                    </label>
+
+                    <input
+                        type="text"
+                        disabled
+                        placeholder="Selecciona un equipo primero"
+                        class="
+                            w-full
+                            px-3 py-2.5
+                            rounded-md
+                            border border-[var(--theme-border-strong)]
+                            bg-[var(--theme-surface)]
+                            text-sm
+                            text-[var(--theme-text)]
+                            placeholder:text-[var(--theme-text-muted)]
+                            disabled:opacity-100
+                            disabled:cursor-default
+                        "
+                    >
+                </div>
+
+
                 {{-- MOTIVO --}}
                 <div>
                     <label
@@ -809,7 +841,36 @@
                 </div>
 
 
-                <div class="hidden lg:block"></div>
+                {{-- HOST --}}
+                <div>
+                    <label
+                        class="
+                            block mb-1.5
+                            text-xs
+                            text-[var(--theme-text-muted)]
+                        "
+                    >
+                        Host
+                    </label>
+
+                    <input
+                        type="text"
+                        disabled
+                        placeholder="Host del equipo"
+                        class="
+                            w-full
+                            px-3 py-2.5
+                            rounded-md
+                            border border-[var(--theme-border-strong)]
+                            bg-[var(--theme-surface)]
+                            text-sm
+                            text-[var(--theme-text)]
+                            placeholder:text-[var(--theme-text-muted)]
+                            disabled:opacity-100
+                            disabled:cursor-default
+                        "
+                    >
+                </div>
 
 
                 {{-- OBSERVACIONES --}}

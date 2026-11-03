@@ -55,8 +55,8 @@
             // Host editable (se guarda en el equipo si cambió).
             hostEquipo: '',
 
-            // «Nuevo nombre»: renombrar el equipo al reasignarlo (opcional).
-            nuevoNombreActivo: false,
+            // Nombre del equipo (editable en «Nueva reasignación»; empieza
+            // con el nombre actual y se guarda si cambió).
             nuevoNombreEquipo: '',
 
             // Mientras se precargan hotel y departamento del responsable actual.
@@ -68,16 +68,6 @@
                 );
 
                 return equipo ? String(equipo.name ?? '') : '';
-            },
-
-            alternarNuevoNombre() {
-                this.nuevoNombreActivo = ! this.nuevoNombreActivo;
-                this.nuevoNombreEquipo = '';
-                this.clearValidationError('nuevoNombreEquipo');
-
-                if (this.nuevoNombreActivo) {
-                    this.$nextTick(() => document.getElementById('reassignment-new-name')?.focus());
-                }
             },
 
             fechaReasignacion: @js(
@@ -105,12 +95,9 @@
                     this.nombreNuevoColaborador = usuario ? usuario.nombre : '';
                 });
                 this.$watch('idEquipoReasignar', () => {
+                    this.clearValidationError('nuevoNombreEquipo');
                     this.loadSelectedAssignment();
                     this.clearValidationError('idEquipoReasignar');
-
-                    // Otro equipo: el nuevo nombre escrito ya no aplica.
-                    this.nuevoNombreEquipo = '';
-                    this.clearValidationError('nuevoNombreEquipo');
                 });
 
                 this.$watch('idUnidadNueva', (value, previous) => {
@@ -200,6 +187,7 @@
                 this.idTipoAsignacionActual = '';
 
                 this.hostEquipo = '';
+                this.nuevoNombreEquipo = '';
             },
 
             resetNewDestination() {
@@ -271,6 +259,9 @@
 
                 // Host editable: empieza con el host actual del equipo.
                 this.hostEquipo = this.hostActual;
+
+                // Nombre editable: empieza con el nombre actual del equipo.
+                this.nuevoNombreEquipo = this.nombreActualEquipo();
 
                 this.precargarDestino();
             },
@@ -378,10 +369,9 @@
                     hostEquipo:
                         String(this.hostEquipo ?? '').trim(),
 
+                    // El servidor solo lo guarda si es distinto del actual.
                     nuevoNombreEquipo:
-                        this.nuevoNombreActivo
-                            ? String(this.nuevoNombreEquipo ?? '').trim()
-                            : '',
+                        String(this.nuevoNombreEquipo ?? '').trim(),
 
                     idAsignacionActual:
                         String(this.idAsignacionActual ?? ''),
@@ -473,11 +463,11 @@
                 }
 
                 if (
-                    this.nuevoNombreActivo
+                    String(payload.idEquipoReasignar ?? '') !== ''
                     && String(payload.nuevoNombreEquipo ?? '') === ''
                 ) {
                     errors.nuevoNombreEquipo = [
-                        'Escribe el nuevo nombre del equipo o quita «Nuevo nombre».'
+                        'Escribe el nombre del equipo.'
                     ];
                 }
 
@@ -881,15 +871,6 @@
 
                 {{-- EQUIPO --}}
                 <div class="relative mb-4">
-                    {{-- Nuevo nombre: se guarda en el equipo al reasignar. --}}
-                    <button
-                        type="button"
-                        x-on:click="alternarNuevoNombre()"
-                        x-bind:aria-expanded="nuevoNombreActivo ? 'true' : 'false'"
-                        class="absolute right-0 top-0 z-10 text-xs text-[var(--theme-primary)] hover:text-[var(--theme-primary-hover)] hover:underline transition-colors"
-                        x-text="nuevoNombreActivo ? 'Conservar el nombre actual' : 'Nuevo nombre'"
-                    >Nuevo nombre</button>
-
                     <x-searchable-select
                         x-model="idEquipoReasignar"
                         x-options="data.equipos"
@@ -904,45 +885,6 @@
                         class="mt-1 text-xs text-[var(--theme-danger)]"
                     ></p>
 
-                    <div x-show="nuevoNombreActivo" x-cloak class="mt-4">
-                        <label
-                            for="reassignment-new-name"
-                            class="block mb-1.5 text-xs text-[var(--theme-text-muted)]"
-                        >
-                            Nuevo nombre del equipo
-                        </label>
-
-                        <input
-                            id="reassignment-new-name"
-                            type="text"
-                            maxlength="255"
-                            x-model="nuevoNombreEquipo"
-                            x-on:input="clearValidationError('nuevoNombreEquipo')"
-                            x-bind:placeholder="nombreActualEquipo() ? 'Actual: ' + nombreActualEquipo() : 'Ej. Laptop de Recepción'"
-                            class="
-                                w-full
-                                px-3 py-2.5
-                                rounded-md
-                                border border-[var(--theme-border-strong)]
-                                bg-[var(--theme-surface)]
-                                text-sm
-                                text-[var(--theme-text)]
-                                placeholder:text-[var(--theme-text-muted)]
-                                outline-none
-                                focus:ring-1
-                                focus:ring-[var(--theme-primary)]
-                                focus:border-[var(--theme-primary)]
-                                transition-colors
-                            "
-                        >
-
-                        <p
-                            x-show="fieldError('nuevoNombreEquipo')"
-                            x-cloak
-                            x-text="fieldError('nuevoNombreEquipo')"
-                            class="mt-1 text-xs text-[var(--theme-danger)]"
-                        ></p>
-                    </div>
                 </div>
 
 
@@ -1269,6 +1211,51 @@
                         gap-x-5 gap-y-4
                     "
                 >
+
+                    {{-- NOMBRE DEL EQUIPO (editable; se guarda si cambió) --}}
+                    <div>
+                        <label
+                            for="reassignment-new-name"
+                            class="block mb-1.5 text-xs text-[var(--theme-text-muted)]"
+                        >
+                            Nombre del equipo *
+                        </label>
+
+                        <input
+                            id="reassignment-new-name"
+                            type="text"
+                            maxlength="255"
+                            x-model="nuevoNombreEquipo"
+                            x-on:input="clearValidationError('nuevoNombreEquipo')"
+                            x-bind:disabled="! idEquipoReasignar"
+                            x-bind:placeholder="idEquipoReasignar ? 'Nombre del equipo' : 'Selecciona un equipo primero'"
+                            class="
+                                w-full
+                                px-3 py-2.5
+                                rounded-md
+                                border border-[var(--theme-border-strong)]
+                                bg-[var(--theme-surface)]
+                                text-sm
+                                text-[var(--theme-text)]
+                                placeholder:text-[var(--theme-text-muted)]
+                                outline-none
+                                focus:ring-1
+                                focus:ring-[var(--theme-primary)]
+                                focus:border-[var(--theme-primary)]
+                                disabled:cursor-not-allowed
+                                disabled:opacity-60
+                                transition-colors
+                            "
+                        >
+
+                        <p
+                            x-show="fieldError('nuevoNombreEquipo')"
+                            x-cloak
+                            x-text="fieldError('nuevoNombreEquipo')"
+                            class="mt-1 text-xs text-[var(--theme-danger)]"
+                        ></p>
+                    </div>
+
 
                     {{-- MOTIVO --}}
                     <div>
