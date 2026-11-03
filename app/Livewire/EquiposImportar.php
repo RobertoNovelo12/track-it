@@ -56,6 +56,9 @@ class EquiposImportar extends EquipoCreate
     // Resultado de la última importación: ['importadas' => n, 'codigos' => [...]].
     public array $ultimoResultado = [];
 
+    // Marcas y modelos creados desde esta importación (para el aviso final).
+    public array $catalogosCreados = [];
+
     public function mount(?int $duplicar = null): void
     {
         Gate::authorize('gestionar');
@@ -69,6 +72,7 @@ class EquiposImportar extends EquipoCreate
         $this->filas = [];
         $this->terminado = false;
         $this->ultimoResultado = [];
+        $this->catalogosCreados = [];
 
         $this->validate(
             ['archivo' => ['required', 'file', 'max:4096', 'mimes:csv,txt,xlsx']],
@@ -107,14 +111,48 @@ class EquiposImportar extends EquipoCreate
             return;
         }
 
+        // Filas crudas por número de fila del archivo (la 1 son los encabezados).
+        $crudas = [];
+
+        foreach (array_values($filas) as $i => $fila) {
+            $crudas[$i + 2] = $fila;
+        }
+
+        $this->clave = 'importar-equipos:'.auth()->id().':'.Str::random(12);
+        Cache::put($this->clave, ['encabezados' => $encabezados, 'filas' => $crudas, 'payloads' => []], now()->addHours(2));
+
+        $this->analizar();
+    }
+
+    /*
+     * Revisa las filas (todas o solo las indicadas por número) con las
+     * reglas del alta y arma la vista previa. Se vuelve a llamar después
+     * de crear marcas/modelos o de aplicar una sugerencia.
+     */
+    private function analizar(?array $soloFilas = null): void
+    {
+        $datos = $this->clave !== '' ? Cache::get($this->clave) : null;
+
+        if (! is_array($datos) || ! isset($datos['filas'])) {
+            $this->addError('archivo', 'La lectura del archivo expiró. Vuelve a subirlo.');
+
+            return;
+        }
+
+        $this->csvMemoria = [];
         $tipos = collect($this->getTiposEquipoProperty())->pluck('nombre', 'id_tipo_equipo');
-        $payloads = [];
         $vista = [];
         $seriesArchivo = [];
 
-        foreach ($filas as $i => $fila) {
+        foreach ($datos['filas'] as $numero => $fila) {
+            if ($soloFilas !== null && ! in_array((int) $numero, $soloFilas, true)) {
+                continue;
+            }
+
+            $this->csvFaltantesFila = [];
+
             try {
-                [$payload, $errores, $tipoId] = $this->csvFilaAPayload($encabezados, $fila);
+                [$payload, $errores, $tipoId] = $this->csvFilaAPayload($datos['encabezados'], $fila);
             } catch (\Throwable $error) {
                 report($error);
                 [$payload, $errores, $tipoId] = [null, ['La configuración de este tipo de equipo no se pudo leer.'], null];
@@ -128,24 +166,25 @@ class EquiposImportar extends EquipoCreate
                 if (isset($seriesArchivo[$normal])) {
                     $errores[] = "El número de serie «{$serie}» se repite en la fila {$seriesArchivo[$normal]}.";
                 } else {
-                    $seriesArchivo[$normal] = $i + 2;
+                    $seriesArchivo[$normal] = (int) $numero;
                 }
             }
 
-            $payloads[$i] = $payload;
+            $datos['payloads'][$numero] = $payload;
             $vista[] = [
-                'fila' => $i + 2,
+                'fila' => (int) $numero,
                 'tipo' => $tipoId ? (string) ($tipos[$tipoId] ?? '') : '',
                 'nombre' => (string) ($payload['nombreEquipo'] ?? ''),
                 'serie' => $serie,
                 'estado' => $errores === [] ? 'lista' : 'error',
                 'mensajes' => array_values(array_unique($errores)),
+                'faltan' => $this->csvFaltantesFila,
                 'codigo' => '',
             ];
         }
 
         // Series que ya existen en el inventario (una sola consulta).
-        $existentes = DB::table('equipos')
+        $existentes = $seriesArchivo === [] ? collect() : DB::table('equipos')
             ->whereIn(DB::raw('LOWER(numero_serie)'), array_keys($seriesArchivo))
             ->pluck('numero_serie')
             ->map(fn ($s) => mb_strtolower((string) $s))
@@ -158,10 +197,262 @@ class EquiposImportar extends EquipoCreate
             }
         }
 
-        $this->clave = 'importar-equipos:'.auth()->id().':'.Str::random(12);
-        Cache::put($this->clave, $payloads, now()->addHours(2));
+        Cache::put($this->clave, $datos, now()->addHours(2));
 
         $this->filas = $vista;
+        $this->terminado = false;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Marcas y modelos que no existen
+    |--------------------------------------------------------------------------
+    |
+    | Se agrupan los que faltan (con cuántas filas afectan) y, si un nombre
+    | se parece mucho a uno que ya existe, se sugiere usar ese en lugar de
+    | crear un duplicado por un error de dedo.
+    |
+    */
+    protected function catalogoFaltante(): array
+    {
+        $grupos = [];
+
+        foreach ($this->filas as $fila) {
+            if ($fila['estado'] !== 'error') {
+                continue;
+            }
+
+            foreach ($fila['faltan'] ?? [] as $falta) {
+                $clave = $falta['clase'] === 'marca'
+                    ? 'marca:'.$this->csvNormalizar($falta['marca'])
+                    : 'modelo:'.$this->csvNormalizar($falta['marca']).'|'.$falta['tipo'].'|'.$this->csvNormalizar($falta['modelo']);
+
+                $grupos[$clave] ??= $falta + ['clave' => $clave, 'filas' => 0, 'sugerencia' => null, 'tipoNombre' => '', 'marcaNueva' => false];
+                $grupos[$clave]['filas']++;
+            }
+        }
+
+        if ($grupos === []) {
+            return [];
+        }
+
+        $marcas = $this->csvMemo('lista.marcas', fn () => $this->getMarcasProperty());
+        $modelos = $this->csvMemo('lista.modelos', fn () => $this->getAllModelos());
+        $tipos = collect($this->getTiposEquipoProperty())->pluck('nombre', 'id_tipo_equipo');
+
+        foreach ($grupos as $clave => $grupo) {
+            $grupos[$clave]['tipoNombre'] = (string) ($tipos[$grupo['tipo']] ?? '');
+
+            if ($grupo['clase'] === 'marca') {
+                $grupos[$clave]['sugerencia'] = $this->nombreParecido($grupo['marca'], array_column($marcas, 'nombre'));
+
+                continue;
+            }
+
+            $idMarca = $this->csvBuscar($grupo['marca'], $marcas, 'id_marca');
+            $grupos[$clave]['marcaNueva'] = $idMarca === null;
+
+            if ($idMarca !== null) {
+                $mismos = array_filter(
+                    $modelos,
+                    fn ($m) => (string) $m['id_marca'] === (string) $idMarca && (int) $m['id_tipo_equipo'] === (int) $grupo['tipo']
+                );
+                $grupos[$clave]['sugerencia'] = $this->nombreParecido($grupo['modelo'], array_column($mismos, 'nombre'));
+            }
+        }
+
+        // Marcas primero; cada modelo después de su marca.
+        return collect($grupos)
+            ->sortBy(fn ($g) => $this->csvNormalizar($g['marca']).($g['clase'] === 'marca' ? '0' : '1'.$this->csvNormalizar($g['modelo'])))
+            ->values()
+            ->all();
+    }
+
+    // El nombre existente más parecido (posible error de dedo) o null.
+    private function nombreParecido(string $texto, array $nombres): ?string
+    {
+        $buscado = $this->csvNormalizar($texto);
+        $mejor = null;
+        $puntos = 0.0;
+
+        foreach ($nombres as $nombre) {
+            $actual = $this->csvNormalizar((string) $nombre);
+
+            if ($actual === '' || $actual === $buscado) {
+                continue;
+            }
+
+            $sinEspacios = str_replace([' ', '-', '_', '.'], '', $buscado) === str_replace([' ', '-', '_', '.'], '', $actual);
+            similar_text($buscado, $actual, $porcentaje);
+            $distancia = levenshtein($buscado, $actual);
+            $limite = max(1, intdiv(max(strlen($buscado), strlen($actual)), 6));
+
+            if ($sinEspacios || $distancia <= $limite || $porcentaje >= 85) {
+                $valor = $sinEspacios ? 101 : $porcentaje;
+
+                if ($valor > $puntos) {
+                    [$mejor, $puntos] = [(string) $nombre, $valor];
+                }
+            }
+        }
+
+        return $mejor;
+    }
+
+    /*
+     * Crea las marcas y modelos marcados (solo con nombre, marca y tipo;
+     * el resto se completa en Administración) y vuelve a revisar las filas.
+     */
+    public function crearCatalogos(array $claves): array
+    {
+        Gate::authorize('gestionar');
+
+        if ($this->importando) {
+            return ['marcas' => 0, 'modelos' => 0];
+        }
+
+        $elegidos = collect($this->catalogoFaltante())->whereIn('clave', $claves);
+        $creados = ['marcas' => [], 'modelos' => []];
+        $origen = '«'.$this->nombreArchivo.'»';
+
+        DB::transaction(function () use ($elegidos, &$creados, $origen): void {
+            $marcaId = function (string $nombre): ?int {
+                $id = DB::table('marcas')->whereRaw('LOWER(BTRIM(nombre)) = LOWER(BTRIM(?))', [$nombre])->value('id_marca');
+
+                return $id !== null ? (int) $id : null;
+            };
+
+            foreach ($elegidos->where('clase', 'marca') as $grupo) {
+                $nombre = trim($grupo['marca']);
+
+                if ($marcaId($nombre) !== null) {
+                    continue;
+                }
+
+                $id = DB::table('marcas')->insertGetId([
+                    'nombre' => $nombre,
+                    'activo' => true,
+                    'comentarios' => 'Creada al importar equipos desde '.$origen.'.',
+                    'fecha_creacion' => now(),
+                    'fecha_actualizacion' => now(),
+                ], 'id_marca');
+
+                $codigo = 'MAR-'.str_pad((string) $id, 6, '0', STR_PAD_LEFT);
+                DB::table('marcas')->where('id_marca', $id)->update(['codigo_interno' => $codigo]);
+                $this->auditarCatalogo('MARCA_CREADA', "Se creó la marca {$nombre} ({$codigo}) al importar equipos desde {$origen}.");
+                $creados['marcas'][] = $nombre;
+            }
+
+            foreach ($elegidos->where('clase', 'modelo') as $grupo) {
+                $nombre = trim($grupo['modelo']);
+                $idMarca = $marcaId($grupo['marca']);
+
+                // Su marca no existe y no se eligió crearla.
+                if ($idMarca === null) {
+                    continue;
+                }
+
+                $existe = DB::table('modelos')
+                    ->where('id_marca', $idMarca)
+                    ->where('id_tipo_equipo', $grupo['tipo'])
+                    ->whereRaw('LOWER(BTRIM(nombre)) = LOWER(BTRIM(?))', [$nombre])
+                    ->exists();
+
+                if ($existe) {
+                    continue;
+                }
+
+                $id = DB::table('modelos')->insertGetId([
+                    'id_marca' => $idMarca,
+                    'id_tipo_equipo' => $grupo['tipo'],
+                    'nombre' => $nombre,
+                    'activo' => true,
+                    'comentarios' => 'Creado al importar equipos desde '.$origen.'.',
+                    'fecha_creacion' => now(),
+                    'fecha_actualizacion' => now(),
+                ], 'id_modelo');
+
+                $codigo = 'MOD-'.str_pad((string) $id, 6, '0', STR_PAD_LEFT);
+                DB::table('modelos')->where('id_modelo', $id)->update(['codigo_interno' => $codigo]);
+                $this->auditarCatalogo('MODELO_CREADO', "Se creó el modelo {$nombre} ({$codigo}) al importar equipos desde {$origen}.");
+                $creados['modelos'][] = $nombre;
+            }
+        });
+
+        if ($creados['marcas'] !== [] || $creados['modelos'] !== []) {
+            app(\App\Services\SystemCacheService::class)->refreshModule('catalogos');
+            Cache::forget('form.marcas.v2');
+            Cache::forget('form.modelos.all.v2');
+
+            $this->catalogosCreados['marcas'] = array_values(array_unique(array_merge($this->catalogosCreados['marcas'] ?? [], $creados['marcas'])));
+            $this->catalogosCreados['modelos'] = array_values(array_unique(array_merge($this->catalogosCreados['modelos'] ?? [], $creados['modelos'])));
+        }
+
+        $this->analizar(array_map(fn ($f) => (int) $f['fila'], $this->filas));
+
+        return ['marcas' => count($creados['marcas']), 'modelos' => count($creados['modelos'])];
+    }
+
+    /*
+     * «¿Quisiste decir…?»: cambia en las filas del archivo el nombre
+     * escrito por el que ya existe y las vuelve a revisar.
+     */
+    public function usarSugerencia(string $clave): void
+    {
+        Gate::authorize('gestionar');
+
+        $grupo = collect($this->catalogoFaltante())->firstWhere('clave', $clave);
+        $datos = $this->clave !== '' ? Cache::get($this->clave) : null;
+
+        if (! $grupo || ! $grupo['sugerencia'] || ! is_array($datos) || $this->importando) {
+            return;
+        }
+
+        $normal = fn ($t) => $this->csvNormalizar((string) $t);
+        $indices = [];
+
+        foreach ($datos['encabezados'] as $i => $encabezado) {
+            $indices[$normal($encabezado)] = $i;
+        }
+
+        $colTipo = $indices['tipo de equipo'] ?? null;
+        $colMarca = $indices[$normal($grupo['clase'] === 'marca' ? $grupo['columna'] : 'Marca')] ?? null;
+        $colModelo = $grupo['clase'] === 'modelo' ? ($indices[$normal($grupo['columna'])] ?? null) : null;
+        $tipos = collect($this->getTiposEquipoProperty())->pluck('id_tipo_equipo', 'nombre')->mapWithKeys(fn ($id, $n) => [$normal($n) => (int) $id]);
+
+        foreach ($datos['filas'] as $numero => $fila) {
+            if ($grupo['clase'] === 'marca') {
+                if ($colMarca !== null && $normal($fila[$colMarca] ?? '') === $normal($grupo['marca'])) {
+                    $datos['filas'][$numero][$colMarca] = $grupo['sugerencia'];
+                }
+
+                continue;
+            }
+
+            if (
+                $colModelo !== null
+                && $normal($fila[$colModelo] ?? '') === $normal($grupo['modelo'])
+                && ($colMarca === null || $normal($fila[$colMarca] ?? '') === $normal($grupo['marca']))
+                && ($colTipo === null || ($tipos[$normal($fila[$colTipo] ?? '')] ?? null) === (int) $grupo['tipo'])
+            ) {
+                $datos['filas'][$numero][$colModelo] = $grupo['sugerencia'];
+            }
+        }
+
+        Cache::put($this->clave, $datos, now()->addHours(2));
+
+        $this->analizar(array_map(fn ($f) => (int) $f['fila'], $this->filas));
+    }
+
+    private function auditarCatalogo(string $accion, string $descripcion): void
+    {
+        DB::table('bitacora_auditoria')->insert([
+            'id_usuario' => auth()->id(),
+            'accion' => $accion,
+            'modulo' => 'CATALOGOS',
+            'descripcion' => $descripcion,
+            'fecha_hora' => now(),
+        ]);
     }
 
     public function descartar(): void
@@ -170,7 +461,7 @@ class EquiposImportar extends EquipoCreate
             Cache::forget($this->clave);
         }
 
-        $this->reset(['archivo', 'nombreArchivo', 'clave', 'filas', 'importando', 'terminado', 'ultimoResultado']);
+        $this->reset(['archivo', 'nombreArchivo', 'clave', 'filas', 'importando', 'terminado', 'ultimoResultado', 'catalogosCreados']);
     }
 
     /*
@@ -187,7 +478,8 @@ class EquiposImportar extends EquipoCreate
         $inicio = microtime(true);
         Gate::authorize('gestionar');
 
-        $payloads = $this->clave !== '' ? Cache::get($this->clave) : null;
+        $datos = $this->clave !== '' ? Cache::get($this->clave) : null;
+        $payloads = is_array($datos) ? ($datos['payloads'] ?? null) : null;
 
         if (! is_array($payloads)) {
             throw ValidationException::withMessages(['archivo' => 'La lectura del archivo expiró. Vuelve a subirlo.']);
@@ -209,7 +501,7 @@ class EquiposImportar extends EquipoCreate
             $procesadas++;
 
             try {
-                $resultado = $this->guardarEquipo($payloads[$i] ?? []);
+                $resultado = $this->guardarEquipo($payloads[$fila['fila']] ?? []);
 
                 if (($resultado['ok'] ?? false) !== true) {
                     throw new \RuntimeException((string) ($resultado['message'] ?? 'No se pudo guardar.'));
@@ -261,8 +553,6 @@ class EquiposImportar extends EquipoCreate
         $this->importando = false;
         $this->terminado = true;
 
-        Cache::forget($this->clave);
-
         $importadas = collect($this->filas)->where('estado', 'importada')->count();
 
         // Inventario y dashboard: una sola actualización al terminar.
@@ -282,7 +572,9 @@ class EquiposImportar extends EquipoCreate
 
         $this->filas = collect($this->filas)->where('estado', '!=', 'importada')->values()->all();
 
+        // Quedan filas con errores: se conserva la lectura para corregirlas aquí.
         if ($this->filas === []) {
+            Cache::forget($this->clave);
             $this->reset(['archivo', 'nombreArchivo', 'clave', 'terminado']);
         }
 
@@ -296,7 +588,7 @@ class EquiposImportar extends EquipoCreate
             $notificaciones->notificar(
                 'equipos',
                 $importadas === 1 ? 'Equipo importado' : $importadas.' equipos importados',
-                $notificaciones->nombreActor().' importó '.$importadas.($importadas === 1 ? ' equipo' : ' equipos').' desde «'.$this->nombreArchivo.'».',
+                $notificaciones->nombreActor().' importó '.$importadas.($importadas === 1 ? ' equipo' : ' equipos').' desde «'.$this->nombreArchivo.'».'.$this->textoCatalogosCreados(),
                 route('equipos.index', [], false)
             );
 
@@ -304,6 +596,23 @@ class EquiposImportar extends EquipoCreate
         } catch (\Throwable $error) {
             report($error);
         }
+    }
+
+    private function textoCatalogosCreados(): string
+    {
+        $partes = [];
+        $marcas = count($this->catalogosCreados['marcas'] ?? []);
+        $modelos = count($this->catalogosCreados['modelos'] ?? []);
+
+        if ($marcas) {
+            $partes[] = $marcas.($marcas === 1 ? ' marca' : ' marcas');
+        }
+
+        if ($modelos) {
+            $partes[] = $modelos.($modelos === 1 ? ' modelo' : ' modelos');
+        }
+
+        return $partes === [] ? '' : ' Se crearon '.implode(' y ', $partes).' desde la importación.';
     }
 
     public function placeholder()
@@ -320,6 +629,7 @@ class EquiposImportar extends EquipoCreate
                 ->map(fn ($t) => ['id' => (int) $t['id_tipo_equipo'], 'nombre' => (string) $t['nombre']])
                 ->values()
                 ->all(),
+            'faltantes' => $this->importando ? [] : $this->catalogoFaltante(),
             'cuentas' => [
                 'total' => $filas->count(),
                 'listas' => $filas->where('estado', 'lista')->count(),

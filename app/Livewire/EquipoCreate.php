@@ -838,7 +838,7 @@ class EquipoCreate extends Component
         );
     }
 
-    private function getAllModelos(): array
+    protected function getAllModelos(): array
     {
         return Cache::remember(
             'form.modelos.all.v2',

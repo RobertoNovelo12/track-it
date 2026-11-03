@@ -37,6 +37,14 @@ trait EquiposCsv
      */
     protected array $csvMemoria = [];
 
+    /*
+     * Marca o modelo que faltan en el catálogo en la última fila leída
+     * (csvFilaAPayload): la importación ofrece crearlos.
+     * [['clase' => 'marca'|'modelo', 'marca' => texto, 'modelo' => texto,
+     *   'tipo' => id, 'columna' => etiqueta de la columna]]
+     */
+    protected array $csvFaltantesFila = [];
+
     protected function csvMemo(string $clave, callable $calcular): mixed
     {
         if (! array_key_exists($clave, $this->csvMemoria)) {
@@ -400,6 +408,9 @@ trait EquiposCsv
 
         $errores = [];
         $payload = ['idTipoEquipo' => (string) $tipoId, 'childData' => []];
+        $this->csvFaltantesFila = [];
+        $textoMarca = '';
+        $marcaFalta = false;
 
         // Generales primero: Modelo y Ubicación dependen de Marca y Unidad.
         $columnas = collect($this->csvColumnas((int) $tipoId))
@@ -420,6 +431,24 @@ trait EquiposCsv
             [$valor, $error] = $columna['origen'] === 'base'
                 ? $this->csvValorBase($columna, $texto, $payload)
                 : $this->csvValorTipo($columna, $texto);
+
+            if ($columna['origen'] === 'base' && $columna['clave'] === 'id_marca') {
+                $textoMarca = $texto;
+                $marcaFalta = $error !== null;
+
+                if ($marcaFalta) {
+                    $this->csvFaltantesFila[] = ['clase' => 'marca', 'marca' => $texto, 'modelo' => '', 'tipo' => (int) $tipoId, 'columna' => $columna['etiqueta']];
+                }
+            }
+
+            if ($columna['origen'] === 'base' && $columna['clave'] === 'id_modelo' && $error !== null && $textoMarca !== '') {
+                $this->csvFaltantesFila[] = ['clase' => 'modelo', 'marca' => $textoMarca, 'modelo' => $texto, 'tipo' => (int) $tipoId, 'columna' => $columna['etiqueta']];
+
+                // Sin marca, el modelo tampoco puede existir: un solo aviso.
+                if ($marcaFalta) {
+                    continue;
+                }
+            }
 
             if ($error !== null) {
                 $errores[] = $error;

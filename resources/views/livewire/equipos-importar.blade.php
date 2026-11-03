@@ -236,6 +236,98 @@
                 <div class="h-full rounded-full bg-[var(--theme-primary)] transition-[width] duration-300" x-bind:style="{ width: avance + '%' }"></div>
             </div>
 
+            {{-- Marcas y modelos que no existen en el catálogo --}}
+            @if ($faltantes !== [])
+                @php
+                    $filasAfectadas = collect($filas)->filter(fn ($f) => $f['estado'] === 'error' && ! empty($f['faltan']))->count();
+                    $modelosFaltan = collect($faltantes)->where('clase', 'modelo')->count();
+                    $marcasFaltan = collect($faltantes)->where('clase', 'marca')->count();
+                    $resumenFaltan = collect([
+                        $marcasFaltan ? $marcasFaltan.($marcasFaltan === 1 ? ' marca' : ' marcas') : null,
+                        $modelosFaltan ? $modelosFaltan.($modelosFaltan === 1 ? ' modelo' : ' modelos') : null,
+                    ])->filter()->implode(' y ');
+                @endphp
+                <div
+                    wire:key="faltantes-{{ md5(collect($faltantes)->pluck('clave')->implode(',')) }}"
+                    x-show="! corriendo"
+                    x-data="{
+                        seleccion: @js(collect($faltantes)->whereNull('sugerencia')->pluck('clave')->values()),
+                        creando: false,
+                        async crear() {
+                            if (this.creando || this.seleccion.length === 0) return;
+                            this.creando = true;
+                            try {
+                                const r = await $wire.crearCatalogos(this.seleccion);
+                                const partes = [];
+                                if (r.marcas) partes.push(r.marcas + (r.marcas === 1 ? ' marca' : ' marcas'));
+                                if (r.modelos) partes.push(r.modelos + (r.modelos === 1 ? ' modelo' : ' modelos'));
+                                window.trackitToast?.('success', partes.length ? 'Se crearon ' + partes.join(' y ') + '. Las filas se revisaron de nuevo.' : 'Ya existían; las filas se revisaron de nuevo.', 'Catálogo actualizado');
+                            } catch (error) {
+                                window.trackitToast?.('error', window.trackitMensajeError(error, 'crear las marcas y modelos'), 'Error');
+                            } finally {
+                                this.creando = false;
+                            }
+                        },
+                    }"
+                    class="mt-4 rounded-lg border border-[var(--theme-border-strong)] bg-[var(--theme-warning-soft)] p-4"
+                >
+                    <p class="text-sm font-semibold text-[var(--theme-text-strong)]">
+                        Faltan {{ $resumenFaltan }} en el catálogo
+                        <span class="font-normal text-[var(--theme-text-muted)]">(afectan {{ $filasAfectadas }} {{ $filasAfectadas === 1 ? 'fila' : 'filas' }})</span>
+                    </p>
+                    <p class="mt-1 text-xs text-[var(--theme-text-muted)]">
+                        Marca los que quieras crear. Se crean solo con su nombre, marca y tipo de equipo; el resto de sus datos se completa después en Administración.
+                    </p>
+
+                    <ul class="mt-3 space-y-2">
+                        @foreach ($faltantes as $falta)
+                            <li wire:key="falta-{{ md5($falta['clave']) }}" class="flex flex-col gap-1.5 rounded-md bg-[var(--theme-surface)] px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
+                                <label class="flex cursor-pointer items-start gap-2 text-sm text-[var(--theme-text)]">
+                                    <input type="checkbox" value="{{ $falta['clave'] }}" x-model="seleccion" class="mt-0.5 h-4 w-4 rounded border-[var(--theme-border-strong)] accent-[var(--theme-primary)]">
+                                    <span>
+                                        @if ($falta['clase'] === 'marca')
+                                            <span class="font-medium text-[var(--theme-text-strong)]">Marca «{{ $falta['marca'] }}»</span>
+                                        @else
+                                            <span class="font-medium text-[var(--theme-text-strong)]">Modelo «{{ $falta['modelo'] }}»</span>
+                                            <span class="text-[var(--theme-text-muted)]">— {{ $falta['marca'] }} · {{ $falta['tipoNombre'] }}</span>
+                                        @endif
+                                        <span class="text-xs text-[var(--theme-text-muted)]">· {{ $falta['filas'] }} {{ $falta['filas'] === 1 ? 'fila' : 'filas' }}</span>
+                                        @if ($falta['clase'] === 'modelo' && $falta['marcaNueva'])
+                                            <span class="block text-xs text-[var(--theme-text-muted)]">Se crea solo si también se crea su marca.</span>
+                                        @endif
+                                    </span>
+                                </label>
+
+                                @if ($falta['sugerencia'])
+                                    <div class="flex items-center gap-2 pl-6 text-xs sm:pl-0">
+                                        <span class="text-[var(--theme-warning)]">¿Quisiste decir «{{ $falta['sugerencia'] }}»?</span>
+                                        <button
+                                            type="button"
+                                            wire:click="usarSugerencia(@js($falta['clave']))"
+                                            wire:loading.attr="disabled"
+                                            class="h-8 shrink-0 rounded-md border border-[var(--theme-border-strong)] px-3 font-medium text-[var(--theme-text)] hover:bg-[var(--theme-surface-soft)] disabled:opacity-50"
+                                        >Usar «{{ $falta['sugerencia'] }}»</button>
+                                    </div>
+                                @endif
+                            </li>
+                        @endforeach
+                    </ul>
+
+                    <div class="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+                        <button
+                            type="button"
+                            x-on:click="crear()"
+                            x-bind:disabled="creando || seleccion.length === 0"
+                            class="h-10 rounded-md bg-[var(--theme-primary)] px-4 text-sm font-medium text-white hover:bg-[var(--theme-primary-hover)] disabled:opacity-60"
+                            x-text="creando ? 'Creando y revisando…' : 'Crear ' + seleccion.length + ' y volver a revisar'"
+                        >Crear y volver a revisar</button>
+                        @if ($listas > 0)
+                            <span class="text-xs text-[var(--theme-text-muted)]">O importa solo las {{ $listas }} listas con el botón de arriba.</span>
+                        @endif
+                    </div>
+                </div>
+            @endif
+
             <div class="mt-4 overflow-x-auto rounded-lg border border-[var(--theme-border)]">
                 <table class="w-full min-w-[720px] text-left text-sm">
                     <thead class="bg-[var(--theme-surface-soft)] text-xs text-[var(--theme-text-muted)]">
