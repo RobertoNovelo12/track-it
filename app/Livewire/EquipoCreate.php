@@ -1428,7 +1428,7 @@ class EquipoCreate extends Component
                     'required',
                     'string',
                     'max:255',
-                    'unique:equipos,numero_serie',
+                    // Repetido: se revisa dentro de la transacción, con bloqueo.
                 ],
 
                 'numeroFactura' => [
@@ -1501,6 +1501,22 @@ class EquipoCreate extends Component
                 $organizacion,
                 $programas
             ) {
+                /*
+                 * Dos personas con el mismo número de serie al mismo tiempo
+                 * (o el mismo archivo importado dos veces): la segunda espera
+                 * a que termine la primera y después ve que ya existe.
+                 */
+                $serie = mb_strtolower(trim((string) $validated['numeroSerie']));
+
+                DB::select('select pg_advisory_xact_lock(hashtext(?))', ['equipo-serie:' . $serie]);
+
+                if (DB::table('equipos')->whereRaw('LOWER(numero_serie) = ?', [$serie])->exists()) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'numeroSerie' => 'Ya hay un equipo registrado con el número de serie «'
+                            . $validated['numeroSerie'] . '». Búscalo en Inventario antes de volver a darlo de alta.',
+                    ]);
+                }
+
                 $idEquipo = DB::table('equipos')
                     ->insertGetId(
                         [
@@ -1727,8 +1743,10 @@ class EquipoCreate extends Component
 
         // La tabla de Inventario guarda sus páginas en caché: sin esto el
         // equipo nuevo solo aparecía al aplicar un filtro.
-        app(\App\Services\SystemCacheService::class)->refreshModule('equipos');
-        app(\App\Services\SystemCacheService::class)->refreshModule('dashboard');
+        if (! $this->importandoCsv) {
+            app(\App\Services\SystemCacheService::class)->refreshModule('equipos');
+            app(\App\Services\SystemCacheService::class)->refreshModule('dashboard');
+        }
 
         // Al importar CSV se manda un solo aviso al final (EquiposImportar).
         if (! $this->importandoCsv) {
@@ -1859,7 +1877,10 @@ class EquipoCreate extends Component
     private function siguienteIdEquipo(): int
     {
         try {
-            $secuencia = DB::selectOne(
+            // El nombre del contador no cambia: se pregunta una vez por petición.
+            static $secuencia = null;
+
+            $secuencia ??= DB::selectOne(
                 "select pg_get_serial_sequence('public.equipos', 'id_equipo') as nombre"
             )?->nombre;
 

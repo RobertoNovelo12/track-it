@@ -177,7 +177,10 @@ class EquiposImportar extends EquipoCreate
      * Guarda las siguientes filas listas (de 10 en 10). La vista lo
      * llama hasta que devuelve 'pendientes' => 0.
      */
-    #[Json]
+    /*
+     * Acción normal (no #[Json]): así la tabla se redibuja en cada lote
+     * y se limpia al terminar, y la campana recibe el aviso final.
+     */
     public function importarLote(int $cuantos = self::POR_LOTE): array
     {
         $cuantos = max(1, min(self::POR_LOTE, $cuantos));
@@ -261,6 +264,12 @@ class EquiposImportar extends EquipoCreate
         Cache::forget($this->clave);
 
         $importadas = collect($this->filas)->where('estado', 'importada')->count();
+
+        // Inventario y dashboard: una sola actualización al terminar.
+        if ($importadas > 0) {
+            app(\App\Services\SystemCacheService::class)->refreshModule('equipos');
+            app(\App\Services\SystemCacheService::class)->refreshModule('dashboard');
+        }
 
         /*
          * Lo importado sale de la tabla; quedan solo las filas con errores
