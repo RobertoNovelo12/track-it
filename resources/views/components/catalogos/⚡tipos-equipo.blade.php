@@ -960,7 +960,12 @@ new class extends Component
                     ]).')',
                 ],
                 [
-                    // Encabezados del formulario del tipo para llenar en Excel e importar.
+                    // Excel: columnas anchas y listas desplegables con las opciones.
+                    'label' => 'Descargar plantilla Excel',
+                    'js' => 'window.trackitDescargar('.\Illuminate\Support\Js::from(route('catalogos.tipos-equipo.plantilla-xlsx', $tipo->id_tipo_equipo)).')',
+                ],
+                [
+                    // Encabezados del formulario del tipo para llenar e importar.
                     'label' => 'Descargar plantilla CSV',
                     'js' => 'window.trackitDescargar('.\Illuminate\Support\Js::from(route('catalogos.tipos-equipo.plantilla-csv', $tipo->id_tipo_equipo)).')',
                 ],

@@ -426,6 +426,14 @@ Route::middleware([
         ->whereNumber('tipoEquipo')
         ->name('catalogos.tipos-equipo.plantilla-csv')->middleware('can:gestionar');
 
+    // La misma plantilla en Excel: columnas anchas y listas desplegables.
+    Route::get(
+        '/catalogos/tipos-equipo/{tipoEquipo}/plantilla-xlsx',
+        fn (int $tipoEquipo) => app(\App\Livewire\EquiposImportar::class)->plantillaXlsx($tipoEquipo)
+    )
+        ->whereNumber('tipoEquipo')
+        ->name('catalogos.tipos-equipo.plantilla-xlsx')->middleware('can:gestionar');
+
 
     /*
     |--------------------------------------------------------------------------

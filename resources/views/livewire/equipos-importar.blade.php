@@ -39,8 +39,8 @@
     <section class="{{ $tarjeta }}">
         <h2 class="text-sm font-semibold text-[var(--theme-text-strong)]">Importar equipos desde CSV</h2>
         <p class="mt-1 text-sm text-[var(--theme-text-muted)]">
-            Descarga la plantilla del tipo de equipo, llénala en Excel u otra herramienta y guárdala como <strong>CSV UTF-8</strong>.
-            También sirve el CSV que exportas desde Inventario.
+            Descarga la plantilla del tipo de equipo, llénala y súbela. La plantilla de <strong>Excel</strong> trae las columnas anchas y listas para elegir las opciones;
+            también se acepta un <strong>CSV</strong> (por ejemplo, el que exportas desde Inventario).
         </p>
 
         <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -54,22 +54,29 @@
                             <option value="{{ route('catalogos.tipos-equipo.plantilla-csv', $tipo['id']) }}">{{ $tipo['nombre'] }}</option>
                         @endforeach
                     </select>
+                    {{-- Excel: columnas anchas y listas desplegables. CSV: texto plano. --}}
+                    <button
+                        type="button"
+                        x-bind:disabled="! tipo"
+                        x-on:click="const url = tipo.replace('plantilla-csv', 'plantilla-xlsx'); window.trackitDescargar ? window.trackitDescargar(url) : (window.location.href = url)"
+                        class="h-10 shrink-0 rounded-md bg-[var(--theme-primary)] px-4 text-sm font-medium text-white transition-colors hover:bg-[var(--theme-primary-hover)] disabled:cursor-not-allowed disabled:opacity-50"
+                    >Excel</button>
                     <button
                         type="button"
                         x-bind:disabled="! tipo"
                         x-on:click="window.trackitDescargar ? window.trackitDescargar(tipo) : (window.location.href = tipo)"
                         class="h-10 shrink-0 rounded-md border border-[var(--theme-border-strong)] px-4 text-sm font-medium text-[var(--theme-text)] transition-colors hover:bg-[var(--theme-surface-soft)] disabled:cursor-not-allowed disabled:opacity-50"
-                    >Descargar</button>
+                    >CSV</button>
                 </div>
             </div>
 
             {{-- Archivo --}}
             <div>
-                <label for="importar-archivo" class="mb-1.5 block text-xs text-[var(--theme-text-muted)]">Archivo CSV *</label>
+                <label for="importar-archivo" class="mb-1.5 block text-xs text-[var(--theme-text-muted)]">Archivo (Excel o CSV) *</label>
                 <input
                     id="importar-archivo"
                     type="file"
-                    accept=".csv,text/csv"
+                    accept=".xlsx,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                     wire:model="archivo"
                     x-bind:disabled="corriendo"
                     class="block w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] text-sm text-[var(--theme-text)] file:mr-3 file:h-10 file:border-0 file:bg-[var(--theme-surface-soft)] file:px-4 file:text-sm file:font-medium file:text-[var(--theme-text)]"

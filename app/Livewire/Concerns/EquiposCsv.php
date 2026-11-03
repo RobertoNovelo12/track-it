@@ -131,6 +131,163 @@ trait EquiposCsv
         return $this->csvDescarga('plantilla-'.Str::slug($tipo->nombre).'.csv', [$encabezados, $ejemplo]);
     }
 
+    /*
+     * Plantilla en Excel (.xlsx): columnas del ancho de su encabezado,
+     * encabezados en negritas (obligatorios resaltados), primera fila
+     * fija y listas desplegables con las opciones válidas (hoja oculta
+     * «Listas»). Se importa igual que el CSV.
+     */
+    public function plantillaXlsx(int $tipoId): StreamedResponse
+    {
+        $tipo = DB::table('tipos_equipo')->where('id_tipo_equipo', $tipoId)->first(['nombre']);
+
+        abort_unless($tipo, 404);
+
+        $columnas = array_merge(
+            [['etiqueta' => 'Tipo de equipo', 'obligatorio' => true, 'origen' => 'tipo_equipo', 'tipo' => 'text']],
+            $this->csvColumnas($tipoId)
+        );
+
+        $libro = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $hoja = $libro->getActiveSheet();
+        $hoja->setTitle('Equipos');
+
+        $listas = $libro->createSheet();
+        $listas->setTitle('Listas');
+        $columnaLista = 0;
+
+        $filasConDatos = 500;
+
+        foreach ($columnas as $i => $columna) {
+            $letra = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($i + 1);
+            $encabezado = $columna['origen'] === 'tipo_equipo' ? 'Tipo de equipo *' : $this->csvEncabezado($columna);
+
+            $hoja->setCellValue($letra.'1', $encabezado);
+            $hoja->getColumnDimension($letra)->setWidth(max(14, mb_strlen($encabezado) + 4));
+            $hoja->getStyle($letra.'1')->applyFromArray([
+                'font' => ['bold' => true, 'color' => ['rgb' => $columna['obligatorio'] ? 'FFFFFF' : '1F2937']],
+                'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => $columna['obligatorio'] ? '2A78D6' : 'E5E7EB']],
+                'alignment' => ['vertical' => 'center'],
+            ]);
+
+            // Fechas como texto dd/mm/aaaa (así Excel no las cambia de formato).
+            if (($columna['tipo'] ?? '') === 'date') {
+                $hoja->getStyle($letra.'2:'.$letra.$filasConDatos)->getNumberFormat()->setFormatCode('@');
+            }
+
+            $opciones = $this->csvOpcionesColumna($columna);
+
+            if ($opciones === []) {
+                continue;
+            }
+
+            $columnaLista++;
+            $letraLista = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($columnaLista);
+            $listas->setCellValue($letraLista.'1', $columna['etiqueta']);
+
+            foreach (array_values($opciones) as $n => $opcion) {
+                $listas->setCellValueExplicit($letraLista.($n + 2), $opcion, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            }
+
+            $validacion = $hoja->getCell($letra.'2')->getDataValidation();
+            $validacion->setType(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::TYPE_LIST)
+                ->setErrorStyle(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::STYLE_STOP)
+                ->setAllowBlank(! $columna['obligatorio'])
+                ->setShowDropDown(true)
+                ->setShowErrorMessage(true)
+                ->setErrorTitle('Valor no válido')
+                ->setError('Elige una opción de la lista.')
+                ->setFormula1('Listas!$'.$letraLista.'$2:$'.$letraLista.'$'.(count($opciones) + 1));
+
+            $hoja->setDataValidation($letra.'2:'.$letra.$filasConDatos, clone $validacion);
+        }
+
+        $hoja->setCellValue('A2', $tipo->nombre);
+        $hoja->freezePane('A2');
+        $hoja->getRowDimension(1)->setRowHeight(22);
+        $listas->setSheetState(\PhpOffice\PhpSpreadsheet\Worksheet\Worksheet::SHEETSTATE_HIDDEN);
+        $libro->setActiveSheetIndex(0);
+
+        $nombre = 'plantilla-'.Str::slug($tipo->nombre).'.xlsx';
+
+        return response()->streamDownload(function () use ($libro) {
+            (new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($libro))->save('php://output');
+        }, $nombre, ['Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']);
+    }
+
+    /*
+     * Textos válidos de una columna de lista (para los desplegables).
+     */
+    private function csvOpcionesColumna(array $columna): array
+    {
+        $nombres = fn (array $lista, string $campo = 'nombre') => collect($lista)
+            ->map(fn ($o) => (string) (((array) $o)[$campo] ?? ''))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($columna['origen'] === 'tipo_equipo') {
+            return $nombres($this->getTiposEquipoProperty());
+        }
+
+        if ($columna['origen'] === 'tipo') {
+            return match ($columna['tipo']) {
+                'select' => $nombres($this->fieldOptions($columna['campo']), 'label'),
+                'boolean', 'checkbox' => ['Sí', 'No'],
+                default => [],
+            };
+        }
+
+        return match ($columna['clave']) {
+            'id_estado_activo' => $nombres($this->getEstadosProperty()),
+            'id_marca' => $nombres($this->getMarcasProperty()),
+            'id_unidad' => $nombres($this->getHotelesProperty()),
+            'id_departamento' => $nombres($this->getAllDepartamentos()),
+            'id_proveedor' => $nombres($this->getProveedoresProperty()),
+            'id_condicion_activo' => $nombres($this->getCondicionesProperty()),
+            default => [],
+        };
+    }
+
+    /*
+     * Lee un archivo subido (.csv o .xlsx) => [encabezados, filas].
+     */
+    public function leerArchivoTabla(string $ruta, string $nombre): array
+    {
+        $extension = strtolower(pathinfo($nombre, PATHINFO_EXTENSION));
+
+        if (! in_array($extension, ['xlsx', 'xls'], true)) {
+            return $this->csvLeer((string) file_get_contents($ruta));
+        }
+
+        $lector = \PhpOffice\PhpSpreadsheet\IOFactory::createReaderForFile($ruta);
+        $lector->setReadDataOnly(false);
+        $libro = $lector->load($ruta);
+        $hoja = $libro->getSheetByName('Equipos') ?? $libro->getSheet(0);
+
+        $encabezados = null;
+        $filas = [];
+
+        foreach ($hoja->toArray(null, true, false, false) as $fila) {
+            $fila = array_map(fn ($v) => trim((string) ($v ?? '')), $fila);
+
+            if (collect($fila)->every(fn ($v) => $v === '')) {
+                continue;
+            }
+
+            if ($encabezados === null) {
+                $encabezados = $fila;
+
+                continue;
+            }
+
+            $filas[] = $fila;
+        }
+
+        return [$encabezados ?? [], $filas];
+    }
+
     private function csvDescarga(string $nombre, iterable $filas): StreamedResponse
     {
         return response()->streamDownload(function () use ($filas) {
@@ -433,6 +590,41 @@ trait EquiposCsv
 
         [$encabezados, $filas] = $this->csvLeer(mb_substr($contenido, 0, 500000));
 
+        return $this->primeraFilaFormulario($encabezados, $filas);
+    }
+
+    /*
+     * Igual que leerCsvFormulario, para .xlsx (llega en base64).
+     */
+    #[\Livewire\Attributes\Json]
+    public function leerArchivoFormulario(string $nombre, string $base64): array
+    {
+        \Illuminate\Support\Facades\Gate::authorize('gestionar');
+
+        $contenido = base64_decode($base64, true);
+
+        if ($contenido === false || strlen($contenido) > 2 * 1024 * 1024) {
+            return ['ok' => false, 'message' => 'No se pudo leer el archivo (máximo 2 MB).'];
+        }
+
+        $ruta = tempnam(sys_get_temp_dir(), 'trackit-');
+        file_put_contents($ruta, $contenido);
+
+        try {
+            [$encabezados, $filas] = $this->leerArchivoTabla($ruta, $nombre);
+        } catch (\Throwable $error) {
+            report($error);
+
+            return ['ok' => false, 'message' => 'El archivo no es un Excel o CSV válido.'];
+        } finally {
+            @unlink($ruta);
+        }
+
+        return $this->primeraFilaFormulario($encabezados, $filas);
+    }
+
+    private function primeraFilaFormulario(array $encabezados, array $filas): array
+    {
         if ($filas === []) {
             return ['ok' => false, 'message' => 'El archivo no tiene filas con datos (la primera fila son los encabezados).'];
         }

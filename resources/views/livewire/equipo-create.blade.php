@@ -51,11 +51,11 @@
                                 Tipo de equipo
                             </h2>
 
-                            {{-- Llenar desde CSV: la primera fila del archivo (plantilla de Tipos de equipo). --}}
+                            {{-- Llenar desde archivo (Excel o CSV): la primera fila (plantilla de Tipos de equipo). --}}
                             <label class="inline-flex cursor-pointer items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-[var(--theme-primary)] transition-colors hover:bg-[var(--theme-primary-soft-subtle)]">
                                 <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3m0 0-4 4m4-4 4 4M5 21h14"/></svg>
-                                <span x-text="leyendoCsv ? 'Leyendo…' : 'Llenar desde CSV'">Llenar desde CSV</span>
-                                <input type="file" accept=".csv,text/csv" class="sr-only" x-on:change="llenarDesdeCsv($event)" x-bind:disabled="leyendoCsv">
+                                <span x-text="leyendoCsv ? 'Leyendo…' : 'Llenar desde archivo'">Llenar desde archivo</span>
+                                <input type="file" accept=".xlsx,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" class="sr-only" x-on:change="llenarDesdeCsv($event)" x-bind:disabled="leyendoCsv">
                             </label>
                         </div>
 
@@ -1015,7 +1015,19 @@
                 this.leyendoCsv = true;
 
                 try {
-                    const resultado = await $wire.leerCsvFormulario(await archivo.text());
+                    // Excel (.xlsx) va en base64; el CSV, como texto.
+                    let resultado;
+
+                    if (/\.xlsx?$/i.test(archivo.name)) {
+                        const bytes = new Uint8Array(await archivo.arrayBuffer());
+                        let binario = '';
+                        for (let i = 0; i < bytes.length; i += 0x8000) {
+                            binario += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+                        }
+                        resultado = await $wire.leerArchivoFormulario(archivo.name, btoa(binario));
+                    } else {
+                        resultado = await $wire.leerCsvFormulario(await archivo.text());
+                    }
 
                     if (! resultado?.ok) {
                         window.trackitToast?.('error', resultado?.message || 'No se pudo leer el archivo.', 'No se pudo leer el CSV');
