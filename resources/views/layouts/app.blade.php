@@ -1993,6 +1993,11 @@ document.addEventListener(
         wire:navigate, así un aviso emitido antes de cambiar de página
         sigue visible.
     --}}
+    {{-- Carga entre pantallas en el celular (logotipo + barra) --}}
+    @persist('carga-pantalla')
+        @include('layouts.partials.carga-pantalla')
+    @endpersist
+
     @persist('avisos-globales-v2')
         <x-ui.toast-region />
 
