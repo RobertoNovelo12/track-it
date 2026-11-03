@@ -250,6 +250,202 @@ trait EquiposCsv
     }
 
     /*
+    |--------------------------------------------------------------------------
+    | Plantilla universal (todos los tipos de equipo)
+    |--------------------------------------------------------------------------
+    |
+    | Una sola hoja para importar equipos de distintos tipos: las columnas
+    | generales y, después, las de cada tipo. Las columnas con el mismo
+    | nombre en varios tipos se comparten (sus opciones se juntan). Al
+    | importar, cada fila solo usa las columnas de su tipo.
+    |
+    */
+    protected function csvColumnasUniversales(): array
+    {
+        $tipos = $this->csvMemo('lista.tipos', fn () => $this->getTiposEquipoProperty());
+        $columnas = [];
+
+        $columnas['tipo de equipo'] = [
+            'origen' => 'tipo_equipo', 'etiqueta' => 'Tipo de equipo', 'tipo' => 'text', 'obligatorio' => true,
+            'opciones' => array_values(array_map(fn ($t) => (string) ((array) $t)['nombre'], $tipos)),
+            'tipos' => [], 'general' => true,
+        ];
+
+        $generales = [];
+        $propias = [];
+
+        foreach ($tipos as $tipo) {
+            $tipo = (array) $tipo;
+
+            foreach ($this->csvColumnas((int) $tipo['id_tipo_equipo']) as $columna) {
+                $clave = $this->csvNormalizar($columna['etiqueta']);
+                $destino = $columna['origen'] === 'base' ? 'generales' : 'propias';
+
+                // Mismo nombre que una general: se comparte esa columna.
+                if ($destino === 'propias' && isset($generales[$clave])) {
+                    $destino = 'generales';
+                }
+
+                $lista = &${$destino};
+                $lista[$clave] ??= $columna + ['opciones' => [], 'tipos' => [], 'general' => $columna['origen'] === 'base'];
+                $lista[$clave]['tipos'][(string) $tipo['nombre']] = (bool) $columna['obligatorio'];
+                $lista[$clave]['opciones'] = array_values(array_unique(array_merge(
+                    $lista[$clave]['opciones'],
+                    $this->csvOpcionesColumna($columna)
+                )));
+                unset($lista);
+            }
+        }
+
+        // Generales en el orden del formulario de alta.
+        $orden = array_flip(array_map(fn ($b) => $this->csvNormalizar($b[1]), array_values($this->csvBase())));
+        uksort($generales, fn ($a, $b) => ($orden[$a] ?? 999) <=> ($orden[$b] ?? 999));
+
+        foreach ($generales as $clave => $columna) {
+            // Obligatoria solo si lo es en todos los tipos que la usan.
+            $columna['obligatorio'] = $columna['tipos'] !== [] && ! in_array(false, $columna['tipos'], true) && count($columna['tipos']) === count($tipos);
+            $columnas[$clave] = $columna;
+        }
+
+        foreach ($propias as $clave => $columna) {
+            $columna['obligatorio'] = false;
+            $columnas[$clave] = $columna;
+        }
+
+        return array_values($columnas);
+    }
+
+    // Texto de ayuda de una columna propia: a qué tipos aplica.
+    protected function csvAyudaColumna(array $columna): string
+    {
+        if ($columna['general'] || $columna['tipos'] === []) {
+            return '';
+        }
+
+        $obligatorio = array_keys(array_filter($columna['tipos']));
+        $texto = 'Solo para: '.implode(', ', array_keys($columna['tipos'])).'.';
+
+        return $obligatorio === [] ? $texto : $texto.' Obligatoria en: '.implode(', ', $obligatorio).'.';
+    }
+
+    public function plantillaUniversalCsv(): StreamedResponse
+    {
+        $encabezados = array_map(
+            fn (array $c) => $c['etiqueta'].($c['obligatorio'] ? ' *' : ''),
+            $this->csvColumnasUniversales()
+        );
+
+        return $this->csvDescarga('plantilla-universal-equipos.csv', [$encabezados]);
+    }
+
+    public function plantillaUniversalXlsx(): StreamedResponse
+    {
+        $columnas = $this->csvColumnasUniversales();
+        $filasConDatos = 500;
+
+        $libro = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $hoja = $libro->getActiveSheet();
+        $hoja->setTitle('Equipos');
+
+        $listas = $libro->createSheet();
+        $listas->setTitle('Listas');
+        $columnaLista = 0;
+
+        foreach ($columnas as $i => $columna) {
+            $letra = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($i + 1);
+            $encabezado = $columna['etiqueta'].($columna['obligatorio'] ? ' *' : '');
+            $propia = ! $columna['general'];
+
+            $hoja->setCellValue($letra.'1', $encabezado);
+            $hoja->getColumnDimension($letra)->setWidth(max(14, mb_strlen($encabezado) + 4));
+            $hoja->getStyle($letra.'1')->applyFromArray([
+                'font' => ['bold' => true, 'color' => ['rgb' => $columna['obligatorio'] ? 'FFFFFF' : ($propia ? '7A4B00' : '1F2937')]],
+                'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => $columna['obligatorio'] ? '2A78D6' : ($propia ? 'FCEFD6' : 'E5E7EB')]],
+                'alignment' => ['vertical' => 'center'],
+            ]);
+
+            // Nota en el encabezado: a qué tipos aplica la columna.
+            if (($ayuda = $this->csvAyudaColumna($columna)) !== '') {
+                $nota = $hoja->getComment($letra.'1');
+                $nota->getText()->createTextRun($ayuda);
+                $nota->setWidth('220pt');
+                $nota->setHeight('70pt');
+            }
+
+            if (($columna['tipo'] ?? '') === 'date') {
+                $hoja->getStyle($letra.'2:'.$letra.$filasConDatos)->getNumberFormat()->setFormatCode('@');
+            }
+
+            $opciones = $columna['opciones'];
+
+            if ($opciones === []) {
+                continue;
+            }
+
+            $columnaLista++;
+            $letraLista = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($columnaLista);
+            $listas->setCellValue($letraLista.'1', $columna['etiqueta']);
+
+            foreach (array_values($opciones) as $n => $opcion) {
+                $listas->setCellValueExplicit($letraLista.($n + 2), $opcion, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            }
+
+            $validacion = $hoja->getCell($letra.'2')->getDataValidation();
+            $validacion->setType(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::TYPE_LIST)
+                ->setErrorStyle(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::STYLE_STOP)
+                ->setAllowBlank(true)
+                ->setShowDropDown(true)
+                ->setShowErrorMessage(true)
+                ->setErrorTitle('Valor no válido')
+                ->setError('Elige una opción de la lista.')
+                ->setFormula1('Listas!$'.$letraLista.'$2:$'.$letraLista.'$'.(count($opciones) + 1));
+
+            $hoja->setDataValidation($letra.'2:'.$letra.$filasConDatos, clone $validacion);
+        }
+
+        $hoja->freezePane('B2');
+        $hoja->getRowDimension(1)->setRowHeight(22);
+
+        /*
+         * Hoja «Guía»: qué columnas llena cada tipo de equipo.
+         */
+        $guia = $libro->createSheet();
+        $guia->setTitle('Guía');
+        $guia->fromArray([['Tipo de equipo', 'Columnas obligatorias', 'Columnas opcionales']], null, 'A1');
+        $guia->getStyle('A1:C1')->applyFromArray([
+            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+            'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '2A78D6']],
+        ]);
+
+        $fila = 2;
+
+        foreach ($this->csvMemo('lista.tipos', fn () => $this->getTiposEquipoProperty()) as $tipo) {
+            $tipo = (array) $tipo;
+            $propias = collect($this->csvColumnas((int) $tipo['id_tipo_equipo']));
+
+            $guia->fromArray([[
+                (string) $tipo['nombre'],
+                $propias->where('obligatorio', true)->pluck('etiqueta')->prepend('Tipo de equipo')->implode(', '),
+                $propias->where('obligatorio', false)->pluck('etiqueta')->implode(', '),
+            ]], null, 'A'.$fila);
+            $fila++;
+        }
+
+        $guia->getColumnDimension('A')->setWidth(24);
+        $guia->getColumnDimension('B')->setWidth(70);
+        $guia->getColumnDimension('C')->setWidth(70);
+        $guia->getStyle('A2:C'.max(2, $fila - 1))->getAlignment()->setWrapText(true)->setVertical('top');
+        $guia->setCellValue('A'.($fila + 1), 'Las columnas en color arena solo aplican a algunos tipos (pasa el cursor sobre su encabezado). Las que no correspondan al tipo de la fila se ignoran al importar.');
+
+        $listas->setSheetState(\PhpOffice\PhpSpreadsheet\Worksheet\Worksheet::SHEETSTATE_HIDDEN);
+        $libro->setActiveSheetIndex(0);
+
+        return response()->streamDownload(function () use ($libro) {
+            (new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($libro))->save('php://output');
+        }, 'plantilla-universal-equipos.xlsx', ['Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']);
+    }
+
+    /*
      * Textos válidos de una columna de lista (para los desplegables).
      */
     protected function csvOpcionesColumna(array $columna): array

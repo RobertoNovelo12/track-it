@@ -155,7 +155,7 @@
             </div>
             <span class="text-sm font-medium text-[var(--theme-text-strong)]" x-text="subiendo ? (progreso < 100 ? 'Subiendo el archivo… ' + progreso + '%' : 'Revisando las filas del archivo…') : 'Suelta tu Excel o CSV en cualquier parte, o haz clic para elegirlo'">Suelta tu Excel o CSV en cualquier parte, o haz clic para elegirlo</span>
             <span class="text-xs text-[var(--theme-text-muted)]">
-                Usa la plantilla del tipo de equipo (Administración › Equipos › ⋮ › Descargar plantilla Excel) o un CSV exportado del Inventario.
+                Usa la plantilla del tipo de equipo (Administración › Equipos › ⋮ › Descargar plantilla Excel), la plantilla universal para varios tipos a la vez o un CSV exportado del Inventario.
             </span>
             <input
                 id="importar-archivo"

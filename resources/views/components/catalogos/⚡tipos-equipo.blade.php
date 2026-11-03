@@ -897,9 +897,36 @@ new class extends Component
         />
 
         <x-slot:actions>
-            <x-admin.action-button x-on:click="$dispatch('abrir-tipo-equipo', {})">
-                Añadir tipo
-            </x-admin.action-button>
+            <div class="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                {{-- Plantilla universal: todos los tipos en un solo archivo --}}
+                <div class="relative" x-data="{ abierto: false }" x-on:click.outside="abierto = false" x-on:keydown.escape.window="abierto = false">
+                    <button
+                        type="button"
+                        x-on:click="abierto = ! abierto"
+                        x-bind:aria-expanded="abierto"
+                        class="inline-flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-4 py-2.5 text-sm font-medium text-[var(--theme-text)] transition-colors hover:bg-[var(--theme-surface-soft)] sm:w-auto"
+                    >
+                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0-4-4m4 4 4-4M5 21h14"/></svg>
+                        Plantilla universal
+                        <svg class="h-3.5 w-3.5 transition-transform" x-bind:class="abierto && 'rotate-180'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                    </button>
+
+                    <div
+                        x-show="abierto"
+                        x-cloak
+                        x-transition.origin.top.right
+                        class="absolute right-0 z-30 mt-1 w-72 overflow-hidden rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface)] py-1 theme-shadow-xl"
+                    >
+                        <p class="px-3 pt-2 pb-1.5 text-[11px] leading-relaxed text-[var(--theme-text-muted)]">Todos los tipos de equipo en un solo archivo, para importar equipos variados.</p>
+                        <button type="button" x-on:click="abierto = false; window.trackitDescargar(@js(route('catalogos.tipos-equipo.plantilla-universal-xlsx')))" class="block w-full px-3 py-2 text-left text-sm text-[var(--theme-text)] hover:bg-[var(--theme-surface-soft)]">Descargar en Excel <span class="text-xs text-[var(--theme-text-muted)]">(con listas)</span></button>
+                        <button type="button" x-on:click="abierto = false; window.trackitDescargar(@js(route('catalogos.tipos-equipo.plantilla-universal-csv')))" class="block w-full px-3 py-2 text-left text-sm text-[var(--theme-text)] hover:bg-[var(--theme-surface-soft)]">Descargar en CSV</button>
+                    </div>
+                </div>
+
+                <x-admin.action-button x-on:click="$dispatch('abrir-tipo-equipo', {})">
+                    Añadir tipo
+                </x-admin.action-button>
+            </div>
         </x-slot:actions>
     </x-admin.filter-bar>
 

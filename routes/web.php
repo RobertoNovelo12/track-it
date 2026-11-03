@@ -434,6 +434,17 @@ Route::middleware([
         ->whereNumber('tipoEquipo')
         ->name('catalogos.tipos-equipo.plantilla-xlsx')->middleware('can:gestionar');
 
+    // Plantilla universal: todos los tipos de equipo en un solo archivo.
+    Route::get(
+        '/catalogos/tipos-equipo/plantilla-universal-xlsx',
+        fn () => app(\App\Livewire\EquiposImportar::class)->plantillaUniversalXlsx()
+    )->name('catalogos.tipos-equipo.plantilla-universal-xlsx')->middleware('can:gestionar');
+
+    Route::get(
+        '/catalogos/tipos-equipo/plantilla-universal-csv',
+        fn () => app(\App\Livewire\EquiposImportar::class)->plantillaUniversalCsv()
+    )->name('catalogos.tipos-equipo.plantilla-universal-csv')->middleware('can:gestionar');
+
 
     /*
     |--------------------------------------------------------------------------

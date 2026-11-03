@@ -62,6 +62,9 @@ new class extends Component
 
     public array $equiposPorTipo = [];
 
+    // Bajas: por mes (12 meses), por tipo de equipo y totales.
+    public array $bajas = [];
+
 
     /*
     |--------------------------------------------------------------------------
@@ -154,7 +157,7 @@ new class extends Component
             )
         );
 
-        $claveSecciones = $this->systemCache()->key(self::CACHE_MODULE, 'secciones-v2');
+        $claveSecciones = $this->systemCache()->key(self::CACHE_MODULE, 'secciones-v3');
 
         if (\Illuminate\Support\Facades\Cache::has($claveSecciones)) {
             $this->cargarSecciones();
@@ -174,7 +177,7 @@ new class extends Component
         try {
             $data = $this->systemCache()->rememberSimple(
                 self::CACHE_MODULE,
-                'secciones-v2',
+                'secciones-v3',
                 fn () => $this->buildSeccionesData(),
                 self::CACHE_TTL_HOURS
             );
@@ -191,6 +194,7 @@ new class extends Component
         $this->estadoMantenimientos = $data['estadoMantenimientos'] ?? [];
         $this->mantenimientosPorMes = $data['mantenimientosPorMes'] ?? [];
         $this->equiposPorTipo = $data['equiposPorTipo'] ?? [];
+        $this->bajas = $data['bajas'] ?? [];
         $this->actividadReciente = $data['actividadReciente'] ?? [];
 
         $this->seccionesListas = true;
@@ -1254,7 +1258,72 @@ new class extends Component
             'bar' => (int) round($tipo['count'] / $maxTipo * 100),
         ], $equiposPorTipo);
 
+        /*
+        |--------------------------------------------------------------------------
+        | BAJAS
+        |--------------------------------------------------------------------------
+        |
+        | Equipos dados de baja por mes (últimos 12 meses), los tipos de
+        | equipo con más bajas en ese periodo y el total histórico.
+        |
+        */
+
+        $inicioBajas = Carbon::now()->startOfMonth()->subMonths(11);
+        $finBajas = Carbon::now()->startOfMonth()->addMonth();
+
+        $bajasPeriodo = static fn () => DB::table('bajas as b')
+            ->whereNotNull('b.fecha_baja')
+            ->where('b.fecha_baja', '>=', $inicioBajas->toDateString())
+            ->where('b.fecha_baja', '<', $finBajas->toDateString());
+
+        $bajasPorMes = [];
+
+        foreach (range(0, 11) as $desplazamiento) {
+            $mes = $inicioBajas->copy()->addMonths($desplazamiento);
+            $bajasPorMes[$mes->format('Y-m-01')] = ['label' => $this->monthLabel($mes), 'anio' => $mes->year, 'total' => 0];
+        }
+
+        foreach (
+            $bajasPeriodo()
+                ->selectRaw("DATE_TRUNC('month', b.fecha_baja)::date as mes, COUNT(DISTINCT b.id_equipo) as total")
+                ->groupBy('mes')
+                ->get() as $fila
+        ) {
+            $clave = Carbon::parse($fila->mes)->format('Y-m-01');
+
+            if (isset($bajasPorMes[$clave])) {
+                $bajasPorMes[$clave]['total'] = (int) $fila->total;
+            }
+        }
+
+        $bajasPorTipoRaw = $bajasPeriodo()
+            ->leftJoin('equipos as e', 'e.id_equipo', '=', 'b.id_equipo')
+            ->leftJoin('tipos_equipo as te', 'te.id_tipo_equipo', '=', 'e.id_tipo_equipo')
+            ->selectRaw('te.nombre as nombre, COUNT(DISTINCT b.id_equipo) as total')
+            ->groupBy('te.nombre')
+            ->orderByDesc('total')
+            ->get();
+
+        $bajasPorTipo = $bajasPorTipoRaw->take(4)
+            ->map(fn ($fila) => ['nombre' => filled($fila->nombre) ? (string) $fila->nombre : 'Sin tipo', 'count' => (int) $fila->total])
+            ->values()
+            ->all();
+
+        $restoBajas = (int) $bajasPorTipoRaw->slice(4)->sum('total');
+
+        if ($restoBajas > 0) {
+            $bajasPorTipo[] = ['nombre' => 'Otros tipos', 'count' => $restoBajas];
+        }
+
+        $bajas = [
+            'meses' => array_values($bajasPorMes),
+            'tipos' => $bajasPorTipo,
+            'periodo' => array_sum(array_column($bajasPorMes, 'total')),
+            'historico' => (int) DB::table('bajas')->distinct()->count('id_equipo'),
+        ];
+
         return [
+            'bajas' => $bajas,
             'equiposPorTipo' => $equiposPorTipo,
             'antiguedadEquipos' => $antiguedadEquipos,
             'estadoMantenimientos' => $estadoMantenimientos,
@@ -1335,7 +1404,7 @@ new class extends Component
 
         {{-- Secciones: misma rejilla de 3 columnas que la vista real --}}
         <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-            @foreach (['md:col-span-2 xl:col-span-1', 'md:col-span-2', '', '', 'md:col-span-2 xl:col-span-1'] as $claseSkeleton)
+            @foreach (['md:col-span-2 xl:col-span-1', 'md:col-span-2', '', '', 'md:col-span-2 xl:col-span-1', 'md:col-span-2 xl:col-span-3'] as $claseSkeleton)
                 <div class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 {{ $claseSkeleton }}">
                     <x-ui.skeleton class="h-4 w-44" />
                     <x-ui.skeleton class="mt-2 h-3 w-64 max-w-full" />
@@ -1544,6 +1613,7 @@ new class extends Component
             'tipos' => ['titulo' => 'Equipos por tipo', 'descripcion' => 'Inventario vigente agrupado por tipo de equipo.', 'clase' => '', 'forma' => 'barras'],
             'estados' => ['titulo' => 'Estado de mantenimientos', 'descripcion' => 'Intervenciones registradas según su estado.', 'clase' => '', 'forma' => 'dona'],
             'antiguedad' => ['titulo' => 'Antigüedad de equipos', 'descripcion' => 'Según la fecha de compra registrada.', 'clase' => 'md:col-span-2 xl:col-span-1', 'forma' => 'columnas'],
+            'bajas' => ['titulo' => 'Bajas de equipos', 'descripcion' => 'Equipos dados de baja en los últimos 12 meses.', 'clase' => 'md:col-span-2 xl:col-span-3', 'forma' => 'columnas'],
         ];
     @endphp
 
@@ -1826,6 +1896,126 @@ new class extends Component
                             <span class="mt-2 w-full truncate text-center text-[11px] text-[var(--theme-text)]">{{ $item['label'] }}</span>
                         </div>
                     @endforeach
+                </div>
+            </section>
+
+            {{-- ====================================================
+                BAJAS DE EQUIPOS (ancho completo)
+                Columnas por mes + tipos con más bajas.
+            ==================================================== --}}
+            @php
+                $mesesBajas = $bajas['meses'] ?? [];
+                $tiposBajas = $bajas['tipos'] ?? [];
+                $bajasPeriodo = (int) ($bajas['periodo'] ?? 0);
+                $bajasMesActual = $mesesBajas === [] ? 0 : (int) $mesesBajas[array_key_last($mesesBajas)]['total'];
+                $maximoBajas = max(array_map(fn ($m) => (int) $m['total'], $mesesBajas ?: [['total' => 0]]));
+                $escalaBajas = $maximoBajas <= 4 ? 4 : (int) (ceil($maximoBajas / 4) * 4);
+                $altoBaja = fn (int $valor) => $valor > 0 ? max(round($valor / $escalaBajas * 100, 2), 3) : 0;
+                $maximoTipoBaja = max(array_column($tiposBajas, 'count') ?: [1]);
+                $colorBaja = '#D9776B';
+            @endphp
+
+            <section class="{{ $claseTarjeta }} md:col-span-2 xl:col-span-3">
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                        <h3 class="text-sm font-semibold text-[var(--theme-text-strong)]">Bajas de equipos</h3>
+                        <p class="mt-1 text-xs text-[var(--theme-text-muted)]">Equipos dados de baja en los últimos 12 meses.</p>
+                    </div>
+
+                    <dl class="flex shrink-0 gap-2">
+                        <div class="rounded-lg bg-[var(--theme-surface-soft)] px-3 py-1.5">
+                            <dt class="flex items-center gap-1.5 text-[10px] text-[var(--theme-text-muted)]"><span class="h-2 w-2 rounded-full" style="background: {{ $colorBaja }};"></span>12 meses</dt>
+                            <dd class="text-base font-semibold tabular-nums text-[var(--theme-text-strong)]">{{ number_format($bajasPeriodo) }}</dd>
+                        </div>
+                        <div class="rounded-lg bg-[var(--theme-surface-soft)] px-3 py-1.5">
+                            <dt class="text-[10px] text-[var(--theme-text-muted)]">Este mes</dt>
+                            <dd class="text-base font-semibold tabular-nums text-[var(--theme-text-strong)]">{{ number_format($bajasMesActual) }}</dd>
+                        </div>
+                        <div class="rounded-lg bg-[var(--theme-surface-soft)] px-3 py-1.5">
+                            <dt class="text-[10px] text-[var(--theme-text-muted)]">Histórico</dt>
+                            <dd class="text-base font-semibold tabular-nums text-[var(--theme-text-strong)]">{{ number_format((int) ($bajas['historico'] ?? 0)) }}</dd>
+                        </div>
+                    </dl>
+                </div>
+
+                <div class="mt-5 grid flex-1 grid-cols-1 gap-5 lg:grid-cols-3">
+                    {{-- Columnas por mes --}}
+                    <div class="relative flex min-h-[200px] gap-2 lg:col-span-2">
+                        <div class="flex w-6 shrink-0 flex-col justify-between pb-6 text-right text-[10px] tabular-nums text-[var(--theme-text-muted)]" aria-hidden="true">
+                            @for ($marca = 4; $marca >= 0; $marca--)
+                                <span class="-translate-y-1/2 leading-none first:translate-y-0 last:translate-y-0">{{ (int) ($escalaBajas / 4 * $marca) }}</span>
+                            @endfor
+                        </div>
+
+                        <div class="relative flex min-w-0 flex-1 flex-col">
+                            <div class="pointer-events-none absolute inset-x-0 top-0 bottom-6 flex flex-col justify-between" aria-hidden="true">
+                                @for ($marca = 0; $marca < 5; $marca++)
+                                    <span class="block border-t {{ $marca === 4 ? 'border-[var(--theme-border-strong)]' : 'border-dashed border-[var(--theme-border)]' }}"></span>
+                                @endfor
+                            </div>
+
+                            <div class="relative grid flex-1 grid-cols-12 gap-1 sm:gap-2">
+                                @foreach ($mesesBajas as $mes)
+                                    <div class="group relative flex min-w-0 flex-col">
+                                        <div class="flex flex-1 items-end justify-center rounded-t-md transition-colors group-hover:bg-[var(--theme-surface-soft)]">
+                                            <div
+                                                x-data="dashboardColumn({{ $altoBaja((int) $mes['total']) }})"
+                                                x-init="init()"
+                                                x-bind:style="{ height: height + '%' }"
+                                                class="w-full max-w-[22px] rounded-t-[4px] transition-[height] duration-1000 ease-out"
+                                                style="background: {{ $colorBaja }};"
+                                            ></div>
+                                        </div>
+
+                                        <span class="mt-2 h-4 truncate text-center text-[10px] text-[var(--theme-text-muted)]">{{ $mes['label'] }}</span>
+
+                                        <div class="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1 hidden -translate-x-1/2 whitespace-nowrap rounded-md border border-[var(--theme-border)] bg-[var(--theme-surface)] px-2.5 py-1.5 text-[11px] theme-shadow-xl group-hover:block">
+                                            <p class="font-semibold text-[var(--theme-text-strong)]">{{ $mes['label'] }} {{ $mes['anio'] }}</p>
+                                            <p class="text-[var(--theme-text)]"><span class="mr-1 inline-block h-1.5 w-1.5 rounded-full" style="background: {{ $colorBaja }};"></span>{{ $mes['total'] }} {{ (int) $mes['total'] === 1 ? 'equipo dado de baja' : 'equipos dados de baja' }}</p>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        @if ($bajasPeriodo === 0)
+                            <p class="pointer-events-none absolute inset-0 flex items-center justify-center pb-6 pl-8 text-xs text-[var(--theme-text-muted)]">
+                                Sin bajas en los últimos 12 meses.
+                            </p>
+                        @endif
+                    </div>
+
+                    {{-- Tipos con más bajas --}}
+                    <div class="flex min-w-0 flex-col border-t border-[var(--theme-border)] pt-4 lg:border-t-0 lg:border-l lg:pl-5 lg:pt-0">
+                        <p class="text-xs font-medium text-[var(--theme-text)]">Por tipo de equipo</p>
+
+                        @if ($tiposBajas === [])
+                            <div class="flex flex-1 items-center justify-center py-6 text-xs text-[var(--theme-text-muted)]">Sin bajas en el periodo.</div>
+                        @else
+                            <ul class="mt-3 space-y-3">
+                                @foreach ($tiposBajas as $tipo)
+                                    <li>
+                                        <div class="flex items-baseline justify-between gap-3 text-xs">
+                                            <span class="min-w-0 truncate text-[var(--theme-text)]">{{ $tipo['nombre'] }}</span>
+                                            <span class="shrink-0 tabular-nums">
+                                                <span class="font-semibold text-[var(--theme-text-strong)]">{{ number_format($tipo['count']) }}</span>
+                                                <span class="ml-1 text-[11px] text-[var(--theme-text-muted)]">{{ $bajasPeriodo > 0 ? (int) round($tipo['count'] / $bajasPeriodo * 100) : 0 }}%</span>
+                                            </span>
+                                        </div>
+                                        <div class="mt-1.5 h-2 overflow-hidden rounded-full bg-[var(--theme-surface-soft)]">
+                                            <div
+                                                x-data="dashboardColumn({{ max((int) round($tipo['count'] / $maximoTipoBaja * 100), 4) }})"
+                                                x-init="init()"
+                                                x-bind:style="{ width: height + '%' }"
+                                                class="h-full rounded-full transition-[width] duration-1000 ease-out"
+                                                style="background: {{ $colorBaja }};"
+                                            ></div>
+                                        </div>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        @endif
+                    </div>
                 </div>
             </section>
 
