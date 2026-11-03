@@ -1024,6 +1024,37 @@ trait EquiposCsv
                 }
             }
 
+            /*
+             * Valor que no está en la lista (Resolución «8K», Estado…): la
+             * importación ofrece elegir uno válido o, en las listas propias
+             * de un tipo, agregarlo como opción nueva.
+             */
+            if (
+                $error !== null
+                && $columna['tipo'] === 'select'
+                && ! in_array($columna['clave'], ['id_marca', 'id_modelo', 'id_ubicacion'], true)
+            ) {
+                $propia = $columna['origen'] === 'tipo';
+                $opciones = $this->csvOpcionesColumna($columna);
+
+                if ($opciones !== []) {
+                    $this->csvFaltantesFila[] = [
+                        'clase' => 'opcion',
+                        'clave' => 'opcion:'.($propia ? (int) $tipoId : 0).'|'.$this->csvNormalizar($columna['etiqueta']).'|'.$this->csvNormalizar($texto),
+                        'valor' => $texto,
+                        'marca' => '',
+                        'modelo' => '',
+                        'tipo' => (int) $tipoId,
+                        'columna' => $columna['etiqueta'],
+                        'propia' => $propia,
+                        'opciones' => array_values($opciones),
+                        // Solo las listas propias del tipo se pueden ampliar desde aquí.
+                        'creable' => $propia && ($columna['campo']['fuente_opciones'] ?? '') === 'personalizado',
+                        'idTipoCampo' => $propia ? (int) ($columna['campo']['id_tipo_campo'] ?? 0) : 0,
+                    ];
+                }
+            }
+
             if ($error !== null) {
                 $errores[] = $error;
 

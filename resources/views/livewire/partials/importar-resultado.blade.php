@@ -41,4 +41,24 @@
                                                     <li>{{ $mensaje }}</li>
                                                 @endforeach
                                             </ul>
+
+                                            {{-- Valor fuera de la lista: corregirlo aquí (en todas las filas que lo traen) --}}
+                                            @foreach (collect($r['faltan'] ?? [])->where('clase', 'opcion')->unique('clave') as $opcion)
+                                                <div class="mt-1.5 flex flex-wrap items-center gap-2 text-xs">
+                                                    <span class="text-[var(--theme-text-muted)]">{{ $opcion['columna'] }}: usar</span>
+                                                    <select
+                                                        x-on:change="if ($event.target.value) { $wire.corregirValor(@js($opcion['clave']), $event.target.value); }"
+                                                        wire:loading.attr="disabled"
+                                                        x-bind:disabled="corriendo"
+                                                        class="h-8 rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-2 text-xs text-[var(--theme-text)] focus:border-[var(--theme-primary)] focus:outline-none"
+                                                        aria-label="Corregir «{{ $opcion['valor'] }}» en {{ $opcion['columna'] }}"
+                                                    >
+                                                        <option value="">Elegir una opción…</option>
+                                                        @foreach ($opcion['opciones'] as $valida)
+                                                            <option value="{{ $valida }}">{{ $valida }}</option>
+                                                        @endforeach
+                                                        <option value="__quitar__">{{ ! empty($r['existe']) ? 'Dejar sin cambiar' : 'Dejar vacío' }}</option>
+                                                    </select>
+                                                </div>
+                                            @endforeach
                                     @endswitch

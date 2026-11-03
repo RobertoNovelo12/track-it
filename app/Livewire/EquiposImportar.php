@@ -342,6 +342,18 @@ class EquiposImportar extends EquipoCreate
             }
 
             foreach ($fila['faltan'] ?? [] as $falta) {
+                // Opciones de lista: al panel solo las que se pueden agregar.
+                if ($falta['clase'] === 'opcion') {
+                    if (! ($falta['creable'] ?? false)) {
+                        continue;
+                    }
+
+                    $grupos[$falta['clave']] ??= $falta + ['filas' => 0, 'sugerencia' => null, 'tipoNombre' => '', 'marcaNueva' => false];
+                    $grupos[$falta['clave']]['filas']++;
+
+                    continue;
+                }
+
                 $clave = $falta['clase'] === 'marca'
                     ? 'marca:'.$this->csvNormalizar($falta['marca'])
                     : 'modelo:'.$this->csvNormalizar($falta['marca']).'|'.$falta['tipo'].'|'.$this->csvNormalizar($falta['modelo']);
@@ -361,6 +373,12 @@ class EquiposImportar extends EquipoCreate
 
         foreach ($grupos as $clave => $grupo) {
             $grupos[$clave]['tipoNombre'] = (string) ($tipos[$grupo['tipo']] ?? '');
+
+            if ($grupo['clase'] === 'opcion') {
+                $grupos[$clave]['sugerencia'] = $this->nombreParecido($grupo['valor'], $grupo['opciones']);
+
+                continue;
+            }
 
             if ($grupo['clase'] === 'marca') {
                 $grupos[$clave]['sugerencia'] = $this->nombreParecido($grupo['marca'], array_column($marcas, 'nombre'));
@@ -382,7 +400,9 @@ class EquiposImportar extends EquipoCreate
 
         // Marcas primero; cada modelo después de su marca.
         return collect($grupos)
-            ->sortBy(fn ($g) => $this->csvNormalizar($g['marca']).($g['clase'] === 'marca' ? '0' : '1'.$this->csvNormalizar($g['modelo'])))
+            ->sortBy(fn ($g) => $g['clase'] === 'opcion'
+                ? 'zz'.$this->csvNormalizar($g['columna'].' '.$g['valor'])
+                : $this->csvNormalizar($g['marca']).($g['clase'] === 'marca' ? '0' : '1'.$this->csvNormalizar($g['modelo'])))
             ->values()
             ->all();
     }
@@ -431,7 +451,7 @@ class EquiposImportar extends EquipoCreate
         }
 
         $elegidos = collect($this->catalogoFaltante())->whereIn('clave', $claves);
-        $creados = ['marcas' => [], 'modelos' => []];
+        $creados = ['marcas' => [], 'modelos' => [], 'opciones' => []];
         $origen = '«'.$this->nombreArchivo.'»';
 
         DB::transaction(function () use ($elegidos, &$creados, $origen): void {
@@ -496,20 +516,56 @@ class EquiposImportar extends EquipoCreate
                 $this->auditarCatalogo('MODELO_CREADO', "Se creó el modelo {$nombre} ({$codigo}) al importar equipos desde {$origen}.");
                 $creados['modelos'][] = $nombre;
             }
+
+            // Opciones nuevas en las listas propias de un tipo (Resolución…).
+            foreach ($elegidos->where('clase', 'opcion') as $grupo) {
+                $nombre = trim($grupo['valor']);
+                $idTipoCampo = (int) ($grupo['idTipoCampo'] ?? 0);
+
+                if ($idTipoCampo <= 0 || ! ($grupo['creable'] ?? false)) {
+                    continue;
+                }
+
+                $existe = DB::table('tipo_equipo_campo_opciones')
+                    ->where('id_tipo_campo', $idTipoCampo)
+                    ->whereRaw('LOWER(BTRIM(nombre)) = LOWER(BTRIM(?))', [$nombre])
+                    ->first(['id_opcion', 'activo']);
+
+                if ($existe) {
+                    // Estaba desactivada: se vuelve a activar en lugar de duplicarla.
+                    if (! $existe->activo) {
+                        DB::table('tipo_equipo_campo_opciones')->where('id_opcion', $existe->id_opcion)->update(['activo' => true]);
+                        $creados['opciones'][] = $nombre;
+                    }
+
+                    continue;
+                }
+
+                DB::table('tipo_equipo_campo_opciones')->insert([
+                    'id_tipo_campo' => $idTipoCampo,
+                    'nombre' => $nombre,
+                    'orden' => (int) DB::table('tipo_equipo_campo_opciones')->where('id_tipo_campo', $idTipoCampo)->max('orden') + 10,
+                    'activo' => true,
+                ]);
+
+                $this->auditarCatalogo('OPCION_CREADA', "Se agregó la opción «{$nombre}» a {$grupo['columna']} ({$grupo['tipoNombre']}) al importar equipos desde {$origen}.");
+                $creados['opciones'][] = $grupo['columna'].': '.$nombre;
+            }
         });
 
-        if ($creados['marcas'] !== [] || $creados['modelos'] !== []) {
+        if ($creados['marcas'] !== [] || $creados['modelos'] !== [] || $creados['opciones'] !== []) {
             app(\App\Services\SystemCacheService::class)->refreshModule('catalogos');
             Cache::forget('form.marcas.v2');
             Cache::forget('form.modelos.all.v2');
 
             $this->catalogosCreados['marcas'] = array_values(array_unique(array_merge($this->catalogosCreados['marcas'] ?? [], $creados['marcas'])));
             $this->catalogosCreados['modelos'] = array_values(array_unique(array_merge($this->catalogosCreados['modelos'] ?? [], $creados['modelos'])));
+            $this->catalogosCreados['opciones'] = array_values(array_unique(array_merge($this->catalogosCreados['opciones'] ?? [], $creados['opciones'])));
         }
 
         $this->analizar(array_map(fn ($f) => (int) $f['fila'], $this->filas));
 
-        return ['marcas' => count($creados['marcas']), 'modelos' => count($creados['modelos'])];
+        return ['marcas' => count($creados['marcas']), 'modelos' => count($creados['modelos']), 'opciones' => count($creados['opciones'])];
     }
 
     /*
@@ -524,6 +580,12 @@ class EquiposImportar extends EquipoCreate
         $datos = $this->clave !== '' ? Cache::get($this->clave) : null;
 
         if (! $grupo || ! $grupo['sugerencia'] || ! is_array($datos) || $this->importando) {
+            return;
+        }
+
+        if ($grupo['clase'] === 'opcion') {
+            $this->corregirValor($clave, $grupo['sugerencia']);
+
             return;
         }
 
@@ -556,6 +618,72 @@ class EquiposImportar extends EquipoCreate
             ) {
                 $datos['filas'][$numero][$colModelo] = $grupo['sugerencia'];
             }
+        }
+
+        Cache::put($this->clave, $datos, now()->addHours(2));
+
+        $this->analizar(array_map(fn ($f) => (int) $f['fila'], $this->filas));
+    }
+
+    /*
+     * Valor que no está en la lista: se cambia por una opción válida (o se
+     * quita, '__quitar__') en todas las filas que lo traen y se revisan
+     * de nuevo. Al actualizar, quitarlo conserva el dato actual.
+     */
+    public function corregirValor(string $clave, string $nuevo): void
+    {
+        Gate::authorize('gestionar');
+
+        $datos = $this->clave !== '' ? Cache::get($this->clave) : null;
+
+        if (! is_array($datos) || $this->importando) {
+            return;
+        }
+
+        $grupo = collect($this->filas)->pluck('faltan')->flatten(1)->first(fn ($f) => ($f['clase'] ?? '') === 'opcion' && ($f['clave'] ?? '') === $clave);
+
+        if (! $grupo) {
+            return;
+        }
+
+        $quitar = $nuevo === '__quitar__';
+
+        // Solo opciones que existen en la lista (o quitar el valor).
+        if (! $quitar && ! in_array($this->csvNormalizar($nuevo), array_map(fn ($o) => $this->csvNormalizar($o), $grupo['opciones']), true)) {
+            return;
+        }
+
+        $normal = fn ($t) => $this->csvNormalizar((string) $t);
+        $colTipo = null;
+        $colValor = null;
+
+        foreach ($datos['encabezados'] as $i => $encabezado) {
+            if ($normal($encabezado) === 'tipo de equipo') {
+                $colTipo = $i;
+            }
+
+            if ($normal($encabezado) === $normal($grupo['columna'])) {
+                $colValor = $i;
+            }
+        }
+
+        if ($colValor === null) {
+            return;
+        }
+
+        $tipos = collect($this->getTiposEquipoProperty())->mapWithKeys(fn ($t) => [$normal(((array) $t)['nombre']) => (int) ((array) $t)['id_tipo_equipo']]);
+
+        foreach ($datos['filas'] as $numero => $fila) {
+            if ($normal($fila[$colValor] ?? '') !== $normal($grupo['valor'])) {
+                continue;
+            }
+
+            // Lista propia de un tipo: solo las filas de ese tipo.
+            if (($grupo['propia'] ?? false) && $colTipo !== null && ($tipos[$normal($fila[$colTipo] ?? '')] ?? null) !== (int) $grupo['tipo']) {
+                continue;
+            }
+
+            $datos['filas'][$numero][$colValor] = $quitar ? '' : $nuevo;
         }
 
         Cache::put($this->clave, $datos, now()->addHours(2));
@@ -751,6 +879,12 @@ class EquiposImportar extends EquipoCreate
 
         if ($modelos) {
             $partes[] = $modelos.($modelos === 1 ? ' modelo' : ' modelos');
+        }
+
+        $opciones = count($this->catalogosCreados['opciones'] ?? []);
+
+        if ($opciones) {
+            $partes[] = $opciones.($opciones === 1 ? ' opción de lista' : ' opciones de lista');
         }
 
         return $partes === [] ? '' : ' Se crearon '.implode(' y ', $partes).' desde la importación.';

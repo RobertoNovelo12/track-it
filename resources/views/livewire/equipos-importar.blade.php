@@ -313,7 +313,9 @@
                     $filasAfectadas = collect($filas)->filter(fn ($f) => $f['estado'] === 'error' && ! empty($f['faltan']))->count();
                     $modelosFaltan = collect($faltantes)->where('clase', 'modelo')->count();
                     $marcasFaltan = collect($faltantes)->where('clase', 'marca')->count();
+                    $opcionesFaltan = collect($faltantes)->where('clase', 'opcion')->count();
                     $resumenFaltan = collect([
+                        $opcionesFaltan ? $opcionesFaltan.($opcionesFaltan === 1 ? ' opción de lista' : ' opciones de lista') : null,
                         $marcasFaltan ? $marcasFaltan.($marcasFaltan === 1 ? ' marca' : ' marcas') : null,
                         $modelosFaltan ? $modelosFaltan.($modelosFaltan === 1 ? ' modelo' : ' modelos') : null,
                     ])->filter()->implode(' y ');
@@ -332,6 +334,7 @@
                                 const partes = [];
                                 if (r.marcas) partes.push(r.marcas + (r.marcas === 1 ? ' marca' : ' marcas'));
                                 if (r.modelos) partes.push(r.modelos + (r.modelos === 1 ? ' modelo' : ' modelos'));
+                                if (r.opciones) partes.push(r.opciones + (r.opciones === 1 ? ' opción' : ' opciones'));
                                 window.trackitToast?.('success', partes.length ? 'Se crearon ' + partes.join(' y ') + '. Las filas se revisaron de nuevo.' : 'Ya existían; las filas se revisaron de nuevo.', 'Catálogo actualizado');
                             } catch (error) {
                                 window.trackitToast?.('error', window.trackitMensajeError(error, 'crear las marcas y modelos'), 'Error');
@@ -356,7 +359,10 @@
                                 <label class="flex cursor-pointer items-start gap-2 text-sm text-[var(--theme-text)]">
                                     <input type="checkbox" value="{{ $falta['clave'] }}" x-model="seleccion" class="mt-0.5 h-4 w-4 rounded border-[var(--theme-border-strong)] accent-[var(--theme-primary)]">
                                     <span>
-                                        @if ($falta['clase'] === 'marca')
+                                        @if ($falta['clase'] === 'opcion')
+                                            <span class="font-medium text-[var(--theme-text-strong)]">Opción «{{ $falta['valor'] }}»</span>
+                                            <span class="text-[var(--theme-text-muted)]">— {{ $falta['columna'] }} · {{ $falta['tipoNombre'] }}</span>
+                                        @elseif ($falta['clase'] === 'marca')
                                             <span class="font-medium text-[var(--theme-text-strong)]">Marca «{{ $falta['marca'] }}»</span>
                                         @else
                                             <span class="font-medium text-[var(--theme-text-strong)]">Modelo «{{ $falta['modelo'] }}»</span>
