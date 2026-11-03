@@ -9,9 +9,58 @@
 <div
     class="space-y-5"
     data-listas="{{ $listas }}"
+    x-on:dragenter.window="if (enContenido($event)) { profundidad++; encima = true; }"
+    x-on:dragleave.window="profundidad = Math.max(0, profundidad - 1); if (profundidad === 0) encima = false"
+    x-on:dragover.window="if (Array.from($event.dataTransfer?.types ?? []).includes('Files')) { $event.preventDefault(); $event.dataTransfer.dropEffect = enContenido($event) ? 'copy' : 'none'; }"
+    x-on:drop.window="if (Array.from($event.dataTransfer?.types ?? []).includes('Files')) { $event.preventDefault(); profundidad = 0; encima = false; if (enContenido($event)) subir($event.dataTransfer.files?.[0]); }"
     x-data="{
         avance: 0,
         corriendo: false,
+        encima: false,
+        profundidad: 0,
+        subiendo: false,
+
+        /*
+         * Se puede soltar en cualquier parte del contenido; el menú
+         * lateral, el encabezado y el menú inferior no cuentan.
+         */
+        enContenido(evento) {
+            const archivo = Array.from(evento.dataTransfer?.types ?? []).includes('Files');
+            const enMenu = evento.target instanceof Element
+                && evento.target.closest('aside, header, nav, #mobileAppHeader, .mi-barra');
+
+            return archivo && ! enMenu;
+        },
+        progreso: 0,
+
+        // Archivo que llegó desde Inventario (arrastrado o elegido en «Añadir»).
+        init() {
+            const archivo = window.__trackitArchivoImportar;
+            window.__trackitArchivoImportar = null;
+
+            if (archivo) this.subir(archivo);
+        },
+
+        subir(archivo) {
+            if (! archivo || this.subiendo || this.corriendo) return;
+
+            if (! /\.(xlsx|csv)$/i.test(archivo.name)) {
+                window.trackitToast?.('error', 'Solo se aceptan archivos Excel (.xlsx) o CSV.', 'Archivo no válido');
+                return;
+            }
+
+            this.subiendo = true;
+            this.progreso = 0;
+
+            $wire.upload(
+                'archivo',
+                archivo,
+                () => { this.subiendo = false; },
+                () => { this.subiendo = false; window.trackitToast?.('error', 'No se pudo subir el archivo (máximo 4 MB).', 'Archivo no válido'); },
+                (evento) => { this.progreso = evento.detail.progress; }
+            );
+        },
+
         async importar() {
             if (this.corriendo) return;
             this.corriendo = true;
@@ -21,12 +70,29 @@
             try {
                 let resultado = { pendientes: total };
 
+                // Lotes pequeños (hasta 10): la barra avanza aunque sean pocos equipos.
+                const porLote = Math.max(1, Math.min(10, Math.ceil(total / 10)));
+                this.avance = 2;
+
+                // Medición: tiempo total (navegador) y del servidor por lote.
+                const inicio = performance.now();
+                let msServidor = 0;
+                let loteMasLento = 0;
+
                 while (resultado.pendientes > 0) {
-                    resultado = await $wire.importarLote();
+                    resultado = await $wire.importarLote(porLote);
+                    msServidor += Number(resultado.ms || 0);
+                    loteMasLento = Math.max(loteMasLento, Number(resultado.ms || 0));
                     this.avance = total > 0 ? Math.round(((total - resultado.pendientes) / total) * 100) : 100;
+                    if (aviso) window.trackitToastActualizar?.(aviso, 'loading', (total - resultado.pendientes) + ' de ' + total + ' equipos guardados…', 'Importando');
                 }
 
-                if (aviso) window.trackitToastActualizar?.(aviso, 'success', resultado.importadas + ' equipos importados.', 'Importación terminada');
+                const segundos = (performance.now() - inicio) / 1000;
+                const porEquipo = resultado.importadas > 0 ? segundos / resultado.importadas : 0;
+                const medicion = resultado.importadas + ' equipos en ' + segundos.toFixed(1) + ' s (' + porEquipo.toFixed(2) + ' s por equipo; servidor ' + (msServidor / 1000).toFixed(1) + ' s; lote más lento ' + (loteMasLento / 1000).toFixed(1) + ' s).';
+                console.info('[Track-it] Importación: ' + medicion);
+
+                if (aviso) window.trackitToastActualizar?.(aviso, 'success', medicion, 'Importación terminada');
             } catch (error) {
                 if (aviso) window.trackitToastActualizar?.(aviso, 'error', window.trackitMensajeError(error, 'importar los equipos'), 'Error al importar');
             } finally {
@@ -35,56 +101,40 @@
         },
     }"
 >
-    {{-- 1. PLANTILLA Y ARCHIVO --}}
+    {{-- 1. ARCHIVO: arrastrar y soltar o elegir (Excel o CSV) --}}
     <section class="{{ $tarjeta }}">
-        <h2 class="text-sm font-semibold text-[var(--theme-text-strong)]">Importar equipos desde CSV</h2>
-        <p class="mt-1 text-sm text-[var(--theme-text-muted)]">
-            Descarga la plantilla del tipo de equipo, llénala y súbela. La plantilla de <strong>Excel</strong> trae las columnas anchas y listas para elegir las opciones;
-            también se acepta un <strong>CSV</strong> (por ejemplo, el que exportas desde Inventario).
-        </p>
+        <label
+            for="importar-archivo"
+            x-bind:class="encima ? 'border-[var(--theme-primary)] bg-[var(--theme-primary-soft-subtle)]' : 'border-[var(--theme-border-strong)] hover:border-[var(--theme-primary)]'"
+            class="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-6 py-10 text-center transition-colors"
+        >
+            <svg x-show="! subiendo" class="h-8 w-8 text-[var(--theme-primary)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3m0 0-4 4m4-4 4 4M5 21h14"/></svg>
 
-        <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-            {{-- Plantillas --}}
-            <div x-data="{ tipo: '' }">
-                <label class="mb-1.5 block text-xs text-[var(--theme-text-muted)]">Plantilla por tipo de equipo</label>
-                <div class="flex gap-2">
-                    <select x-model="tipo" class="h-10 w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)]">
-                        <option value="">Elige un tipo…</option>
-                        @foreach ($tiposPlantilla as $tipo)
-                            <option value="{{ route('catalogos.tipos-equipo.plantilla-csv', $tipo['id']) }}">{{ $tipo['nombre'] }}</option>
-                        @endforeach
-                    </select>
-                    {{-- Excel: columnas anchas y listas desplegables. CSV: texto plano. --}}
-                    <button
-                        type="button"
-                        x-bind:disabled="! tipo"
-                        x-on:click="const url = tipo.replace('plantilla-csv', 'plantilla-xlsx'); window.trackitDescargar ? window.trackitDescargar(url) : (window.location.href = url)"
-                        class="h-10 shrink-0 rounded-md bg-[var(--theme-primary)] px-4 text-sm font-medium text-white transition-colors hover:bg-[var(--theme-primary-hover)] disabled:cursor-not-allowed disabled:opacity-50"
-                    >Excel</button>
-                    <button
-                        type="button"
-                        x-bind:disabled="! tipo"
-                        x-on:click="window.trackitDescargar ? window.trackitDescargar(tipo) : (window.location.href = tipo)"
-                        class="h-10 shrink-0 rounded-md border border-[var(--theme-border-strong)] px-4 text-sm font-medium text-[var(--theme-text)] transition-colors hover:bg-[var(--theme-surface-soft)] disabled:cursor-not-allowed disabled:opacity-50"
-                    >CSV</button>
+            {{-- Subida (porcentaje real) y después revisión de filas en el servidor. --}}
+            <div x-show="subiendo" x-cloak class="w-full max-w-xs">
+                <div class="h-2 overflow-hidden rounded-full bg-[var(--theme-surface-soft)]">
+                    <div
+                        class="h-full rounded-full bg-[var(--theme-primary)] transition-[width] duration-300"
+                        x-bind:class="progreso >= 100 && 'animate-pulse'"
+                        x-bind:style="{ width: Math.max(4, progreso) + '%' }"
+                    ></div>
                 </div>
             </div>
+            <span class="text-sm font-medium text-[var(--theme-text-strong)]" x-text="subiendo ? (progreso < 100 ? 'Subiendo el archivo… ' + progreso + '%' : 'Revisando las filas del archivo…') : 'Suelta tu Excel o CSV en cualquier parte, o haz clic para elegirlo'">Suelta tu Excel o CSV en cualquier parte, o haz clic para elegirlo</span>
+            <span class="text-xs text-[var(--theme-text-muted)]">
+                Usa la plantilla del tipo de equipo (Administración › Equipos › ⋮ › Descargar plantilla Excel) o un CSV exportado del Inventario.
+            </span>
+            <input
+                id="importar-archivo"
+                type="file"
+                class="sr-only"
+                accept=".xlsx,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                x-on:change="subir($event.target.files?.[0]); $event.target.value = ''"
+                x-bind:disabled="corriendo || subiendo"
+            >
+        </label>
 
-            {{-- Archivo --}}
-            <div>
-                <label for="importar-archivo" class="mb-1.5 block text-xs text-[var(--theme-text-muted)]">Archivo (Excel o CSV) *</label>
-                <input
-                    id="importar-archivo"
-                    type="file"
-                    accept=".xlsx,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                    wire:model="archivo"
-                    x-bind:disabled="corriendo"
-                    class="block w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] text-sm text-[var(--theme-text)] file:mr-3 file:h-10 file:border-0 file:bg-[var(--theme-surface-soft)] file:px-4 file:text-sm file:font-medium file:text-[var(--theme-text)]"
-                >
-                <p wire:loading wire:target="archivo" class="mt-1 text-xs text-[var(--theme-text-muted)]">Leyendo el archivo…</p>
-                @error('archivo') <p class="mt-1 text-xs text-[var(--theme-danger)]">{{ $message }}</p> @enderror
-            </div>
-        </div>
+        @error('archivo') <p class="mt-2 text-center text-xs text-[var(--theme-danger)]">{{ $message }}</p> @enderror
 
         <ul class="mt-4 list-disc space-y-1 pl-5 text-xs text-[var(--theme-text-muted)]">
             <li>La primera fila son los encabezados; no cambies sus nombres. Las columnas con * son obligatorias.</li>
@@ -93,6 +143,22 @@
             <li>Hasta 500 equipos por archivo. Las filas con errores no se importan; corrígelas y vuelve a subir solo esas.</li>
         </ul>
     </section>
+
+    {{-- RESULTADO DE LA ÚLTIMA IMPORTACIÓN --}}
+    @if (($ultimoResultado['importadas'] ?? 0) > 0)
+        <div role="status" class="flex flex-col gap-3 rounded-xl border border-[var(--theme-success-border,var(--theme-border))] bg-[var(--theme-success-soft)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <p class="text-sm text-[var(--theme-text)]">
+                <strong class="font-semibold text-[var(--theme-success)]">{{ $ultimoResultado['importadas'] }} {{ $ultimoResultado['importadas'] === 1 ? 'equipo importado' : 'equipos importados' }}.</strong>
+                @if (! empty($ultimoResultado['codigos']))
+                    <span class="text-[var(--theme-text-muted)]">{{ collect($ultimoResultado['codigos'])->take(6)->implode(', ') }}{{ count($ultimoResultado['codigos']) > 6 ? '…' : '' }}</span>
+                @endif
+                @if ($cuentas['total'] > 0)
+                    <span class="block text-xs text-[var(--theme-text-muted)]">Abajo quedan las filas que no se importaron; corrígelas y vuelve a subir el archivo.</span>
+                @endif
+            </p>
+            <a href="{{ route('equipos.index') }}" wire:navigate class="inline-flex h-9 shrink-0 items-center justify-center rounded-md bg-[var(--theme-primary)] px-4 text-sm font-medium text-white hover:bg-[var(--theme-primary-hover)]">Ver en Inventario</a>
+        </div>
+    @endif
 
     {{-- 2. VISTA PREVIA --}}
     @if ($cuentas['total'] > 0)
@@ -141,7 +207,7 @@
                 <table class="w-full min-w-[720px] text-left text-sm">
                     <thead class="bg-[var(--theme-surface-soft)] text-xs text-[var(--theme-text-muted)]">
                         <tr>
-                            <th class="px-3 py-2 font-medium">Fila</th>
+                            <th class="px-3 py-2 font-medium" title="Número de fila en tu archivo (la fila 1 son los encabezados)">Fila en el archivo</th>
                             <th class="px-3 py-2 font-medium">Tipo</th>
                             <th class="px-3 py-2 font-medium">Nombre</th>
                             <th class="px-3 py-2 font-medium">Número de serie</th>

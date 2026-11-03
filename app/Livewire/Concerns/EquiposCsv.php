@@ -31,10 +31,26 @@ trait EquiposCsv
     protected bool $importandoCsv = false;
 
     /*
+     * Memoria de la petición: listas y columnas se consultan una sola vez
+     * aunque el archivo tenga cientos de filas (antes cada fila repetía
+     * las consultas a la base remota y 100 filas tardaban más de un minuto).
+     */
+    protected array $csvMemoria = [];
+
+    protected function csvMemo(string $clave, callable $calcular): mixed
+    {
+        if (! array_key_exists($clave, $this->csvMemoria)) {
+            $this->csvMemoria[$clave] = $calcular();
+        }
+
+        return $this->csvMemoria[$clave];
+    }
+
+    /*
      * Campos generales: clave de configuración => [modelo del guardado,
      * etiqueta, tipo, obligatorio].
      */
-    private function csvBase(): array
+    protected function csvBase(): array
     {
         $unidad = app(\App\Services\PlantillaInstalacionService::class)->etiquetas()['unidad_singular'];
 
@@ -65,7 +81,12 @@ trait EquiposCsv
      */
     public function csvColumnas(int $tipoId): array
     {
-        $configurados = $this->getConfiguredBaseFields()[$tipoId] ?? [];
+        return $this->csvMemo('columnas.'.$tipoId, fn () => $this->csvColumnasSinMemoria($tipoId));
+    }
+
+    protected function csvColumnasSinMemoria(int $tipoId): array
+    {
+        $configurados = $this->csvMemo('base', fn () => $this->getConfiguredBaseFields())[$tipoId] ?? [];
         $columnas = [];
 
         foreach ($this->csvBase() as $clave => [$modelo, $etiqueta, $tipo, $obligatorio]) {
@@ -98,12 +119,12 @@ trait EquiposCsv
         return $columnas;
     }
 
-    private function csvEncabezado(array $columna): string
+    protected function csvEncabezado(array $columna): string
     {
         return $columna['etiqueta'].($columna['obligatorio'] ? ' *' : '');
     }
 
-    private function csvNormalizar(?string $texto): string
+    protected function csvNormalizar(?string $texto): string
     {
         $texto = Str::ascii(mb_strtolower(trim((string) $texto)));
         $texto = trim(str_replace('*', '', $texto));
@@ -144,7 +165,7 @@ trait EquiposCsv
         abort_unless($tipo, 404);
 
         $columnas = array_merge(
-            [['etiqueta' => 'Tipo de equipo', 'obligatorio' => true, 'origen' => 'tipo_equipo', 'tipo' => 'text']],
+            [['etiqueta' => 'Tipo de equipo', 'obligatorio' => true, 'origen' => 'tipo_equipo', 'tipo' => 'text', 'nombre_tipo' => $tipo->nombre]],
             $this->csvColumnas($tipoId)
         );
 
@@ -203,6 +224,11 @@ trait EquiposCsv
         }
 
         $hoja->setCellValue('A2', $tipo->nombre);
+
+        // Si se deja vacío «Tipo de equipo» en otras filas, al importar se
+        // usa el de la plantilla (ver leerArchivoTabla).
+        $listas->setCellValue('Z1', 'tipo_plantilla');
+        $listas->setCellValue('Z2', $tipo->nombre);
         $hoja->freezePane('A2');
         $hoja->getRowDimension(1)->setRowHeight(22);
         $listas->setSheetState(\PhpOffice\PhpSpreadsheet\Worksheet\Worksheet::SHEETSTATE_HIDDEN);
@@ -218,7 +244,7 @@ trait EquiposCsv
     /*
      * Textos válidos de una columna de lista (para los desplegables).
      */
-    private function csvOpcionesColumna(array $columna): array
+    protected function csvOpcionesColumna(array $columna): array
     {
         $nombres = fn (array $lista, string $campo = 'nombre') => collect($lista)
             ->map(fn ($o) => (string) (((array) $o)[$campo] ?? ''))
@@ -228,7 +254,8 @@ trait EquiposCsv
             ->all();
 
         if ($columna['origen'] === 'tipo_equipo') {
-            return $nombres($this->getTiposEquipoProperty());
+            // Solo el tipo de la plantilla: no se puede elegir otro.
+            return [(string) ($columna['nombre_tipo'] ?? '')];
         }
 
         if ($columna['origen'] === 'tipo') {
@@ -240,12 +267,12 @@ trait EquiposCsv
         }
 
         return match ($columna['clave']) {
-            'id_estado_activo' => $nombres($this->getEstadosProperty()),
-            'id_marca' => $nombres($this->getMarcasProperty()),
-            'id_unidad' => $nombres($this->getHotelesProperty()),
-            'id_departamento' => $nombres($this->getAllDepartamentos()),
-            'id_proveedor' => $nombres($this->getProveedoresProperty()),
-            'id_condicion_activo' => $nombres($this->getCondicionesProperty()),
+            'id_estado_activo' => $nombres($this->csvMemo('lista.estados', fn () => $this->getEstadosProperty())),
+            'id_marca' => $nombres($this->csvMemo('lista.marcas', fn () => $this->getMarcasProperty())),
+            'id_unidad' => $nombres($this->csvMemo('lista.hoteles', fn () => $this->getHotelesProperty())),
+            'id_departamento' => $nombres($this->csvMemo('lista.departamentos', fn () => $this->getAllDepartamentos())),
+            'id_proveedor' => $nombres($this->csvMemo('lista.proveedores', fn () => $this->getProveedoresProperty())),
+            'id_condicion_activo' => $nombres($this->csvMemo('lista.condiciones', fn () => $this->getCondicionesProperty())),
             default => [],
         };
     }
@@ -265,6 +292,7 @@ trait EquiposCsv
         $lector->setReadDataOnly(false);
         $libro = $lector->load($ruta);
         $hoja = $libro->getSheetByName('Equipos') ?? $libro->getSheet(0);
+        $tipoPlantilla = trim((string) ($libro->getSheetByName('Listas')?->getCell('Z2')->getValue() ?? ''));
 
         $encabezados = null;
         $filas = [];
@@ -282,13 +310,18 @@ trait EquiposCsv
                 continue;
             }
 
+            // Plantilla de un solo tipo: el tipo vacío se completa solo.
+            if ($tipoPlantilla !== '' && trim((string) ($fila[0] ?? '')) === '') {
+                $fila[0] = $tipoPlantilla;
+            }
+
             $filas[] = $fila;
         }
 
         return [$encabezados ?? [], $filas];
     }
 
-    private function csvDescarga(string $nombre, iterable $filas): StreamedResponse
+    protected function csvDescarga(string $nombre, iterable $filas): StreamedResponse
     {
         return response()->streamDownload(function () use ($filas) {
             $salida = fopen('php://output', 'w');
@@ -359,7 +392,7 @@ trait EquiposCsv
         }
 
         $tipoTexto = trim((string) ($porColumna['tipo de equipo'] ?? ''));
-        $tipoId = $this->csvBuscar($tipoTexto, $this->getTiposEquipoProperty(), 'id_tipo_equipo');
+        $tipoId = $this->csvBuscar($tipoTexto, $this->csvMemo('lista.tipos', fn () => $this->getTiposEquipoProperty()), 'id_tipo_equipo');
 
         if ($tipoId === null) {
             return [null, [$tipoTexto === '' ? 'Falta «Tipo de equipo».' : "El tipo de equipo «{$tipoTexto}» no existe o está inactivo."], null];
@@ -404,7 +437,7 @@ trait EquiposCsv
         return [$payload, $errores, (int) $tipoId];
     }
 
-    private function csvBuscar(string $texto, array $opciones, string $id, string $nombre = 'nombre'): ?string
+    protected function csvBuscar(string $texto, array $opciones, string $id, string $nombre = 'nombre'): ?string
     {
         $buscado = $this->csvNormalizar($texto);
 
@@ -423,7 +456,7 @@ trait EquiposCsv
         return null;
     }
 
-    private function csvNoExiste(array $columna, string $texto, array $lista, string $nombre = 'nombre'): array
+    protected function csvNoExiste(array $columna, string $texto, array $lista, string $nombre = 'nombre'): array
     {
         $opciones = collect($lista)->map(fn ($o) => (string) (((array) $o)[$nombre] ?? ''))->filter();
 
@@ -431,7 +464,7 @@ trait EquiposCsv
             .($opciones->count() <= 12 ? ' (opciones: '.$opciones->implode(', ').').' : '.')];
     }
 
-    private function csvValorBase(array $columna, string $texto, array $payload): array
+    protected function csvValorBase(array $columna, string $texto, array $payload): array
     {
         $catalogo = function (array $lista, string $id) use ($columna, $texto): array {
             $valor = $this->csvBuscar($texto, $lista, $id);
@@ -441,26 +474,26 @@ trait EquiposCsv
 
         switch ($columna['clave']) {
             case 'id_estado_activo':
-                return $catalogo($this->getEstadosProperty(), 'id_estado_equipo');
+                return $catalogo($this->csvMemo('lista.estados', fn () => $this->getEstadosProperty()), 'id_estado_equipo');
 
             case 'id_marca':
-                return $catalogo($this->getMarcasProperty(), 'id_marca');
+                return $catalogo($this->csvMemo('lista.marcas', fn () => $this->getMarcasProperty()), 'id_marca');
 
             case 'id_unidad':
-                return $catalogo($this->getHotelesProperty(), 'id_unidad');
+                return $catalogo($this->csvMemo('lista.hoteles', fn () => $this->getHotelesProperty()), 'id_unidad');
 
             case 'id_departamento':
-                return $catalogo($this->getAllDepartamentos(), 'id_departamento');
+                return $catalogo($this->csvMemo('lista.departamentos', fn () => $this->getAllDepartamentos()), 'id_departamento');
 
             case 'id_proveedor':
-                return $catalogo($this->getProveedoresProperty(), 'id_proveedor');
+                return $catalogo($this->csvMemo('lista.proveedores', fn () => $this->getProveedoresProperty()), 'id_proveedor');
 
             case 'id_condicion_activo':
-                return $catalogo($this->getCondicionesProperty(), 'id_valor');
+                return $catalogo($this->csvMemo('lista.condiciones', fn () => $this->getCondicionesProperty()), 'id_valor');
 
             case 'id_modelo':
                 $lista = array_values(array_filter(
-                    $this->getAllModelos(),
+                    $this->csvMemo('lista.modelos', fn () => $this->getAllModelos()),
                     fn ($m) => (string) $m['id_marca'] === (string) ($payload['idMarca'] ?? '')
                         && (string) $m['id_tipo_equipo'] === (string) ($payload['idTipoEquipo'] ?? '')
                 ));
@@ -473,7 +506,7 @@ trait EquiposCsv
             case 'id_ubicacion':
                 $buscado = $this->csvNormalizar($texto);
                 $coinciden = array_values(array_filter(
-                    app(\App\Services\UbicacionOrganizacionalService::class)->ubicaciones(),
+                    $this->csvMemo('lista.ubicaciones', fn () => app(\App\Services\UbicacionOrganizacionalService::class)->ubicaciones()),
                     fn ($u) => $this->csvNormalizar($u['label']) === $buscado
                 ));
                 $mismaUnidad = array_values(array_filter(
@@ -488,7 +521,7 @@ trait EquiposCsv
                 // Usuario con cuenta (nombre, usuario, correo o número) o nombre sin cuenta.
                 $buscado = $this->csvNormalizar($texto);
 
-                foreach (app(\App\Services\ColaboradoresService::class)->opcionesUsuarios() as $usuario) {
+                foreach ($this->csvMemo('lista.usuarios', fn () => app(\App\Services\ColaboradoresService::class)->opcionesUsuarios()) as $usuario) {
                     $alias = array_merge(
                         [$usuario['nombre'] ?? '', $usuario['label'] ?? ''],
                         explode(' ', (string) ($usuario['search'] ?? ''))
@@ -514,7 +547,7 @@ trait EquiposCsv
         }
     }
 
-    private function csvValorTipo(array $columna, string $texto): array
+    protected function csvValorTipo(array $columna, string $texto): array
     {
         $campo = $columna['campo'];
 
@@ -556,7 +589,7 @@ trait EquiposCsv
         }
     }
 
-    private function csvFecha(string $texto): ?string
+    protected function csvFecha(string $texto): ?string
     {
         $texto = trim($texto);
 
@@ -623,7 +656,7 @@ trait EquiposCsv
         return $this->primeraFilaFormulario($encabezados, $filas);
     }
 
-    private function primeraFilaFormulario(array $encabezados, array $filas): array
+    protected function primeraFilaFormulario(array $encabezados, array $filas): array
     {
         if ($filas === []) {
             return ['ok' => false, 'message' => 'El archivo no tiene filas con datos (la primera fila son los encabezados).'];
@@ -681,16 +714,16 @@ trait EquiposCsv
             ->all();
 
         $catalogos = [
-            'id_estado_activo' => $nombres($this->getEstadosProperty(), 'id_estado_equipo'),
-            'id_marca' => $nombres($this->getMarcasProperty(), 'id_marca'),
-            'id_modelo' => $nombres($this->getAllModelos(), 'id_modelo'),
-            'id_unidad' => $nombres($this->getHotelesProperty(), 'id_unidad'),
-            'id_departamento' => $nombres($this->getAllDepartamentos(), 'id_departamento'),
-            'id_proveedor' => $nombres($this->getProveedoresProperty(), 'id_proveedor'),
-            'id_condicion_activo' => $nombres($this->getCondicionesProperty(), 'id_valor'),
-            'id_ubicacion' => collect(app(\App\Services\UbicacionOrganizacionalService::class)->ubicaciones())->pluck('label', 'value')->all(),
+            'id_estado_activo' => $nombres($this->csvMemo('lista.estados', fn () => $this->getEstadosProperty()), 'id_estado_equipo'),
+            'id_marca' => $nombres($this->csvMemo('lista.marcas', fn () => $this->getMarcasProperty()), 'id_marca'),
+            'id_modelo' => $nombres($this->csvMemo('lista.modelos', fn () => $this->getAllModelos()), 'id_modelo'),
+            'id_unidad' => $nombres($this->csvMemo('lista.hoteles', fn () => $this->getHotelesProperty()), 'id_unidad'),
+            'id_departamento' => $nombres($this->csvMemo('lista.departamentos', fn () => $this->getAllDepartamentos()), 'id_departamento'),
+            'id_proveedor' => $nombres($this->csvMemo('lista.proveedores', fn () => $this->getProveedoresProperty()), 'id_proveedor'),
+            'id_condicion_activo' => $nombres($this->csvMemo('lista.condiciones', fn () => $this->getCondicionesProperty()), 'id_valor'),
+            'id_ubicacion' => collect($this->csvMemo('lista.ubicaciones', fn () => app(\App\Services\UbicacionOrganizacionalService::class)->ubicaciones()))->pluck('label', 'value')->all(),
         ];
-        $tipos = $nombres($this->getTiposEquipoProperty(), 'id_tipo_equipo');
+        $tipos = $nombres($this->csvMemo('lista.tipos', fn () => $this->getTiposEquipoProperty()), 'id_tipo_equipo');
 
         $columnasPorTipo = [];
         $encabezados = ['tipo de equipo' => 'Tipo de equipo *'];

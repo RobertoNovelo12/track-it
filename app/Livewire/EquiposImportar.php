@@ -53,6 +53,9 @@ class EquiposImportar extends EquipoCreate
 
     public bool $terminado = false;
 
+    // Resultado de la última importación: ['importadas' => n, 'codigos' => [...]].
+    public array $ultimoResultado = [];
+
     public function mount(?int $duplicar = null): void
     {
         Gate::authorize('gestionar');
@@ -65,18 +68,26 @@ class EquiposImportar extends EquipoCreate
         $this->resetErrorBag();
         $this->filas = [];
         $this->terminado = false;
+        $this->ultimoResultado = [];
 
         $this->validate(
-            ['archivo' => ['required', 'file', 'max:4096', 'mimes:csv,txt']],
+            ['archivo' => ['required', 'file', 'max:4096', 'mimes:csv,txt,xlsx']],
             [
-                'archivo.mimes' => 'Sube un archivo .csv (en Excel: Guardar como › CSV UTF-8).',
+                'archivo.mimes' => 'Sube la plantilla en Excel (.xlsx) o un archivo .csv.',
                 'archivo.max' => 'El archivo no puede pasar de 4 MB.',
             ]
         );
 
         $this->nombreArchivo = (string) $this->archivo->getClientOriginalName();
 
-        [$encabezados, $filas] = $this->csvLeer((string) file_get_contents($this->archivo->getRealPath()));
+        try {
+            [$encabezados, $filas] = $this->leerArchivoTabla($this->archivo->getRealPath(), $this->nombreArchivo);
+        } catch (\Throwable $error) {
+            report($error);
+            $this->addError('archivo', 'No se pudo leer el archivo. Revisa que sea la plantilla en Excel o un CSV.');
+
+            return;
+        }
 
         if (! in_array('tipo de equipo', array_map(fn ($e) => $this->csvNormalizar($e), $encabezados), true)) {
             $this->addError('archivo', 'Falta la columna «Tipo de equipo». Descarga la plantilla en Administración › Equipos.');
@@ -159,7 +170,7 @@ class EquiposImportar extends EquipoCreate
             Cache::forget($this->clave);
         }
 
-        $this->reset(['archivo', 'nombreArchivo', 'clave', 'filas', 'importando', 'terminado']);
+        $this->reset(['archivo', 'nombreArchivo', 'clave', 'filas', 'importando', 'terminado', 'ultimoResultado']);
     }
 
     /*
@@ -167,8 +178,10 @@ class EquiposImportar extends EquipoCreate
      * llama hasta que devuelve 'pendientes' => 0.
      */
     #[Json]
-    public function importarLote(): array
+    public function importarLote(int $cuantos = self::POR_LOTE): array
     {
+        $cuantos = max(1, min(self::POR_LOTE, $cuantos));
+        $inicio = microtime(true);
         Gate::authorize('gestionar');
 
         $payloads = $this->clave !== '' ? Cache::get($this->clave) : null;
@@ -186,7 +199,7 @@ class EquiposImportar extends EquipoCreate
                 continue;
             }
 
-            if ($procesadas >= self::POR_LOTE) {
+            if ($procesadas >= $cuantos) {
                 break;
             }
 
@@ -212,14 +225,31 @@ class EquiposImportar extends EquipoCreate
         }
 
         $pendientes = collect($this->filas)->where('estado', 'lista')->count();
+        $importadas = collect($this->filas)->where('estado', 'importada')->count();
 
         if ($pendientes === 0) {
             $this->terminar();
         }
 
+        $milisegundos = (int) round((microtime(true) - $inicio) * 1000);
+
+        // Medición: cuánto tarda el servidor por lote (storage/logs/importaciones.log).
+        try {
+            @file_put_contents(
+                storage_path('logs/importaciones.log'),
+                sprintf("[%s] %s · lote de %d equipos · %d ms (%d ms por equipo) · pico de memoria %.1f MB\n",
+                    now()->format('Y-m-d H:i:s'), $this->nombreArchivo, $procesadas, $milisegundos,
+                    $procesadas > 0 ? intdiv($milisegundos, $procesadas) : 0, memory_get_peak_usage(true) / 1048576),
+                FILE_APPEND
+            );
+        } catch (\Throwable) {
+        }
+
         return [
             'pendientes' => $pendientes,
-            'importadas' => collect($this->filas)->where('estado', 'importada')->count(),
+            'importadas' => $importadas,
+            'procesadas' => $procesadas,
+            'ms' => $milisegundos,
         ];
     }
 
@@ -231,6 +261,21 @@ class EquiposImportar extends EquipoCreate
         Cache::forget($this->clave);
 
         $importadas = collect($this->filas)->where('estado', 'importada')->count();
+
+        /*
+         * Lo importado sale de la tabla; quedan solo las filas con errores
+         * para corregirlas. Si no queda ninguna, se quita el archivo.
+         */
+        $this->ultimoResultado = [
+            'importadas' => $importadas,
+            'codigos' => collect($this->filas)->where('estado', 'importada')->pluck('codigo')->filter()->values()->all(),
+        ];
+
+        $this->filas = collect($this->filas)->where('estado', '!=', 'importada')->values()->all();
+
+        if ($this->filas === []) {
+            $this->reset(['archivo', 'nombreArchivo', 'clave', 'terminado']);
+        }
 
         if ($importadas === 0) {
             return;

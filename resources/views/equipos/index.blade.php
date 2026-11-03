@@ -192,16 +192,20 @@
                         <span class="block text-xs text-[var(--theme-text-muted)]">Capturar uno en el formulario</span>
                     </a>
 
-                    <a
-                        href="{{ route('equipos.importar') }}"
-                        wire:navigate
+                    {{-- Importar: abre el selector (Excel o CSV) y lleva el archivo a la vista previa. --}}
+                    <label
                         role="menuitem"
-                        x-on:click="abierto = false"
-                        class="block border-t border-[var(--theme-border)] px-4 py-2.5 text-sm text-[var(--theme-text)] transition-colors hover:bg-[var(--theme-surface-soft)] hover:text-[var(--theme-primary)]"
+                        class="block cursor-pointer border-t border-[var(--theme-border)] px-4 py-2.5 text-sm text-[var(--theme-text)] transition-colors hover:bg-[var(--theme-surface-soft)] hover:text-[var(--theme-primary)]"
                     >
-                        <span class="block font-medium">Importar CSV</span>
+                        <span class="block font-medium">Importar Excel o CSV</span>
                         <span class="block text-xs text-[var(--theme-text-muted)]">Dar de alta varios desde un archivo</span>
-                    </a>
+                        <input
+                            type="file"
+                            class="sr-only"
+                            accept=".xlsx,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                            x-on:change="abierto = false; window.trackitImportarArchivo?.($event.target.files?.[0]); $event.target.value = ''"
+                        >
+                    </label>
                 </div>
             </div>
 
@@ -215,6 +219,55 @@
 
         </div>
     </div>
+
+    @can('gestionar')
+        {{--
+            Importar arrastrando: al soltar un Excel o CSV en cualquier parte
+            del Inventario se abre la vista previa de importación con ese
+            archivo (equipos.importar lo sube al cargar).
+        --}}
+        <div
+            x-data="{
+                visible: false,
+                profundidad: 0,
+                esArchivo(evento) { return Array.from(evento.dataTransfer?.types ?? []).includes('Files'); },
+                // El menú lateral, el encabezado y el menú inferior no reciben el archivo.
+                enMenu(evento) { return evento.target instanceof Element && !! evento.target.closest('aside, header, nav, #mobileAppHeader, .mi-barra'); },
+            }"
+            x-init="
+                window.trackitImportarArchivo = (archivo) => {
+                    if (! archivo) return;
+
+                    if (! /\.(xlsx|csv)$/i.test(archivo.name)) {
+                        window.trackitToast?.('error', 'Solo se aceptan archivos Excel (.xlsx) o CSV.', 'Archivo no válido');
+                        return;
+                    }
+
+                    window.__trackitArchivoImportar = archivo;
+                    window.Livewire?.navigate
+                        ? window.Livewire.navigate(@js(route('equipos.importar')))
+                        : (window.location.href = @js(route('equipos.importar')));
+                };
+            "
+            x-on:dragenter.window="if (esArchivo($event)) { profundidad++; visible = true; }"
+            x-on:dragleave.window="if (esArchivo($event)) { profundidad = Math.max(0, profundidad - 1); if (profundidad === 0) visible = false; }"
+            x-on:dragover.window="if (esArchivo($event)) { $event.preventDefault(); $event.dataTransfer.dropEffect = enMenu($event) ? 'none' : 'copy'; }"
+            x-on:drop.window="if (esArchivo($event)) { $event.preventDefault(); profundidad = 0; visible = false; if (! enMenu($event)) window.trackitImportarArchivo($event.dataTransfer.files?.[0]); }"
+        >
+            <div
+                x-show="visible"
+                x-cloak
+                x-transition.opacity
+                class="pointer-events-none fixed inset-0 z-[150] flex items-center justify-center bg-[var(--theme-overlay,rgba(0,0,0,0.45))] p-6"
+            >
+                <div class="flex flex-col items-center gap-2 rounded-2xl border-2 border-dashed border-[var(--theme-primary)] bg-[var(--theme-surface)] px-10 py-8 text-center shadow-xl">
+                    <svg class="h-9 w-9 text-[var(--theme-primary)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3m0 0-4 4m4-4 4 4M5 21h14"/></svg>
+                    <p class="text-sm font-semibold text-[var(--theme-text-strong)]">Suelta tu Excel o CSV para importar equipos</p>
+                    <p class="text-xs text-[var(--theme-text-muted)]">Verás una vista previa antes de guardar.</p>
+                </div>
+            </div>
+        </div>
+    @endcan
 
     {{-- FILTROS, TABLA Y PAGINACIÓN --}}
     {{-- El componente Livewire administra el inventario. --}}
