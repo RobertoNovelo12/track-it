@@ -261,15 +261,19 @@ class EquiposImportar extends EquipoCreate
             $vista[$i]['existe'] = true;
             $vista[$i]['codigo'] = $codigo;
 
-            if (! $this->actualizarExistentes) {
-                $vista[$i]['estado'] = 'error';
-                $vista[$i]['mensajes'] = array_values(array_unique(array_merge(
-                    array_filter($vista[$i]['mensajes'], fn ($m) => ! str_starts_with($m, 'Falta «') || str_starts_with($m, 'Falta «Tipo de equipo')),
+            /*
+             * Se calculan las dos versiones de la fila: sin actualizar (se
+             * rechaza) y actualizando (lo que cambia). La casilla cambia de
+             * una a otra en el navegador, sin esperar al servidor.
+             */
+            $sinActualizar = [
+                'estado' => 'error',
+                'mensajes' => array_values(array_unique(array_merge(
+                    array_filter($fila['mensajes'], fn ($m) => ! str_starts_with($m, 'Falta «') || str_starts_with($m, 'Falta «Tipo de equipo')),
                     ["Ya existe en el inventario ({$codigo}). Activa «Actualizar los equipos que ya existen» para aplicar sus cambios."]
-                )));
-
-                continue;
-            }
+                ))),
+                'cambios' => [],
+            ];
 
             // Celdas vacías conservan lo actual: «Falta…» no aplica al actualizar.
             $errores = array_values(array_filter($fila['mensajes'], fn ($m) => ! str_starts_with($m, 'Falta «') || str_starts_with($m, 'Falta «Tipo de equipo')));
@@ -283,36 +287,39 @@ class EquiposImportar extends EquipoCreate
             }
 
             if ($errores !== []) {
-                $vista[$i]['estado'] = 'error';
-                $vista[$i]['mensajes'] = $errores;
+                $actualizando = ['estado' => 'error', 'mensajes' => $errores, 'cambios' => []];
+            } else {
+                [$cambios, $avisos] = $this->csvCambios(
+                    $datos['encabezados'],
+                    $datos['filas'][$fila['fila']],
+                    (int) $actual['equipo']->id_tipo_equipo,
+                    $actual,
+                    $datos['payloads'][$fila['fila']] ?? []
+                );
 
-                continue;
+                $actualizando = ['estado' => $cambios === [] ? 'sin_cambios' : 'actualizar', 'mensajes' => $avisos, 'cambios' => $cambios];
             }
 
-            [$cambios, $avisos] = $this->csvCambios(
-                $datos['encabezados'],
-                $datos['filas'][$fila['fila']],
-                (int) $actual['equipo']->id_tipo_equipo,
-                $actual,
-                $datos['payloads'][$fila['fila']] ?? []
-            );
-
-            $vista[$i]['estado'] = $cambios === [] ? 'sin_cambios' : 'actualizar';
-            $vista[$i]['mensajes'] = $avisos;
-            $vista[$i]['cambios'] = $cambios;
-            $vista[$i]['faltan'] = [];
+            $vista[$i]['sinActualizar'] = $sinActualizar;
+            $vista[$i]['actualizando'] = $actualizando;
+            $vista[$i] = array_merge($vista[$i], $this->actualizarExistentes ? $actualizando : $sinActualizar);
         }
     }
 
-    public function updatedActualizarExistentes(): void
+    // La casilla ya no consulta al servidor (ver importarLote).
+    private function aplicarModoActualizar(bool $actualizar): void
     {
-        Gate::authorize('gestionar');
-
-        if ($this->importando || $this->filas === []) {
+        if ($this->actualizarExistentes === $actualizar) {
             return;
         }
 
-        $this->analizar(array_map(fn ($f) => (int) $f['fila'], $this->filas));
+        $this->actualizarExistentes = $actualizar;
+
+        foreach ($this->filas as $i => $fila) {
+            if (isset($fila['actualizando'], $fila['sinActualizar']) && ! in_array($fila['estado'], ['importada', 'actualizada', 'fallo'], true)) {
+                $this->filas[$i] = array_merge($fila, $actualizar ? $fila['actualizando'] : $fila['sinActualizar']);
+            }
+        }
     }
 
     /*
@@ -584,11 +591,16 @@ class EquiposImportar extends EquipoCreate
      * Acción normal (no #[Json]): así la tabla se redibuja en cada lote
      * y se limpia al terminar, y la campana recibe el aviso final.
      */
-    public function importarLote(int $cuantos = self::POR_LOTE): array
+    public function importarLote(int $cuantos = self::POR_LOTE, ?bool $actualizar = null): array
     {
         $cuantos = max(1, min(self::POR_LOTE, $cuantos));
         $inicio = microtime(true);
         Gate::authorize('gestionar');
+
+        // La casilla «Actualizar…» llega con el primer lote.
+        if ($actualizar !== null && ! $this->importando) {
+            $this->aplicarModoActualizar($actualizar);
+        }
 
         $datos = $this->clave !== '' ? Cache::get($this->clave) : null;
         $payloads = is_array($datos) ? ($datos['payloads'] ?? null) : null;
@@ -766,6 +778,15 @@ class EquiposImportar extends EquipoCreate
                 'actualizar' => $filas->where('estado', 'actualizar')->count(),
                 'sinCambios' => $filas->where('estado', 'sin_cambios')->count(),
                 'existentes' => $filas->where('existe', true)->count(),
+                // Con la casilla marcada (se calcula en el navegador al cambiarla).
+                'conActualizar' => [
+                    'actualizar' => $filas->filter(fn ($f) => ($f['actualizando']['estado'] ?? $f['estado']) === 'actualizar' && ! in_array($f['estado'], ['importada', 'actualizada'], true))->count(),
+                    'sinCambios' => $filas->filter(fn ($f) => ($f['actualizando']['estado'] ?? $f['estado']) === 'sin_cambios')->count(),
+                    'errores' => $filas->filter(fn ($f) => in_array($f['actualizando']['estado'] ?? $f['estado'], ['error', 'fallo'], true))->count(),
+                ],
+                'sinActualizar' => [
+                    'errores' => $filas->filter(fn ($f) => in_array($f['sinActualizar']['estado'] ?? $f['estado'], ['error', 'fallo'], true))->count(),
+                ],
                 'errores' => $filas->whereIn('estado', ['error', 'fallo'])->count(),
                 'importadas' => $filas->where('estado', 'importada')->count(),
             ],

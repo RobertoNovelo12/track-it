@@ -3,22 +3,38 @@
 ============================================================ --}}
 @php
     $tarjeta = 'rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 sm:p-6';
-    $listas = $cuentas['listas'];
-    $textoAplicar = collect([
-        $cuentas['nuevas'] ? 'importar '.$cuentas['nuevas'] : null,
-        $cuentas['actualizar'] ? 'actualizar '.$cuentas['actualizar'] : null,
-    ])->filter()->implode(' y ');
-    $textoAplicar = ucfirst($textoAplicar).($listas === 1 ? ' equipo' : ' equipos');
+    /*
+     * Dos versiones (casilla «Actualizar…» apagada / encendida): se cambia
+     * entre ellas en el navegador, sin esperar al servidor.
+     */
+    $textoBoton = function (int $nuevas, int $actualizar): string {
+        $total = $nuevas + $actualizar;
+        $texto = collect([$nuevas ? 'importar '.$nuevas : null, $actualizar ? 'actualizar '.$actualizar : null])->filter()->implode(' y ');
+
+        return ucfirst($texto).($total === 1 ? ' equipo' : ' equipos');
+    };
+    $modos = [
+        'sin' => ['listas' => $cuentas['nuevas'], 'errores' => $cuentas['sinActualizar']['errores'], 'boton' => $textoBoton($cuentas['nuevas'], 0)],
+        'con' => [
+            'listas' => $cuentas['nuevas'] + $cuentas['conActualizar']['actualizar'],
+            'errores' => $cuentas['conActualizar']['errores'],
+            'sinCambios' => $cuentas['conActualizar']['sinCambios'],
+            'boton' => $textoBoton($cuentas['nuevas'], $cuentas['conActualizar']['actualizar']),
+        ],
+    ];
+    $listas = $actualizarExistentes ? $modos['con']['listas'] : $modos['sin']['listas'];
 @endphp
 
 <div
     class="space-y-5"
-    data-listas="{{ $listas }}"
+    data-listas-sin="{{ $modos['sin']['listas'] }}"
+    data-listas-con="{{ $modos['con']['listas'] }}"
     x-on:dragenter.window="if (enContenido($event)) { profundidad++; encima = true; }"
     x-on:dragleave.window="profundidad = Math.max(0, profundidad - 1); if (profundidad === 0) encima = false"
     x-on:dragover.window="if (Array.from($event.dataTransfer?.types ?? []).includes('Files')) { $event.preventDefault(); $event.dataTransfer.dropEffect = enContenido($event) ? 'copy' : 'none'; }"
     x-on:drop.window="if (Array.from($event.dataTransfer?.types ?? []).includes('Files')) { $event.preventDefault(); profundidad = 0; encima = false; if (enContenido($event)) subir($event.dataTransfer.files?.[0]); }"
     x-data="{
+        actualizar: @js($actualizarExistentes),
         avance: 0,
         contados: 0,
         totalImportar: 0,
@@ -72,7 +88,8 @@
         async importar() {
             if (this.corriendo) return;
             this.corriendo = true;
-            const total = Number(this.$root.dataset.listas || 0);
+            const total = Number((this.actualizar ? this.$root.dataset.listasCon : this.$root.dataset.listasSin) || 0);
+            if (total === 0) { this.corriendo = false; return; }
             let aviso = window.trackitToast?.('loading', 'Guardando los equipos del archivo…', 'Importando') ?? null;
 
             try {
@@ -123,7 +140,7 @@
 
                 try {
                     while (resultado.pendientes > 0) {
-                        resultado = await $wire.importarLote(porLote);
+                        resultado = await $wire.importarLote(porLote, this.actualizar);
                         msServidor += Number(resultado.ms || 0);
                         loteMasLento = Math.max(loteMasLento, Number(resultado.ms || 0));
                         confirmados = total - resultado.pendientes;
@@ -222,8 +239,12 @@
                     <h2 class="text-sm font-semibold text-[var(--theme-text-strong)]">{{ $nombreArchivo }}</h2>
                     <p class="mt-1 text-xs text-[var(--theme-text-muted)]">
                         {{ $cuentas['total'] }} filas ·
-                        <span class="text-[var(--theme-success)]">{{ $cuentas['listas'] + $cuentas['importadas'] }} sin errores</span> ·
-                        <span class="{{ $cuentas['errores'] ? 'text-[var(--theme-danger)]' : '' }}">{{ $cuentas['errores'] }} con errores</span>
+                        @foreach ($modos as $modo => $m)
+                            <span x-show="{{ $modo === 'con' ? 'actualizar' : '! actualizar' }}" @if ($modo === 'con' && ! $actualizarExistentes || $modo === 'sin' && $actualizarExistentes) x-cloak @endif>
+                                <span class="text-[var(--theme-success)]">{{ $m['listas'] + $cuentas['importadas'] }} {{ $modo === 'con' ? 'por aplicar' : 'sin errores' }}</span> ·
+                                <span class="{{ $m['errores'] ? 'text-[var(--theme-danger)]' : '' }}">{{ $m['errores'] }} con errores</span>
+                            </span>
+                        @endforeach
                         @if ($cuentas['importadas']) · {{ $cuentas['importadas'] }} importadas @endif
                         @if ($cuentas['existentes']) · {{ $cuentas['existentes'] }} ya existen @endif
                     </p>
@@ -233,7 +254,7 @@
                         <label class="mt-3 flex cursor-pointer items-start gap-2 text-sm text-[var(--theme-text)]">
                             <input
                                 type="checkbox"
-                                wire:model.live="actualizarExistentes"
+                                x-model="actualizar"
                                 x-bind:disabled="corriendo"
                                 class="mt-0.5 h-4 w-4 rounded border-[var(--theme-border-strong)] accent-[var(--theme-primary)]"
                             >
@@ -241,8 +262,8 @@
                                 <span class="font-medium text-[var(--theme-text-strong)]">Actualizar los equipos que ya existen</span>
                                 <span class="block text-xs text-[var(--theme-text-muted)]">
                                     Se reconocen por su código de inventario (o su número de serie). Solo se cambian las celdas con valor; una celda vacía conserva el dato actual.
-                                    @if ($actualizarExistentes && $cuentas['sinCambios'])
-                                        {{ $cuentas['sinCambios'] }} {{ $cuentas['sinCambios'] === 1 ? 'fila no tiene' : 'filas no tienen' }} cambios.
+                                    @if ($modos['con']['sinCambios'])
+                                        <span x-show="actualizar" @unless ($actualizarExistentes) x-cloak @endunless>{{ $modos['con']['sinCambios'] }} {{ $modos['con']['sinCambios'] === 1 ? 'fila no tiene' : 'filas no tienen' }} cambios.</span>
                                     @endif
                                 </span>
                             </span>
@@ -258,13 +279,14 @@
                         class="h-10 rounded-md border border-[var(--theme-border-strong)] px-4 text-sm font-medium text-[var(--theme-text)] hover:bg-[var(--theme-surface-soft)] disabled:opacity-50"
                     >{{ $terminado ? 'Importar otro archivo' : 'Descartar' }}</button>
 
-                    @if (! $terminado && $listas > 0)
+                    @if (! $terminado && $modos['sin']['listas'] + $modos['con']['listas'] > 0)
                         <button
+                            x-show="(actualizar ? {{ $modos['con']['listas'] }} : {{ $modos['sin']['listas'] }}) > 0"
                             type="button"
                             x-on:click="importar()"
                             x-bind:disabled="corriendo"
                             class="h-10 rounded-md bg-[var(--theme-primary)] px-4 text-sm font-medium text-white hover:bg-[var(--theme-primary-hover)] disabled:opacity-70"
-                            x-text="corriendo ? 'Guardando… ' + contados + ' de ' + totalImportar : @js($textoAplicar)"
+                            x-text="corriendo ? 'Guardando… ' + contados + ' de ' + totalImportar : (actualizar ? @js($modos['con']['boton']) : @js($modos['sin']['boton']))"
                         >Importar</button>
                     @endif
 
@@ -396,49 +418,16 @@
                                 <td class="px-3 py-2 font-medium text-[var(--theme-text-strong)]">{{ $fila['nombre'] ?: '—' }}</td>
                                 <td class="px-3 py-2 text-[var(--theme-text)]">{{ $fila['serie'] ?: '—' }}</td>
                                 <td class="px-3 py-2">
-                                    @switch($fila['estado'])
-                                        @case('importada')
-                                            <span class="inline-flex rounded-md bg-[var(--theme-success-soft)] px-2 py-0.5 text-xs font-medium text-[var(--theme-success)]">Importada · {{ $fila['codigo'] }}</span>
-                                            @break
-                                        @case('lista')
-                                            <span class="inline-flex rounded-md bg-[var(--theme-primary-soft)] px-2 py-0.5 text-xs font-medium text-[var(--theme-primary)]">Lista para importar</span>
-                                            @break
-                                        @case('actualizar')
-                                        @case('actualizada')
-                                            <span class="inline-flex rounded-md {{ $fila['estado'] === 'actualizada' ? 'bg-[var(--theme-success-soft)] text-[var(--theme-success)]' : 'bg-[var(--theme-warning-soft)] text-[var(--theme-warning)]' }} px-2 py-0.5 text-xs font-medium">
-                                                {{ $fila['estado'] === 'actualizada' ? 'Actualizada' : 'Se actualizará' }} · {{ $fila['codigo'] }} · {{ count($fila['cambios'] ?? []) }} {{ count($fila['cambios'] ?? []) === 1 ? 'cambio' : 'cambios' }}
-                                            </span>
-                                            <ul class="mt-1 space-y-0.5 text-xs text-[var(--theme-text)]">
-                                                @foreach ($fila['cambios'] ?? [] as $cambio)
-                                                    <li>
-                                                        <span class="text-[var(--theme-text-muted)]">{{ $cambio['etiqueta'] }}:</span>
-                                                        @if ($cambio['antes'] !== '')
-                                                            <span class="text-[var(--theme-text-muted)] line-through">{{ $cambio['antes'] }}</span> →
-                                                        @else
-                                                            <span class="text-[var(--theme-text-muted)]">(vacío)</span> →
-                                                        @endif
-                                                        <span class="font-medium text-[var(--theme-text-strong)]">{{ $cambio['despues'] }}</span>
-                                                    </li>
-                                                @endforeach
-                                                @foreach ($fila['mensajes'] as $mensaje)
-                                                    <li class="text-[var(--theme-warning)]">{{ $mensaje }}</li>
-                                                @endforeach
-                                            </ul>
-                                            @break
-                                        @case('sin_cambios')
-                                            <span class="inline-flex rounded-md bg-[var(--theme-surface-soft)] px-2 py-0.5 text-xs font-medium text-[var(--theme-text-muted)]">Sin cambios · {{ $fila['codigo'] }}</span>
-                                            @foreach ($fila['mensajes'] as $mensaje)
-                                                <p class="mt-1 text-xs text-[var(--theme-warning)]">{{ $mensaje }}</p>
-                                            @endforeach
-                                            @break
-                                        @default
-                                            <span class="inline-flex rounded-md bg-[var(--theme-danger-soft)] px-2 py-0.5 text-xs font-medium text-[var(--theme-danger)]">{{ $fila['estado'] === 'fallo' ? 'No se guardó' : 'Con errores' }}</span>
-                                            <ul class="mt-1 space-y-0.5 text-xs text-[var(--theme-danger)]">
-                                                @foreach ($fila['mensajes'] as $mensaje)
-                                                    <li>{{ $mensaje }}</li>
-                                                @endforeach
-                                            </ul>
-                                    @endswitch
+                                    @if (isset($fila['actualizando'], $fila['sinActualizar']) && ! in_array($fila['estado'], ['importada', 'actualizada', 'fallo'], true))
+                                        <div x-show="! actualizar" @if ($actualizarExistentes) x-cloak @endif>
+                                            @include('livewire.partials.importar-resultado', ['r' => array_merge($fila, $fila['sinActualizar'])])
+                                        </div>
+                                        <div x-show="actualizar" @unless ($actualizarExistentes) x-cloak @endunless>
+                                            @include('livewire.partials.importar-resultado', ['r' => array_merge($fila, $fila['actualizando'])])
+                                        </div>
+                                    @else
+                                        @include('livewire.partials.importar-resultado', ['r' => $fila])
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach
