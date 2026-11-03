@@ -15,6 +15,8 @@
     x-on:drop.window="if (Array.from($event.dataTransfer?.types ?? []).includes('Files')) { $event.preventDefault(); profundidad = 0; encima = false; if (enContenido($event)) subir($event.dataTransfer.files?.[0]); }"
     x-data="{
         avance: 0,
+        contados: 0,
+        totalImportar: 0,
         corriendo: false,
         encima: false,
         profundidad: 0,
@@ -79,12 +81,43 @@
                 let msServidor = 0;
                 let loteMasLento = 0;
 
-                while (resultado.pendientes > 0) {
-                    resultado = await $wire.importarLote(porLote);
-                    msServidor += Number(resultado.ms || 0);
-                    loteMasLento = Math.max(loteMasLento, Number(resultado.ms || 0));
-                    this.avance = total > 0 ? Math.round(((total - resultado.pendientes) / total) * 100) : 100;
-                    if (aviso) window.trackitToastActualizar?.(aviso, 'loading', (total - resultado.pendientes) + ' de ' + total + ' equipos guardados…', 'Importando');
+                /*
+                 * Contador de 1 en 1: entre lote y lote avanza al ritmo real
+                 * medido (ms por equipo), sin pasar del lote que se está
+                 * guardando; al volver cada lote se ajusta al número real.
+                 */
+                let confirmados = 0;
+                let finLote = inicio;
+                let msPorEquipo = 1200;
+                this.contados = 0;
+                this.totalImportar = total;
+
+                const pintar = () => {
+                    if (total <= 0) return;
+                    const enCurso = Math.min(total, confirmados + porLote) - 1;
+                    const estimado = confirmados + Math.floor((performance.now() - finLote) / msPorEquipo);
+                    const nuevo = Math.max(this.contados, Math.min(Math.max(confirmados, enCurso), estimado), confirmados);
+
+                    if (nuevo === this.contados && this.avance > 2) return;
+                    this.contados = nuevo;
+                    this.avance = Math.max(2, Math.round((nuevo / total) * 100));
+                    if (aviso) window.trackitToastActualizar?.(aviso, 'loading', nuevo + ' de ' + total + ' equipos guardados…', 'Importando');
+                };
+
+                const reloj = setInterval(pintar, 60);
+
+                try {
+                    while (resultado.pendientes > 0) {
+                        resultado = await $wire.importarLote(porLote);
+                        msServidor += Number(resultado.ms || 0);
+                        loteMasLento = Math.max(loteMasLento, Number(resultado.ms || 0));
+                        confirmados = total - resultado.pendientes;
+                        finLote = performance.now();
+                        if (confirmados > 0) msPorEquipo = Math.max(30, (finLote - inicio) / confirmados);
+                        pintar();
+                    }
+                } finally {
+                    clearInterval(reloj);
                 }
 
                 const segundos = (performance.now() - inicio) / 1000;
@@ -188,7 +221,7 @@
                             x-on:click="importar()"
                             x-bind:disabled="corriendo"
                             class="h-10 rounded-md bg-[var(--theme-primary)] px-4 text-sm font-medium text-white hover:bg-[var(--theme-primary-hover)] disabled:opacity-70"
-                            x-text="corriendo ? 'Importando… ' + avance + '%' : @js('Importar '.$listas.($listas === 1 ? ' equipo' : ' equipos'))"
+                            x-text="corriendo ? 'Importando… ' + contados + ' de ' + totalImportar : @js('Importar '.$listas.($listas === 1 ? ' equipo' : ' equipos'))"
                         >Importar</button>
                     @endif
 
