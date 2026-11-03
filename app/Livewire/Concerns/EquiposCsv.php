@@ -98,7 +98,8 @@ trait EquiposCsv
         $columnas = [];
 
         foreach ($this->csvBase() as $clave => [$modelo, $etiqueta, $tipo, $obligatorio]) {
-            if (! $obligatorio && $clave !== 'id_modelo' && ! array_key_exists($clave, $configurados)) {
+            // Modelo y Responsable siempre (Responsable crea la asignación al importar).
+            if (! $obligatorio && ! in_array($clave, ['id_modelo', 'propietario'], true) && ! array_key_exists($clave, $configurados)) {
                 continue;
             }
 
@@ -443,6 +444,383 @@ trait EquiposCsv
         return response()->streamDownload(function () use ($libro) {
             (new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($libro))->save('php://output');
         }, 'plantilla-universal-equipos.xlsx', ['Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Actualizar equipos existentes desde el archivo
+    |--------------------------------------------------------------------------
+    |
+    | Una fila corresponde a un equipo existente por su «Código de
+    | inventario» (columna del CSV exportado) o, si no la trae, por su
+    | número de serie. Solo se aplican las celdas con valor que cambian:
+    | una celda vacía conserva el dato actual.
+    |
+    */
+
+    /*
+     * Valores actuales de los equipos como texto (igual que en el CSV
+     * exportado), por etiqueta normalizada.
+     * [id => ['equipo', 'baja', 'textos' => [...], 'responsable' => ?array]]
+     */
+    protected function csvDatosActuales(array $ids): array
+    {
+        $ids = array_values(array_unique(array_map('intval', $ids)));
+
+        if ($ids === []) {
+            return [];
+        }
+
+        $equipos = DB::table('equipos')->whereIn('id_equipo', $ids)->get()->keyBy('id_equipo');
+        $atributos = DB::table('atributos_equipo')->whereIn('id_equipo', $ids)->whereNotNull('id_campo')->get(['id_equipo', 'id_campo', 'valor'])->groupBy('id_equipo');
+        $responsables = DB::table('asignaciones')->whereIn('id_equipo', $ids)->whereNull('fecha_fin')
+            ->get(['id_equipo', 'nombre_colaborador', ...(app(\App\Services\ColaboradoresService::class)->disponible() ? ['id_usuario'] : [])])
+            ->keyBy('id_equipo');
+        $bajas = DB::table('bajas')->whereIn('id_equipo', $ids)->pluck('id_equipo')->map(fn ($id) => (int) $id)->flip();
+        $estadoBaja = DB::table('estados_equipo')->whereRaw('UPPER(clave) = ?', ['BAJA'])->value('id_estado_equipo');
+
+        $nombres = fn (array $lista, string $id) => collect($lista)
+            ->mapWithKeys(fn ($o) => [(string) ((array) $o)[$id] => (string) (((array) $o)['nombre'] ?? '')])
+            ->all();
+
+        $catalogos = [
+            'id_estado_activo' => $nombres($this->csvMemo('lista.estados', fn () => $this->getEstadosProperty()), 'id_estado_equipo'),
+            'id_marca' => $nombres($this->csvMemo('lista.marcas', fn () => $this->getMarcasProperty()), 'id_marca'),
+            'id_modelo' => $nombres($this->csvMemo('lista.modelos', fn () => $this->getAllModelos()), 'id_modelo'),
+            'id_unidad' => $nombres($this->csvMemo('lista.hoteles', fn () => $this->getHotelesProperty()), 'id_unidad'),
+            'id_departamento' => $nombres($this->csvMemo('lista.departamentos', fn () => $this->getAllDepartamentos()), 'id_departamento'),
+            'id_proveedor' => $nombres($this->csvMemo('lista.proveedores', fn () => $this->getProveedoresProperty()), 'id_proveedor'),
+            'id_condicion_activo' => $nombres($this->csvMemo('lista.condiciones', fn () => $this->getCondicionesProperty()), 'id_valor'),
+            'id_ubicacion' => collect($this->csvMemo('lista.ubicaciones', fn () => app(\App\Services\UbicacionOrganizacionalService::class)->ubicaciones()))->pluck('label', 'value')->all(),
+        ];
+
+        $fisicas = [];
+        $salida = [];
+
+        foreach ($equipos as $id => $equipo) {
+            $tipoId = (int) $equipo->id_tipo_equipo;
+            $propios = $atributos->get($id, collect())->pluck('valor', 'id_campo');
+            $responsable = $responsables->get($id);
+            $textos = [];
+
+            foreach ($this->csvColumnas($tipoId) as $c) {
+                $clave = $this->csvNormalizar($c['etiqueta']);
+
+                if ($c['origen'] === 'base') {
+                    $valor = $c['clave'] === 'propietario' ? ($responsable->nombre_colaborador ?? '') : ($equipo->{$c['clave']} ?? '');
+
+                    if (isset($catalogos[$c['clave']])) {
+                        $valor = $catalogos[$c['clave']][(string) $valor] ?? '';
+                    } elseif ($c['tipo'] === 'date' && filled($valor)) {
+                        $valor = rescue(fn () => Carbon::parse($valor)->format('d/m/Y'), (string) $valor, false);
+                    }
+
+                    $textos[$clave] = (string) $valor;
+
+                    continue;
+                }
+
+                $campo = $c['campo'];
+                $tabla = (string) ($campo['tabla_destino'] ?? '');
+
+                if ($campo['origen_dato'] === 'tabla_tipo' && $tabla !== '' && ! isset($fisicas[$tabla])) {
+                    $fisicas[$tabla] = DB::table($tabla)->whereIn('id_equipo', $ids)->get()->keyBy('id_equipo');
+                }
+
+                $valor = $campo['origen_dato'] === 'atributo'
+                    ? ($propios[$campo['id_campo']] ?? '')
+                    : (($fisicas[$tabla] ?? collect())->get($id)?->{$campo['columna_destino']} ?? '');
+
+                if ($valor !== '' && $valor !== null) {
+                    $valor = match ($c['tipo']) {
+                        'select' => collect($this->fieldOptions($campo))->firstWhere('value', (string) $valor)['label'] ?? $valor,
+                        'boolean', 'checkbox' => filter_var($valor, FILTER_VALIDATE_BOOLEAN) ? 'Sí' : 'No',
+                        'date' => rescue(fn () => Carbon::parse($valor)->format('d/m/Y'), (string) $valor, false),
+                        default => $valor,
+                    };
+                }
+
+                $textos[$clave] = (string) $valor;
+            }
+
+            $salida[(int) $id] = [
+                'equipo' => $equipo,
+                'baja' => $bajas->has((int) $id) || ($estadoBaja !== null && (int) $equipo->id_estado_activo === (int) $estadoBaja),
+                'textos' => $textos,
+                'responsable' => $responsable ? [
+                    'nombre' => (string) $responsable->nombre_colaborador,
+                    'id_usuario' => isset($responsable->id_usuario) && $responsable->id_usuario !== null ? (int) $responsable->id_usuario : null,
+                ] : null,
+            ];
+        }
+
+        return $salida;
+    }
+
+    // Texto comparable de una celda o de un valor actual.
+    protected function csvComparable(array $columna, string $texto): string
+    {
+        $t = $this->csvNormalizar($texto);
+
+        if ($t === '') {
+            return '';
+        }
+
+        if (($columna['tipo'] ?? '') === 'date') {
+            return (string) ($this->csvFecha($texto) ?? $t);
+        }
+
+        if (in_array($columna['tipo'] ?? '', ['boolean', 'checkbox'], true)) {
+            return match (true) {
+                in_array($t, ['si', '1', 'true', 'x', 'yes'], true) => 'si',
+                in_array($t, ['no', '0', 'false'], true) => 'no',
+                default => $t,
+            };
+        }
+
+        $numero = str_replace(',', '.', $t);
+
+        return is_numeric($numero) ? (string) (float) $numero : $t;
+    }
+
+    /*
+     * Celdas con valor que cambian respecto al equipo actual.
+     * => [cambios [[etiqueta, antes, despues, clave, origen]], avisos [texto]]
+     */
+    protected function csvCambios(array $encabezados, array $fila, int $tipoId, array $actual, array $payload): array
+    {
+        $porColumna = [];
+
+        foreach ($encabezados as $i => $encabezado) {
+            $porColumna[$this->csvNormalizar($encabezado)] = trim((string) ($fila[$i] ?? ''));
+        }
+
+        $cambios = [];
+        $avisos = [];
+
+        foreach ($this->csvColumnas($tipoId) as $c) {
+            $norma = $this->csvNormalizar($c['etiqueta']);
+            $nuevo = $porColumna[$norma] ?? '';
+
+            if ($nuevo === '') {
+                continue; // vacía: se conserva lo actual
+            }
+
+            $antes = (string) ($actual['textos'][$norma] ?? '');
+
+            if ($c['origen'] === 'base' && $c['clave'] === 'propietario') {
+                $elegido = (string) ($payload['propietario'] ?? '');
+                $responsable = $actual['responsable'];
+
+                if ($responsable === null) {
+                    $cambios[] = ['etiqueta' => $c['etiqueta'], 'antes' => '', 'despues' => $nuevo, 'clave' => 'propietario', 'origen' => 'base'];
+
+                    continue;
+                }
+
+                $mismo = ctype_digit($elegido) && $responsable['id_usuario'] !== null
+                    ? (int) $elegido === $responsable['id_usuario']
+                    : $this->csvNormalizar($nuevo) === $this->csvNormalizar($responsable['nombre']);
+
+                if (! $mismo) {
+                    $avisos[] = "Ya está asignado a {$responsable['nombre']}: el responsable no se cambia desde el archivo (usa Reasignación).";
+                }
+
+                continue;
+            }
+
+            if ($this->csvComparable($c, $nuevo) !== $this->csvComparable($c, $antes)) {
+                $cambios[] = ['etiqueta' => $c['etiqueta'], 'antes' => $antes, 'despues' => $nuevo, 'clave' => $c['clave'], 'origen' => $c['origen']];
+            }
+        }
+
+        return [$cambios, $avisos];
+    }
+
+    /*
+     * Aplica los cambios de una fila a un equipo existente.
+     */
+    protected function csvActualizarEquipo(int $idEquipo, array $payload, array $cambios): array
+    {
+        \Illuminate\Support\Facades\Gate::authorize('gestionar');
+
+        $claves = collect($cambios)->groupBy('origen')->map(fn ($g) => $g->pluck('clave')->all());
+        $base = $claves->get('base', []);
+        $propias = $claves->get('tipo', []);
+
+        return DB::transaction(function () use ($idEquipo, $payload, $base, $propias) {
+            $equipo = DB::table('equipos')->where('id_equipo', $idEquipo)->lockForUpdate()->first();
+
+            if (! $equipo) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['fila' => 'El equipo ya no existe.']);
+            }
+
+            if (DB::table('bajas')->where('id_equipo', $idEquipo)->exists()) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['fila' => 'El equipo está dado de baja; no se actualiza.']);
+            }
+
+            $columnas = [
+                'nombre_equipo' => 'nombreEquipo', 'id_estado_activo' => 'idEstadoActivo', 'id_marca' => 'idMarca',
+                'id_modelo' => 'idModelo', 'numero_serie' => 'numeroSerie', 'numero_factura' => 'numeroFactura',
+                'id_proveedor' => 'idProveedor', 'id_condicion_activo' => 'idCondicionActivo', 'host' => 'host',
+                'direccion_mac' => 'direccionMac', 'fecha_compra' => 'fechaCompra', 'fecha_fin_garantia' => 'fechaFinGarantia',
+                'comentarios' => 'comentarios',
+            ];
+            $enteros = ['id_estado_activo', 'id_marca', 'id_modelo', 'id_proveedor', 'id_condicion_activo'];
+            $datos = [];
+
+            foreach ($base as $clave) {
+                if (! isset($columnas[$clave])) {
+                    continue;
+                }
+
+                $valor = $payload[$columnas[$clave]] ?? null;
+                $datos[$clave] = in_array($clave, $enteros, true) ? (int) $valor : trim((string) $valor);
+            }
+
+            // Serie nueva: que no la tenga otro equipo.
+            if (isset($datos['numero_serie'])) {
+                $serie = mb_strtolower($datos['numero_serie']);
+                DB::select('select pg_advisory_xact_lock(hashtext(?))', ['equipo-serie:' . $serie]);
+
+                if (DB::table('equipos')->whereRaw('LOWER(numero_serie) = ?', [$serie])->where('id_equipo', '!=', $idEquipo)->exists()) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'numeroSerie' => 'Otro equipo ya tiene el número de serie «' . $datos['numero_serie'] . '».',
+                    ]);
+                }
+            }
+
+            // Otra marca sin modelo nuevo: el modelo anterior ya no corresponde.
+            if (isset($datos['id_marca']) && ! isset($datos['id_modelo']) && $equipo->id_modelo !== null) {
+                $marcaModelo = DB::table('modelos')->where('id_modelo', $equipo->id_modelo)->value('id_marca');
+
+                if ((int) $marcaModelo !== (int) $datos['id_marca']) {
+                    $datos['id_modelo'] = null;
+                }
+            }
+
+            // Organización: lo nuevo del archivo sobre lo actual, validado junto.
+            if (array_intersect($base, ['id_unidad', 'id_departamento', 'id_ubicacion']) !== []) {
+                $organizacion = $this->validarOrganizacion([
+                    'idHotel' => in_array('id_unidad', $base, true) ? $payload['idHotel'] : $equipo->id_unidad,
+                    'idDepartamento' => in_array('id_departamento', $base, true) ? $payload['idDepartamento'] : $equipo->id_departamento,
+                    'idUbicacion' => in_array('id_ubicacion', $base, true) ? $payload['idUbicacion'] : ($equipo->id_ubicacion ?? null),
+                ]);
+
+                $datos['id_unidad'] = $organizacion['id_unidad'];
+                $datos['id_departamento'] = $organizacion['id_departamento'];
+
+                if (\App\Services\UbicacionOrganizacionalService::equiposTienenUbicacion()) {
+                    $datos['id_ubicacion'] = $organizacion['id_ubicacion'];
+                }
+            }
+
+            if ($datos !== [] || $propias !== []) {
+                if (property_exists($equipo, 'fecha_actualizacion')) {
+                    $datos['fecha_actualizacion'] = now();
+                }
+
+                DB::table('equipos')->where('id_equipo', $idEquipo)->update($datos);
+            }
+
+            // Campos propios del tipo.
+            if ($propias !== []) {
+                $tipoId = (int) $equipo->id_tipo_equipo;
+                $definiciones = array_intersect_key($this->configuredChildFields($tipoId), array_flip($propias));
+                $valores = $this->validatedChildData(
+                    array_intersect_key($payload['childData'] ?? [], $definiciones),
+                    $definiciones
+                );
+                $fisica = $this->childConfig()[$tipoId] ?? null;
+                $fila = [];
+
+                foreach ($definiciones as $clave => $campo) {
+                    $valor = $valores[$clave];
+
+                    if ($campo['origen_dato'] === 'tabla_tipo' && $fisica) {
+                        $fila[$campo['columna_destino']] = $valor;
+
+                        continue;
+                    }
+
+                    if ($campo['origen_dato'] === 'atributo' && $valor !== null) {
+                        DB::table('atributos_equipo')->updateOrInsert(
+                            ['id_equipo' => $idEquipo, 'id_campo' => (int) $campo['id_campo']],
+                            ['nombre' => $campo['etiqueta'], 'valor' => is_bool($valor) ? ($valor ? '1' : '0') : (string) $valor]
+                        );
+                    }
+                }
+
+                if ($fila !== []) {
+                    if (! DB::table($fisica['table'])->where('id_equipo', $idEquipo)->exists()) {
+                        foreach ($fisica['fields'] as $columna => $tipo) {
+                            $fila[$columna] ??= $tipo === 'boolean' ? false : null;
+                        }
+                    }
+
+                    DB::table($fisica['table'])->updateOrInsert(['id_equipo' => $idEquipo], $fila);
+                }
+            }
+
+            // Responsable nuevo (el equipo no tenía): asignación inicial.
+            if (in_array('propietario', $base, true) && filled($payload['propietario'] ?? null)) {
+                $this->csvAsignarResponsable($idEquipo, (string) $payload['propietario']);
+            }
+
+            DB::table('bitacora_auditoria')->insert([
+                'id_usuario' => auth()->id(),
+                'accion' => 'EQUIPO_ACTUALIZADO_IMPORTACION',
+                'modulo' => 'EQUIPOS',
+                'descripcion' => 'Se actualizó el equipo ' . $equipo->codigo_inventario . ' desde una importación ('
+                    . implode(', ', array_merge($base, $propias)) . ').',
+                'fecha_hora' => now(),
+            ]);
+
+            return ['code' => (string) $equipo->codigo_inventario];
+        });
+    }
+
+    protected function csvAsignarResponsable(int $idEquipo, string $seleccion): void
+    {
+        if (DB::table('asignaciones')->where('id_equipo', $idEquipo)->whereNull('fecha_fin')->exists()) {
+            return;
+        }
+
+        $colaboradores = app(\App\Services\ColaboradoresService::class);
+        $colaborador = $colaboradores->resolver($seleccion, $seleccion);
+
+        if ($colaborador['nombre'] === '') {
+            return;
+        }
+
+        $tipoAsignacion = DB::table('catalogo_valores')
+            ->join('catalogos', 'catalogos.id_catalogo', '=', 'catalogo_valores.id_catalogo')
+            ->where('catalogos.clave', 'tipo_asignacion')
+            ->where('catalogo_valores.clave', 'ASIGNACION_INICIAL')
+            ->value('catalogo_valores.id_valor');
+
+        if (! $tipoAsignacion) {
+            return;
+        }
+
+        $equipo = DB::table('equipos')->where('id_equipo', $idEquipo)->first(['id_unidad', 'id_departamento', 'id_ubicacion']);
+
+        DB::table('asignaciones')->insert([
+            'id_equipo' => $idEquipo,
+            ...$colaboradores->columnasAsignacion($colaborador),
+            'id_unidad' => $equipo->id_unidad,
+            'id_departamento' => $equipo->id_departamento,
+            'id_ubicacion' => $equipo->id_ubicacion ?? null,
+            'id_tipo_asignacion' => $tipoAsignacion,
+            'fecha_asignacion' => now(),
+            'asignado_por' => auth()->id(),
+        ]);
+
+        $asignado = DB::table('estados_equipo')->whereRaw('LOWER(clave) = ?', ['asignado'])->value('id_estado_equipo');
+
+        if ($asignado !== null) {
+            DB::table('equipos')->where('id_equipo', $idEquipo)->update(['id_estado_activo' => $asignado]);
+        }
     }
 
     /*
@@ -951,7 +1329,8 @@ trait EquiposCsv
         $tipos = $nombres($this->csvMemo('lista.tipos', fn () => $this->getTiposEquipoProperty()), 'id_tipo_equipo');
 
         $columnasPorTipo = [];
-        $encabezados = ['tipo de equipo' => 'Tipo de equipo *'];
+        // Código de inventario: al volver a importar, identifica al equipo.
+        $encabezados = ['tipo de equipo' => 'Tipo de equipo *', 'codigo de inventario' => 'Código de inventario'];
 
         foreach ($equipos->pluck('id_tipo_equipo')->unique() as $tipoId) {
             try {
@@ -986,6 +1365,7 @@ trait EquiposCsv
                 $tipoId = (int) $equipo->id_tipo_equipo;
                 $fila = array_fill_keys(array_keys($encabezados), '');
                 $fila['tipo de equipo'] = $tipos[(string) $tipoId] ?? '';
+                $fila['codigo de inventario'] = (string) ($equipo->codigo_inventario ?? '');
                 $propios = $atributos->get($equipo->id_equipo, collect())->pluck('valor', 'id_campo');
 
                 foreach ($columnasPorTipo[$tipoId] ?? [] as $c) {

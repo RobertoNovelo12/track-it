@@ -4,6 +4,11 @@
 @php
     $tarjeta = 'rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 sm:p-6';
     $listas = $cuentas['listas'];
+    $textoAplicar = collect([
+        $cuentas['nuevas'] ? 'importar '.$cuentas['nuevas'] : null,
+        $cuentas['actualizar'] ? 'actualizar '.$cuentas['actualizar'] : null,
+    ])->filter()->implode(' y ');
+    $textoAplicar = ucfirst($textoAplicar).($listas === 1 ? ' equipo' : ' equipos');
 @endphp
 
 <div
@@ -131,8 +136,9 @@
                 }
 
                 const segundos = (performance.now() - inicio) / 1000;
-                const porEquipo = resultado.importadas > 0 ? segundos / resultado.importadas : 0;
-                const medicion = resultado.importadas + ' equipos en ' + segundos.toFixed(1) + ' s (' + porEquipo.toFixed(2) + ' s por equipo; servidor ' + (msServidor / 1000).toFixed(1) + ' s; lote más lento ' + (loteMasLento / 1000).toFixed(1) + ' s).';
+                const hechos = Number(resultado.importadas || 0) + Number(resultado.actualizadas || 0);
+                const porEquipo = hechos > 0 ? segundos / hechos : 0;
+                const medicion = hechos + ' equipos en ' + segundos.toFixed(1) + ' s (' + porEquipo.toFixed(2) + ' s por equipo; servidor ' + (msServidor / 1000).toFixed(1) + ' s; lote más lento ' + (loteMasLento / 1000).toFixed(1) + ' s).';
                 console.info('[Track-it] Importación: ' + medicion);
 
                 if (aviso) window.trackitToastActualizar?.(aviso, 'success', medicion, 'Importación terminada');
@@ -188,10 +194,15 @@
     </section>
 
     {{-- RESULTADO DE LA ÚLTIMA IMPORTACIÓN --}}
-    @if (($ultimoResultado['importadas'] ?? 0) > 0)
+    @if (($ultimoResultado['importadas'] ?? 0) + ($ultimoResultado['actualizadas'] ?? 0) > 0)
         <div role="status" class="flex flex-col gap-3 rounded-xl border border-[var(--theme-success-border,var(--theme-border))] bg-[var(--theme-success-soft)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
             <p class="text-sm text-[var(--theme-text)]">
-                <strong class="font-semibold text-[var(--theme-success)]">{{ $ultimoResultado['importadas'] }} {{ $ultimoResultado['importadas'] === 1 ? 'equipo importado' : 'equipos importados' }}.</strong>
+                <strong class="font-semibold text-[var(--theme-success)]">
+                    {{ collect([
+                        ($ultimoResultado['importadas'] ?? 0) ? $ultimoResultado['importadas'].(($ultimoResultado['importadas'] ?? 0) === 1 ? ' equipo importado' : ' equipos importados') : null,
+                        ($ultimoResultado['actualizadas'] ?? 0) ? $ultimoResultado['actualizadas'].(($ultimoResultado['actualizadas'] ?? 0) === 1 ? ' equipo actualizado' : ' equipos actualizados') : null,
+                    ])->filter()->implode(' y ') }}.
+                </strong>
                 @if (! empty($ultimoResultado['codigos']))
                     <span class="text-[var(--theme-text-muted)]">{{ collect($ultimoResultado['codigos'])->take(6)->implode(', ') }}{{ count($ultimoResultado['codigos']) > 6 ? '…' : '' }}</span>
                 @endif
@@ -214,7 +225,29 @@
                         <span class="text-[var(--theme-success)]">{{ $cuentas['listas'] + $cuentas['importadas'] }} sin errores</span> ·
                         <span class="{{ $cuentas['errores'] ? 'text-[var(--theme-danger)]' : '' }}">{{ $cuentas['errores'] }} con errores</span>
                         @if ($cuentas['importadas']) · {{ $cuentas['importadas'] }} importadas @endif
+                        @if ($cuentas['existentes']) · {{ $cuentas['existentes'] }} ya existen @endif
                     </p>
+
+                    {{-- Equipos que ya existen: actualizar con lo que cambió --}}
+                    @if ($cuentas['existentes'] > 0)
+                        <label class="mt-3 flex cursor-pointer items-start gap-2 text-sm text-[var(--theme-text)]">
+                            <input
+                                type="checkbox"
+                                wire:model.live="actualizarExistentes"
+                                x-bind:disabled="corriendo"
+                                class="mt-0.5 h-4 w-4 rounded border-[var(--theme-border-strong)] accent-[var(--theme-primary)]"
+                            >
+                            <span>
+                                <span class="font-medium text-[var(--theme-text-strong)]">Actualizar los equipos que ya existen</span>
+                                <span class="block text-xs text-[var(--theme-text-muted)]">
+                                    Se reconocen por su código de inventario (o su número de serie). Solo se cambian las celdas con valor; una celda vacía conserva el dato actual.
+                                    @if ($actualizarExistentes && $cuentas['sinCambios'])
+                                        {{ $cuentas['sinCambios'] }} {{ $cuentas['sinCambios'] === 1 ? 'fila no tiene' : 'filas no tienen' }} cambios.
+                                    @endif
+                                </span>
+                            </span>
+                        </label>
+                    @endif
                 </div>
 
                 <div class="flex gap-2">
@@ -231,7 +264,7 @@
                             x-on:click="importar()"
                             x-bind:disabled="corriendo"
                             class="h-10 rounded-md bg-[var(--theme-primary)] px-4 text-sm font-medium text-white hover:bg-[var(--theme-primary-hover)] disabled:opacity-70"
-                            x-text="corriendo ? 'Importando… ' + contados + ' de ' + totalImportar : @js('Importar '.$listas.($listas === 1 ? ' equipo' : ' equipos'))"
+                            x-text="corriendo ? 'Guardando… ' + contados + ' de ' + totalImportar : @js($textoAplicar)"
                         >Importar</button>
                     @endif
 
@@ -369,6 +402,34 @@
                                             @break
                                         @case('lista')
                                             <span class="inline-flex rounded-md bg-[var(--theme-primary-soft)] px-2 py-0.5 text-xs font-medium text-[var(--theme-primary)]">Lista para importar</span>
+                                            @break
+                                        @case('actualizar')
+                                        @case('actualizada')
+                                            <span class="inline-flex rounded-md {{ $fila['estado'] === 'actualizada' ? 'bg-[var(--theme-success-soft)] text-[var(--theme-success)]' : 'bg-[var(--theme-warning-soft)] text-[var(--theme-warning)]' }} px-2 py-0.5 text-xs font-medium">
+                                                {{ $fila['estado'] === 'actualizada' ? 'Actualizada' : 'Se actualizará' }} · {{ $fila['codigo'] }} · {{ count($fila['cambios'] ?? []) }} {{ count($fila['cambios'] ?? []) === 1 ? 'cambio' : 'cambios' }}
+                                            </span>
+                                            <ul class="mt-1 space-y-0.5 text-xs text-[var(--theme-text)]">
+                                                @foreach ($fila['cambios'] ?? [] as $cambio)
+                                                    <li>
+                                                        <span class="text-[var(--theme-text-muted)]">{{ $cambio['etiqueta'] }}:</span>
+                                                        @if ($cambio['antes'] !== '')
+                                                            <span class="text-[var(--theme-text-muted)] line-through">{{ $cambio['antes'] }}</span> →
+                                                        @else
+                                                            <span class="text-[var(--theme-text-muted)]">(vacío)</span> →
+                                                        @endif
+                                                        <span class="font-medium text-[var(--theme-text-strong)]">{{ $cambio['despues'] }}</span>
+                                                    </li>
+                                                @endforeach
+                                                @foreach ($fila['mensajes'] as $mensaje)
+                                                    <li class="text-[var(--theme-warning)]">{{ $mensaje }}</li>
+                                                @endforeach
+                                            </ul>
+                                            @break
+                                        @case('sin_cambios')
+                                            <span class="inline-flex rounded-md bg-[var(--theme-surface-soft)] px-2 py-0.5 text-xs font-medium text-[var(--theme-text-muted)]">Sin cambios · {{ $fila['codigo'] }}</span>
+                                            @foreach ($fila['mensajes'] as $mensaje)
+                                                <p class="mt-1 text-xs text-[var(--theme-warning)]">{{ $mensaje }}</p>
+                                            @endforeach
                                             @break
                                         @default
                                             <span class="inline-flex rounded-md bg-[var(--theme-danger-soft)] px-2 py-0.5 text-xs font-medium text-[var(--theme-danger)]">{{ $fila['estado'] === 'fallo' ? 'No se guardó' : 'Con errores' }}</span>

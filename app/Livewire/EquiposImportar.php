@@ -59,6 +59,12 @@ class EquiposImportar extends EquipoCreate
     // Marcas y modelos creados desde esta importación (para el aviso final).
     public array $catalogosCreados = [];
 
+    /*
+     * Filas de equipos que ya existen (por código de inventario o serie):
+     * apagado = se rechazan; encendido = se actualizan con lo que cambió.
+     */
+    public bool $actualizarExistentes = false;
+
     public function mount(?int $duplicar = null): void
     {
         Gate::authorize('gestionar');
@@ -180,27 +186,133 @@ class EquiposImportar extends EquipoCreate
                 'mensajes' => array_values(array_unique($errores)),
                 'faltan' => $this->csvFaltantesFila,
                 'codigo' => '',
+                'tipoId' => $tipoId ? (int) $tipoId : null,
             ];
         }
 
-        // Series que ya existen en el inventario (una sola consulta).
-        $existentes = $seriesArchivo === [] ? collect() : DB::table('equipos')
-            ->whereIn(DB::raw('LOWER(numero_serie)'), array_keys($seriesArchivo))
-            ->pluck('numero_serie')
-            ->map(fn ($s) => mb_strtolower((string) $s))
-            ->flip();
-
-        foreach ($vista as $i => $fila) {
-            if ($fila['serie'] !== '' && $existentes->has(mb_strtolower($fila['serie']))) {
-                $vista[$i]['estado'] = 'error';
-                $vista[$i]['mensajes'][] = "Ya hay un equipo con el número de serie «{$fila['serie']}».";
-            }
-        }
+        $this->revisarExistentes($vista, $datos);
 
         Cache::put($this->clave, $datos, now()->addHours(2));
 
         $this->filas = $vista;
         $this->terminado = false;
+    }
+
+    /*
+     * Filas de equipos que ya existen en el inventario: por «Código de
+     * inventario» (CSV exportado) o, sin esa columna, por número de serie.
+     * Con «Actualizar los equipos que ya existen» muestran lo que cambia.
+     */
+    private function revisarExistentes(array &$vista, array $datos): void
+    {
+        $indiceCodigo = null;
+
+        foreach ($datos['encabezados'] as $i => $encabezado) {
+            if ($this->csvNormalizar($encabezado) === 'codigo de inventario') {
+                $indiceCodigo = $i;
+            }
+        }
+
+        $codigoDe = fn (array $fila) => $indiceCodigo === null ? '' : trim((string) ($datos['filas'][$fila['fila']][$indiceCodigo] ?? ''));
+
+        $codigos = collect($vista)->map($codigoDe)->filter()->map(fn ($c) => mb_strtolower($c))->unique()->values()->all();
+        $series = collect($vista)->pluck('serie')->filter()->map(fn ($s) => mb_strtolower($s))->unique()->values()->all();
+
+        $porCodigo = $codigos === [] ? [] : DB::table('equipos')->whereIn(DB::raw('LOWER(codigo_inventario)'), $codigos)
+            ->get(['id_equipo', 'codigo_inventario'])->mapWithKeys(fn ($e) => [mb_strtolower((string) $e->codigo_inventario) => (int) $e->id_equipo])->all();
+        $porSerie = $series === [] ? [] : DB::table('equipos')->whereIn(DB::raw('LOWER(numero_serie)'), $series)
+            ->get(['id_equipo', 'numero_serie'])->mapWithKeys(fn ($e) => [mb_strtolower((string) $e->numero_serie) => (int) $e->id_equipo])->all();
+
+        $ids = [];
+
+        foreach ($vista as $i => $fila) {
+            $codigo = $codigoDe($fila);
+
+            if ($codigo !== '') {
+                $id = $porCodigo[mb_strtolower($codigo)] ?? null;
+
+                if ($id === null) {
+                    $vista[$i]['estado'] = 'error';
+                    $vista[$i]['mensajes'][] = "No hay un equipo con el código de inventario «{$codigo}». Para dar de alta uno nuevo, deja vacío el código.";
+
+                    continue;
+                }
+            } else {
+                $id = $fila['serie'] !== '' ? ($porSerie[mb_strtolower($fila['serie'])] ?? null) : null;
+            }
+
+            if ($id !== null) {
+                $vista[$i]['id_equipo'] = $id;
+                $ids[] = $id;
+            }
+        }
+
+        $actuales = $ids === [] ? [] : $this->csvDatosActuales($ids);
+
+        foreach ($vista as $i => $fila) {
+            $id = $fila['id_equipo'] ?? null;
+
+            if ($id === null || ! isset($actuales[$id])) {
+                continue;
+            }
+
+            $actual = $actuales[$id];
+            $codigo = (string) $actual['equipo']->codigo_inventario;
+            $vista[$i]['existe'] = true;
+            $vista[$i]['codigo'] = $codigo;
+
+            if (! $this->actualizarExistentes) {
+                $vista[$i]['estado'] = 'error';
+                $vista[$i]['mensajes'] = array_values(array_unique(array_merge(
+                    array_filter($vista[$i]['mensajes'], fn ($m) => ! str_starts_with($m, 'Falta «') || str_starts_with($m, 'Falta «Tipo de equipo')),
+                    ["Ya existe en el inventario ({$codigo}). Activa «Actualizar los equipos que ya existen» para aplicar sus cambios."]
+                )));
+
+                continue;
+            }
+
+            // Celdas vacías conservan lo actual: «Falta…» no aplica al actualizar.
+            $errores = array_values(array_filter($fila['mensajes'], fn ($m) => ! str_starts_with($m, 'Falta «') || str_starts_with($m, 'Falta «Tipo de equipo')));
+
+            if ($actual['baja']) {
+                $errores[] = "El equipo {$codigo} está dado de baja; no se actualiza.";
+            }
+
+            if ($fila['tipoId'] !== null && $fila['tipoId'] !== (int) $actual['equipo']->id_tipo_equipo) {
+                $errores[] = "El equipo {$codigo} es de otro tipo; el tipo de equipo no se cambia desde el archivo.";
+            }
+
+            if ($errores !== []) {
+                $vista[$i]['estado'] = 'error';
+                $vista[$i]['mensajes'] = $errores;
+
+                continue;
+            }
+
+            [$cambios, $avisos] = $this->csvCambios(
+                $datos['encabezados'],
+                $datos['filas'][$fila['fila']],
+                (int) $actual['equipo']->id_tipo_equipo,
+                $actual,
+                $datos['payloads'][$fila['fila']] ?? []
+            );
+
+            $vista[$i]['estado'] = $cambios === [] ? 'sin_cambios' : 'actualizar';
+            $vista[$i]['mensajes'] = $avisos;
+            $vista[$i]['cambios'] = $cambios;
+            $vista[$i]['faltan'] = [];
+        }
+    }
+
+    public function updatedActualizarExistentes(): void
+    {
+        Gate::authorize('gestionar');
+
+        if ($this->importando || $this->filas === []) {
+            return;
+        }
+
+        $this->analizar(array_map(fn ($f) => (int) $f['fila'], $this->filas));
     }
 
     /*
@@ -461,7 +573,7 @@ class EquiposImportar extends EquipoCreate
             Cache::forget($this->clave);
         }
 
-        $this->reset(['archivo', 'nombreArchivo', 'clave', 'filas', 'importando', 'terminado', 'ultimoResultado', 'catalogosCreados']);
+        $this->reset(['archivo', 'nombreArchivo', 'clave', 'filas', 'importando', 'terminado', 'ultimoResultado', 'catalogosCreados', 'actualizarExistentes']);
     }
 
     /*
@@ -490,7 +602,7 @@ class EquiposImportar extends EquipoCreate
         $procesadas = 0;
 
         foreach ($this->filas as $i => $fila) {
-            if ($fila['estado'] !== 'lista') {
+            if (! in_array($fila['estado'], ['lista', 'actualizar'], true)) {
                 continue;
             }
 
@@ -501,6 +613,13 @@ class EquiposImportar extends EquipoCreate
             $procesadas++;
 
             try {
+                if ($fila['estado'] === 'actualizar') {
+                    $this->csvActualizarEquipo((int) $fila['id_equipo'], $payloads[$fila['fila']] ?? [], $fila['cambios'] ?? []);
+                    $this->filas[$i]['estado'] = 'actualizada';
+
+                    continue;
+                }
+
                 $resultado = $this->guardarEquipo($payloads[$fila['fila']] ?? []);
 
                 if (($resultado['ok'] ?? false) !== true) {
@@ -519,8 +638,9 @@ class EquiposImportar extends EquipoCreate
             }
         }
 
-        $pendientes = collect($this->filas)->where('estado', 'lista')->count();
+        $pendientes = collect($this->filas)->whereIn('estado', ['lista', 'actualizar'])->count();
         $importadas = collect($this->filas)->where('estado', 'importada')->count();
+        $actualizadas = collect($this->filas)->where('estado', 'actualizada')->count();
 
         if ($pendientes === 0) {
             $this->terminar();
@@ -543,6 +663,7 @@ class EquiposImportar extends EquipoCreate
         return [
             'pendientes' => $pendientes,
             'importadas' => $importadas,
+            'actualizadas' => $actualizadas,
             'procesadas' => $procesadas,
             'ms' => $milisegundos,
         ];
@@ -554,9 +675,10 @@ class EquiposImportar extends EquipoCreate
         $this->terminado = true;
 
         $importadas = collect($this->filas)->where('estado', 'importada')->count();
+        $actualizadas = collect($this->filas)->where('estado', 'actualizada')->count();
 
         // Inventario y dashboard: una sola actualización al terminar.
-        if ($importadas > 0) {
+        if ($importadas + $actualizadas > 0) {
             app(\App\Services\SystemCacheService::class)->refreshModule('equipos');
             app(\App\Services\SystemCacheService::class)->refreshModule('dashboard');
         }
@@ -567,10 +689,11 @@ class EquiposImportar extends EquipoCreate
          */
         $this->ultimoResultado = [
             'importadas' => $importadas,
+            'actualizadas' => $actualizadas,
             'codigos' => collect($this->filas)->where('estado', 'importada')->pluck('codigo')->filter()->values()->all(),
         ];
 
-        $this->filas = collect($this->filas)->where('estado', '!=', 'importada')->values()->all();
+        $this->filas = collect($this->filas)->whereNotIn('estado', ['importada', 'actualizada', 'sin_cambios'])->values()->all();
 
         // Quedan filas con errores: se conserva la lectura para corregirlas aquí.
         if ($this->filas === []) {
@@ -578,17 +701,23 @@ class EquiposImportar extends EquipoCreate
             $this->reset(['archivo', 'nombreArchivo', 'clave', 'terminado']);
         }
 
-        if ($importadas === 0) {
+        if ($importadas + $actualizadas === 0) {
             return;
         }
 
         try {
             $notificaciones = app(\App\Services\NotificacionService::class);
+            $partes = array_filter([
+                $importadas ? 'importó '.$importadas.($importadas === 1 ? ' equipo' : ' equipos') : null,
+                $actualizadas ? 'actualizó '.$actualizadas.($actualizadas === 1 ? ' equipo' : ' equipos') : null,
+            ]);
 
             $notificaciones->notificar(
                 'equipos',
-                $importadas === 1 ? 'Equipo importado' : $importadas.' equipos importados',
-                $notificaciones->nombreActor().' importó '.$importadas.($importadas === 1 ? ' equipo' : ' equipos').' desde «'.$this->nombreArchivo.'».'.$this->textoCatalogosCreados(),
+                $importadas && $actualizadas
+                    ? 'Importación de equipos'
+                    : ($importadas ? ($importadas === 1 ? 'Equipo importado' : $importadas.' equipos importados') : ($actualizadas === 1 ? 'Equipo actualizado' : $actualizadas.' equipos actualizados')),
+                $notificaciones->nombreActor().' '.implode(' y ', $partes).' desde «'.$this->nombreArchivo.'».'.$this->textoCatalogosCreados(),
                 route('equipos.index', [], false)
             );
 
@@ -632,7 +761,11 @@ class EquiposImportar extends EquipoCreate
             'faltantes' => $this->importando ? [] : $this->catalogoFaltante(),
             'cuentas' => [
                 'total' => $filas->count(),
-                'listas' => $filas->where('estado', 'lista')->count(),
+                'listas' => $filas->whereIn('estado', ['lista', 'actualizar'])->count(),
+                'nuevas' => $filas->where('estado', 'lista')->count(),
+                'actualizar' => $filas->where('estado', 'actualizar')->count(),
+                'sinCambios' => $filas->where('estado', 'sin_cambios')->count(),
+                'existentes' => $filas->where('existe', true)->count(),
                 'errores' => $filas->whereIn('estado', ['error', 'fallo'])->count(),
                 'importadas' => $filas->where('estado', 'importada')->count(),
             ],
