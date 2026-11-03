@@ -64,6 +64,11 @@ class RestablecimientoContrasenaService
         return DB::table('usuarios as u')
             ->join('estados_usuario as eu', 'eu.id_estado_usuario', '=', 'u.id_estado_usuario')
             ->whereRaw('UPPER(eu.clave) = ?', ['ACTIVO'])
+            // Personas sin acceso (solo inventario): no tienen contraseña que recuperar.
+            ->when(
+                \App\Support\Esquema::tieneColumna('usuarios', 'acceso_sistema'),
+                fn ($query) => $query->where('u.acceso_sistema', true)
+            )
             ->where(function ($query) use ($identificador) {
                 $query->whereRaw('LOWER(u.correo) = ?', [mb_strtolower($identificador)])
                     ->orWhere('u.username', $identificador);

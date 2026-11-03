@@ -17,14 +17,25 @@
     <form
             data-avisar-cambios wire:submit="save" class="space-y-5">
 
+        {{-- Persona sin acceso: qué significa --}}
+        @if ($soloInventario)
+            <div class="flex items-start gap-3 rounded-xl border border-[var(--theme-border-strong)] bg-[var(--theme-surface-soft)] px-4 py-3 text-sm text-[var(--theme-text)]">
+                <svg class="mt-0.5 h-4 w-4 shrink-0 text-[var(--theme-text-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+                <p>
+                    <span class="font-semibold text-[var(--theme-text-strong)]">Persona sin acceso al sistema.</span>
+                    Se registra solo para asignarle equipos y que aparezca en sus actas; no tiene correo, contraseña ni rol y <span class="font-medium">no puede iniciar sesión</span>.
+                </p>
+            </div>
+        @endif
+
         {{-- Cuenta para un colaborador sin cuenta (desde Seguridad y roles) --}}
         @if ($colaboradorNombre !== '')
             <div class="flex items-start gap-3 rounded-xl border border-[var(--theme-primary)] bg-[var(--theme-primary-soft)] px-4 py-3 text-sm text-[var(--theme-text-strong)]">
                 <svg class="mt-0.5 h-4 w-4 shrink-0 text-[var(--theme-primary)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-be03452') }}"></use></svg>
 
                 <p>
-                    Cuenta para <span class="font-semibold">{{ $colaboradorNombre }}</span>.
-                    Al guardarla, los equipos asignados a este colaborador quedarán vinculados a la nueva cuenta.
+                    {{ $soloInventario ? 'Registro' : 'Cuenta' }} para <span class="font-semibold">{{ $colaboradorNombre }}</span>.
+                    Al guardar, los equipos asignados a este colaborador quedarán vinculados {{ $soloInventario ? 'a este registro' : 'a la nueva cuenta' }}.
                     Revisa nombres y apellidos antes de guardar.
                 </p>
             </div>
@@ -33,7 +44,7 @@
         {{-- ====================================================
             SIN DOMINIOS CONFIGURADOS
         ==================================================== --}}
-        @if ($dominios === [])
+        @if ($dominios === [] && ! $soloInventario)
             <div class="rounded-xl border border-[var(--theme-warning-border,var(--theme-border))] bg-[var(--theme-warning-soft)] px-4 py-3 text-sm text-[var(--theme-warning)]">
                 <p class="font-medium">
                     Falta configurar el dominio de correo
@@ -79,6 +90,7 @@
                     @error('apellidoMaterno') <p class="{{ $error }}">{{ $message }}</p> @enderror
                 </div>
 
+                @unless ($soloInventario)
                 <div>
                     <label for="user-email" class="{{ $label }}">Correo electrónico *</label>
                     <input
@@ -101,6 +113,7 @@
                         @endif
                     @enderror
                 </div>
+                @endunless
 
                 <div>
                     <label for="user-phone" class="{{ $label }}">Teléfono{{ $asterisco('telefono') }}</label>
@@ -158,6 +171,7 @@
         </section>
 
 
+        @unless ($soloInventario)
         {{-- ====================================================
             ACCESO AL SISTEMA
         ==================================================== --}}
@@ -308,6 +322,7 @@
 
             @error('idRol') <p class="{{ $error }} mt-3">{{ $message }}</p> @enderror
         </section>
+        @endunless
 
 
         {{-- ====================================================
@@ -326,11 +341,11 @@
                 type="submit"
                 target="save"
                 size="lg"
-                :disabled="$dominios === []"
-                loading-text="Creando…"
+                :disabled="$dominios === [] && ! $soloInventario"
+                loading-text="{{ $soloInventario ? 'Registrando…' : 'Creando…' }}"
                 class="w-full sm:w-auto"
             >
-                Crear usuario
+                {{ $soloInventario ? 'Registrar persona' : 'Crear usuario' }}
             </x-ui.button>
         </div>
 

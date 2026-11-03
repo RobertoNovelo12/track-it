@@ -234,6 +234,11 @@ class NotificacionService
             ->where('eu.clave', 'ACTIVO')
             ->whereRaw("COALESCE(pn.{$columna}, {$defecto}) = TRUE");
 
+        // Personas sin acceso (solo inventario) no reciben avisos.
+        if (\App\Support\Esquema::tieneColumna('usuarios', 'acceso_sistema')) {
+            $query->where('u.acceso_sistema', true);
+        }
+
         /*
          * Asignaciones y mantenimientos solo se notifican a quien puede
          * abrir esos módulos (roles Admin y Estándar).

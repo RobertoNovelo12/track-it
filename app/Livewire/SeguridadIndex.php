@@ -1000,6 +1000,8 @@ class SeguridadIndex extends Component
         |--------------------------------------------------------------------------
         */
 
+        $conAcceso = \App\Support\Esquema::tieneColumna('usuarios', 'acceso_sistema');
+
         $usuariosQuery = DB::table('usuarios as u')
             ->join(
                 'estados_usuario as eu',
@@ -1051,6 +1053,11 @@ class SeguridadIndex extends Component
              */
             ->selectRaw('COUNT(*) OVER() AS total_resultados')
             ->selectRaw(
+                $conAcceso
+                    ? 'COALESCE(u.acceso_sistema, true) AS acceso_sistema'
+                    : 'true AS acceso_sistema'
+            )
+            ->selectRaw(
                 app(\App\Services\ColaboradoresService::class)->disponible()
                     ? '(SELECT COUNT(DISTINCT ax.id_equipo) FROM asignaciones ax WHERE ax.id_usuario = u.id_usuario AND ax.fecha_fin IS NULL) AS equipos_asignados'
                     : '0 AS equipos_asignados'
@@ -1096,10 +1103,6 @@ class SeguridadIndex extends Component
                         [$like]
                     )
                     ->orWhereRaw(
-                        'LOWER(COALESCE(a.nombre, \'\')) LIKE ?',
-                        [$like]
-                    )
-                    ->orWhereRaw(
                         'LOWER(COALESCE(d.nombre, \'\')) LIKE ?',
                         [$like]
                     )
@@ -1119,7 +1122,12 @@ class SeguridadIndex extends Component
             });
         }
 
-        if ($this->estado !== '') {
+        // «Sin acceso (solo inventario)» es un filtro aparte del estado.
+        if ($this->estado === 'SIN_ACCESO') {
+            $conAcceso
+                ? $usuariosQuery->where('u.acceso_sistema', false)
+                : $usuariosQuery->whereRaw('false');
+        } elseif ($this->estado !== '') {
             $usuariosQuery->where('eu.clave', $this->estado);
         }
 
@@ -1303,6 +1311,13 @@ class SeguridadIndex extends Component
                 'ok' => false,
                 'mensaje' => 'Para cambiar tu propia contraseña usa Ajustes › Seguridad.',
             ];
+        }
+
+        if (
+            \App\Support\Esquema::tieneColumna('usuarios', 'acceso_sistema')
+            && DB::table('usuarios')->where('id_usuario', $idUsuario)->where('acceso_sistema', false)->exists()
+        ) {
+            return ['ok' => false, 'mensaje' => 'Esta persona no tiene acceso al sistema (solo inventario).'];
         }
 
         if (! $servicio->solicitudVigente($idUsuario)) {

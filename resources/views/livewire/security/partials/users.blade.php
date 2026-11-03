@@ -186,6 +186,7 @@
                             compact
                             :options="[
                                 ...collect($estados)->map(fn ($estadoOption) => ['value' => $estadoOption->clave, 'label' => $estadoOption->nombre])->all(),
+                                ['value' => 'SIN_ACCESO', 'label' => 'Sin acceso (solo inventario)'],
                             ]"
                         />
                     </div>
@@ -215,7 +216,7 @@
             result-plural="usuarios encontrados"
             empty-message="No se encontraron usuarios."
             :mobile-title="fn ($usuario) => trim($usuario->nombres . ' ' . $usuario->apellido_paterno)"
-            :mobile-subtitle="fn ($usuario) => '@' . $usuario->username"
+            :mobile-subtitle="fn ($usuario) => ($usuario->acceso_sistema ?? true) ? '@' . $usuario->username : 'Sin acceso · solo inventario'"
             :columns="[
                 [
                     'key' => 'nombre',
@@ -229,13 +230,17 @@
                     'key' => 'username',
                     'label' => 'Nombre de usuario',
                     'width' => '150px',
-                    'value' => fn ($usuario) => $usuario->username ? '@' . $usuario->username : null,
+                    // Persona sin acceso: su identificador interno no se muestra.
+                    'value' => fn ($usuario) => ! ($usuario->acceso_sistema ?? true)
+                        ? 'Sin acceso · solo inventario'
+                        : ($usuario->username ? '@' . $usuario->username : null),
                     'mobile' => false,
                 ],
                 [
                     'key' => 'correo',
                     'label' => 'Correo',
                     'width' => '220px',
+                    'default' => '—',
                 ],
                 [
                     'key' => 'organizacion',
@@ -248,6 +253,7 @@
                     'key' => 'rol_nombre',
                     'label' => 'Rol',
                     'width' => '150px',
+                    'value' => fn ($usuario) => ($usuario->acceso_sistema ?? true) ? $usuario->rol_nombre : '—',
                     'default' => 'Sin rol',
                 ],
                 [

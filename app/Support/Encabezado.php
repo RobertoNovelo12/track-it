@@ -127,6 +127,10 @@ class Encabezado
                 self::miga('Seguridad y roles', 'usuarios.index'),
                 self::miga('Nuevo usuario'),
             ]],
+            'usuarios.create-sin-acceso' => ['Seguridad y roles', [
+                self::miga('Seguridad y roles', 'usuarios.index'),
+                self::miga('Nueva persona sin acceso'),
+            ]],
 
             // Administración (la sección activa la agrega la propia pantalla)
             'catalogos.index' => ['Administración', [

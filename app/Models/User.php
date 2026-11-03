@@ -39,6 +39,7 @@ class User extends Authenticatable
         'id_departamento',
         'fecha_nacimiento',
         'debe_cambiar_password',
+        'acceso_sistema',
     ];
 
 
@@ -64,6 +65,8 @@ class User extends Authenticatable
             'fecha_nacimiento' => 'date',
 
             'debe_cambiar_password' => 'boolean',
+
+            'acceso_sistema' => 'boolean',
         ];
     }
 
@@ -74,7 +77,17 @@ class User extends Authenticatable
      */
     public function getAuthPassword(): string
     {
-        return $this->password_hash;
+        return (string) $this->password_hash;
+    }
+
+    /*
+     * Persona registrada solo para el inventario (sin acceso al sistema):
+     * nunca puede iniciar sesión. Sin la columna (migración pendiente)
+     * todas las cuentas tienen acceso.
+     */
+    public function sinAccesoSistema(): bool
+    {
+        return $this->getAttribute('acceso_sistema') === false;
     }
 
 

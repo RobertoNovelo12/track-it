@@ -122,8 +122,10 @@ class AuthenticatedSessionController extends Controller
         |--------------------------------------------------------------------------
         */
 
+        // Persona solo de inventario: se rechaza igual que una contraseña incorrecta.
         if (
             ! $user ||
+            $user->sinAccesoSistema() ||
             ! Hash::check(
                 $credentials['password'],
                 $user->getAuthPassword()

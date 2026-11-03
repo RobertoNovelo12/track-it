@@ -1,18 +1,20 @@
 @extends('layouts.app')
 
-@section('title', 'Nuevo usuario')
+@php($soloInventario = $soloInventario ?? false)
+
+@section('title', $soloInventario ? 'Nueva persona sin acceso' : 'Nuevo usuario')
 
 @section('content')
 
 <x-form.page-header
-    title="Nuevo usuario"
+    :title="$soloInventario ? 'Nueva persona sin acceso' : 'Nuevo usuario'"
     :crumbs="[
         ['label' => 'Inicio'],
         ['label' => 'Seguridad y Roles', 'href' => route('usuarios.index')],
-        ['label' => 'Nuevo usuario'],
+        ['label' => $soloInventario ? 'Nueva persona sin acceso' : 'Nuevo usuario'],
     ]"
 />
 
-<livewire:usuario-create />
+<livewire:usuario-create :solo-inventario="$soloInventario" />
 
 @endsection

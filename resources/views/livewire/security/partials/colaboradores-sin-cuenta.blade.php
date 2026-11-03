@@ -97,6 +97,16 @@
                             >
                                 Crear cuenta
                             </a>
+
+                            {{-- Sin acceso: solo para el inventario, no puede iniciar sesión --}}
+                            <a
+                                href="{{ route('usuarios.create-sin-acceso', array_filter(['colaborador' => $grupo['nombre'], 'numero' => $grupo['numero']])) }}"
+                                wire:navigate
+                                title="Registrarlo solo para el inventario, sin cuenta para entrar"
+                                class="inline-flex h-8 items-center justify-center rounded-[var(--radius-md)] border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 text-xs font-medium text-[var(--theme-text)] transition-colors duration-[var(--motion-fast)] hover:bg-[var(--theme-surface-soft)]"
+                            >
+                                Registrar sin acceso
+                            </a>
                         </div>
                     </div>
 

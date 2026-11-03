@@ -17,6 +17,7 @@
         avance: 0,
         contados: 0,
         totalImportar: 0,
+        restante: '',
         corriendo: false,
         encima: false,
         profundidad: 0,
@@ -101,7 +102,16 @@
                     if (nuevo === this.contados && this.avance > 2) return;
                     this.contados = nuevo;
                     this.avance = Math.max(2, Math.round((nuevo / total) * 100));
-                    if (aviso) window.trackitToastActualizar?.(aviso, 'loading', nuevo + ' de ' + total + ' equipos guardados…', 'Importando');
+
+                    // ETA: con el ritmo real (tras el primer lote confirmado).
+                    if (confirmados > 0) {
+                        const s = Math.max(1, Math.round(((total - nuevo) * msPorEquipo) / 1000));
+                        this.restante = nuevo >= total ? '' : 'quedan ≈ ' + (s < 60 ? s + ' s' : Math.floor(s / 60) + ' min ' + String(s % 60).padStart(2, '0') + ' s');
+                    } else {
+                        this.restante = 'calculando tiempo…';
+                    }
+
+                    if (aviso) window.trackitToastActualizar?.(aviso, 'loading', nuevo + ' de ' + total + ' equipos guardados' + (this.restante ? ' · ' + this.restante : '…'), 'Importando');
                 };
 
                 const reloj = setInterval(pintar, 60);
@@ -232,8 +242,14 @@
             </div>
 
             {{-- Barra de avance --}}
-            <div x-show="corriendo" x-cloak class="mt-4 h-2 overflow-hidden rounded-full bg-[var(--theme-surface-soft)]">
-                <div class="h-full rounded-full bg-[var(--theme-primary)] transition-[width] duration-300" x-bind:style="{ width: avance + '%' }"></div>
+            <div x-show="corriendo" x-cloak class="mt-4">
+                <div class="h-2 overflow-hidden rounded-full bg-[var(--theme-surface-soft)]">
+                    <div class="h-full rounded-full bg-[var(--theme-primary)] transition-[width] duration-300" x-bind:style="{ width: avance + '%' }"></div>
+                </div>
+                <p class="mt-1.5 flex justify-between text-[11px] tabular-nums text-[var(--theme-text-muted)]">
+                    <span x-text="contados + ' de ' + totalImportar + ' equipos'"></span>
+                    <span x-text="restante"></span>
+                </p>
             </div>
 
             {{-- Marcas y modelos que no existen en el catálogo --}}

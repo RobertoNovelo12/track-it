@@ -642,6 +642,12 @@ Route::middleware([
         fn () => view('seguridad.usuarios.create')
     )->name('usuarios.create')->middleware('can:administrar');
 
+    // Persona sin acceso: registrada solo para asignarle equipos.
+    Route::get(
+        '/seguridad/personas-sin-acceso/nueva',
+        fn () => view('seguridad.usuarios.create', ['soloInventario' => true])
+    )->name('usuarios.create-sin-acceso')->middleware('can:administrar');
+
 
     /*
     |--------------------------------------------------------------------------

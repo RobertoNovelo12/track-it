@@ -58,8 +58,18 @@ class UsuarioCreate extends Component
     #[\Livewire\Attributes\Locked]
     public string $colaboradorClave = '';
 
-    public function mount(): void
+    /*
+     * Persona sin acceso (solo inventario): se registra para asignarle
+     * equipos, sin correo, contraseña ni rol, y no puede iniciar sesión.
+     */
+    #[\Livewire\Attributes\Locked]
+    public bool $soloInventario = false;
+
+    public function mount(bool $soloInventario = false): void
     {
+        $this->soloInventario = $soloInventario
+            && \App\Support\Esquema::tieneColumna('usuarios', 'acceso_sistema');
+
         $nombre = trim((string) preg_replace('/\s+/u', ' ', (string) request()->query('colaborador', '')));
 
         if ($nombre === '' || mb_strlen($nombre) > 255) {
@@ -136,6 +146,10 @@ class UsuarioCreate extends Component
         }
 
         $this->correo = Str::lower($this->correo);
+
+        if ($this->soloInventario) {
+            return $this->guardarSinAcceso($regla, $unidad);
+        }
 
         $validated = $this->validate(
             [
@@ -319,6 +333,128 @@ class UsuarioCreate extends Component
         session()->flash(
             'usuarioCreado',
             'La cuenta de ' . $usuario->nombres . ' se creó correctamente.'
+                . ($vinculadas > 0
+                    ? ' Se le vincularon ' . $vinculadas . ($vinculadas === 1 ? ' asignación.' : ' asignaciones.')
+                    : '')
+        );
+
+        return $this->redirectRoute('usuarios.index', navigate: true);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Guardar persona sin acceso (solo inventario)
+    |--------------------------------------------------------------------------
+    |
+    | Mismos datos personales y de organización; sin correo, contraseña ni
+    | rol. La contraseña se guarda aleatoria (nadie la conoce) y el inicio
+    | de sesión la rechaza siempre por acceso_sistema = false.
+    |
+    */
+
+    private function guardarSinAcceso(callable $regla, string $unidad)
+    {
+        $validated = $this->validate(
+            [
+                'nombres' => ['required', 'string', 'max:255'],
+                'apellidoPaterno' => ['required', 'string', 'max:255'],
+                'apellidoMaterno' => [$regla('apellido_materno'), 'string', 'max:255'],
+                'telefono' => [$regla('telefono'), 'string', 'max:30', 'regex:/^[0-9+()\-\s.]{7,30}$/'],
+                'numeroColaborador' => [
+                    $regla('numero_colaborador'),
+                    'string',
+                    'max:255',
+                    Rule::unique('usuarios', 'numero_colaborador'),
+                ],
+                'puesto' => [$regla('puesto'), 'string', 'max:255'],
+                'idUnidad' => [
+                    'required',
+                    'integer',
+                    Rule::exists('unidades_organizativas', 'id_unidad')
+                        ->where(fn ($query) => $query->where('activo', true)),
+                ],
+                'idDepartamento' => ['required', 'integer'],
+            ],
+            [
+                'nombres.required' => 'Escribe el nombre.',
+                'apellidoPaterno.required' => 'Escribe el apellido paterno.',
+                'apellidoMaterno.required' => 'Escribe el apellido materno.',
+                'telefono.required' => 'Escribe el teléfono.',
+                'puesto.required' => 'Escribe el puesto.',
+                'telefono.regex' => 'Escribe un teléfono válido.',
+                'numeroColaborador.required' => 'Escribe el número de colaborador.',
+                'numeroColaborador.unique' => 'Ese número de colaborador ya está registrado.',
+                'idUnidad.required' => 'Selecciona el ' . $unidad . '.',
+                'idUnidad.exists' => 'El ' . $unidad . ' seleccionado no está disponible.',
+                'idDepartamento.required' => 'Selecciona el departamento.',
+            ]
+        );
+
+        $departamentoValido = Departamento::query()
+            ->disponiblesParaUnidad((int) $validated['idUnidad'])
+            ->where('departamentos.id_departamento', (int) $validated['idDepartamento'])
+            ->exists();
+
+        if (! $departamentoValido) {
+            $this->addError('idDepartamento', 'El departamento no atiende el ' . $unidad . ' seleccionado.');
+
+            return null;
+        }
+
+        $idEstadoActivo = DB::table('estados_usuario')->where('clave', 'ACTIVO')->value('id_estado_usuario');
+
+        if (! $idEstadoActivo) {
+            $this->addError('nombres', 'No se encontró el estado ACTIVO en el sistema.');
+
+            return null;
+        }
+
+        $opcional = fn (?string $valor): ?string => filled($valor) ? $valor : null;
+        $nombreCompleto = trim($validated['nombres'] . ' ' . $validated['apellidoPaterno']);
+
+        $usuario = DB::transaction(function () use ($validated, $idEstadoActivo, $opcional, $nombreCompleto) {
+            $usuario = User::create([
+                'nombres' => $validated['nombres'],
+                'apellido_paterno' => $validated['apellidoPaterno'],
+                'apellido_materno' => $opcional($validated['apellidoMaterno'] ?? null),
+                'telefono' => $opcional($validated['telefono'] ?? null),
+
+                // Identificador interno (no sirve para entrar: sin acceso).
+                'username' => 'sin-acceso-' . Str::lower(Str::random(12)),
+                'correo' => null,
+
+                'numero_colaborador' => $opcional($validated['numeroColaborador'] ?? null),
+                'puesto' => $opcional($validated['puesto'] ?? null),
+                'id_unidad' => (int) $validated['idUnidad'],
+                'id_departamento' => (int) $validated['idDepartamento'],
+                'id_rol' => null,
+
+                'password_hash' => Hash::make(Str::random(64)),
+                'id_estado_usuario' => $idEstadoActivo,
+                'acceso_sistema' => false,
+            ]);
+
+            DB::table('bitacora_auditoria')->insert([
+                'id_usuario' => auth()->id(),
+                'accion' => 'PERSONA_SIN_ACCESO_CREADA',
+                'modulo' => 'SEGURIDAD',
+                'descripcion' => 'Se registró a ' . $nombreCompleto . ' como persona sin acceso al sistema (solo inventario).',
+                'fecha_hora' => now(),
+            ]);
+
+            return $usuario;
+        });
+
+        $colaboradores = app(\App\Services\ColaboradoresService::class);
+        $colaboradores->olvidarOpciones();
+
+        $vinculadas = $this->colaboradorClave !== ''
+            ? $colaboradores->vincular($this->colaboradorClave, (int) $usuario->id_usuario)
+            : 0;
+
+        session()->flash(
+            'usuarioCreado',
+            $nombreCompleto . ' quedó registrado sin acceso al sistema; ya puedes asignarle equipos.'
                 . ($vinculadas > 0
                     ? ' Se le vincularon ' . $vinculadas . ($vinculadas === 1 ? ' asignación.' : ' asignaciones.')
                     : '')
