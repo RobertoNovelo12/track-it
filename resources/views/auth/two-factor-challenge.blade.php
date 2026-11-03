@@ -79,7 +79,7 @@
             class="{{ $initialMode === 'recovery' ? 'hidden' : '' }}"
         >
             <label
-                for="code"
+                for="codeBox0"
                 class="
                     block
                     mb-1.5
@@ -93,60 +93,74 @@
             </label>
 
 
+            {{-- Valor que se envía (lo llenan las 6 casillas) --}}
             <input
                 id="code"
-                type="text"
+                type="hidden"
                 name="code"
-
                 value="{{ old('code') }}"
-
-                inputmode="numeric"
-                pattern="[0-9]*"
-                maxlength="6"
-
-                autocomplete="one-time-code"
-
-                placeholder="000000"
-
-                @if ($initialMode === 'recovery')
-                    disabled
-                @else
-                    autofocus
-                @endif
-
-                class="
-                    w-full
-
-                    bg-[var(--theme-surface)]
-
-                    border
-                    border-[var(--theme-border-strong)]
-
-                    rounded-md
-
-                    px-4
-                    py-3
-
-                    text-center
-                    text-lg
-                    font-medium
-                    tracking-[0.35em]
-                    text-[var(--theme-text)]
-
-                    placeholder:text-[var(--theme-text-muted)]
-
-                    focus:outline-none
-                    focus:ring-2
-                    focus:ring-[var(--theme-primary-soft)]
-                    focus:border-[var(--theme-primary)]
-
-                    transition-colors
-
-                    @error('code')
-                        border-[var(--theme-danger)]
-                    @enderror
-                "
+                @if ($initialMode === 'recovery') disabled @endif
             >
+
+            {{--
+                Una casilla por dígito. Al pegar o al autocompletar el código
+                (SMS / gestor de contraseñas) se reparte en todas; al llenar
+                la sexta se envía solo.
+            --}}
+            <div
+                id="codeBoxes"
+                class="flex justify-between gap-2 sm:gap-3"
+                role="group"
+                aria-label="Código de verificación de 6 dígitos"
+            >
+                @for ($i = 0; $i < 6; $i++)
+                    <input
+                        type="text"
+                        inputmode="numeric"
+                        pattern="[0-9]*"
+                        maxlength="{{ $i === 0 ? 6 : 1 }}"
+                        @if ($i === 0) id="codeBox0" autocomplete="one-time-code" @else autocomplete="off" @endif
+                        @if ($i === 0 && $initialMode !== 'recovery') autofocus @endif
+                        data-code-box
+                        data-1p-ignore
+                        data-lpignore="true"
+                        data-bwignore
+                        data-form-type="other"
+                        aria-label="Dígito {{ $i + 1 }} de 6"
+                        value="{{ substr((string) old('code'), $i, 1) }}"
+                        class="
+                            h-14
+                            w-full
+                            min-w-0
+                            max-w-[52px]
+
+                            rounded-md
+                            border
+                            border-[var(--theme-border-strong)]
+                            bg-[var(--theme-surface)]
+
+                            text-center
+                            text-xl
+                            font-semibold
+                            tabular-nums
+                            text-[var(--theme-text-strong)]
+
+                            caret-[var(--theme-primary)]
+
+                            focus:outline-none
+                            focus:ring-2
+                            focus:ring-[var(--theme-primary-soft)]
+                            focus:border-[var(--theme-primary)]
+
+                            transition-colors
+
+                            @error('code')
+                                border-[var(--theme-danger)]
+                            @enderror
+                        "
+                    >
+                @endfor
+            </div>
 
 
             @error('code')
@@ -499,6 +513,97 @@
 
             /*
             |--------------------------------------------------------------------------
+            | Casillas del código (una por dígito)
+            |--------------------------------------------------------------------------
+            */
+
+            const cajas = Array.from(
+                document.querySelectorAll('[data-code-box]')
+            );
+
+            let enviando = false;
+
+            if (modeInput.value === 'recovery') {
+                cajas.forEach((caja) => { caja.disabled = true; });
+            }
+
+            function sincronizarCodigo() {
+                codeInput.value = cajas.map((caja) => caja.value).join('');
+
+                if (/^\d{6}$/.test(codeInput.value) && modeInput.value === 'authenticator' && !enviando) {
+                    enviando = true;
+                    form.requestSubmit ? form.requestSubmit() : form.submit();
+                }
+            }
+
+            // Reparte varios dígitos desde la casilla indicada.
+            function repartir(desde, texto) {
+                const digitos = String(texto).replace(/\D/g, '').slice(0, 6 - desde).split('');
+
+                digitos.forEach((digito, n) => {
+                    cajas[desde + n].value = digito;
+                });
+
+                const siguiente = Math.min(desde + digitos.length, cajas.length - 1);
+                cajas[siguiente].focus();
+                cajas[siguiente].select();
+
+                sincronizarCodigo();
+            }
+
+            cajas.forEach((caja, indice) => {
+                caja.addEventListener('focus', () => caja.select());
+
+                caja.addEventListener('input', () => {
+                    const limpio = caja.value.replace(/\D/g, '');
+
+                    // Autocompletado (SMS o gestor) o varios dígitos a la vez.
+                    if (limpio.length > 1) {
+                        repartir(indice, limpio);
+
+                        return;
+                    }
+
+                    caja.value = limpio;
+
+                    if (limpio !== '' && indice < cajas.length - 1) {
+                        cajas[indice + 1].focus();
+                    }
+
+                    sincronizarCodigo();
+                });
+
+                caja.addEventListener('paste', (evento) => {
+                    evento.preventDefault();
+                    repartir(indice, (evento.clipboardData || window.clipboardData).getData('text'));
+                });
+
+                caja.addEventListener('keydown', (evento) => {
+                    if (evento.key === 'Backspace' && caja.value === '' && indice > 0) {
+                        evento.preventDefault();
+                        cajas[indice - 1].value = '';
+                        cajas[indice - 1].focus();
+                        sincronizarCodigo();
+                    } else if (evento.key === 'ArrowLeft' && indice > 0) {
+                        evento.preventDefault();
+                        cajas[indice - 1].focus();
+                    } else if (evento.key === 'ArrowRight' && indice < cajas.length - 1) {
+                        evento.preventDefault();
+                        cajas[indice + 1].focus();
+                    }
+                });
+            });
+
+            // Si hubo error, se borra el código para escribirlo de nuevo.
+            @error('code')
+                cajas.forEach((caja) => { caja.value = ''; });
+                codeInput.value = '';
+                cajas[0]?.focus();
+            @enderror
+
+
+            /*
+            |--------------------------------------------------------------------------
             | Aplicación autenticadora
             |--------------------------------------------------------------------------
             */
@@ -543,8 +648,9 @@
 
                 recoveryInput.value = '';
 
+                cajas.forEach((caja) => { caja.disabled = false; });
 
-                codeInput.focus();
+                cajas[0]?.focus();
             }
 
 
@@ -593,6 +699,8 @@
 
 
                 codeInput.value = '';
+
+                cajas.forEach((caja) => { caja.value = ''; caja.disabled = true; });
 
 
                 recoveryInput.focus();
