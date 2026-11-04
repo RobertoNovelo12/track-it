@@ -317,7 +317,7 @@
                             x-show="(actualizar ? {{ $modos['con']['listas'] }} : {{ $modos['sin']['listas'] }}) > 0"
                             type="button"
                             x-on:click="importar()"
-                            x-bind:disabled="corriendo || revisando"
+                            x-bind:disabled="corriendo || revisando > 0"
                             class="h-10 rounded-md bg-[var(--theme-primary)] px-4 text-sm font-medium text-white hover:bg-[var(--theme-primary-hover)] disabled:opacity-70"
                             x-text="corriendo ? 'Guardando… ' + contados + ' de ' + totalImportar : (actualizar ? @js($modos['con']['boton']) : @js($modos['sin']['boton']))"
                         >Importar</button>
@@ -411,6 +411,9 @@
                                             <span class="text-[var(--theme-text-muted)]">— {{ $falta['marca'] }} · {{ $falta['tipoNombre'] }}</span>
                                         @endif
                                         <span class="text-xs text-[var(--theme-text-muted)]">· {{ $falta['filas'] }} {{ $falta['filas'] === 1 ? 'fila' : 'filas' }}</span>
+                                        @if ($falta['sugerencia'])
+                                            <span class="block text-xs text-[var(--theme-text-muted)]">Márcalo solo si es distinto al que ya tienes; se creará como nuevo.</span>
+                                        @endif
                                         @if ($falta['clase'] === 'modelo' && $falta['marcaNueva'])
                                             <span class="block text-xs text-[var(--theme-text-muted)]">Se crea solo si también se crea su marca.</span>
                                         @endif
@@ -418,15 +421,23 @@
                                 </label>
 
                                 @if ($falta['sugerencia'])
-                                    <div class="flex items-center gap-2 pl-6 text-xs sm:pl-0">
-                                        <span class="text-[var(--theme-warning)]">¿Quisiste decir «{{ $falta['sugerencia'] }}»?</span>
+                                    {{--
+                                        Parecido a uno que ya existe: «Usar el existente» cambia el
+                                        nombre en las filas (no crea nada); marcar la casilla lo crea
+                                        como nuevo.
+                                    --}}
+                                    <div class="flex flex-wrap items-center gap-2 pl-6 text-xs sm:justify-end sm:pl-0">
+                                        <span class="text-[var(--theme-text-muted)]">
+                                            Ya tienes {{ $falta['clase'] === 'opcion' ? 'la opción' : ($falta['clase'] === 'marca' ? 'la marca' : 'el modelo') }}
+                                            <span class="font-medium text-[var(--theme-text-strong)]">«{{ $falta['sugerencia'] }}»</span>
+                                        </span>
                                         <button
                                             type="button"
                                             x-on:click="revisarTras(() => $wire.usarSugerencia(@js($falta['clave'])))"
-                                            x-bind:disabled="revisando"
-                                            wire:loading.attr="disabled"
-                                            class="h-8 shrink-0 rounded-md border border-[var(--theme-border-strong)] px-3 font-medium text-[var(--theme-text)] hover:bg-[var(--theme-surface-soft)] disabled:opacity-50"
-                                        >Usar «{{ $falta['sugerencia'] }}»</button>
+                                            x-bind:disabled="revisando > 0 || corriendo"
+                                            title="Cambia «{{ $falta['clase'] === 'opcion' ? $falta['valor'] : ($falta['clase'] === 'marca' ? $falta['marca'] : $falta['modelo']) }}» por «{{ $falta['sugerencia'] }}» en {{ $falta['filas'] === 1 ? 'la fila' : 'las '.$falta['filas'].' filas' }}, sin crear nada nuevo"
+                                            class="h-8 shrink-0 rounded-md border border-[var(--theme-primary)] px-3 font-medium text-[var(--theme-primary)] hover:bg-[var(--theme-primary-soft)] disabled:opacity-50"
+                                        >Usar el existente</button>
                                     </div>
                                 @endif
                             </li>

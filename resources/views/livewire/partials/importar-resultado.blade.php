@@ -48,7 +48,7 @@
                                                     <span class="text-[var(--theme-text-muted)]">{{ $opcion['columna'] }}: usar</span>
                                                     <select
                                                         x-on:change="if ($event.target.value) { revisarTras(() => $wire.corregirValor(@js($opcion['clave']), $event.target.value)); }"
-                                                        x-bind:disabled="corriendo || revisando"
+                                                        x-bind:disabled="corriendo || revisando > 0"
                                                         class="h-8 rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-2 text-xs text-[var(--theme-text)] focus:border-[var(--theme-primary)] focus:outline-none"
                                                         aria-label="Corregir «{{ $opcion['valor'] }}» en {{ $opcion['columna'] }}"
                                                     >
