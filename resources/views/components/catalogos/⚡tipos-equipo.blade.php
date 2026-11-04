@@ -917,7 +917,6 @@ new class extends Component
                         x-transition.origin.top.right
                         class="absolute right-0 z-30 mt-1 w-72 overflow-hidden rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface)] py-1 theme-shadow-xl"
                     >
-                        <p class="px-3 pt-2 pb-1.5 text-[11px] leading-relaxed text-[var(--theme-text-muted)]">Todos los tipos de equipo en un solo archivo, para importar equipos variados. En Excel, cada tipo va en su propia hoja.</p>
                         <button type="button" x-on:click="abierto = false; window.trackitDescargar(@js(route('catalogos.tipos-equipo.plantilla-universal-xlsx')))" class="block w-full px-3 py-2 text-left text-sm text-[var(--theme-text)] hover:bg-[var(--theme-surface-soft)]">Descargar en Excel <span class="text-xs text-[var(--theme-text-muted)]">(una hoja por tipo)</span></button>
                         <button type="button" x-on:click="abierto = false; window.trackitDescargar(@js(route('catalogos.tipos-equipo.plantilla-universal-csv')))" class="block w-full px-3 py-2 text-left text-sm text-[var(--theme-text)] hover:bg-[var(--theme-surface-soft)]">Descargar en CSV <span class="text-xs text-[var(--theme-text-muted)]">(una sola tabla)</span></button>
                     </div>
