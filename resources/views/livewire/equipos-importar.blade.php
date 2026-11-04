@@ -405,40 +405,64 @@
                 </div>
             @endif
 
-            <div class="mt-4 overflow-x-auto rounded-lg border border-[var(--theme-border)]">
-                <table class="w-full min-w-[720px] text-left text-sm">
-                    <thead class="bg-[var(--theme-surface-soft)] text-xs text-[var(--theme-text-muted)]">
-                        <tr>
-                            <th class="px-3 py-2 font-medium" title="Número de fila en tu archivo (la fila 1 son los encabezados)">Fila en el archivo</th>
-                            <th class="px-3 py-2 font-medium">Tipo</th>
-                            <th class="px-3 py-2 font-medium">Nombre</th>
-                            <th class="px-3 py-2 font-medium">Número de serie</th>
-                            <th class="px-3 py-2 font-medium">Resultado</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-[var(--theme-border)]">
-                        @foreach ($filas as $fila)
-                            <tr wire:key="importar-fila-{{ $fila['fila'] }}" class="align-top">
-                                <td class="px-3 py-2 text-[var(--theme-text-muted)]">{{ $fila['fila'] }}</td>
-                                <td class="px-3 py-2 text-[var(--theme-text)]">{{ $fila['tipo'] ?: '—' }}</td>
-                                <td class="px-3 py-2 font-medium text-[var(--theme-text-strong)]">{{ $fila['nombre'] ?: '—' }}</td>
-                                <td class="px-3 py-2 text-[var(--theme-text)]">{{ $fila['serie'] ?: '—' }}</td>
-                                <td class="px-3 py-2">
-                                    @if (isset($fila['actualizando'], $fila['sinActualizar']) && ! in_array($fila['estado'], ['importada', 'actualizada', 'fallo'], true))
-                                        <div x-show="! actualizar" @if ($actualizarExistentes) x-cloak @endif>
-                                            @include('livewire.partials.importar-resultado', ['r' => array_merge($fila, $fila['sinActualizar'])])
-                                        </div>
-                                        <div x-show="actualizar" @unless ($actualizarExistentes) x-cloak @endunless>
-                                            @include('livewire.partials.importar-resultado', ['r' => array_merge($fila, $fila['actualizando'])])
-                                        </div>
+            {{--
+                Filas: tabla en escritorio y tarjetas en móvil (mismo marcado;
+                la rejilla solo se activa desde md).
+            --}}
+            @php
+                $columnasFila = 'md:grid-cols-[120px_130px_minmax(0,1fr)_150px_minmax(0,1.6fr)]';
+            @endphp
+
+            <div class="mt-4 md:overflow-hidden md:rounded-lg md:border md:border-[var(--theme-border)]">
+                <div class="hidden bg-[var(--theme-surface-soft)] text-xs text-[var(--theme-text-muted)] md:grid {{ $columnasFila }}">
+                    <div class="px-3 py-2 font-medium" title="Número de fila en tu archivo (la fila 1 son los encabezados)">Fila en el archivo</div>
+                    <div class="px-3 py-2 font-medium">Tipo</div>
+                    <div class="px-3 py-2 font-medium">Nombre</div>
+                    <div class="px-3 py-2 font-medium">Número de serie</div>
+                    <div class="px-3 py-2 font-medium">Resultado</div>
+                </div>
+
+                <div class="space-y-2 md:space-y-0 md:divide-y md:divide-[var(--theme-border)]">
+                    @foreach ($filas as $fila)
+                        <div
+                            wire:key="importar-fila-{{ $fila['fila'] }}"
+                            class="rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface)] p-3 text-sm md:grid md:items-start md:rounded-none md:border-0 md:bg-transparent md:p-0 {{ $columnasFila }}"
+                        >
+                            {{-- Móvil: «Fila 2 · Access point» en una línea --}}
+                            <div class="flex items-center gap-1.5 text-xs text-[var(--theme-text-muted)] md:contents">
+                                <span class="md:px-3 md:py-2 md:text-sm">
+                                    @if (! empty($fila['etiqueta']))
+                                        {{-- Excel por hojas: «Laptop · fila 3» --}}
+                                        {{ $fila['etiqueta'] }}
                                     @else
-                                        @include('livewire.partials.importar-resultado', ['r' => $fila])
+                                        <span class="md:hidden">Fila </span>{{ $fila['fila'] }}
                                     @endif
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                                </span>
+                                <span class="md:hidden" aria-hidden="true">·</span>
+                                <span class="md:px-3 md:py-2 md:text-sm md:text-[var(--theme-text)]">{{ $fila['tipo'] ?: '—' }}</span>
+                            </div>
+
+                            <div class="mt-1 break-words font-medium text-[var(--theme-text-strong)] md:mt-0 md:px-3 md:py-2">{{ $fila['nombre'] ?: '—' }}</div>
+
+                            <div class="break-words text-xs text-[var(--theme-text)] md:px-3 md:py-2 md:text-sm">
+                                <span class="text-[var(--theme-text-muted)] md:hidden">Serie: </span>{{ $fila['serie'] ?: '—' }}
+                            </div>
+
+                            <div class="mt-2 min-w-0 border-t border-[var(--theme-border)] pt-2 md:mt-0 md:border-t-0 md:px-3 md:py-2">
+                                @if (isset($fila['actualizando'], $fila['sinActualizar']) && ! in_array($fila['estado'], ['importada', 'actualizada', 'fallo'], true))
+                                    <div x-show="! actualizar" @if ($actualizarExistentes) x-cloak @endif>
+                                        @include('livewire.partials.importar-resultado', ['r' => array_merge($fila, $fila['sinActualizar'])])
+                                    </div>
+                                    <div x-show="actualizar" @unless ($actualizarExistentes) x-cloak @endunless>
+                                        @include('livewire.partials.importar-resultado', ['r' => array_merge($fila, $fila['actualizando'])])
+                                    </div>
+                                @else
+                                    @include('livewire.partials.importar-resultado', ['r' => $fila])
+                                @endif
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
             </div>
         </section>
     @endif

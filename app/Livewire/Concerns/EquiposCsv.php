@@ -339,111 +339,178 @@ trait EquiposCsv
         return $this->csvDescarga('plantilla-universal-equipos.csv', [$encabezados]);
     }
 
+    /*
+     * Plantilla universal en Excel: una hoja por tipo de equipo, cada una
+     * solo con sus columnas (sin columna de tipo: lo da la hoja). La hoja
+     * oculta «_tipos» relaciona cada hoja con su tipo para importarla.
+     */
     public function plantillaUniversalXlsx(): StreamedResponse
     {
-        $columnas = $this->csvColumnasUniversales();
         $filasConDatos = 500;
-
         $libro = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
-        $hoja = $libro->getActiveSheet();
-        $hoja->setTitle('Equipos');
+        $libro->removeSheetByIndex(0);
 
-        $listas = $libro->createSheet();
-        $listas->setTitle('Listas');
+        $listas = new \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet($libro, 'Listas');
+        $mapa = new \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet($libro, '_tipos');
+        $libro->addSheet($listas);
+        $libro->addSheet($mapa);
         $columnaLista = 0;
-
-        foreach ($columnas as $i => $columna) {
-            $letra = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($i + 1);
-            $encabezado = $columna['etiqueta'].($columna['obligatorio'] ? ' *' : '');
-            $propia = ! $columna['general'];
-
-            $hoja->setCellValue($letra.'1', $encabezado);
-            $hoja->getColumnDimension($letra)->setWidth(max(14, mb_strlen($encabezado) + 4));
-            $hoja->getStyle($letra.'1')->applyFromArray([
-                'font' => ['bold' => true, 'color' => ['rgb' => $columna['obligatorio'] ? 'FFFFFF' : ($propia ? '7A4B00' : '1F2937')]],
-                'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => $columna['obligatorio'] ? '2A78D6' : ($propia ? 'FCEFD6' : 'E5E7EB')]],
-                'alignment' => ['vertical' => 'center'],
-            ]);
-
-            // Nota en el encabezado: a qué tipos aplica la columna.
-            if (($ayuda = $this->csvAyudaColumna($columna)) !== '') {
-                $nota = $hoja->getComment($letra.'1');
-                $nota->getText()->createTextRun($ayuda);
-                $nota->setWidth('220pt');
-                $nota->setHeight('70pt');
-            }
-
-            if (($columna['tipo'] ?? '') === 'date') {
-                $hoja->getStyle($letra.'2:'.$letra.$filasConDatos)->getNumberFormat()->setFormatCode('@');
-            }
-
-            $opciones = $columna['opciones'];
-
-            if ($opciones === []) {
-                continue;
-            }
-
-            $columnaLista++;
-            $letraLista = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($columnaLista);
-            $listas->setCellValue($letraLista.'1', $columna['etiqueta']);
-
-            foreach (array_values($opciones) as $n => $opcion) {
-                $listas->setCellValueExplicit($letraLista.($n + 2), $opcion, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
-            }
-
-            $validacion = $hoja->getCell($letra.'2')->getDataValidation();
-            $validacion->setType(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::TYPE_LIST)
-                ->setErrorStyle(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::STYLE_STOP)
-                ->setAllowBlank(true)
-                ->setShowDropDown(true)
-                ->setShowErrorMessage(true)
-                ->setErrorTitle('Valor no válido')
-                ->setError('Elige una opción de la lista.')
-                ->setFormula1('Listas!$'.$letraLista.'$2:$'.$letraLista.'$'.(count($opciones) + 1));
-
-            $hoja->setDataValidation($letra.'2:'.$letra.$filasConDatos, clone $validacion);
-        }
-
-        $hoja->freezePane('B2');
-        $hoja->getRowDimension(1)->setRowHeight(22);
-
-        /*
-         * Hoja «Guía»: qué columnas llena cada tipo de equipo.
-         */
-        $guia = $libro->createSheet();
-        $guia->setTitle('Guía');
-        $guia->fromArray([['Tipo de equipo', 'Columnas obligatorias', 'Columnas opcionales']], null, 'A1');
-        $guia->getStyle('A1:C1')->applyFromArray([
-            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
-            'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '2A78D6']],
-        ]);
-
-        $fila = 2;
+        $usados = [];
+        $filaMapa = 1;
+        $hojas = [];
 
         foreach ($this->csvMemo('lista.tipos', fn () => $this->getTiposEquipoProperty()) as $tipo) {
             $tipo = (array) $tipo;
-            $propias = collect($this->csvColumnas((int) $tipo['id_tipo_equipo']));
 
-            $guia->fromArray([[
-                (string) $tipo['nombre'],
-                $propias->where('obligatorio', true)->pluck('etiqueta')->prepend('Tipo de equipo')->implode(', '),
-                $propias->where('obligatorio', false)->pluck('etiqueta')->implode(', '),
-            ]], null, 'A'.$fila);
-            $fila++;
+            // Nombre de hoja válido en Excel (31 caracteres, sin : \ / ? * [ ]).
+            $titulo = trim(mb_substr(str_replace([':', '\\', '/', '?', '*', '[', ']'], ' ', (string) $tipo['nombre']), 0, 31)) ?: 'Tipo';
+            $base = $titulo;
+
+            for ($n = 2; isset($usados[mb_strtolower($titulo)]); $n++) {
+                $titulo = mb_substr($base, 0, 28).' '.$n;
+            }
+
+            $usados[mb_strtolower($titulo)] = true;
+
+            $hoja = new \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet($libro, $titulo);
+            $libro->addSheet($hoja);
+            $hojas[] = $hoja;
+
+            $mapa->setCellValueExplicit('A'.$filaMapa, $titulo, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $mapa->setCellValueExplicit('B'.$filaMapa, (string) $tipo['nombre'], \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $filaMapa++;
+
+            foreach (array_values($this->csvColumnas((int) $tipo['id_tipo_equipo'])) as $i => $columna) {
+                $letra = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($i + 1);
+                $encabezado = $this->csvEncabezado($columna);
+                $propia = $columna['origen'] === 'tipo';
+
+                $hoja->setCellValue($letra.'1', $encabezado);
+                $hoja->getColumnDimension($letra)->setWidth(max(14, mb_strlen($encabezado) + 4));
+                $hoja->getStyle($letra.'1')->applyFromArray([
+                    'font' => ['bold' => true, 'color' => ['rgb' => $columna['obligatorio'] ? 'FFFFFF' : ($propia ? '7A4B00' : '1F2937')]],
+                    'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => $columna['obligatorio'] ? '2A78D6' : ($propia ? 'FCEFD6' : 'E5E7EB')]],
+                    'alignment' => ['vertical' => 'center'],
+                ]);
+
+                if (($columna['tipo'] ?? '') === 'date') {
+                    $hoja->getStyle($letra.'2:'.$letra.$filasConDatos)->getNumberFormat()->setFormatCode('@');
+                }
+
+                $opciones = $this->csvOpcionesColumna($columna);
+
+                if ($opciones === []) {
+                    continue;
+                }
+
+                $columnaLista++;
+                $letraLista = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($columnaLista);
+                $listas->setCellValue($letraLista.'1', $titulo.' · '.$columna['etiqueta']);
+
+                foreach (array_values($opciones) as $n => $opcion) {
+                    $listas->setCellValueExplicit($letraLista.($n + 2), $opcion, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                }
+
+                $validacion = $hoja->getCell($letra.'2')->getDataValidation();
+                $validacion->setType(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::TYPE_LIST)
+                    ->setErrorStyle(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::STYLE_STOP)
+                    ->setAllowBlank(! $columna['obligatorio'])
+                    ->setShowDropDown(true)
+                    ->setShowErrorMessage(true)
+                    ->setErrorTitle('Valor no válido')
+                    ->setError('Elige una opción de la lista.')
+                    ->setFormula1('Listas!$'.$letraLista.'$2:$'.$letraLista.'$'.(count($opciones) + 1));
+
+                $hoja->setDataValidation($letra.'2:'.$letra.$filasConDatos, clone $validacion);
+            }
+
+            $hoja->freezePane('A2');
+            $hoja->getRowDimension(1)->setRowHeight(22);
         }
 
-        $guia->getColumnDimension('A')->setWidth(24);
-        $guia->getColumnDimension('B')->setWidth(70);
-        $guia->getColumnDimension('C')->setWidth(70);
-        $guia->getStyle('A2:C'.max(2, $fila - 1))->getAlignment()->setWrapText(true)->setVertical('top');
-        $guia->setCellValue('A'.($fila + 1), 'Las columnas en color arena solo aplican a algunos tipos (pasa el cursor sobre su encabezado). Las que no correspondan al tipo de la fila se ignoran al importar.');
-
         $listas->setSheetState(\PhpOffice\PhpSpreadsheet\Worksheet\Worksheet::SHEETSTATE_HIDDEN);
-        $libro->setActiveSheetIndex(0);
+        $mapa->setSheetState(\PhpOffice\PhpSpreadsheet\Worksheet\Worksheet::SHEETSTATE_VERYHIDDEN);
+        if ($hojas !== []) {
+            $libro->setActiveSheetIndex($libro->getIndex($hojas[0]));
+        }
 
         return response()->streamDownload(function () use ($libro) {
             (new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($libro))->save('php://output');
         }, 'plantilla-universal-equipos.xlsx', ['Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']);
+    }
+
+    /*
+     * Excel con una hoja por tipo (plantilla universal): se juntan todas
+     * en una sola tabla con «Tipo de equipo» tomado de la hoja.
+     * => [encabezados, filas, etiquetas «Laptop · fila 3»]
+     */
+    protected function leerHojasPorTipo(\PhpOffice\PhpSpreadsheet\Spreadsheet $libro, array $mapa): array
+    {
+        $encabezados = ['Tipo de equipo *'];
+        $indices = ['tipo de equipo' => 0];
+        $porFila = [];
+        $etiquetas = [];
+
+        foreach ($mapa as $titulo => $tipo) {
+            $hoja = $libro->getSheetByName($titulo);
+
+            if (! $hoja) {
+                continue;
+            }
+
+            $propios = null;
+
+            foreach ($hoja->toArray(null, true, false, false) as $n => $fila) {
+                $fila = array_map(fn ($v) => trim((string) ($v ?? '')), $fila);
+
+                if (collect($fila)->every(fn ($v) => $v === '')) {
+                    continue;
+                }
+
+                if ($propios === null) {
+                    $propios = [];
+
+                    foreach ($fila as $i => $encabezado) {
+                        $clave = $this->csvNormalizar($encabezado);
+
+                        if ($clave === '') {
+                            continue;
+                        }
+
+                        if (! isset($indices[$clave])) {
+                            $indices[$clave] = count($encabezados);
+                            $encabezados[] = $encabezado;
+                        }
+
+                        $propios[$i] = $indices[$clave];
+                    }
+
+                    continue;
+                }
+
+                $valores = [0 => $tipo];
+
+                foreach ($propios as $i => $destino) {
+                    $valores[$destino] = $fila[$i] ?? '';
+                }
+
+                $porFila[] = $valores;
+                $etiquetas[] = $titulo.' · fila '.($n + 1);
+            }
+        }
+
+        $total = count($encabezados);
+        $filas = array_map(function (array $valores) use ($total) {
+            $fila = array_fill(0, $total, '');
+
+            foreach ($valores as $i => $v) {
+                $fila[$i] = $v;
+            }
+
+            return $fila;
+        }, $porFila);
+
+        return [$encabezados, $filas, $etiquetas];
     }
 
     /*
@@ -873,6 +940,24 @@ trait EquiposCsv
         $lector = \PhpOffice\PhpSpreadsheet\IOFactory::createReaderForFile($ruta);
         $lector->setReadDataOnly(false);
         $libro = $lector->load($ruta);
+
+        // Plantilla universal por hojas (una por tipo de equipo).
+        if ($hojaMapa = $libro->getSheetByName('_tipos')) {
+            $mapa = [];
+
+            foreach ($hojaMapa->toArray(null, true, false, false) as $par) {
+                $titulo = trim((string) ($par[0] ?? ''));
+
+                if ($titulo !== '') {
+                    $mapa[$titulo] = trim((string) ($par[1] ?? ''));
+                }
+            }
+
+            if ($mapa !== []) {
+                return $this->leerHojasPorTipo($libro, $mapa);
+            }
+        }
+
         $hoja = $libro->getSheetByName('Equipos') ?? $libro->getSheet(0);
         $tipoPlantilla = trim((string) ($libro->getSheetByName('Listas')?->getCell('Z2')->getValue() ?? ''));
 

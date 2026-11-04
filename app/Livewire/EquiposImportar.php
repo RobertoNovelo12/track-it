@@ -91,7 +91,10 @@ class EquiposImportar extends EquipoCreate
         $this->nombreArchivo = (string) $this->archivo->getClientOriginalName();
 
         try {
-            [$encabezados, $filas] = $this->leerArchivoTabla($this->archivo->getRealPath(), $this->nombreArchivo);
+            $leido = $this->leerArchivoTabla($this->archivo->getRealPath(), $this->nombreArchivo);
+            [$encabezados, $filas] = $leido;
+            // Excel por hojas: «Laptop · fila 3» para ubicar cada fila.
+            $etiquetasHoja = $leido[2] ?? [];
         } catch (\Throwable $error) {
             report($error);
             $this->addError('archivo', 'No se pudo leer el archivo. Revisa que sea la plantilla en Excel o un CSV.');
@@ -119,13 +122,18 @@ class EquiposImportar extends EquipoCreate
 
         // Filas crudas por número de fila del archivo (la 1 son los encabezados).
         $crudas = [];
+        $etiquetas = [];
 
         foreach (array_values($filas) as $i => $fila) {
             $crudas[$i + 2] = $fila;
+
+            if (isset($etiquetasHoja[$i])) {
+                $etiquetas[$i + 2] = $etiquetasHoja[$i];
+            }
         }
 
         $this->clave = 'importar-equipos:'.auth()->id().':'.Str::random(12);
-        Cache::put($this->clave, ['encabezados' => $encabezados, 'filas' => $crudas, 'payloads' => []], now()->addHours(2));
+        Cache::put($this->clave, ['encabezados' => $encabezados, 'filas' => $crudas, 'payloads' => [], 'etiquetas' => $etiquetas], now()->addHours(2));
 
         $this->analizar();
     }
@@ -170,15 +178,16 @@ class EquiposImportar extends EquipoCreate
                 $normal = mb_strtolower($serie);
 
                 if (isset($seriesArchivo[$normal])) {
-                    $errores[] = "El número de serie «{$serie}» se repite en la fila {$seriesArchivo[$normal]}.";
+                    $errores[] = "El número de serie «{$serie}» se repite en {$seriesArchivo[$normal]}.";
                 } else {
-                    $seriesArchivo[$normal] = (int) $numero;
+                    $seriesArchivo[$normal] = $datos['etiquetas'][$numero] ?? 'la fila '.$numero;
                 }
             }
 
             $datos['payloads'][$numero] = $payload;
             $vista[] = [
                 'fila' => (int) $numero,
+                'etiqueta' => $datos['etiquetas'][$numero] ?? null,
                 'tipo' => $tipoId ? (string) ($tipos[$tipoId] ?? '') : '',
                 'nombre' => (string) ($payload['nombreEquipo'] ?? ''),
                 'serie' => $serie,
