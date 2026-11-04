@@ -67,8 +67,12 @@ class UsuarioCreate extends Component
 
     public function mount(bool $soloInventario = false): void
     {
-        $this->soloInventario = $soloInventario
-            && \App\Support\Esquema::tieneColumna('usuarios', 'acceso_sistema');
+        /*
+         * La página de «Persona sin acceso» siempre muestra su formulario
+         * (sin correo, contraseña ni rol). Si falta la migración, se avisa
+         * al guardar en lugar de mostrar el formulario de cuenta.
+         */
+        $this->soloInventario = $soloInventario || request()->routeIs('usuarios.create-sin-acceso');
 
         $nombre = trim((string) preg_replace('/\s+/u', ' ', (string) request()->query('colaborador', '')));
 
@@ -354,6 +358,12 @@ class UsuarioCreate extends Component
 
     private function guardarSinAcceso(callable $regla, string $unidad)
     {
+        if (! \App\Support\Esquema::tieneColumna('usuarios', 'acceso_sistema')) {
+            $this->addError('nombres', 'Falta preparar la base de datos para personas sin acceso: corre «php artisan migrate» (migración personas_sin_acceso) y vuelve a intentarlo.');
+
+            return null;
+        }
+
         $validated = $this->validate(
             [
                 'nombres' => ['required', 'string', 'max:255'],

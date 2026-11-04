@@ -15,6 +15,6 @@
     ]"
 />
 
-<livewire:usuario-create :solo-inventario="$soloInventario" />
+<livewire:usuario-create :soloInventario="$soloInventario" />
 
 @endsection
