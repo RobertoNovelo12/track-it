@@ -65,6 +65,15 @@ class EquiposImportar extends EquipoCreate
      */
     public bool $actualizarExistentes = false;
 
+    /*
+     * Filas por volver a revisar tras crear catálogos o corregir valores:
+     * la vista las pide de 25 en 25 (revisarPendientes) y los conteos
+     * bajan mientras tanto.
+     */
+    public array $porRevisar = [];
+
+    private const POR_REVISION = 25;
+
     public function mount(?int $duplicar = null): void
     {
         Gate::authorize('gestionar');
@@ -143,7 +152,7 @@ class EquiposImportar extends EquipoCreate
      * reglas del alta y arma la vista previa. Se vuelve a llamar después
      * de crear marcas/modelos o de aplicar una sugerencia.
      */
-    private function analizar(?array $soloFilas = null): void
+    private function analizar(?array $soloFilas = null, bool $combinar = false): void
     {
         $datos = $this->clave !== '' ? Cache::get($this->clave) : null;
 
@@ -157,6 +166,15 @@ class EquiposImportar extends EquipoCreate
         $tipos = collect($this->getTiposEquipoProperty())->pluck('nombre', 'id_tipo_equipo');
         $vista = [];
         $seriesArchivo = [];
+
+        // Revisión parcial: las demás filas cuentan para la serie repetida.
+        if ($combinar && $soloFilas !== null) {
+            foreach ($this->filas as $otra) {
+                if (! in_array((int) $otra['fila'], $soloFilas, true) && ($otra['serie'] ?? '') !== '') {
+                    $seriesArchivo[mb_strtolower($otra['serie'])] ??= $otra['etiqueta'] ?? 'la fila '.$otra['fila'];
+                }
+            }
+        }
 
         foreach ($datos['filas'] as $numero => $fila) {
             if ($soloFilas !== null && ! in_array((int) $numero, $soloFilas, true)) {
@@ -203,8 +221,40 @@ class EquiposImportar extends EquipoCreate
 
         Cache::put($this->clave, $datos, now()->addHours(2));
 
-        $this->filas = $vista;
+        if ($combinar) {
+            $nuevas = collect($vista)->keyBy('fila');
+            $this->filas = array_map(fn ($f) => $nuevas->get($f['fila'], $f), $this->filas);
+        } else {
+            $this->filas = $vista;
+        }
+
         $this->terminado = false;
+    }
+
+    // Pone filas en la cola de revisión; la vista la recorre.
+    private function encolarRevision(array $numeros): int
+    {
+        $actuales = array_map(fn ($f) => (int) $f['fila'], $this->filas);
+        $this->porRevisar = array_values(array_intersect(
+            $actuales,
+            array_unique(array_merge($this->porRevisar, array_map('intval', $numeros)))
+        ));
+
+        return count($this->porRevisar);
+    }
+
+    public function revisarPendientes(): array
+    {
+        Gate::authorize('gestionar');
+
+        $lote = array_slice($this->porRevisar, 0, self::POR_REVISION);
+        $this->porRevisar = array_values(array_slice($this->porRevisar, self::POR_REVISION));
+
+        if ($lote !== []) {
+            $this->analizar($lote, true);
+        }
+
+        return ['pendientes' => count($this->porRevisar)];
     }
 
     /*
@@ -572,16 +622,22 @@ class EquiposImportar extends EquipoCreate
             $this->catalogosCreados['opciones'] = array_values(array_unique(array_merge($this->catalogosCreados['opciones'] ?? [], $creados['opciones'])));
         }
 
-        $this->analizar(array_map(fn ($f) => (int) $f['fila'], $this->filas));
+        // Solo las filas que esperaban algo del catálogo.
+        $afectadas = collect($this->filas)->filter(fn ($f) => ! empty($f['faltan']))->pluck('fila')->all();
 
-        return ['marcas' => count($creados['marcas']), 'modelos' => count($creados['modelos']), 'opciones' => count($creados['opciones'])];
+        return [
+            'marcas' => count($creados['marcas']),
+            'modelos' => count($creados['modelos']),
+            'opciones' => count($creados['opciones']),
+            'porRevisar' => $this->encolarRevision($afectadas),
+        ];
     }
 
     /*
      * «¿Quisiste decir…?»: cambia en las filas del archivo el nombre
      * escrito por el que ya existe y las vuelve a revisar.
      */
-    public function usarSugerencia(string $clave): void
+    public function usarSugerencia(string $clave): array
     {
         Gate::authorize('gestionar');
 
@@ -589,14 +645,14 @@ class EquiposImportar extends EquipoCreate
         $datos = $this->clave !== '' ? Cache::get($this->clave) : null;
 
         if (! $grupo || ! $grupo['sugerencia'] || ! is_array($datos) || $this->importando) {
-            return;
+            return ['porRevisar' => 0];
         }
 
         if ($grupo['clase'] === 'opcion') {
-            $this->corregirValor($clave, $grupo['sugerencia']);
-
-            return;
+            return $this->corregirValor($clave, $grupo['sugerencia']);
         }
+
+        $cambiadas = [];
 
         $normal = fn ($t) => $this->csvNormalizar((string) $t);
         $indices = [];
@@ -614,6 +670,7 @@ class EquiposImportar extends EquipoCreate
             if ($grupo['clase'] === 'marca') {
                 if ($colMarca !== null && $normal($fila[$colMarca] ?? '') === $normal($grupo['marca'])) {
                     $datos['filas'][$numero][$colMarca] = $grupo['sugerencia'];
+                    $cambiadas[] = $numero;
                 }
 
                 continue;
@@ -626,12 +683,13 @@ class EquiposImportar extends EquipoCreate
                 && ($colTipo === null || ($tipos[$normal($fila[$colTipo] ?? '')] ?? null) === (int) $grupo['tipo'])
             ) {
                 $datos['filas'][$numero][$colModelo] = $grupo['sugerencia'];
+                $cambiadas[] = $numero;
             }
         }
 
         Cache::put($this->clave, $datos, now()->addHours(2));
 
-        $this->analizar(array_map(fn ($f) => (int) $f['fila'], $this->filas));
+        return ['porRevisar' => $this->encolarRevision($cambiadas)];
     }
 
     /*
@@ -639,27 +697,27 @@ class EquiposImportar extends EquipoCreate
      * quita, '__quitar__') en todas las filas que lo traen y se revisan
      * de nuevo. Al actualizar, quitarlo conserva el dato actual.
      */
-    public function corregirValor(string $clave, string $nuevo): void
+    public function corregirValor(string $clave, string $nuevo): array
     {
         Gate::authorize('gestionar');
 
         $datos = $this->clave !== '' ? Cache::get($this->clave) : null;
 
         if (! is_array($datos) || $this->importando) {
-            return;
+            return ['porRevisar' => 0];
         }
 
         $grupo = collect($this->filas)->pluck('faltan')->flatten(1)->first(fn ($f) => ($f['clase'] ?? '') === 'opcion' && ($f['clave'] ?? '') === $clave);
 
         if (! $grupo) {
-            return;
+            return ['porRevisar' => 0];
         }
 
         $quitar = $nuevo === '__quitar__';
 
         // Solo opciones que existen en la lista (o quitar el valor).
         if (! $quitar && ! in_array($this->csvNormalizar($nuevo), array_map(fn ($o) => $this->csvNormalizar($o), $grupo['opciones']), true)) {
-            return;
+            return ['porRevisar' => 0];
         }
 
         $normal = fn ($t) => $this->csvNormalizar((string) $t);
@@ -677,9 +735,10 @@ class EquiposImportar extends EquipoCreate
         }
 
         if ($colValor === null) {
-            return;
+            return ['porRevisar' => 0];
         }
 
+        $cambiadas = [];
         $tipos = collect($this->getTiposEquipoProperty())->mapWithKeys(fn ($t) => [$normal(((array) $t)['nombre']) => (int) ((array) $t)['id_tipo_equipo']]);
 
         foreach ($datos['filas'] as $numero => $fila) {
@@ -693,11 +752,12 @@ class EquiposImportar extends EquipoCreate
             }
 
             $datos['filas'][$numero][$colValor] = $quitar ? '' : $nuevo;
+            $cambiadas[] = $numero;
         }
 
         Cache::put($this->clave, $datos, now()->addHours(2));
 
-        $this->analizar(array_map(fn ($f) => (int) $f['fila'], $this->filas));
+        return ['porRevisar' => $this->encolarRevision($cambiadas)];
     }
 
     private function auditarCatalogo(string $accion, string $descripcion): void
@@ -717,7 +777,7 @@ class EquiposImportar extends EquipoCreate
             Cache::forget($this->clave);
         }
 
-        $this->reset(['archivo', 'nombreArchivo', 'clave', 'filas', 'importando', 'terminado', 'ultimoResultado', 'catalogosCreados', 'actualizarExistentes']);
+        $this->reset(['archivo', 'nombreArchivo', 'clave', 'filas', 'importando', 'terminado', 'ultimoResultado', 'catalogosCreados', 'actualizarExistentes', 'porRevisar']);
     }
 
     /*

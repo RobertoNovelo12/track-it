@@ -35,6 +35,39 @@
     x-on:drop.window="if (Array.from($event.dataTransfer?.types ?? []).includes('Files')) { $event.preventDefault(); profundidad = 0; encima = false; if (enContenido($event)) subir($event.dataTransfer.files?.[0]); }"
     x-data="{
         actualizar: @js($actualizarExistentes),
+        revisando: 0,
+        revisadas: 0,
+
+        /*
+         * Tras crear catálogos o corregir valores, el servidor revisa las
+         * filas afectadas de 25 en 25: los conteos bajan mientras tanto.
+         */
+        async revisarTras(accion) {
+            if (this.revisando || this.corriendo) return null;
+            this.revisando = 1;
+            this.revisadas = 0;
+
+            try {
+                const r = await accion();
+                const total = Number(r?.porRevisar || 0);
+                let pendientes = total;
+                this.revisando = Math.max(total, 1);
+
+                while (pendientes > 0) {
+                    const x = await $wire.revisarPendientes();
+                    pendientes = Number(x?.pendientes || 0);
+                    this.revisadas = total - pendientes;
+                }
+
+                return r;
+            } catch (error) {
+                window.trackitToast?.('error', window.trackitMensajeError(error, 'revisar las filas'), 'Error');
+
+                return null;
+            } finally {
+                this.revisando = 0;
+            }
+        },
         avance: 0,
         contados: 0,
         totalImportar: 0,
@@ -284,7 +317,7 @@
                             x-show="(actualizar ? {{ $modos['con']['listas'] }} : {{ $modos['sin']['listas'] }}) > 0"
                             type="button"
                             x-on:click="importar()"
-                            x-bind:disabled="corriendo"
+                            x-bind:disabled="corriendo || revisando"
                             class="h-10 rounded-md bg-[var(--theme-primary)] px-4 text-sm font-medium text-white hover:bg-[var(--theme-primary-hover)] disabled:opacity-70"
                             x-text="corriendo ? 'Guardando… ' + contados + ' de ' + totalImportar : (actualizar ? @js($modos['con']['boton']) : @js($modos['sin']['boton']))"
                         >Importar</button>
@@ -294,6 +327,14 @@
                         <a href="{{ route('equipos.index') }}" wire:navigate class="inline-flex h-10 items-center rounded-md bg-[var(--theme-primary)] px-4 text-sm font-medium text-white hover:bg-[var(--theme-primary-hover)]">Ir a Inventario</a>
                     @endif
                 </div>
+            </div>
+
+            {{-- Revisión de filas tras crear catálogos o corregir valores --}}
+            <div x-show="revisando" x-cloak class="mt-4" role="status">
+                <div class="h-1.5 overflow-hidden rounded-full bg-[var(--theme-surface-soft)]">
+                    <div class="h-full rounded-full bg-[var(--theme-primary)] transition-[width] duration-300" x-bind:style="{ width: (revisando > 1 ? Math.max(4, Math.round(revisadas / revisando * 100)) : 30) + '%' }"></div>
+                </div>
+                <p class="mt-1.5 text-[11px] tabular-nums text-[var(--theme-text-muted)]" x-text="revisando > 1 ? 'Revisando de nuevo las filas… ' + revisadas + ' de ' + revisando : 'Aplicando cambios…'"></p>
             </div>
 
             {{-- Barra de avance --}}
@@ -330,7 +371,8 @@
                             if (this.creando || this.seleccion.length === 0) return;
                             this.creando = true;
                             try {
-                                const r = await $wire.crearCatalogos(this.seleccion);
+                                const r = await this.revisarTras(() => $wire.crearCatalogos(this.seleccion));
+                                if (! r) return;
                                 const partes = [];
                                 if (r.marcas) partes.push(r.marcas + (r.marcas === 1 ? ' marca' : ' marcas'));
                                 if (r.modelos) partes.push(r.modelos + (r.modelos === 1 ? ' modelo' : ' modelos'));
@@ -380,7 +422,8 @@
                                         <span class="text-[var(--theme-warning)]">¿Quisiste decir «{{ $falta['sugerencia'] }}»?</span>
                                         <button
                                             type="button"
-                                            wire:click="usarSugerencia(@js($falta['clave']))"
+                                            x-on:click="revisarTras(() => $wire.usarSugerencia(@js($falta['clave'])))"
+                                            x-bind:disabled="revisando"
                                             wire:loading.attr="disabled"
                                             class="h-8 shrink-0 rounded-md border border-[var(--theme-border-strong)] px-3 font-medium text-[var(--theme-text)] hover:bg-[var(--theme-surface-soft)] disabled:opacity-50"
                                         >Usar «{{ $falta['sugerencia'] }}»</button>

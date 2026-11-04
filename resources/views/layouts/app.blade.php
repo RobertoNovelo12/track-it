@@ -373,6 +373,15 @@ document.addEventListener(
         }
     </style>
 
+        {{--
+            Funciones de la vista general (dashboardBar, dashboardCounter…).
+            En <head> y antes de Alpine: así existen siempre que Alpine
+            evalúa las tarjetas, también al llegar con wire:navigate (los
+            scripts del <body> se ejecutaban después y salía «ready is not
+            defined» / «display is not defined»).
+        --}}
+        @include('layouts.partials.dashboard-script')
+
         @vite(['resources/css/app.css', 'resources/js/app.js'])
 
         @stack('styles')
@@ -1480,8 +1489,7 @@ document.addEventListener(
 
     @include('layouts.partials.sidebar-script')
 
-    {{-- Funciones de la vista general (cargada en diferido) --}}
-    @include('layouts.partials.dashboard-script')
+    {{-- Funciones de la vista general: van en <head> (ver más arriba). --}}
 
 
     <script>    
