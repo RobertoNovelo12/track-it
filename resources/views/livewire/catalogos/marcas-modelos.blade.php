@@ -152,13 +152,13 @@
             min-width="900px"
 
             :columns="[
-                ['key' => 'id', 'label' => 'ID', 'width' => '70px', 'sort' => 'id', 'mobile' => false],
+                ['key' => 'id', 'label' => 'ID', 'width' => '90px', 'sort' => 'id', 'mobile' => false],
                 ['key' => 'nombre', 'label' => 'Marca', 'width' => '20%', 'sort' => 'nombre', 'strong' => true],
                 ['key' => 'descripcion', 'label' => 'Descripción', 'width' => '26%', 'default' => 'Sin descripción', 'mobile' => 'filled'],
                 ['key' => 'activo', 'label' => 'Estado', 'width' => '110px', 'sort' => 'activo', 'type' => 'status', 'value' => $estadoTexto],
                 ['key' => 'totalModelos', 'label' => 'Modelos', 'width' => '100px', 'sort' => 'totalModelos'],
                 ['key' => 'totalEquipos', 'label' => 'Equipos', 'width' => '100px', 'sort' => 'totalEquipos'],
-                ['key' => 'fechaCreacion', 'label' => 'Fecha de creación', 'width' => '150px', 'sort' => 'fechaCreacion', 'value' => fn ($m) => $fecha($m->fechaCreacion), 'mobileLabel' => 'Creada'],
+                ['key' => 'fechaCreacion', 'label' => 'Fecha de creación', 'width' => '170px', 'sort' => 'fechaCreacion', 'value' => fn ($m) => $fecha($m->fechaCreacion), 'mobileLabel' => 'Creada'],
             ]"
 
             :actions="fn ($marca) => [
@@ -197,14 +197,14 @@
             min-width="1050px"
 
             :columns="[
-                ['key' => 'id', 'label' => 'ID', 'width' => '70px', 'sort' => 'id', 'mobile' => false],
+                ['key' => 'id', 'label' => 'ID', 'width' => '90px', 'sort' => 'id', 'mobile' => false],
                 ['key' => 'nombre', 'label' => 'Modelo', 'width' => '19%', 'sort' => 'nombre', 'strong' => true],
                 ['key' => 'marcaNombre', 'label' => 'Marca', 'width' => '14%', 'sort' => 'marcaNombre'],
                 ['key' => 'tipoEquipoNombre', 'label' => 'Tipo de equipo', 'width' => '15%', 'sort' => 'tipoEquipoNombre'],
                 ['key' => 'descripcion', 'label' => 'Descripción', 'width' => '18%', 'default' => 'Sin descripción', 'mobile' => 'filled'],
                 ['key' => 'activo', 'label' => 'Estado', 'width' => '110px', 'sort' => 'activo', 'type' => 'status', 'value' => $estadoTexto],
-                ['key' => 'totalEquipos', 'label' => 'Equipos', 'width' => '95px', 'sort' => 'totalEquipos'],
-                ['key' => 'fechaCreacion', 'label' => 'Fecha de creación', 'width' => '150px', 'sort' => 'fechaCreacion', 'value' => fn ($m) => $fecha($m->fechaCreacion), 'mobileLabel' => 'Creado'],
+                ['key' => 'totalEquipos', 'label' => 'Equipos', 'width' => '110px', 'sort' => 'totalEquipos'],
+                ['key' => 'fechaCreacion', 'label' => 'Fecha de creación', 'width' => '170px', 'sort' => 'fechaCreacion', 'value' => fn ($m) => $fecha($m->fechaCreacion), 'mobileLabel' => 'Creado'],
             ]"
 
             :actions="fn ($modelo) => [

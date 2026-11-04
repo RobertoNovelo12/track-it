@@ -200,18 +200,31 @@
         },
     }"
 >
-    {{-- 1. ARCHIVO: arrastrar y soltar o elegir (Excel o CSV) --}}
+    {{-- ========================================================
+        1. ARCHIVO (mismo diseño que las secciones de los formularios)
+    ======================================================== --}}
     <section class="{{ $tarjeta }}">
+        <div class="mb-4 flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+                <h2 class="text-sm font-semibold text-[var(--theme-text-strong)]">Archivo</h2>
+                <p class="mt-1 text-xs text-[var(--theme-text-muted)]">
+                    Plantilla de un tipo, plantilla universal (Excel por hojas o CSV) o un CSV exportado del Inventario.
+                </p>
+            </div>
+        </div>
+
         <label
             for="importar-archivo"
-            x-bind:class="encima ? 'border-[var(--theme-primary)] bg-[var(--theme-primary-soft-subtle)]' : 'border-[var(--theme-border-strong)] hover:border-[var(--theme-primary)]'"
-            class="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-6 py-10 text-center transition-colors"
+            x-bind:class="encima ? 'border-[var(--theme-primary)] bg-[var(--theme-primary-soft-subtle)]' : 'border-[var(--theme-border-strong)] hover:border-[var(--theme-primary)] hover:bg-[var(--theme-primary-soft-subtle)]'"
+            class="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-6 py-8 text-center transition-colors"
         >
-            <svg x-show="! subiendo" class="h-8 w-8 text-[var(--theme-primary)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3m0 0-4 4m4-4 4 4M5 21h14"/></svg>
+            <span x-show="! subiendo" class="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--theme-primary-soft)] text-[var(--theme-primary)]">
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3m0 0-4 4m4-4 4 4M5 21h14"/></svg>
+            </span>
 
             {{-- Subida (porcentaje real) y después revisión de filas en el servidor. --}}
             <div x-show="subiendo" x-cloak class="w-full max-w-xs">
-                <div class="h-2 overflow-hidden rounded-full bg-[var(--theme-surface-soft)]">
+                <div class="h-1.5 overflow-hidden rounded-full bg-[var(--theme-surface-soft)]">
                     <div
                         class="h-full rounded-full bg-[var(--theme-primary)] transition-[width] duration-300"
                         x-bind:class="progreso >= 100 && 'animate-pulse'"
@@ -219,10 +232,10 @@
                     ></div>
                 </div>
             </div>
-            <span class="text-sm font-medium text-[var(--theme-text-strong)]" x-text="subiendo ? (progreso < 100 ? 'Subiendo el archivo… ' + progreso + '%' : 'Revisando las filas del archivo…') : 'Suelta tu Excel o CSV en cualquier parte, o haz clic para elegirlo'">Suelta tu Excel o CSV en cualquier parte, o haz clic para elegirlo</span>
-            <span class="text-xs text-[var(--theme-text-muted)]">
-                Usa la plantilla del tipo de equipo (Administración › Equipos › ⋮ › Descargar plantilla Excel), la plantilla universal para varios tipos a la vez o un CSV exportado del Inventario.
-            </span>
+
+            <span class="text-sm font-medium text-[var(--theme-text-strong)]" x-text="subiendo ? (progreso < 100 ? 'Subiendo el archivo… ' + progreso + '%' : 'Revisando las filas del archivo…') : 'Suelta tu Excel o CSV aquí, o haz clic para elegirlo'">Suelta tu Excel o CSV aquí, o haz clic para elegirlo</span>
+            <span class="text-xs text-[var(--theme-text-muted)]">.xlsx o .csv · hasta 4 MB y 500 equipos</span>
+
             <input
                 id="importar-archivo"
                 type="file"
@@ -235,52 +248,63 @@
 
         @error('archivo') <p class="mt-2 text-center text-xs text-[var(--theme-danger)]">{{ $message }}</p> @enderror
 
-        <ul class="mt-4 list-disc space-y-1 pl-5 text-xs text-[var(--theme-text-muted)]">
-            <li>La primera fila son los encabezados; no cambies sus nombres. Las columnas con * son obligatorias.</li>
-            <li>Escribe las listas con su texto, como aparecen en el sistema (Estado «Disponible», Marca «Dell», Hotel…).</li>
-            <li>Fechas en dd/mm/aaaa. Sí/No como «Sí» o «No». El código de inventario se asigna solo.</li>
-            <li>Hasta 500 equipos por archivo. Las filas con errores no se importan; corrígelas y vuelve a subir solo esas.</li>
-        </ul>
+        {{-- Cómo llenar el archivo --}}
+        <div class="mt-4 grid grid-cols-1 gap-2 text-xs text-[var(--theme-text-muted)] sm:grid-cols-2">
+            @foreach ([
+                'No cambies los encabezados. Las columnas con * son obligatorias.',
+                'Escribe las listas con su texto, como aparecen en el sistema (Estado «Disponible», Marca «Dell»…).',
+                'Fechas en dd/mm/aaaa y Sí/No como «Sí» o «No». El código de inventario se asigna solo.',
+                'Las filas con errores no se importan: corrígelas aquí mismo o en el archivo.',
+            ] as $consejo)
+                <p class="flex items-start gap-2 rounded-lg bg-[var(--theme-surface-soft)] px-3 py-2">
+                    <svg class="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--theme-primary)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+                    <span>{{ $consejo }}</span>
+                </p>
+            @endforeach
+        </div>
     </section>
 
     {{-- RESULTADO DE LA ÚLTIMA IMPORTACIÓN --}}
     @if (($ultimoResultado['importadas'] ?? 0) + ($ultimoResultado['actualizadas'] ?? 0) > 0)
-        <div role="status" class="flex flex-col gap-3 rounded-xl border border-[var(--theme-success-border,var(--theme-border))] bg-[var(--theme-success-soft)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-            <p class="text-sm text-[var(--theme-text)]">
-                <strong class="font-semibold text-[var(--theme-success)]">
-                    {{ collect([
-                        ($ultimoResultado['importadas'] ?? 0) ? $ultimoResultado['importadas'].(($ultimoResultado['importadas'] ?? 0) === 1 ? ' equipo importado' : ' equipos importados') : null,
-                        ($ultimoResultado['actualizadas'] ?? 0) ? $ultimoResultado['actualizadas'].(($ultimoResultado['actualizadas'] ?? 0) === 1 ? ' equipo actualizado' : ' equipos actualizados') : null,
-                    ])->filter()->implode(' y ') }}.
-                </strong>
-                @if (! empty($ultimoResultado['codigos']))
-                    <span class="text-[var(--theme-text-muted)]">{{ collect($ultimoResultado['codigos'])->take(6)->implode(', ') }}{{ count($ultimoResultado['codigos']) > 6 ? '…' : '' }}</span>
-                @endif
-                @if ($cuentas['total'] > 0)
-                    <span class="block text-xs text-[var(--theme-text-muted)]">Abajo quedan las filas que no se importaron; corrígelas y vuelve a subir el archivo.</span>
-                @endif
-            </p>
-            <a href="{{ route('equipos.index') }}" wire:navigate class="inline-flex h-9 shrink-0 items-center justify-center rounded-md bg-[var(--theme-primary)] px-4 text-sm font-medium text-white hover:bg-[var(--theme-primary-hover)]">Ver en Inventario</a>
+        <div role="status" class="flex flex-col gap-3 rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between" style="box-shadow: inset 3px 0 var(--theme-success);">
+            <div class="flex items-start gap-3">
+                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--theme-success-soft)] text-[var(--theme-success)]">
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+                </span>
+                <p class="text-sm text-[var(--theme-text)]">
+                    <strong class="font-semibold text-[var(--theme-text-strong)]">
+                        {{ collect([
+                            ($ultimoResultado['importadas'] ?? 0) ? $ultimoResultado['importadas'].(($ultimoResultado['importadas'] ?? 0) === 1 ? ' equipo importado' : ' equipos importados') : null,
+                            ($ultimoResultado['actualizadas'] ?? 0) ? $ultimoResultado['actualizadas'].(($ultimoResultado['actualizadas'] ?? 0) === 1 ? ' equipo actualizado' : ' equipos actualizados') : null,
+                        ])->filter()->implode(' y ') }}.
+                    </strong>
+                    @if (! empty($ultimoResultado['codigos']))
+                        <span class="block text-xs text-[var(--theme-text-muted)]">{{ collect($ultimoResultado['codigos'])->take(6)->implode(', ') }}{{ count($ultimoResultado['codigos']) > 6 ? '…' : '' }}</span>
+                    @endif
+                    @if ($cuentas['total'] > 0)
+                        <span class="block text-xs text-[var(--theme-text-muted)]">Abajo quedan las filas que no se guardaron; corrígelas aquí o en el archivo.</span>
+                    @endif
+                </p>
+            </div>
+            <a href="{{ route('equipos.index') }}" wire:navigate.hover class="inline-flex h-9 shrink-0 items-center justify-center rounded-[var(--radius-md)] border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-4 text-xs font-medium text-[var(--theme-text)] transition-colors hover:bg-[var(--theme-surface-soft)]">Ver en Inventario</a>
         </div>
     @endif
 
-    {{-- 2. VISTA PREVIA --}}
+    {{-- ========================================================
+        2. VISTA PREVIA
+        Barra con el archivo y las acciones, métricas y filas: el
+        mismo orden que los apartados de Administración.
+    ======================================================== --}}
     @if ($cuentas['total'] > 0)
-        <section class="{{ $tarjeta }}">
-            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                    <h2 class="text-sm font-semibold text-[var(--theme-text-strong)]">{{ $nombreArchivo }}</h2>
-                    <p class="mt-1 text-xs text-[var(--theme-text-muted)]">
-                        {{ $cuentas['total'] }} filas ·
-                        @foreach ($modos as $modo => $m)
-                            <span x-show="{{ $modo === 'con' ? 'actualizar' : '! actualizar' }}" @if ($modo === 'con' && ! $actualizarExistentes || $modo === 'sin' && $actualizarExistentes) x-cloak @endif>
-                                <span class="text-[var(--theme-success)]">{{ $m['listas'] + $cuentas['importadas'] }} {{ $modo === 'con' ? 'por aplicar' : 'sin errores' }}</span> ·
-                                <span class="{{ $m['errores'] ? 'text-[var(--theme-danger)]' : '' }}">{{ $m['errores'] }} con errores</span>
-                            </span>
-                        @endforeach
-                        @if ($cuentas['importadas']) · {{ $cuentas['importadas'] }} importadas @endif
-                        @if ($cuentas['existentes']) · {{ $cuentas['existentes'] }} ya existen @endif
-                    </p>
+        <x-admin.filter-bar>
+            <div class="flex min-w-0 flex-1 items-start gap-3">
+                <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--theme-surface-soft)] text-[var(--theme-text-muted)]">
+                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>
+                </span>
+
+                <div class="min-w-0 flex-1">
+                    <p class="truncate text-sm font-semibold text-[var(--theme-text-strong)]">{{ $nombreArchivo }}</p>
+                    <p class="mt-0.5 text-xs text-[var(--theme-text-muted)]">{{ number_format($cuentas['total']) }} {{ $cuentas['total'] === 1 ? 'fila' : 'filas' }} en el archivo</p>
 
                     {{-- Equipos que ya existen: actualizar con lo que cambió --}}
                     @if ($cuentas['existentes'] > 0)
@@ -303,32 +327,45 @@
                         </label>
                     @endif
                 </div>
-
-                <div class="flex gap-2">
-                    <button
-                        type="button"
-                        wire:click="descartar"
-                        x-bind:disabled="corriendo"
-                        class="h-10 rounded-md border border-[var(--theme-border-strong)] px-4 text-sm font-medium text-[var(--theme-text)] hover:bg-[var(--theme-surface-soft)] disabled:opacity-50"
-                    >{{ $terminado ? 'Importar otro archivo' : 'Descartar' }}</button>
-
-                    @if (! $terminado && $modos['sin']['listas'] + $modos['con']['listas'] > 0)
-                        <button
-                            x-show="(actualizar ? {{ $modos['con']['listas'] }} : {{ $modos['sin']['listas'] }}) > 0"
-                            type="button"
-                            x-on:click="importar()"
-                            x-bind:disabled="corriendo || revisando > 0"
-                            class="h-10 rounded-md bg-[var(--theme-primary)] px-4 text-sm font-medium text-white hover:bg-[var(--theme-primary-hover)] disabled:opacity-70"
-                            x-text="corriendo ? 'Guardando… ' + contados + ' de ' + totalImportar : (actualizar ? @js($modos['con']['boton']) : @js($modos['sin']['boton']))"
-                        >Importar</button>
-                    @endif
-
-                    @if ($terminado)
-                        <a href="{{ route('equipos.index') }}" wire:navigate class="inline-flex h-10 items-center rounded-md bg-[var(--theme-primary)] px-4 text-sm font-medium text-white hover:bg-[var(--theme-primary-hover)]">Ir a Inventario</a>
-                    @endif
-                </div>
             </div>
 
+            <x-slot:actions>
+                <x-ui.button variant="secondary" wire:click="descartar" x-disabled="corriendo">
+                    {{ $terminado ? 'Importar otro archivo' : 'Descartar' }}
+                </x-ui.button>
+
+                @if (! $terminado && $modos['sin']['listas'] + $modos['con']['listas'] > 0)
+                    <x-ui.button
+                        x-show="(actualizar ? {{ $modos['con']['listas'] }} : {{ $modos['sin']['listas'] }}) > 0"
+                        x-on:click="importar()"
+                        x-loading="corriendo"
+                        x-disabled="corriendo || revisando > 0"
+                        loading-text="Guardando…"
+                    >
+                        <span x-text="actualizar ? @js($modos['con']['boton']) : @js($modos['sin']['boton'])">{{ $actualizarExistentes ? $modos['con']['boton'] : $modos['sin']['boton'] }}</span>
+                    </x-ui.button>
+                @endif
+
+                @if ($terminado)
+                    <a href="{{ route('equipos.index') }}" wire:navigate.hover class="inline-flex h-10 items-center rounded-[var(--radius-md)] bg-[var(--theme-primary)] px-4 text-sm font-medium text-white transition-colors hover:bg-[var(--theme-primary-hover)]">Ir a Inventario</a>
+                @endif
+            </x-slot:actions>
+        </x-admin.filter-bar>
+
+        {{-- Métricas: una versión por estado de la casilla «Actualizar…» --}}
+        @foreach ($modos as $modo => $m)
+            <div x-show="{{ $modo === 'con' ? 'actualizar' : '! actualizar' }}" @if ($modo === 'con' && ! $actualizarExistentes || $modo === 'sin' && $actualizarExistentes) x-cloak @endif>
+                <x-admin.metrics :items="array_values(array_filter([
+                    ['label' => $modo === 'con' ? 'Por guardar (nuevas y actualizaciones)' : 'Listas para importar', 'value' => $m['listas']],
+                    ['label' => 'Con errores', 'value' => $m['errores']],
+                    $cuentas['existentes'] ? ['label' => $modo === 'con' ? 'Ya existen · '.($m['sinCambios'] ?? 0).' sin cambios' : 'Ya existen en el inventario', 'value' => $cuentas['existentes']] : null,
+                    ['label' => 'Filas en el archivo', 'value' => $cuentas['total']],
+                ]))" />
+            </div>
+        @endforeach
+
+        {{-- Avances, catálogos faltantes y filas (sin tarjeta: como las tablas del sistema) --}}
+        <div>
             {{-- Revisión de filas tras crear catálogos o corregir valores --}}
             <div x-show="revisando" x-cloak class="mt-4" role="status">
                 <div class="h-1.5 overflow-hidden rounded-full bg-[var(--theme-surface-soft)]">
@@ -464,45 +501,45 @@
                 la rejilla solo se activa desde md).
             --}}
             @php
-                $columnasFila = 'md:grid-cols-[120px_130px_minmax(0,1fr)_150px_minmax(0,1.6fr)]';
+                $columnasFila = 'lg:grid-cols-[130px_130px_minmax(0,1fr)_160px_minmax(0,1.7fr)]';
             @endphp
 
-            <div class="mt-4 md:overflow-hidden md:rounded-lg md:border md:border-[var(--theme-border)]">
-                <div class="hidden bg-[var(--theme-surface-soft)] text-xs text-[var(--theme-text-muted)] md:grid {{ $columnasFila }}">
-                    <div class="px-3 py-2 font-medium" title="Número de fila en tu archivo (la fila 1 son los encabezados)">Fila en el archivo</div>
-                    <div class="px-3 py-2 font-medium">Tipo</div>
-                    <div class="px-3 py-2 font-medium">Nombre</div>
-                    <div class="px-3 py-2 font-medium">Número de serie</div>
-                    <div class="px-3 py-2 font-medium">Resultado</div>
+            <div class="mt-4 lg:overflow-hidden lg:rounded-lg lg:border lg:border-[var(--theme-border)] lg:bg-[var(--theme-surface)]">
+                <div class="hidden h-11 items-center border-b border-[var(--theme-border)] text-xs font-medium text-[var(--theme-text-muted)] lg:grid {{ $columnasFila }}">
+                    <div class="px-4" title="Número de fila en tu archivo (la fila 1 son los encabezados)">Fila en el archivo</div>
+                    <div class="px-4">Tipo</div>
+                    <div class="px-4">Nombre</div>
+                    <div class="px-4">Número de serie</div>
+                    <div class="px-4">Resultado</div>
                 </div>
 
-                <div class="space-y-2 md:space-y-0 md:divide-y md:divide-[var(--theme-border)]">
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:block lg:divide-y lg:divide-[var(--theme-border)]">
                     @foreach ($filas as $fila)
                         <div
                             wire:key="importar-fila-{{ $fila['fila'] }}"
-                            class="rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface)] p-3 text-sm md:grid md:items-start md:rounded-none md:border-0 md:bg-transparent md:p-0 {{ $columnasFila }}"
+                            class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 text-sm shadow-sm transition-colors lg:grid lg:items-start lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0 lg:text-xs lg:shadow-none lg:hover:bg-[var(--theme-primary-soft-subtle)] 2xl:text-sm {{ $columnasFila }}"
                         >
                             {{-- Móvil: «Fila 2 · Access point» en una línea --}}
-                            <div class="flex items-center gap-1.5 text-xs text-[var(--theme-text-muted)] md:contents">
-                                <span class="md:px-3 md:py-2 md:text-sm">
+                            <div class="flex items-center gap-1.5 text-xs text-[var(--theme-text-muted)] lg:contents">
+                                <span class="lg:px-4 lg:py-3 lg:text-xs 2xl:text-sm">
                                     @if (! empty($fila['etiqueta']))
                                         {{-- Excel por hojas: «Laptop · fila 3» --}}
                                         {{ $fila['etiqueta'] }}
                                     @else
-                                        <span class="md:hidden">Fila </span>{{ $fila['fila'] }}
+                                        <span class="lg:hidden">Fila </span>{{ $fila['fila'] }}
                                     @endif
                                 </span>
-                                <span class="md:hidden" aria-hidden="true">·</span>
-                                <span class="md:px-3 md:py-2 md:text-sm md:text-[var(--theme-text)]">{{ $fila['tipo'] ?: '—' }}</span>
+                                <span class="lg:hidden" aria-hidden="true">·</span>
+                                <span class="lg:px-4 lg:py-3 lg:text-xs 2xl:text-sm lg:text-[var(--theme-text)]">{{ $fila['tipo'] ?: '—' }}</span>
                             </div>
 
-                            <div class="mt-1 break-words font-medium text-[var(--theme-text-strong)] md:mt-0 md:px-3 md:py-2">{{ $fila['nombre'] ?: '—' }}</div>
+                            <div class="mt-1 break-words font-medium text-[var(--theme-text-strong)] lg:mt-0 lg:px-4 lg:py-3">{{ $fila['nombre'] ?: '—' }}</div>
 
-                            <div class="break-words text-xs text-[var(--theme-text)] md:px-3 md:py-2 md:text-sm">
-                                <span class="text-[var(--theme-text-muted)] md:hidden">Serie: </span>{{ $fila['serie'] ?: '—' }}
+                            <div class="break-words text-xs text-[var(--theme-text)] lg:px-4 lg:py-3 lg:text-xs 2xl:text-sm">
+                                <span class="text-[var(--theme-text-muted)] lg:hidden">Serie: </span>{{ $fila['serie'] ?: '—' }}
                             </div>
 
-                            <div class="mt-2 min-w-0 border-t border-[var(--theme-border)] pt-2 md:mt-0 md:border-t-0 md:px-3 md:py-2">
+                            <div class="mt-2 min-w-0 border-t border-[var(--theme-border)] pt-2 lg:mt-0 lg:border-t-0 lg:px-4 lg:py-3">
                                 @if (isset($fila['actualizando'], $fila['sinActualizar']) && ! in_array($fila['estado'], ['importada', 'actualizada', 'fallo'], true))
                                     <div x-show="! actualizar" @if ($actualizarExistentes) x-cloak @endif>
                                         @include('livewire.partials.importar-resultado', ['r' => array_merge($fila, $fila['sinActualizar'])])
@@ -518,6 +555,6 @@
                     @endforeach
                 </div>
             </div>
-        </section>
+        </div>
     @endif
 </div>
