@@ -1,62 +1,6 @@
 <div class="space-y-5">
 
-    {{-- ============================================================
-        ENCABEZADO
-    ============================================================ --}}
-    <section>
-
-        <div
-            class="
-                flex flex-col
-                sm:flex-row
-                sm:items-start
-                sm:justify-between
-                gap-4
-            "
-        >
-
-            <a
-                href="{{ route('asignaciones.index') }}"
-                wire:navigate.hover
-                class="
-                    h-9
-                    px-4
-
-                    inline-flex
-                    items-center
-                    justify-center
-                    gap-2
-
-                    rounded-md
-
-                    border
-                    border-[var(--theme-border-strong)]
-
-                    bg-[var(--theme-surface)]
-
-                    text-sm
-                    font-medium
-                    text-[var(--theme-text)]
-
-                    hover:bg-[var(--theme-surface-soft)]
-                    hover:border-[var(--theme-primary-border)]
-
-                    transition-colors
-                "
-            >
-                <svg
-                    class="w-4 h-4"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.7"
-                ><use href="{{ \App\Support\Icono::url('i-d889af1') }}"></use></svg>
-
-                Volver
-            </a>
-        </div>
-    </section>
-
+    {{-- «Volver» lo agrega el layout (layouts/partials/boton-volver). --}}
 
     {{-- ============================================================
         FILTROS
