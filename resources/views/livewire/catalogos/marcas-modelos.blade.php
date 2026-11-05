@@ -71,60 +71,79 @@
         @endif
 
         <x-slot:actions>
-            {{-- Importar y exportar (Excel / CSV), con los filtros de la pantalla --}}
+            {{-- Mismo diseño que Administración › Equipos (Plantilla) e Inventario (Exportar / Añadir) --}}
             @php
+                $claseActual = $vista === 'modelos' ? 'modelo' : 'marca';
                 $clasesExportar = $vista === 'marcas' ? ['marca' => 'marcas'] : ($vista === 'modelos' ? ['modelo' => 'modelos'] : ['marca' => 'marcas', 'modelo' => 'modelos']);
                 $filtrosExportar = array_filter(['search' => $search, 'estado' => $estado, 'tipo' => $tipo], fn ($v) => $v !== '' && $v !== 'todos');
+                $botonSecundario = 'inline-flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-4 py-2.5 text-sm font-medium text-[var(--theme-text)] transition-colors hover:bg-[var(--theme-surface-soft)] sm:w-auto';
+                $menu = 'absolute right-0 z-30 mt-1 w-72 overflow-hidden rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface)] py-1 theme-shadow-xl';
+                $opcion = 'block w-full px-3 py-2 text-left text-sm text-[var(--theme-text)] hover:bg-[var(--theme-surface-soft)]';
+                $flecha = '<svg class="h-3.5 w-3.5 transition-transform" x-bind:class="abierto && \'rotate-180\'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
             @endphp
-            <div class="relative w-full sm:w-auto" x-data="{ abierto: false }" x-on:click.outside="abierto = false" x-on:keydown.escape.window="abierto = false">
-                <button
-                    type="button"
-                    x-on:click="abierto = ! abierto"
-                    x-bind:aria-expanded="abierto"
-                    class="inline-flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-4 py-2.5 text-sm font-medium text-[var(--theme-text)] transition-colors hover:bg-[var(--theme-surface-soft)] sm:w-auto"
-                >
-                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 10l5-5 5 5M12 5v11M5 19h14"/></svg>
-                    Importar / exportar
-                    <svg class="h-3.5 w-3.5 transition-transform" x-bind:class="abierto && 'rotate-180'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
-                </button>
 
-                <div x-show="abierto" x-cloak x-transition.origin.top.right class="absolute right-0 z-30 mt-1 w-72 overflow-hidden rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface)] py-1 theme-shadow-xl">
-                    <a href="{{ route('catalogos.marcas-modelos.importar') }}" wire:navigate.hover class="block px-3 py-2 text-sm text-[var(--theme-text)] hover:bg-[var(--theme-surface-soft)]">
-                        Importar desde Excel o CSV
-                        <span class="block text-xs text-[var(--theme-text-muted)]">Crear o actualizar marcas y modelos</span>
-                    </a>
+            <div class="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                {{-- Plantilla --}}
+                <div class="relative" x-data="{ abierto: false }" x-on:click.outside="abierto = false" x-on:keydown.escape.window="abierto = false">
+                    <button type="button" x-on:click="abierto = ! abierto" x-bind:aria-expanded="abierto" class="{{ $botonSecundario }}">
+                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0-4-4m4 4 4-4M5 21h14"/></svg>
+                        Plantilla
+                        {!! $flecha !!}
+                    </button>
 
-                    <div class="my-1 border-t border-[var(--theme-border)]"></div>
+                    <div x-show="abierto" x-cloak x-transition.origin.top.right class="{{ $menu }}">
+                        <button type="button" x-on:click="abierto = false; window.trackitDescargar(@js(route('catalogos.marcas-modelos.plantilla', ['formato' => 'xlsx'])))" class="{{ $opcion }}">Descargar en Excel <span class="text-xs text-[var(--theme-text-muted)]">(marcas y modelos)</span></button>
+                        <button type="button" x-on:click="abierto = false; window.trackitDescargar(@js(route('catalogos.marcas-modelos.plantilla', ['formato' => 'csv', 'clase' => $claseActual])))" class="{{ $opcion }}">Descargar en CSV <span class="text-xs text-[var(--theme-text-muted)]">({{ $claseActual === 'marca' ? 'marcas' : 'modelos' }})</span></button>
+                    </div>
+                </div>
 
-                    @foreach ($clasesExportar as $claseExportar => $etiquetaExportar)
-                        @foreach (['xlsx' => 'Excel', 'csv' => 'CSV'] as $formatoExportar => $nombreFormato)
-                            <button
-                                type="button"
-                                x-on:click="abierto = false; window.trackitDescargar(@js(route('catalogos.marcas-modelos.exportar', array_merge(['clase' => $claseExportar, 'formato' => $formatoExportar], $filtrosExportar))))"
-                                class="block w-full px-3 py-2 text-left text-sm text-[var(--theme-text)] hover:bg-[var(--theme-surface-soft)]"
-                            >
-                                Exportar {{ $etiquetaExportar }} a {{ $nombreFormato }}
-                                @if ($filtrosExportar !== [] && $loop->first)
-                                    <span class="block text-xs text-[var(--theme-text-muted)]">Con los filtros aplicados</span>
-                                @endif
-                            </button>
+                {{-- Exportar (con los filtros aplicados) --}}
+                <div class="relative" x-data="{ abierto: false }" x-on:click.outside="abierto = false" x-on:keydown.escape.window="abierto = false">
+                    <button type="button" x-on:click="abierto = ! abierto" x-bind:aria-expanded="abierto" class="{{ $botonSecundario }}">
+                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><use href="{{ \App\Support\Icono::url('i-12264a0') }}"></use></svg>
+                        Exportar
+                        {!! $flecha !!}
+                    </button>
+
+                    <div x-show="abierto" x-cloak x-transition.origin.top.right class="{{ $menu }}">
+                        @foreach ($clasesExportar as $claseExportar => $etiquetaExportar)
+                            @foreach (['xlsx' => 'Excel', 'csv' => 'CSV'] as $formatoExportar => $nombreFormato)
+                                <button
+                                    type="button"
+                                    x-on:click="abierto = false; window.trackitDescargar(@js(route('catalogos.marcas-modelos.exportar', array_merge(['clase' => $claseExportar, 'formato' => $formatoExportar], $filtrosExportar))))"
+                                    class="{{ $opcion }}"
+                                >Exportar {{ count($clasesExportar) > 1 ? $etiquetaExportar.' ' : '' }}a {{ $nombreFormato }}@if ($filtrosExportar !== []) <span class="text-xs text-[var(--theme-text-muted)]">(con filtros)</span>@endif</button>
+                            @endforeach
                         @endforeach
-                    @endforeach
+                    </div>
+                </div>
 
-                    <div class="my-1 border-t border-[var(--theme-border)]"></div>
+                {{-- Añadir: uno en el formulario o varios desde un archivo --}}
+                <div class="relative" x-data="{ abierto: false }" x-on:click.outside="abierto = false" x-on:keydown.escape.window="abierto = false">
+                    <button
+                        type="button"
+                        x-on:click="abierto = ! abierto"
+                        x-bind:aria-expanded="abierto"
+                        aria-haspopup="menu"
+                        class="inline-flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-md border border-transparent bg-[var(--theme-primary)] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[var(--theme-primary-hover)] sm:w-auto"
+                    >
+                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-6aed230') }}"></use></svg>
+                        {{ $vista === 'marcas' ? 'Añadir marca' : ($vista === 'modelos' ? 'Añadir modelo' : 'Añadir') }}
+                        {!! $flecha !!}
+                    </button>
 
-                    <button type="button" x-on:click="abierto = false; window.trackitDescargar(@js(route('catalogos.marcas-modelos.plantilla', ['formato' => 'xlsx'])))" class="block w-full px-3 py-2 text-left text-sm text-[var(--theme-text)] hover:bg-[var(--theme-surface-soft)]">
-                        Descargar plantilla Excel
-                    </button>
-                    <button type="button" x-on:click="abierto = false; window.trackitDescargar(@js(route('catalogos.marcas-modelos.plantilla', ['formato' => 'csv', 'clase' => $vista === 'marcas' ? 'marca' : 'modelo'])))" class="block w-full px-3 py-2 text-left text-sm text-[var(--theme-text)] hover:bg-[var(--theme-surface-soft)]">
-                        Descargar plantilla CSV
-                    </button>
+                    <div x-show="abierto" x-cloak x-transition.origin.top.right role="menu" class="absolute right-0 z-30 mt-1 w-60 overflow-hidden rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface)] theme-shadow-xl">
+                        <a href="{{ route('catalogos.create', ['tipo' => $claseActual]) }}" wire:navigate.hover role="menuitem" class="block px-4 py-2.5 text-sm text-[var(--theme-text)] transition-colors hover:bg-[var(--theme-surface-soft)] hover:text-[var(--theme-primary)]">
+                            <span class="block font-medium">{{ $claseActual === 'marca' ? 'Agregar marca' : 'Agregar modelo' }}</span>
+                            <span class="block text-xs text-[var(--theme-text-muted)]">Capturar uno en el formulario</span>
+                        </a>
+                        <a href="{{ route('catalogos.marcas-modelos.importar') }}" wire:navigate.hover role="menuitem" class="block border-t border-[var(--theme-border)] px-4 py-2.5 text-sm text-[var(--theme-text)] transition-colors hover:bg-[var(--theme-surface-soft)] hover:text-[var(--theme-primary)]">
+                            <span class="block font-medium">Importar Excel o CSV</span>
+                            <span class="block text-xs text-[var(--theme-text-muted)]">Crear o actualizar varios desde un archivo</span>
+                        </a>
+                    </div>
                 </div>
             </div>
-
-            <x-admin.action-button :href="route('catalogos.create', ['tipo' => $vista === 'modelos' ? 'modelo' : 'marca'])">
-                {{ $vista === 'marcas' ? 'Añadir marca' : ($vista === 'modelos' ? 'Añadir modelo' : 'Añadir') }}
-            </x-admin.action-button>
         </x-slot:actions>
 
         <x-slot:footer>
