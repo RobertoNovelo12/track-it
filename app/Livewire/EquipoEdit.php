@@ -2852,6 +2852,9 @@ class EquipoEdit extends Component
 
         );
 
+        // Asignado a alguien: no puede quedar como «Disponible».
+        \App\Support\EstadoAsignado::sincronizar((int) $this->equipoId);
+
         $this->invalidateEquipoCaches();
 
         $notificaciones = app(\App\Services\NotificacionService::class);

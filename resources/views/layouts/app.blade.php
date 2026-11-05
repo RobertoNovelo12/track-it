@@ -19,7 +19,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>@yield('title', 'Sistema') | Grand Palladium</title>
+        {{-- Nombre de la organización (Administración › Organización › Identidad visual) --}}
+        <title>@yield('title', 'Sistema') | {{ rescue(fn () => app(\App\Services\OrganizacionService::class)->nombre(), \App\Services\OrganizacionService::NOMBRE_PREDETERMINADO, false) }}</title>
 
         {{-- Aplicación instalable (manifiesto, íconos, service worker) --}}
         @include('layouts.partials.pwa-head')
@@ -1149,8 +1150,8 @@ document.addEventListener(
                                     text-sm
                                     text-[var(--theme-text-strong)]
 
-                                    hover:bg-[var(--theme-primary-soft)]
-                                    hover:text-[var(--theme-primary)]
+                                    hover:bg-[var(--theme-surface-soft)]
+                                    hover:text-[var(--theme-text-strong)]
 
                                     transition-colors
                                 "
@@ -1189,8 +1190,8 @@ document.addEventListener(
                                     text-sm
                                     text-[var(--theme-text-strong)]
 
-                                    hover:bg-[var(--theme-primary-soft)]
-                                    hover:text-[var(--theme-primary)]
+                                    hover:bg-[var(--theme-surface-soft)]
+                                    hover:text-[var(--theme-text-strong)]
 
                                     transition-colors
                                 "
@@ -1242,7 +1243,7 @@ document.addEventListener(
                                     x-on:click="modos = ! modos"
                                     x-bind:aria-expanded="modos ? 'true' : 'false'"
                                     aria-controls="menu-modos-tema"
-                                    class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-[var(--theme-text-strong)] hover:bg-[var(--theme-primary-soft)] hover:text-[var(--theme-primary)] aria-expanded:bg-[var(--theme-primary-soft-subtle)] transition-colors"
+                                    class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-[var(--theme-text-strong)] hover:bg-[var(--theme-surface-soft)] hover:text-[var(--theme-text-strong)] aria-expanded:bg-[var(--theme-surface-soft)] transition-colors"
                                 >
                                     {{-- Icono del modo actual --}}
                                     @foreach ($iconosModo as $claveModo => $iconoModo)
@@ -1273,8 +1274,8 @@ document.addEventListener(
                                             type="button"
                                             x-on:click="window.setTrackItTheme(@js($claveModo)); theme = @js($claveModo);"
                                             x-bind:aria-pressed="theme === @js($claveModo) ? 'true' : 'false'"
-                                            x-bind:class="theme === @js($claveModo) ? 'text-[var(--theme-primary)] font-medium' : 'text-[var(--theme-text)]'"
-                                            class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm hover:bg-[var(--theme-primary-soft)] hover:text-[var(--theme-primary)] transition-colors"
+                                            x-bind:class="theme === @js($claveModo) ? 'text-[var(--theme-text-strong)] font-semibold' : 'text-[var(--theme-text)]'"
+                                            class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm hover:bg-[var(--theme-surface-soft)] hover:text-[var(--theme-text-strong)] transition-colors"
                                         >
                                             <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{!! $iconosModo[$claveModo] !!}</svg>
                                             <span class="flex-1 text-left">{{ $nombreModo }}</span>
@@ -1303,8 +1304,8 @@ document.addEventListener(
                                     text-sm
                                     text-[var(--theme-text-strong)]
 
-                                    hover:bg-[var(--theme-primary-soft)]
-                                    hover:text-[var(--theme-primary)]
+                                    hover:bg-[var(--theme-surface-soft)]
+                                    hover:text-[var(--theme-text-strong)]
 
                                     transition-colors
                                 "
@@ -1338,8 +1339,8 @@ document.addEventListener(
                                     text-sm
                                     text-[var(--theme-text-strong)]
 
-                                    hover:bg-[var(--theme-primary-soft)]
-                                    hover:text-[var(--theme-primary)]
+                                    hover:bg-[var(--theme-surface-soft)]
+                                    hover:text-[var(--theme-text-strong)]
 
                                     transition-colors
                                 "

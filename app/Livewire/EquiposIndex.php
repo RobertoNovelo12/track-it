@@ -885,6 +885,10 @@ class EquiposIndex extends Component
                 'ee.nombre as estado_nombre',
                 'ee.clave as estado_clave',
 
+                // Por separado para «Copiar como JSON» (la tabla los combina).
+                'u.nombre as hotel_nombre',
+                'dep.nombre as departamento_nombre',
+
 
                 /*
                 |--------------------------------------------------------------------------
@@ -1254,7 +1258,7 @@ class EquiposIndex extends Component
                 ->remember(
                     self::CACHE_MODULE,
 
-                    'index.page.bajas.v2',
+                    'index.page.bajas.v3',
 
                     $this->tableCacheState(
                         $perPage,

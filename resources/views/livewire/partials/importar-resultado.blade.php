@@ -28,6 +28,13 @@
                                                 @endforeach
                                             </ul>
                                             @break
+                                        @case('existe')
+                                            {{-- Ya está en el inventario: aviso neutro, no es un error --}}
+                                            <span class="inline-flex rounded-md bg-[var(--theme-surface-soft)] px-2 py-0.5 text-xs font-medium text-[var(--theme-text)]">Ya existe · {{ $r['codigo'] }}</span>
+                                            @foreach ($r['mensajes'] as $mensaje)
+                                                <p class="mt-1 text-xs text-[var(--theme-text-muted)]">{{ $mensaje }}</p>
+                                            @endforeach
+                                            @break
                                         @case('sin_cambios')
                                             <span class="inline-flex rounded-md bg-[var(--theme-surface-soft)] px-2 py-0.5 text-xs font-medium text-[var(--theme-text-muted)]">Sin cambios · {{ $r['codigo'] }}</span>
                                             @foreach ($r['mensajes'] as $mensaje)

@@ -24,6 +24,37 @@
     @if (filled($loadingTarget ?? null)) wire:target="{{ $loadingTarget }}" @elseif (filled($loadingExcept ?? null)) wire:target.except="{{ $loadingExcept }}" @endif
 >
 
+    {{-- Seleccionar todos los de esta página (mismo comportamiento que la casilla del encabezado en escritorio) --}}
+    @if ($selectable && $registros->isNotEmpty())
+        @php
+            $filasPaginaMovil = $registros->filter(fn ($r) => ! ($rowSelectable instanceof \Closure && ! $rowSelectable($r)));
+            $idsPaginaMovil = $filasPaginaMovil->map(fn ($r) => (string) $clave($r))->values()->all();
+            $bajasPaginaMovil = $filasPaginaMovil
+                ->filter(fn ($r) => $rowDecommissioned instanceof \Closure && $rowDecommissioned($r))
+                ->map(fn ($r) => (string) $clave($r))->values()->all();
+        @endphp
+
+        @if ($idsPaginaMovil !== [])
+            <label class="flex cursor-pointer items-center gap-3 rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] px-4 py-3 text-sm text-[var(--theme-text)] sm:col-span-2">
+                <input
+                    type="checkbox"
+                    @if ($selectionAlpine)
+                        x-bind:checked="paginaSeleccionada(@js($idsPaginaMovil))"
+                        @change="alternarPagina(@js($idsPaginaMovil), $event.target.checked, @js($bajasPaginaMovil))"
+                    @elseif ($selectionModel)
+                        wire:click="{{ $selectPageAction }}"
+                        @checked($registros->every(fn ($row) => in_array((string) $clave($row), $selectedKeys)))
+                    @else
+                        @change="$dispatch('data-table-seleccionar-pagina', $event.target.checked)"
+                    @endif
+                    class="h-4 w-4 rounded border-[var(--theme-border-strong)] accent-[var(--theme-primary)]"
+                >
+                <span class="min-w-0 truncate font-medium text-[var(--theme-text-strong)]">Seleccionar todos</span>
+                <span class="ml-auto shrink-0 whitespace-nowrap text-xs tabular-nums text-[var(--theme-text-muted)]">{{ count($idsPaginaMovil) }} en esta página</span>
+            </label>
+        @endif
+    @endif
+
     @forelse ($registros as $row)
 
         @php
@@ -73,8 +104,12 @@
                 :data-export-selected="@js($puedeSeleccionar) && selected ? @js((string) $id) : null"
             @endif
             @data-table-menu-open.window="if ($event.detail !== $el) menuOpen = false"
+            @if (! $selectionAlpine && ! $selectionModel)
+                @data-table-seleccionar-pagina.window="if (@js($puedeSeleccionar)) selected = $event.detail"
+            @endif
 
-            @click="if (@js($puedeSeleccionar)) selected = ! selected"
+            {{-- Tocar marca la tarjeta; si se está seleccionando texto (mantener presionado para copiar), no. --}}
+            @click="if (@js($puedeSeleccionar) && ! (window.getSelection && String(window.getSelection()).trim() !== '')) selected = ! selected"
 
             wire:key="{{ $keyPrefix }}-card-{{ $id }}"
 
@@ -92,7 +127,7 @@
                 transition-all
 
                 cursor-pointer
-                select-none
+                select-text
             "
 
             :class="

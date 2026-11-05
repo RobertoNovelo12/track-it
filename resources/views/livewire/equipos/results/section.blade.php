@@ -115,6 +115,11 @@
             'label' => $etiquetaUnidad.' / Departamento',
             'width' => '225px',
             'sort' => 'ubicacion_organizacional',
+            // «Copiar como JSON»: dos campos en lugar del texto combinado.
+            'copiar' => fn ($equipo) => [
+                'hotel' => (string) ($equipo->hotel_nombre ?? ''),
+                'departamento' => (string) ($equipo->departamento_nombre ?? ''),
+            ],
         ],
     ]"
 
@@ -161,4 +166,10 @@
         ];
     }"
 />
+
+{{--
+    Móvil: la barra de selección flota sobre el contenido; este espacio
+    (de su alto) deja ver la paginación al final sin que la tape.
+--}}
+<div x-show="seleccion.length > 0" x-cloak class="h-20 lg:hidden" aria-hidden="true"></div>
 </div>

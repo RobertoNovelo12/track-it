@@ -461,6 +461,7 @@ class CatalogoMarcasModelosArchivo
     {
         $this->memo = [];
         $marcasArchivo = [];
+        $marcasConError = [];
         $vistos = [];
         $salida = [];
 
@@ -468,7 +469,10 @@ class CatalogoMarcasModelosArchivo
             $clase = $fila['clase'];
             $v = $fila['valores'];
             $errores = [];
+            // Mismo error con su corrección (clave) o la fila de la que depende.
+            $detalle = [];
             $datos = [];
+            $this->correcciones = [];
 
             foreach ($this->columnas($clase) as $clave => $definicion) {
                 $texto = trim((string) ($v[$clave] ?? ''));
@@ -477,10 +481,14 @@ class CatalogoMarcasModelosArchivo
                     continue;
                 }
 
-                [$valor, $error] = $this->convertir($clave, $definicion, $texto, $marcasArchivo);
+                $previas = array_keys($this->correcciones);
+                $this->dependeDe = null;
+                [$valor, $error] = $this->convertir($clave, $definicion, $texto, $marcasArchivo, $marcasConError, $clase);
 
                 if ($error !== null) {
                     $errores[] = $error;
+                    $nuevas = array_values(array_diff(array_keys($this->correcciones), $previas));
+                    $detalle[] = ['texto' => $error, 'clave' => $nuevas[0] ?? null, 'depende' => $this->dependeDe];
                 } else {
                     $datos[$clave] = $valor;
                 }
@@ -492,20 +500,16 @@ class CatalogoMarcasModelosArchivo
             $llave = $clase === 'marca' ? 'id_marca' : 'id_modelo';
             $existente = null;
 
+            $indice = $this->indice($clase);
+
             if ($codigo !== '') {
-                $existente = DB::table($tabla)->whereRaw('LOWER(codigo_interno) = ?', [mb_strtolower($codigo)])->first();
+                $existente = $indice['codigo'][mb_strtolower($codigo)] ?? null;
 
                 if (! $existente) {
                     $errores[] = "No hay ".($clase === 'marca' ? 'una marca' : 'un modelo')." con el código «{$codigo}». Para crear uno nuevo, deja vacío el código.";
                 }
             } elseif (isset($datos['nombre']) && ($clase === 'marca' || (isset($datos['id_marca']) && is_int($datos['id_marca']) && isset($datos['id_tipo_equipo'])))) {
-                $consulta = DB::table($tabla)->whereRaw('LOWER(BTRIM(nombre)) = LOWER(BTRIM(?))', [$datos['nombre']]);
-
-                if ($clase === 'modelo') {
-                    $consulta->where('id_marca', $datos['id_marca'])->where('id_tipo_equipo', $datos['id_tipo_equipo']);
-                }
-
-                $existente = $consulta->first();
+                $existente = $indice['nombre'][$this->llaveNombre($clase, $datos['nombre'], $datos['id_marca'] ?? null, $datos['id_tipo_equipo'] ?? null)] ?? null;
             }
 
             // Repetido dentro del archivo.
@@ -515,6 +519,16 @@ class CatalogoMarcasModelosArchivo
                 $errores[] = 'Se repite en '.$vistos[$clave].'.';
             } else {
                 $vistos[$clave] = $fila['etiqueta'];
+            }
+
+            // Los demás errores (código, repetido, faltantes…) no se corrigen aquí.
+            $conDetalle = array_column($detalle, 'texto');
+
+            foreach ($errores as $texto) {
+                if (! in_array($texto, $conDetalle, true)) {
+                    $detalle[] = ['texto' => $texto, 'clave' => null, 'depende' => null];
+                    $conDetalle[] = $texto;
+                }
             }
 
             $base = [
@@ -529,6 +543,8 @@ class CatalogoMarcasModelosArchivo
                 'codigo' => $existente ? (string) ($existente->codigo_interno ?? '') : '',
                 'datos' => $datos,
                 'cambios' => [],
+                // Valores fuera de lista: corregirlos desde la fila.
+                'correcciones' => array_values($this->correcciones),
             ];
 
             if (! $existente) {
@@ -538,14 +554,26 @@ class CatalogoMarcasModelosArchivo
                     }
                 }
 
-                if ($clase === 'marca' && isset($datos['nombre']) && $errores === []) {
-                    $marcasArchivo[$this->normalizar($datos['nombre'])] = $datos['nombre'];
+                if ($clase === 'marca' && trim((string) ($v['nombre'] ?? '')) !== '') {
+                    if ($errores === []) {
+                        $marcasArchivo[$this->normalizar($v['nombre'])] = trim($v['nombre']);
+                    } else {
+                        // Sus modelos dirán que la marca tiene errores (no que no existe).
+                        $marcasConError[$this->normalizar($v['nombre'])] ??= [$fila['etiqueta'], $numero];
+                    }
+                }
+
+                foreach ($errores as $texto) {
+                    if (! in_array($texto, array_column($detalle, 'texto'), true)) {
+                        $detalle[] = ['texto' => $texto, 'clave' => null, 'depende' => null];
+                    }
                 }
 
                 $salida[] = $base + [
                     'existe' => false,
                     'estado' => $errores === [] ? 'nueva' : 'error',
                     'mensajes' => array_values(array_unique($errores)),
+                    'errores' => $detalle,
                 ];
 
                 continue;
@@ -568,29 +596,35 @@ class CatalogoMarcasModelosArchivo
 
             // Otro registro ya tiene ese nombre (al renombrar por código).
             if (collect($cambios)->contains('clave', 'nombre') || collect($cambios)->contains('clave', 'id_marca') || collect($cambios)->contains('clave', 'id_tipo_equipo')) {
-                $consulta = DB::table($tabla)->where($llave, '!=', $base['id'])
-                    ->whereRaw('LOWER(BTRIM(nombre)) = LOWER(BTRIM(?))', [$datos['nombre'] ?? $existente->nombre]);
+                $otro = $indice['nombre'][$this->llaveNombre(
+                    $clase,
+                    $datos['nombre'] ?? $existente->nombre,
+                    is_int($datos['id_marca'] ?? null) ? $datos['id_marca'] : ($existente->id_marca ?? null),
+                    $datos['id_tipo_equipo'] ?? ($existente->id_tipo_equipo ?? null)
+                )] ?? null;
 
-                if ($clase === 'modelo') {
-                    $consulta->where('id_marca', is_int($datos['id_marca'] ?? null) ? $datos['id_marca'] : $existente->id_marca)
-                        ->where('id_tipo_equipo', $datos['id_tipo_equipo'] ?? $existente->id_tipo_equipo);
-                }
-
-                if ($consulta->exists()) {
+                if ($otro && (int) $otro->{$llave} !== $base['id']) {
                     $errores[] = 'Ya existe otro registro con ese nombre.';
+                }
+            }
+
+            // Valor actual de cada columna con corrección (para mostrar el cambio).
+            $base['correcciones'] = array_map(fn ($c) => $c + ['actual' => $actuales[$c['columna']] ?? ''], $base['correcciones']);
+
+            foreach ($errores as $texto) {
+                if (! in_array($texto, array_column($detalle, 'texto'), true)) {
+                    $detalle[] = ['texto' => $texto, 'clave' => null, 'depende' => null];
                 }
             }
 
             $salida[] = $base + [
                 'existe' => true,
+                'errores' => array_values(array_filter($detalle, fn ($e) => ! str_starts_with($e['texto'], 'Falta «'))),
                 'cambios' => $cambios,
-                'sinActualizar' => [
-                    'estado' => 'error',
-                    'mensajes' => array_values(array_unique(array_merge(
-                        array_filter($errores, fn ($m) => ! str_starts_with($m, 'Falta «')),
-                        ["Ya existe ({$base['codigo']}). Activa «Actualizar los que ya existen» para aplicar sus cambios."]
-                    ))),
-                ],
+                // «Ya existe» no es un error: solo se avisa (salvo que haya errores reales).
+                'sinActualizar' => ($erroresReales = array_values(array_filter($errores, fn ($m) => ! str_starts_with($m, 'Falta «')))) !== []
+                    ? ['estado' => 'error', 'mensajes' => array_values(array_unique($erroresReales))]
+                    : ['estado' => 'existe', 'mensajes' => ['Activa «Actualizar los que ya existen» para aplicar sus cambios.']],
                 'actualizando' => [
                     'estado' => $errores !== [] ? 'error' : ($cambios === [] ? 'sin_cambios' : 'actualizar'),
                     'mensajes' => array_values(array_unique($errores)),
@@ -601,7 +635,13 @@ class CatalogoMarcasModelosArchivo
         return $salida;
     }
 
-    private function convertir(string $clave, array $definicion, string $texto, array $marcasArchivo): array
+    // Correcciones posibles de la fila que se está revisando.
+    private array $correcciones = [];
+
+    // Fila de marca (con errores) de la que depende el valor revisado.
+    private ?int $dependeDe = null;
+
+    private function convertir(string $clave, array $definicion, string $texto, array $marcasArchivo, array $marcasConError = [], string $clase = 'marca'): array
     {
         switch ($definicion[2]) {
             case 'lista':
@@ -616,7 +656,16 @@ class CatalogoMarcasModelosArchivo
                     return ['nueva:'.$marcasArchivo[$this->normalizar($texto)], null];
                 }
 
-                $opciones = $this->lista($clave);
+                // Su marca viene en el archivo, pero esa fila tiene errores.
+                if ($clave === 'id_marca' && isset($marcasConError[$this->normalizar($texto)])) {
+                    [$etiquetaMarca, $numeroMarca] = $marcasConError[$this->normalizar($texto)];
+                    $this->dependeDe = $numeroMarca;
+
+                    return [null, "Su marca «{$texto}» tiene errores en {$etiquetaMarca}. Corrígela y este modelo se podrá crear."];
+                }
+
+                $opciones = array_values(array_map('strval', $this->lista($clave)));
+                $this->registrarCorreccion($clave, $definicion[0], $texto, $opciones, $clase);
                 $sugerencia = count($opciones) <= 12 ? ' (opciones: '.implode(', ', $opciones).')' : '';
 
                 return [null, $clave === 'id_marca'
@@ -640,11 +689,17 @@ class CatalogoMarcasModelosArchivo
             case 'estado':
                 $t = $this->normalizar($texto);
 
-                return match (true) {
-                    in_array($t, ['activo', 'activa', 'si', '1'], true) => [true, null],
-                    in_array($t, ['inactivo', 'inactiva', 'no', '0'], true) => [false, null],
-                    default => [null, "Estado: escribe «Activo» o «Inactivo»."],
-                };
+                if (in_array($t, ['activo', 'activa', 'si', '1'], true)) {
+                    return [true, null];
+                }
+
+                if (in_array($t, ['inactivo', 'inactiva', 'no', '0'], true)) {
+                    return [false, null];
+                }
+
+                $this->registrarCorreccion($clave, $definicion[0], $texto, ['Activo', 'Inactivo'], $clase);
+
+                return [null, "Estado: escribe «Activo» o «Inactivo»."];
 
             default:
                 $max = $clave === 'nombre' ? 255 : ($clave === 'descripcion' ? 1000 : 5000);
@@ -653,6 +708,81 @@ class CatalogoMarcasModelosArchivo
                     ? [$texto, null]
                     : [null, "{$definicion[0]}: máximo {$max} caracteres."];
         }
+    }
+
+    /*
+     * Todas las marcas o modelos en memoria (una consulta), por código y por
+     * nombre: revisar cientos de filas sin una consulta por fila.
+     */
+    private function indice(string $clase): array
+    {
+        return $this->memo['indice.'.$clase] ??= (function () use ($clase) {
+            $porCodigo = [];
+            $porNombre = [];
+
+            foreach (DB::table($clase === 'marca' ? 'marcas' : 'modelos')->get() as $registro) {
+                if (filled($registro->codigo_interno ?? null)) {
+                    $porCodigo[mb_strtolower((string) $registro->codigo_interno)] = $registro;
+                }
+
+                $porNombre[$this->llaveNombre($clase, (string) $registro->nombre, $registro->id_marca ?? null, $registro->id_tipo_equipo ?? null)] ??= $registro;
+            }
+
+            return ['codigo' => $porCodigo, 'nombre' => $porNombre];
+        })();
+    }
+
+    private function llaveNombre(string $clase, string $nombre, mixed $marca = null, mixed $tipo = null): string
+    {
+        $base = mb_strtolower(trim($nombre));
+
+        return $clase === 'marca' ? $base : $base.'|'.(int) $marca.'|'.(int) $tipo;
+    }
+
+    private function registrarCorreccion(string $columna, string $etiqueta, string $valor, array $opciones, string $clase): void
+    {
+        $clave = $clase.'|'.$columna.'|'.$this->normalizar($valor);
+
+        $this->correcciones[$clave] = [
+            'clave' => $clave,
+            'clase' => $clase,
+            'columna' => $columna,
+            'etiqueta' => $etiqueta,
+            'valor' => $valor,
+            'opciones' => $opciones,
+            'sugerencia' => $this->parecido($valor, $opciones),
+        ];
+    }
+
+    // Nombre existente muy parecido (posible error de dedo) o null.
+    public function parecido(string $texto, array $nombres): ?string
+    {
+        $buscado = $this->normalizar($texto);
+        $mejor = null;
+        $puntos = 0.0;
+
+        foreach ($nombres as $nombre) {
+            $actual = $this->normalizar((string) $nombre);
+
+            if ($actual === '' || $actual === $buscado) {
+                continue;
+            }
+
+            $compacto = fn ($t) => str_replace([' ', '-', '_', '.'], '', $t);
+            similar_text($buscado, $actual, $porcentaje);
+            $limite = max(1, intdiv(max(strlen($buscado), strlen($actual)), 5));
+            $contiene = strlen($actual) >= 4 && strlen($buscado) >= 4 && (str_starts_with($buscado, $actual) || str_starts_with($actual, $buscado));
+
+            if ($compacto($buscado) === $compacto($actual) || levenshtein($buscado, $actual) <= $limite || $porcentaje >= 80 || $contiene) {
+                $valor = $compacto($buscado) === $compacto($actual) ? 101 : $porcentaje;
+
+                if ($valor > $puntos) {
+                    [$mejor, $puntos] = [(string) $nombre, $valor];
+                }
+            }
+        }
+
+        return $mejor;
     }
 
     private function comparable(string $tipo, string $texto): string

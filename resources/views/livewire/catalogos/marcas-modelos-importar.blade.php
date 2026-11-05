@@ -1,20 +1,15 @@
 {{-- ============================================================
     IMPORTAR MARCAS Y MODELOS (App\Livewire\Catalogos\MarcasModelosImportar)
     Mismo diseño que Inventario › Importar.
+
+    La vista previa se arma en el navegador con las filas que revisó el
+    servidor ($wire.filas): las correcciones («usar…», «Usar el
+    existente», «Dejar vacío») y la casilla «Actualizar…» son
+    instantáneas. Se envían al servidor al pulsar el botón de guardar.
 ============================================================ --}}
 @php
     $tarjeta = 'rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 sm:p-6';
     $columnasFila = 'lg:grid-cols-[150px_110px_minmax(0,1fr)_minmax(0,1.6fr)]';
-
-    $insignia = fn (string $estado) => match ($estado) {
-        'nueva' => ['Se creará', 'bg-[var(--theme-primary-soft)] text-[var(--theme-primary)]'],
-        'actualizar' => ['Se actualizará', 'bg-[var(--theme-warning-soft)] text-[var(--theme-warning)]'],
-        'sin_cambios' => ['Sin cambios', 'bg-[var(--theme-surface-soft)] text-[var(--theme-text-muted)]'],
-        'creada' => ['Creada', 'bg-[var(--theme-success-soft)] text-[var(--theme-success)]'],
-        'actualizada' => ['Actualizada', 'bg-[var(--theme-success-soft)] text-[var(--theme-success)]'],
-        'fallo' => ['No se guardó', 'bg-[var(--theme-danger-soft)] text-[var(--theme-danger)]'],
-        default => ['Con errores', 'bg-[var(--theme-danger-soft)] text-[var(--theme-danger)]'],
-    };
 @endphp
 
 <div
@@ -23,17 +18,27 @@
     x-on:dragleave.window="if (esArchivo($event)) { profundidad = Math.max(0, profundidad - 1); if (profundidad === 0) encima = false; }"
     x-on:dragover.window="if (esArchivo($event)) { $event.preventDefault(); $event.dataTransfer.dropEffect = enMenu($event) ? 'none' : 'copy'; }"
     x-on:drop.window="if (esArchivo($event)) { $event.preventDefault(); profundidad = 0; encima = false; if (! enMenu($event)) subir($event.dataTransfer.files?.[0]); }"
-    data-listas-sin="{{ $modos['sin']['listas'] }}"
-    data-listas-con="{{ $modos['con']['listas'] }}"
     x-data="{
         actualizar: @js($actualizarExistentes),
+        correcciones: {},
         corriendo: false,
         subiendo: false,
         progreso: 0,
         encima: false,
+        profundidad: 0,
         hechos: 0,
         totalImportar: 0,
-        profundidad: 0,
+
+        insignias: {
+            nueva: ['Se creará', 'bg-[var(--theme-primary-soft)] text-[var(--theme-primary)]'],
+            actualizar: ['Se actualizará', 'bg-[var(--theme-warning-soft)] text-[var(--theme-warning)]'],
+            sin_cambios: ['Sin cambios', 'bg-[var(--theme-surface-soft)] text-[var(--theme-text-muted)]'],
+            existe: ['Ya existe', 'bg-[var(--theme-surface-soft)] text-[var(--theme-text)]'],
+            creada: ['Creada', 'bg-[var(--theme-success-soft)] text-[var(--theme-success)]'],
+            actualizada: ['Actualizada', 'bg-[var(--theme-success-soft)] text-[var(--theme-success)]'],
+            fallo: ['No se guardó', 'bg-[var(--theme-danger-soft)] text-[var(--theme-danger)]'],
+            error: ['Con errores', 'bg-[var(--theme-danger-soft)] text-[var(--theme-danger)]'],
+        },
 
         // Archivo que llegó desde Marcas/Modelos (arrastrado o elegido en «Añadir»).
         init() {
@@ -45,6 +50,93 @@
 
         esArchivo(evento) { return Array.from(evento.dataTransfer?.types ?? []).includes('Files'); },
         enMenu(evento) { return evento.target instanceof Element && !! evento.target.closest('aside, header, nav, #mobileAppHeader, .mi-barra'); },
+        normal(t) { return String(t ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim(); },
+
+        /* ---------- Vista previa calculada en el navegador ---------- */
+
+        get filas() { return $wire.filas || []; },
+
+        corregida(clave) { return clave && Object.prototype.hasOwnProperty.call(this.correcciones, clave); },
+
+        // Fila de marca sin errores pendientes (sus modelos dependen de ella).
+        filaOk(numero) {
+            const f = this.filas.find((x) => x.numero === numero);
+
+            return !! f && f.estado !== 'fallo' && (f.errores || []).every((e) => this.corregida(e.clave));
+        },
+
+        resuelto(e) {
+            return this.corregida(e.clave) || (e.depende !== null && e.depende !== undefined && this.filaOk(e.depende));
+        },
+
+        calcular(f) {
+            if (['creada', 'actualizada', 'fallo'].includes(f.estado)) {
+                return { estado: f.estado, mensajes: f.mensajes || [], cambios: f.estado === 'actualizada' ? (f.cambios || []) : [], corregidos: [] };
+            }
+
+            const pendientes = (f.errores || []).filter((e) => ! this.resuelto(e));
+            const corregidos = (f.correcciones || [])
+                .filter((c) => this.corregida(c.clave))
+                .map((c) => ({ etiqueta: c.etiqueta, antes: c.valor, despues: this.correcciones[c.clave] === '__quitar__' ? '' : this.correcciones[c.clave] }));
+
+            if (pendientes.length) {
+                return { estado: 'error', mensajes: pendientes.map((e) => e.texto), cambios: [], corregidos };
+            }
+
+            if (! f.existe) return { estado: 'nueva', mensajes: [], cambios: [], corregidos };
+
+            if (! this.actualizar) {
+                return { estado: 'existe', mensajes: ['Activa «Actualizar los que ya existen» para aplicar sus cambios.'], cambios: [], corregidos: [] };
+            }
+
+            const extra = (f.correcciones || [])
+                .filter((c) => this.corregida(c.clave) && this.correcciones[c.clave] !== '__quitar__' && this.normal(this.correcciones[c.clave]) !== this.normal(c.actual))
+                .map((c) => ({ etiqueta: c.etiqueta, antes: c.actual || '', despues: this.correcciones[c.clave] }));
+            const cambios = [...(f.cambios || []), ...extra];
+
+            return { estado: cambios.length ? 'actualizar' : 'sin_cambios', mensajes: [], cambios, corregidos: [] };
+        },
+
+        get vista() { return this.filas.map((f) => ({ f, r: this.calcular(f) })); },
+
+        get cuentas() {
+            const c = { nuevas: 0, actualizar: 0, errores: 0, sinCambios: 0, existen: 0 };
+
+            this.vista.forEach(({ f, r }) => {
+                if (r.estado === 'nueva') c.nuevas++;
+                if (r.estado === 'actualizar') c.actualizar++;
+                if (r.estado === 'error' || r.estado === 'fallo') c.errores++;
+                if (r.estado === 'sin_cambios') c.sinCambios++;
+                if (f.existe) c.existen++;
+            });
+
+            return c;
+        },
+
+        get textoBoton() {
+            const c = this.cuentas;
+            const total = c.nuevas + c.actualizar;
+            const partes = [];
+
+            if (c.nuevas) partes.push('crear ' + c.nuevas);
+            if (c.actualizar) partes.push('actualizar ' + c.actualizar);
+
+            const texto = partes.join(' y ');
+
+            return texto.charAt(0).toUpperCase() + texto.slice(1) + (total === 1 ? ' registro' : ' registros');
+        },
+
+        corregir(clave, valor) {
+            if (valor === '' || valor === null) {
+                delete this.correcciones[clave];
+            } else {
+                this.correcciones[clave] = valor;
+            }
+
+            this.correcciones = { ...this.correcciones };
+        },
+
+        /* ---------- Archivo e importación ---------- */
 
         subir(archivo) {
             if (! archivo || this.subiendo || this.corriendo) return;
@@ -56,6 +148,7 @@
 
             this.subiendo = true;
             this.progreso = 0;
+            this.correcciones = {};
 
             $wire.upload(
                 'archivo',
@@ -69,7 +162,7 @@
         async importar() {
             if (this.corriendo) return;
 
-            const total = Number((this.actualizar ? this.$root.dataset.listasCon : this.$root.dataset.listasSin) || 0);
+            const total = this.cuentas.nuevas + this.cuentas.actualizar;
             if (total === 0) return;
 
             this.corriendo = true;
@@ -78,12 +171,51 @@
             let aviso = window.trackitToast?.('loading', 'Guardando marcas y modelos…', 'Importando') ?? null;
 
             try {
-                let r = { pendientes: total };
+                // 1) Las correcciones se aplican una sola vez; 2) se guarda de 10 en 10.
+                const preparado = await $wire.prepararImportacion({ ...this.correcciones }, this.actualizar);
+                this.correcciones = {};
+                this.totalImportar = Number(preparado.pendientes || 0);
 
-                while (r.pendientes > 0) {
-                    r = await $wire.importarLote(20, this.actualizar);
-                    this.hechos = total - r.pendientes;
-                    if (aviso) window.trackitToastActualizar?.(aviso, 'loading', this.hechos + ' de ' + total + ' guardados…', 'Importando');
+                let r = { pendientes: this.totalImportar, creadas: 0, actualizadas: 0 };
+
+                /*
+                 * Contador de 1 en 1 (como en Inventario): entre lote y lote
+                 * avanza al ritmo real medido, sin pasar del lote en curso; al
+                 * volver cada lote se ajusta al número real.
+                 */
+                const totalLote = this.totalImportar;
+                const inicio = performance.now();
+                let confirmados = 0;
+                let finLote = inicio;
+                let msPorRegistro = 600;
+
+                const pintar = () => {
+                    if (totalLote <= 0) return;
+                    const tope = Math.min(totalLote, confirmados + 10) - 1;
+                    const estimado = confirmados + Math.floor((performance.now() - finLote) / msPorRegistro);
+                    const nuevo = Math.max(this.hechos, confirmados, Math.min(Math.max(confirmados, tope), estimado));
+
+                    if (nuevo === this.hechos) return;
+                    this.hechos = nuevo;
+
+                    const s = Math.max(1, Math.round(((totalLote - nuevo) * msPorRegistro) / 1000));
+                    const resta = confirmados > 0 && nuevo < totalLote ? ' · quedan ≈ ' + (s < 60 ? s + ' s' : Math.floor(s / 60) + ' min ' + String(s % 60).padStart(2, '0') + ' s') : '';
+                    if (aviso) window.trackitToastActualizar?.(aviso, 'loading', nuevo + ' de ' + totalLote + ' guardados' + resta, 'Importando');
+                };
+
+                const reloj = setInterval(pintar, 60);
+
+                try {
+                    while (r.pendientes > 0) {
+                        r = await $wire.importarLote(10, this.actualizar);
+                        confirmados = Math.max(0, totalLote - r.pendientes);
+                        finLote = performance.now();
+                        if (confirmados > 0) msPorRegistro = Math.max(30, (finLote - inicio) / confirmados);
+                        this.hechos = Math.max(this.hechos, confirmados);
+                        pintar();
+                    }
+                } finally {
+                    clearInterval(reloj);
                 }
 
                 const partes = [];
@@ -170,7 +302,8 @@
                     </strong>
                     <span class="block text-xs text-[var(--theme-text-muted)]">
                         {{ $ultimoResultado['marcas'] }} {{ $ultimoResultado['marcas'] === 1 ? 'marca' : 'marcas' }} · {{ $ultimoResultado['modelos'] }} {{ $ultimoResultado['modelos'] === 1 ? 'modelo' : 'modelos' }}
-                        @if ($cuentas['total'] > 0) · abajo quedan las filas que no se guardaron. @endif
+                        @if (($ultimoResultado['omitidas'] ?? 0) > 0) · {{ $ultimoResultado['omitidas'] }} ya {{ $ultimoResultado['omitidas'] === 1 ? 'existía y no se tocó' : 'existían y no se tocaron' }} @endif
+                        @if ($cuentas['total'] > 0) · abajo quedan las filas con errores para corregirlas. @endif
                     </span>
                 </p>
             </div>
@@ -182,7 +315,7 @@
     @endif
 
     {{-- ========================================================
-        2. VISTA PREVIA
+        2. VISTA PREVIA (se calcula en el navegador)
     ======================================================== --}}
     @if ($cuentas['total'] > 0)
         <x-admin.filter-bar>
@@ -195,6 +328,7 @@
                     <p class="truncate text-sm font-semibold text-[var(--theme-text-strong)]">{{ $nombreArchivo }}</p>
                     <p class="mt-0.5 text-xs text-[var(--theme-text-muted)]">
                         {{ $cuentas['marcas'] }} {{ $cuentas['marcas'] === 1 ? 'marca' : 'marcas' }} · {{ $cuentas['modelos'] }} {{ $cuentas['modelos'] === 1 ? 'modelo' : 'modelos' }}
+                        <span x-show="Object.keys(correcciones).length" x-cloak x-text="' · ' + Object.keys(correcciones).length + (Object.keys(correcciones).length === 1 ? ' corrección pendiente de guardar' : ' correcciones pendientes de guardar')"></span>
                     </p>
 
                     @if ($cuentas['existentes'] > 0)
@@ -216,30 +350,39 @@
                     {{ $terminado ? 'Importar otro archivo' : 'Descartar' }}
                 </x-ui.button>
 
-                @if (! $terminado && $modos['sin']['listas'] + $modos['con']['listas'] > 0)
-                    <x-ui.button
-                        x-show="(actualizar ? {{ $modos['con']['listas'] }} : {{ $modos['sin']['listas'] }}) > 0"
-                        x-on:click="importar()"
-                        x-loading="corriendo"
-                        loading-text="Guardando…"
-                    >
-                        <span x-text="actualizar ? @js($modos['con']['boton']) : @js($modos['sin']['boton'])">{{ $actualizarExistentes ? $modos['con']['boton'] : $modos['sin']['boton'] }}</span>
-                    </x-ui.button>
-                @endif
+                <x-ui.button
+                    x-show="cuentas.nuevas + cuentas.actualizar > 0"
+                    x-on:click="importar()"
+                    x-loading="corriendo"
+                    loading-text="Guardando…"
+                >
+                    <span x-text="textoBoton">Guardar</span>
+                </x-ui.button>
             </x-slot:actions>
         </x-admin.filter-bar>
 
-        {{-- Métricas (una versión por estado de la casilla) --}}
-        @foreach ($modos as $modo => $m)
-            <div x-show="{{ $modo === 'con' ? 'actualizar' : '! actualizar' }}" @if ($modo === 'con' && ! $actualizarExistentes || $modo === 'sin' && $actualizarExistentes) x-cloak @endif>
-                <x-admin.metrics :items="array_values(array_filter([
-                    ['label' => $modo === 'con' ? 'Por guardar (nuevos y actualizaciones)' : 'Listos para crear', 'value' => $m['listas']],
-                    ['label' => 'Con errores', 'value' => $m['errores']],
-                    $cuentas['existentes'] ? ['label' => $modo === 'con' ? 'Ya existen · '.$m['sinCambios'].' sin cambios' : 'Ya existen', 'value' => $cuentas['existentes']] : null,
-                    ['label' => 'Filas en el archivo', 'value' => $cuentas['total']],
-                ]))" />
-            </div>
-        @endforeach
+        {{-- Métricas (cambian al instante con las correcciones y la casilla) --}}
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            @foreach ([
+                ['cuentas.nuevas + cuentas.actualizar', "actualizar ? 'Por guardar (nuevos y actualizaciones)' : 'Listos para crear'", true],
+                ['cuentas.errores', "'Con errores'", false],
+                ['cuentas.existen', "actualizar ? 'Ya existen · ' + cuentas.sinCambios + ' sin cambios' : 'Ya existen'", false],
+                ['filas.length', "'Filas en el archivo'", false],
+            ] as [$valor, $etiqueta, $destacada])
+                <div @class([
+                    'rounded-xl border bg-[var(--theme-surface)] px-4 py-3.5',
+                    'border-[var(--theme-primary)]' => $destacada,
+                    'border-[var(--theme-border)]' => ! $destacada,
+                ])>
+                    <p @class([
+                        'text-2xl font-semibold leading-tight tabular-nums',
+                        'text-[var(--theme-primary)]' => $destacada,
+                        'text-[var(--theme-text-strong)]' => ! $destacada,
+                    ]) x-text="({{ $valor }}).toLocaleString('es-MX')">0</p>
+                    <p class="mt-0.5 text-[11px] text-[var(--theme-text-muted)]" x-text="{{ $etiqueta }}"></p>
+                </div>
+            @endforeach
+        </div>
 
         <div>
             {{-- Avance --}}
@@ -260,67 +403,87 @@
                 </div>
 
                 <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:block lg:divide-y lg:divide-[var(--theme-border)]">
-                    @foreach ($filas as $fila)
-                        <div
-                            wire:key="mm-fila-{{ $fila['numero'] }}"
-                            class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 text-sm shadow-sm lg:grid lg:items-start lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0 lg:text-xs lg:shadow-none lg:hover:bg-[var(--theme-primary-soft-subtle)] 2xl:text-sm {{ $columnasFila }}"
-                        >
+                    <template x-for="{ f, r } in vista" :key="f.numero + '-' + f.etiqueta">
+                        <div class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 text-sm shadow-sm lg:grid lg:items-start lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0 lg:text-xs lg:shadow-none lg:hover:bg-[var(--theme-primary-soft-subtle)] 2xl:text-sm {{ $columnasFila }}">
                             <div class="flex items-center gap-1.5 text-xs text-[var(--theme-text-muted)] lg:contents">
-                                <span class="lg:px-4 lg:py-3 lg:text-xs 2xl:text-sm">{{ $fila['etiqueta'] }}</span>
+                                <span class="lg:px-4 lg:py-3 lg:text-xs 2xl:text-sm" x-text="f.etiqueta"></span>
                                 <span class="lg:hidden" aria-hidden="true">·</span>
-                                <span class="lg:px-4 lg:py-3 lg:text-xs lg:text-[var(--theme-text)] 2xl:text-sm">{{ $fila['clase'] === 'marca' ? 'Marca' : 'Modelo' }}</span>
+                                <span class="lg:px-4 lg:py-3 lg:text-xs lg:text-[var(--theme-text)] 2xl:text-sm" x-text="f.clase === 'marca' ? 'Marca' : 'Modelo'"></span>
                             </div>
 
                             <div class="mt-1 min-w-0 lg:mt-0 lg:px-4 lg:py-3">
-                                <p class="break-words font-medium text-[var(--theme-text-strong)]">{{ $fila['nombre'] ?: '—' }}</p>
-                                @if ($fila['detalle'] !== '')
-                                    <p class="break-words text-xs text-[var(--theme-text-muted)]">{{ $fila['detalle'] }}</p>
-                                @endif
+                                <p class="break-words font-medium text-[var(--theme-text-strong)]" x-text="f.nombre || '—'"></p>
+                                <p x-show="f.detalle" class="break-words text-xs text-[var(--theme-text-muted)]" x-text="f.detalle"></p>
                             </div>
 
                             <div class="mt-2 min-w-0 border-t border-[var(--theme-border)] pt-2 lg:mt-0 lg:border-t-0 lg:px-4 lg:py-3">
-                                @php
-                                    $variantes = ($fila['existe'] ?? false) && ! in_array($fila['estado'], ['creada', 'actualizada', 'fallo'], true)
-                                        ? ['! actualizar' => $fila['sinActualizar'], 'actualizar' => $fila['actualizando']]
-                                        : [null => ['estado' => $fila['estado'], 'mensajes' => $fila['mensajes'] ?? []]];
-                                @endphp
+                                <span class="inline-flex rounded-md px-2 py-0.5 text-xs font-medium" x-bind:class="insignias[r.estado][1]">
+                                    <span x-text="insignias[r.estado][0] + (f.codigo ? ' · ' + f.codigo : '') + (['actualizar', 'actualizada'].includes(r.estado) ? ' · ' + r.cambios.length + (r.cambios.length === 1 ? ' cambio' : ' cambios') : '')"></span>
+                                </span>
 
-                                @foreach ($variantes as $condicion => $r)
-                                    <div
-                                        @if ($condicion) x-show="{{ $condicion }}" @if (($condicion === 'actualizar') !== $actualizarExistentes) x-cloak @endif @endif
-                                    >
-                                        @php [$texto, $color] = $insignia($r['estado']); @endphp
-                                        <span class="inline-flex rounded-md px-2 py-0.5 text-xs font-medium {{ $color }}">
-                                            {{ $texto }}@if ($fila['codigo'] !== '') · {{ $fila['codigo'] }}@endif
-                                            @if (in_array($r['estado'], ['actualizar', 'actualizada'], true)) · {{ count($fila['cambios']) }} {{ count($fila['cambios']) === 1 ? 'cambio' : 'cambios' }} @endif
-                                        </span>
+                                {{-- Lo que cambia (al actualizar) --}}
+                                <ul x-show="r.cambios.length" class="mt-1 space-y-0.5 text-xs text-[var(--theme-text)]">
+                                    <template x-for="(cambio, i) in r.cambios" :key="i">
+                                        <li>
+                                            <span class="text-[var(--theme-text-muted)]" x-text="cambio.etiqueta + ':'"></span>
+                                            <span class="text-[var(--theme-text-muted)]" x-bind:class="cambio.antes && 'line-through'" x-text="cambio.antes || '(vacío)'"></span> →
+                                            <span class="font-medium text-[var(--theme-text-strong)]" x-text="cambio.despues"></span>
+                                        </li>
+                                    </template>
+                                </ul>
 
-                                        @if (in_array($r['estado'], ['actualizar', 'actualizada'], true))
-                                            <ul class="mt-1 space-y-0.5 text-xs text-[var(--theme-text)]">
-                                                @foreach ($fila['cambios'] as $cambio)
-                                                    <li>
-                                                        <span class="text-[var(--theme-text-muted)]">{{ $cambio['etiqueta'] }}:</span>
-                                                        @if ($cambio['antes'] !== '')
-                                                            <span class="text-[var(--theme-text-muted)] line-through">{{ $cambio['antes'] }}</span> →
-                                                        @else
-                                                            <span class="text-[var(--theme-text-muted)]">(vacío)</span> →
-                                                        @endif
-                                                        <span class="font-medium text-[var(--theme-text-strong)]">{{ $cambio['despues'] }}</span>
-                                                    </li>
-                                                @endforeach
-                                            </ul>
-                                        @elseif (! empty($r['mensajes']))
-                                            <ul class="mt-1 space-y-0.5 text-xs text-[var(--theme-danger)]">
-                                                @foreach ($r['mensajes'] as $mensaje)
-                                                    <li>{{ $mensaje }}</li>
-                                                @endforeach
-                                            </ul>
-                                        @endif
+                                {{-- Correcciones hechas en esta fila (se pueden deshacer) --}}
+                                <template x-for="(c, i) in r.corregidos" :key="'c' + i">
+                                    <p class="mt-1 text-xs text-[var(--theme-text)]">
+                                        <span class="text-[var(--theme-text-muted)]" x-text="c.etiqueta + ':'"></span>
+                                        <span class="text-[var(--theme-text-muted)] line-through" x-text="c.antes"></span> →
+                                        <span class="font-medium text-[var(--theme-text-strong)]" x-text="c.despues || '(vacío)'"></span>
+                                    </p>
+                                </template>
+
+                                {{-- Avisos y errores pendientes --}}
+                                <ul x-show="r.mensajes.length" class="mt-1 space-y-0.5 text-xs" x-bind:class="r.estado === 'existe' ? 'text-[var(--theme-text-muted)]' : 'text-[var(--theme-danger)]'">
+                                    <template x-for="(m, i) in r.mensajes" :key="'m' + i">
+                                        <li x-text="m"></li>
+                                    </template>
+                                </ul>
+
+                                {{-- Corregir aquí: elegir una opción válida, usar el parecido o quitar el valor --}}
+                                <template x-for="c in (f.correcciones || [])" :key="c.clave">
+                                    <div x-show="r.estado === 'error' || corregida(c.clave)" class="mt-1.5 flex flex-wrap items-center gap-2 text-xs">
+                                        <span class="text-[var(--theme-text-muted)]" x-text="c.etiqueta + ': usar'"></span>
+                                        <select
+                                            x-on:change="corregir(c.clave, $event.target.value)"
+                                            x-bind:value="correcciones[c.clave] ?? ''"
+                                            x-bind:disabled="corriendo"
+                                            class="h-8 max-w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-2 text-xs text-[var(--theme-text)] focus:border-[var(--theme-primary)] focus:outline-none"
+                                            x-bind:aria-label="'Corregir «' + c.valor + '» en ' + c.etiqueta"
+                                        >
+                                            <option value="" x-text="'«' + c.valor + '» (sin corregir)'"></option>
+                                            <template x-for="o in c.opciones" :key="o">
+                                                <option x-bind:value="o" x-text="o" x-bind:selected="correcciones[c.clave] === o"></option>
+                                            </template>
+                                            <template x-if="! (['id_marca', 'id_tipo_equipo'].includes(c.columna) && ! f.existe)">
+                                                <option value="__quitar__" x-text="f.existe ? 'Dejar sin cambiar' : 'Dejar vacío'" x-bind:selected="correcciones[c.clave] === '__quitar__'"></option>
+                                            </template>
+                                        </select>
+
+                                        <template x-if="c.sugerencia && ! corregida(c.clave)">
+                                            <span class="flex flex-wrap items-center gap-2">
+                                                <span class="text-[var(--theme-text-muted)]">Ya tienes <span class="font-medium text-[var(--theme-text-strong)]" x-text="'«' + c.sugerencia + '»'"></span></span>
+                                                <button
+                                                    type="button"
+                                                    x-on:click="corregir(c.clave, c.sugerencia)"
+                                                    x-bind:title="'Cambia «' + c.valor + '» por «' + c.sugerencia + '» en todas las filas que lo traen'"
+                                                    class="h-8 shrink-0 rounded-md border border-[var(--theme-primary)] px-3 font-medium text-[var(--theme-primary)] hover:bg-[var(--theme-primary-soft)]"
+                                                >Usar el existente</button>
+                                            </span>
+                                        </template>
                                     </div>
-                                @endforeach
+                                </template>
                             </div>
                         </div>
-                    @endforeach
+                    </template>
                 </div>
             </div>
         </div>

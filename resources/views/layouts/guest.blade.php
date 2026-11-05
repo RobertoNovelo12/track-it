@@ -10,7 +10,7 @@
     >
 
     <title>
-        @yield('title', 'Track-IT') | Grand Palladium Hotels &amp; Resorts
+        @yield('title', 'Track-IT') | {{ rescue(fn () => app(\App\Services\OrganizacionService::class)->nombre(), \App\Services\OrganizacionService::NOMBRE_PREDETERMINADO, false) }}
     </title>
 
     {{-- Aplicación instalable (manifiesto, íconos, service worker) --}}

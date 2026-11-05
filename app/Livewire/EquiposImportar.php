@@ -325,14 +325,11 @@ class EquiposImportar extends EquipoCreate
              * rechaza) y actualizando (lo que cambia). La casilla cambia de
              * una a otra en el navegador, sin esperar al servidor.
              */
-            $sinActualizar = [
-                'estado' => 'error',
-                'mensajes' => array_values(array_unique(array_merge(
-                    array_filter($fila['mensajes'], fn ($m) => ! str_starts_with($m, 'Falta «') || str_starts_with($m, 'Falta «Tipo de equipo')),
-                    ["Ya existe en el inventario ({$codigo}). Activa «Actualizar los equipos que ya existen» para aplicar sus cambios."]
-                ))),
-                'cambios' => [],
-            ];
+            // «Ya existe» no es un error: solo se avisa (salvo que haya errores reales).
+            $erroresReales = array_values(array_filter($fila['mensajes'], fn ($m) => ! str_starts_with($m, 'Falta «') || str_starts_with($m, 'Falta «Tipo de equipo')));
+            $sinActualizar = $erroresReales !== []
+                ? ['estado' => 'error', 'mensajes' => array_values(array_unique($erroresReales)), 'cambios' => []]
+                : ['estado' => 'existe', 'mensajes' => ['Activa «Actualizar los equipos que ya existen» para aplicar sus cambios.'], 'cambios' => []];
 
             // Celdas vacías conservan lo actual: «Falta…» no aplica al actualizar.
             $errores = array_values(array_filter($fila['mensajes'], fn ($m) => ! str_starts_with($m, 'Falta «') || str_starts_with($m, 'Falta «Tipo de equipo')));

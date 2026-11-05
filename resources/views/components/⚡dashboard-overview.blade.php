@@ -243,6 +243,16 @@ new class extends Component
     |--------------------------------------------------------------------------
     */
 
+    /*
+     * Recalcula el caché del dashboard sin que nadie espere: se llama
+     * después de responder a quien guardó un cambio (SystemCacheService).
+     */
+    public function precalentar(): void
+    {
+        $this->systemCache()->rememberSimple(self::CACHE_MODULE, 'kpis', fn () => $this->buildKpiData(), self::CACHE_TTL_HOURS);
+        $this->systemCache()->rememberSimple(self::CACHE_MODULE, 'secciones-v3', fn () => $this->buildSeccionesData(), self::CACHE_TTL_HOURS);
+    }
+
     protected function buildKpiData(): array
     {
         $today =
@@ -269,143 +279,51 @@ new class extends Component
 
         /*
         |--------------------------------------------------------------------------
-        | TOTAL DE EQUIPOS
+        | TARJETAS EN UNA SOLA CONSULTA
         |--------------------------------------------------------------------------
+        |
+        | Antes era una consulta por número (6 viajes a la base remota). Mismos
+        | criterios: inventario vigente (sin baja), asignaciones abiertas,
+        | mantenimientos en proceso o vencidos y garantías.
+        |
         */
 
-        $totalEquipos =
-            $equiposVigentes()
-                ->count();
+        $hoy = $today->toDateString();
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | EQUIPOS ASIGNADOS
-        |--------------------------------------------------------------------------
-        */
-
-        $equiposAsignados =
-            DB::table('asignaciones')
-                ->whereIn('id_equipo', $equiposVigentes()->select('e.id_equipo'))
-                ->whereNull('fecha_fin')
-                ->distinct()
-                ->count('id_equipo');
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | EN MANTENIMIENTO
-        |--------------------------------------------------------------------------
-        */
-
-        $enMantenimiento =
-            DB::table('mantenimientos as m')
-                ->whereIn('m.id_equipo', $equiposVigentes()->select('e.id_equipo'))
-
-                ->leftJoin(
-                    'catalogo_valores as cv',
-                    'cv.id_valor',
-                    '=',
-                    'm.id_estado_mantenimiento'
+        $kpi = DB::selectOne(
+            "WITH vig AS (
+                SELECT e.id_equipo, e.fecha_fin_garantia, e.fecha_compra
+                FROM equipos e
+                WHERE NOT EXISTS (SELECT 1 FROM bajas b WHERE b.id_equipo = e.id_equipo)
+                AND NOT EXISTS (
+                    SELECT 1 FROM estados_equipo ee
+                    WHERE ee.id_estado_equipo = e.id_estado_activo AND ee.clave = 'BAJA'
                 )
+            )
+            SELECT
+                (SELECT COUNT(*) FROM vig) AS total,
+                (SELECT COUNT(*) FROM vig WHERE fecha_fin_garantia IS NOT NULL AND fecha_fin_garantia::date < ?) AS garantias_vencidas,
+                (SELECT COUNT(*) FROM vig WHERE fecha_fin_garantia IS NOT NULL AND fecha_fin_garantia BETWEEN ? AND ?) AS garantias_por_vencer,
+                (SELECT COUNT(DISTINCT a.id_equipo) FROM asignaciones a JOIN vig ON vig.id_equipo = a.id_equipo WHERE a.fecha_fin IS NULL) AS asignados,
+                (SELECT COUNT(m.id_mantenimiento) FROM mantenimientos m
+                    JOIN vig ON vig.id_equipo = m.id_equipo
+                    LEFT JOIN catalogo_valores cv ON cv.id_valor = m.id_estado_mantenimiento
+                    WHERE cv.clave = 'EN_PROCESO') AS en_mantenimiento,
+                (SELECT COUNT(m.id_mantenimiento) FROM mantenimientos m
+                    JOIN vig ON vig.id_equipo = m.id_equipo
+                    LEFT JOIN catalogo_valores cv ON cv.id_valor = m.id_estado_mantenimiento
+                    WHERE cv.clave NOT IN ('COMPLETADO', 'CANCELADO')
+                    AND m.fecha_proximo_mantenimiento IS NOT NULL
+                    AND m.fecha_proximo_mantenimiento::date < ?) AS mantenimientos_vencidos",
+            [$hoy, $hoy, $today->copy()->addDays(30)->toDateString(), $hoy]
+        );
 
-                ->where(
-                    'cv.clave',
-                    'EN_PROCESO'
-                )
-
-                ->count(
-                    'm.id_mantenimiento'
-                );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | MANTENIMIENTOS VENCIDOS
-        |--------------------------------------------------------------------------
-        */
-
-        $mantenimientosVencidos =
-            DB::table('mantenimientos as m')
-                ->whereIn('m.id_equipo', $equiposVigentes()->select('e.id_equipo'))
-
-                ->leftJoin(
-                    'catalogo_valores as cv',
-                    'cv.id_valor',
-                    '=',
-                    'm.id_estado_mantenimiento'
-                )
-
-                ->whereNotIn(
-                    'cv.clave',
-                    [
-                        'COMPLETADO',
-                        'CANCELADO',
-                    ]
-                )
-
-                ->whereNotNull(
-                    'm.fecha_proximo_mantenimiento'
-                )
-
-                ->whereDate(
-                    'm.fecha_proximo_mantenimiento',
-                    '<',
-                    $today
-                )
-
-                ->count(
-                    'm.id_mantenimiento'
-                );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | GARANTÍAS VENCIDAS
-        |--------------------------------------------------------------------------
-        */
-
-        $garantiasVencidas =
-            $equiposVigentes()
-
-                ->whereNotNull(
-                    'fecha_fin_garantia'
-                )
-
-                ->whereDate(
-                    'fecha_fin_garantia',
-                    '<',
-                    $today
-                )
-
-                ->count();
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | GARANTÍAS POR VENCER
-        |--------------------------------------------------------------------------
-        */
-
-        $garantiasPorVencer =
-            $equiposVigentes()
-
-                ->whereNotNull(
-                    'fecha_fin_garantia'
-                )
-
-                ->whereBetween(
-                    'fecha_fin_garantia',
-                    [
-                        $today->toDateString(),
-                        $today
-                            ->copy()
-                            ->addDays(30)
-                            ->toDateString(),
-                    ]
-                )
-
-                ->count();
+        $totalEquipos = (int) ($kpi->total ?? 0);
+        $equiposAsignados = (int) ($kpi->asignados ?? 0);
+        $enMantenimiento = (int) ($kpi->en_mantenimiento ?? 0);
+        $mantenimientosVencidos = (int) ($kpi->mantenimientos_vencidos ?? 0);
+        $garantiasVencidas = (int) ($kpi->garantias_vencidas ?? 0);
+        $garantiasPorVencer = (int) ($kpi->garantias_por_vencer ?? 0);
 
 
         /*
@@ -592,107 +510,36 @@ new class extends Component
         |--------------------------------------------------------------------------
         */
 
+        // Los 4 rangos en una sola consulta (antes, una por rango).
+        $antiguedad = DB::selectOne(
+            "WITH vig AS (
+                SELECT e.id_equipo, e.fecha_fin_garantia, e.fecha_compra
+                FROM equipos e
+                WHERE NOT EXISTS (SELECT 1 FROM bajas b WHERE b.id_equipo = e.id_equipo)
+                AND NOT EXISTS (
+                    SELECT 1 FROM estados_equipo ee
+                    WHERE ee.id_estado_equipo = e.id_estado_activo AND ee.clave = 'BAJA'
+                )
+            )
+            SELECT
+                COUNT(*) FILTER (WHERE fecha_compra IS NOT NULL AND fecha_compra::date >= ?) AS reciente,
+                COUNT(*) FILTER (WHERE fecha_compra IS NOT NULL AND fecha_compra::date < ? AND fecha_compra::date >= ?) AS media,
+                COUNT(*) FILTER (WHERE fecha_compra IS NOT NULL AND fecha_compra::date < ?) AS antigua,
+                COUNT(*) FILTER (WHERE fecha_compra IS NULL) AS sin_fecha
+            FROM vig",
+            [
+                $today->copy()->subYears(2)->toDateString(),
+                $today->copy()->subYears(2)->toDateString(),
+                $today->copy()->subYears(5)->toDateString(),
+                $today->copy()->subYears(5)->toDateString(),
+            ]
+        );
+
         $antiguedadBase = [
-
-            [
-                'label' => '0 - 2 años',
-
-                'count' =>
-                    $equiposVigentes()
-
-                        ->whereNotNull(
-                            'fecha_compra'
-                        )
-
-                        ->whereDate(
-                            'fecha_compra',
-                            '>=',
-                            $today
-                                ->copy()
-                                ->subYears(2)
-                        )
-
-                        ->count(),
-
-                'color' =>
-                    '#3BA5D9',
-            ],
-
-
-            [
-                'label' => '3 - 5 años',
-
-                'count' =>
-                    $equiposVigentes()
-
-                        ->whereNotNull(
-                            'fecha_compra'
-                        )
-
-                        ->whereDate(
-                            'fecha_compra',
-                            '<',
-                            $today
-                                ->copy()
-                                ->subYears(2)
-                        )
-
-                        ->whereDate(
-                            'fecha_compra',
-                            '>=',
-                            $today
-                                ->copy()
-                                ->subYears(5)
-                        )
-
-                        ->count(),
-
-                'color' =>
-                    '#6BB38E',
-            ],
-
-
-            [
-                'label' => '6+ años',
-
-                'count' =>
-                    $equiposVigentes()
-
-                        ->whereNotNull(
-                            'fecha_compra'
-                        )
-
-                        ->whereDate(
-                            'fecha_compra',
-                            '<',
-                            $today
-                                ->copy()
-                                ->subYears(5)
-                        )
-
-                        ->count(),
-
-                'color' =>
-                    '#D9A441',
-            ],
-
-
-            [
-                'label' => 'Sin fecha',
-
-                'count' =>
-                    $equiposVigentes()
-
-                        ->whereNull(
-                            'fecha_compra'
-                        )
-
-                        ->count(),
-
-                'color' =>
-                    '#94A3B8',
-            ],
-
+            ['label' => '0 - 2 años', 'count' => (int) ($antiguedad->reciente ?? 0), 'color' => '#3BA5D9'],
+            ['label' => '3 - 5 años', 'count' => (int) ($antiguedad->media ?? 0), 'color' => '#6BB38E'],
+            ['label' => '6+ años', 'count' => (int) ($antiguedad->antigua ?? 0), 'color' => '#D9A441'],
+            ['label' => 'Sin fecha', 'count' => (int) ($antiguedad->sin_fecha ?? 0), 'color' => '#94A3B8'],
         ];
 
 
@@ -2308,7 +2155,39 @@ new class extends Component
             </div>
 
 
-            <div class="overflow-x-auto">
+            {{-- Móvil: una tarjeta por registro (sin desplazamiento lateral) --}}
+            <ul class="divide-y divide-[var(--theme-border)] md:hidden">
+                @forelse ($actividadReciente as $item)
+                    <li class="px-4 py-3">
+                        <div class="flex items-start justify-between gap-3">
+                            <p class="min-w-0 truncate text-xs font-semibold text-[var(--theme-text-strong)]">{{ $item['usuario'] }}</p>
+                            <p class="shrink-0 whitespace-nowrap text-[10px] text-[var(--theme-text-muted)]">{{ \App\Support\Fecha::conHora($item['fecha']) }}</p>
+                        </div>
+
+                        <div class="mt-1.5 flex flex-wrap items-center gap-1.5">
+                            <span class="inline-flex max-w-full truncate rounded-full bg-[var(--theme-surface-soft)] px-2 py-0.5 text-[10px] font-medium text-[var(--theme-text)]">
+                                {{ \Illuminate\Support\Str::ucfirst(\Illuminate\Support\Str::lower(str_replace('_', ' ', (string) $item['accion']))) }}
+                            </span>
+                            @if (filled($item['modulo']))
+                                <span class="text-[10px] uppercase tracking-wide text-[var(--theme-text-muted)]">{{ $item['modulo'] }}</span>
+                            @endif
+                        </div>
+
+                        <p class="mt-1.5 break-words text-xs leading-relaxed text-[var(--theme-text)]">{{ $item['descripcion'] }}</p>
+                    </li>
+                @empty
+                    <li>
+                        <x-ui.empty-state
+                            compact
+                            title="Sin actividad reciente"
+                            description="Aquí aparecerán los últimos cambios registrados en bitácora."
+                        />
+                    </li>
+                @endforelse
+            </ul>
+
+            {{-- Tablet y escritorio: tabla --}}
+            <div class="hidden overflow-x-auto md:block">
 
                 <table
                     class="

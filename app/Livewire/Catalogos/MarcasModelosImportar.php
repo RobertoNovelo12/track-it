@@ -26,7 +26,7 @@ class MarcasModelosImportar extends Component
 
     private const MAXIMO_FILAS = 1000;
 
-    private const POR_LOTE = 20;
+    private const POR_LOTE = 10;
 
     public $archivo = null;
 
@@ -41,6 +41,9 @@ class MarcasModelosImportar extends Component
     public array $ultimoResultado = [];
 
     public bool $actualizarExistentes = false;
+
+    // Filas tal como vienen en el archivo (para corregirlas y revisar de nuevo).
+    public array $crudas = [];
 
     public function mount(): void
     {
@@ -93,8 +96,105 @@ class MarcasModelosImportar extends Component
             return;
         }
 
+        $this->crudas = $filas;
         $this->filas = $this->servicio()->revisar($filas);
         $this->aplicarModo(false, true);
+    }
+
+    /*
+     * Valor fuera de lista: se cambia por una opción válida (o se quita,
+     * '__quitar__') en todas las filas que lo traen y se revisa de nuevo.
+     */
+    public function corregir(string $clave, string $nuevo, ?bool $actualizar = null): void
+    {
+        Gate::authorize('gestionar');
+
+        if ($this->importando) {
+            return;
+        }
+
+        $correccion = collect($this->filas)->pluck('correcciones')->flatten(1)->firstWhere('clave', $clave);
+
+        if (! $correccion) {
+            return;
+        }
+
+        $servicio = $this->servicio();
+        $quitar = $nuevo === '__quitar__';
+
+        if (! $quitar && ! in_array($servicio->normalizar($nuevo), array_map(fn ($o) => $servicio->normalizar($o), $correccion['opciones']), true)) {
+            return;
+        }
+
+        foreach ($this->crudas as $i => $cruda) {
+            if (
+                $cruda['clase'] === $correccion['clase']
+                && $servicio->normalizar((string) ($cruda['valores'][$correccion['columna']] ?? '')) === $servicio->normalizar($correccion['valor'])
+            ) {
+                $this->crudas[$i]['valores'][$correccion['columna']] = $quitar ? '' : $nuevo;
+            }
+        }
+
+        $this->revisarDeNuevo($actualizar ?? $this->actualizarExistentes);
+    }
+
+    /*
+     * Antes de guardar: las correcciones hechas en el navegador se aplican
+     * una sola vez (petición propia, rápida) y la vista toma el resultado.
+     */
+    public function prepararImportacion(array $correcciones, bool $actualizar): array
+    {
+        Gate::authorize('gestionar');
+        @set_time_limit(120);
+
+        if ($correcciones !== []) {
+            $this->aplicarCorrecciones($correcciones, $actualizar);
+        } else {
+            $this->aplicarModo($actualizar);
+        }
+
+        return ['pendientes' => collect($this->filas)->whereIn('estado', ['nueva', 'actualizar'])->count()];
+    }
+
+    // {clave de corrección: valor nuevo | '__quitar__'} → filas del archivo.
+    private function aplicarCorrecciones(array $mapa, bool $actualizar): void
+    {
+        $servicio = $this->servicio();
+        $todas = collect($this->filas)->pluck('correcciones')->flatten(1)->keyBy('clave');
+
+        foreach ($mapa as $clave => $nuevo) {
+            $correccion = $todas->get($clave);
+            $nuevo = (string) $nuevo;
+
+            if (! $correccion) {
+                continue;
+            }
+
+            $quitar = $nuevo === '__quitar__';
+
+            if (! $quitar && ! in_array($servicio->normalizar($nuevo), array_map(fn ($o) => $servicio->normalizar($o), $correccion['opciones']), true)) {
+                continue;
+            }
+
+            foreach ($this->crudas as $i => $cruda) {
+                if (
+                    $cruda['clase'] === $correccion['clase']
+                    && $servicio->normalizar((string) ($cruda['valores'][$correccion['columna']] ?? '')) === $servicio->normalizar($correccion['valor'])
+                ) {
+                    $this->crudas[$i]['valores'][$correccion['columna']] = $quitar ? '' : $nuevo;
+                }
+            }
+        }
+
+        $this->revisarDeNuevo($actualizar);
+    }
+
+    private function revisarDeNuevo(bool $actualizar): void
+    {
+        $this->filas = $this->servicio()->revisar($this->crudas);
+        $this->actualizarExistentes = $actualizar;
+        $this->aplicarModo($actualizar, true);
+        $this->terminado = false;
     }
 
     // Filas que ya existen: versión «se rechaza» o «se actualiza».
@@ -115,16 +215,19 @@ class MarcasModelosImportar extends Component
 
     public function descartar(): void
     {
-        $this->reset(['archivo', 'nombreArchivo', 'filas', 'importando', 'terminado', 'ultimoResultado', 'actualizarExistentes']);
+        $this->reset(['archivo', 'nombreArchivo', 'filas', 'crudas', 'importando', 'terminado', 'ultimoResultado', 'actualizarExistentes']);
     }
 
-    public function importarLote(int $cuantos = self::POR_LOTE, ?bool $actualizar = null): array
+    public function importarLote(int $cuantos = self::POR_LOTE, ?bool $actualizar = null, array $correcciones = []): array
     {
         Gate::authorize('gestionar');
 
         $cuantos = max(1, min(self::POR_LOTE, $cuantos));
 
-        if ($actualizar !== null && ! $this->importando) {
+        // Varias consultas por fila a la base remota: margen sobre los 30 s.
+        @set_time_limit(120);
+
+        if (! $this->importando && $actualizar !== null) {
             $this->aplicarModo($actualizar);
         }
 
@@ -190,11 +293,23 @@ class MarcasModelosImportar extends Component
             'modelos' => $filas->whereIn('estado', ['creada', 'actualizada'])->where('clase', 'modelo')->count(),
         ];
 
-        // Quedan solo las filas con errores para corregirlas.
-        $this->filas = $filas->whereNotIn('estado', ['creada', 'actualizada', 'sin_cambios'])->values()->all();
+        /*
+         * Como en Inventario: salen de la tabla las guardadas, las que no
+         * tenían cambios y las que ya existían (sin «Actualizar…»). Quedan
+         * solo las filas con errores para corregirlas.
+         */
+        $omitidas = $filas->where('estado', 'existe')->count();
+        $this->ultimoResultado['omitidas'] = $omitidas;
+        $hechas = $filas->whereIn('estado', ['creada', 'actualizada', 'sin_cambios', 'existe'])->pluck('numero')->flip();
+        $this->crudas = array_values(array_filter($this->crudas, fn ($c, $i) => ! $hechas->has($i), ARRAY_FILTER_USE_BOTH));
+        $this->filas = $filas->whereNotIn('estado', ['creada', 'actualizada', 'sin_cambios', 'existe'])->values()->all();
 
         if ($this->filas === []) {
-            $this->reset(['archivo', 'nombreArchivo', 'terminado', 'actualizarExistentes']);
+            $this->reset(['archivo', 'nombreArchivo', 'terminado', 'actualizarExistentes', 'crudas']);
+        } else {
+            // Con las marcas ya creadas, sus modelos pendientes se revisan otra vez.
+            $this->revisarDeNuevo($this->actualizarExistentes);
+            $this->terminado = true;
         }
     }
 

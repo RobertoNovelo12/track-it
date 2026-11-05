@@ -93,7 +93,17 @@
         $ordenMovil = fn (int $n) => $columnasOrdenables->isNotEmpty() ? $clasesOrden[$n] : '';
     @endphp
 
-    <div class="flex w-full flex-wrap items-center gap-x-2 gap-y-2 sm:w-auto sm:gap-x-4">
+    {{--
+        Móvil con «Ordenar por»: rejilla de 2 columnas
+        · fila 1: Ordenar por | Copiar + Actualizar
+        · fila 2: Mostrar     | ASC / DESC
+        Desde sm, una sola fila como antes.
+    --}}
+    <div @class([
+        'w-full items-center gap-2 sm:flex sm:w-auto sm:flex-wrap sm:gap-x-4',
+        'grid grid-cols-[minmax(0,1fr)_auto]' => $columnasOrdenables->isNotEmpty(),
+        'flex flex-wrap' => $columnasOrdenables->isEmpty(),
+    ])>
 
         {{-- Controles adicionales del módulo --}}
         {{ $toolbarActions ?? '' }}
@@ -106,7 +116,7 @@
         ==================================================== --}}
         @if ($columnasOrdenables->isNotEmpty())
             <div
-                class="order-1 flex min-w-0 flex-1 basis-[calc(100%-2.625rem)] items-center gap-2 sm:order-none sm:flex-none sm:basis-auto lg:hidden"
+                class="order-1 flex min-w-0 items-center gap-2 sm:order-none lg:hidden"
                 x-data="{ campo: @js((string) $sortField) }"
                 x-init="$watch('campo', valor => { if (valor) $wire.call(@js($sortAction), valor) })"
             >
@@ -131,13 +141,14 @@
             CANTIDAD POR PÁGINA
         ==================================================== --}}
         @if ($perPageModel)
-            <div class="flex items-center gap-2 {{ $ordenMovil(3) }}">
+            <div class="flex min-w-0 items-center gap-2 {{ $ordenMovil(3) }}">
 
                 <span class="w-[4.75rem] shrink-0 whitespace-nowrap text-xs text-[var(--theme-text-muted)] sm:w-auto">
                     Mostrar
                 </span>
 
-                <div class="w-20">
+                {{-- Móvil: ocupa el ancho de su columna (alineado con «Campo»); desde sm, fijo. --}}
+                <div @class(['sm:w-20', 'min-w-0 flex-1 sm:flex-none' => $columnasOrdenables->isNotEmpty(), 'w-20' => $columnasOrdenables->isEmpty()])>
                     <x-searchable-select
                         :wire-model="$perPageModel"
                         :options="collect($perPageOptions)->map(fn ($opcion) => ['value' => (string) $opcion, 'label' => (string) $opcion])->all()"
@@ -159,7 +170,8 @@
             DIRECCIÓN DEL ORDENAMIENTO
         ==================================================== --}}
         @if ($sortModel)
-            <div class="w-24 {{ $ordenMovil(4) }}">
+            {{-- Ancho fijo: en móvil define la 2.ª columna (bajo Copiar y Actualizar). --}}
+            <div class="w-24 justify-self-end sm:justify-self-auto {{ $ordenMovil(4) }}">
                 <x-searchable-select
                     :wire-model="$sortModel"
                     :options="[
@@ -173,6 +185,153 @@
             </div>
         @endif
 
+
+        {{-- ====================================================
+            COPIAR TABLA (Markdown o JSON) Y ACTUALIZAR
+            Copia las filas de la página que se está viendo, con
+            las columnas de la tabla en escritorio.
+        ==================================================== --}}
+        @php
+            $copiaColumnas = $columnasEscritorio
+                ->reject(fn ($c) => in_array($c['type'] ?? null, ['download', 'actions'], true))
+                ->values();
+
+            $copiaFilas = $registros->map(fn ($r) => $copiaColumnas
+                ->mapWithKeys(fn ($c) => [(string) $c['label'] => trim(preg_replace('/\s+/', ' ', strip_tags($valor($r, $c))))])
+                ->all()
+            )->values()->all();
+
+            /*
+             * JSON con nombres técnicos (sin espacios ni acentos): la clave de
+             * la columna (codigo_inventario, numero_serie…) o, si no sirve,
+             * la etiqueta en snake_case. Sin repetidos.
+             */
+            $usadasJson = [];
+            $clavesJson = $copiaColumnas->mapWithKeys(function ($c) use (&$usadasJson) {
+                $base = is_string($c['key'] ?? null) && preg_match('/^[a-z][a-z0-9_]*$/', $c['key'])
+                    ? $c['key']
+                    : (\Illuminate\Support\Str::snake(preg_replace('/[^A-Za-z0-9]+/', ' ', \Illuminate\Support\Str::ascii((string) $c['label']))) ?: 'campo');
+                $base = trim(preg_replace('/_+/', '_', $base), '_') ?: 'campo';
+                // «marca_nombre» → «marca», «estado_nombre» → «estado».
+                $base = preg_replace('/_nombre$/', '', $base) ?: $base;
+                $clave = $base;
+
+                for ($n = 2; isset($usadasJson[$clave]); $n++) {
+                    $clave = $base.'_'.$n;
+                }
+
+                $usadasJson[$clave] = true;
+
+                return [(string) $c['label'] => $clave];
+            })->all();
+
+            /*
+             * Filas para JSON. Una columna puede dar varios campos con
+             * 'copiar' => fn ($row) => ['hotel' => …, 'departamento' => …]
+             * (la tabla los muestra combinados; el JSON los separa).
+             */
+            $copiaJson = $registros->map(function ($r) use ($copiaColumnas, $clavesJson, $valor) {
+                $objeto = [];
+
+                foreach ($copiaColumnas as $c) {
+                    if (($c['copiar'] ?? null) instanceof \Closure) {
+                        foreach ((array) ($c['copiar'])($r) as $campo => $dato) {
+                            $objeto[(string) $campo] = is_scalar($dato) || $dato === null ? $dato : (string) json_encode($dato);
+                        }
+
+                        continue;
+                    }
+
+                    $objeto[$clavesJson[(string) $c['label']]] = trim(preg_replace('/\s+/', ' ', strip_tags($valor($r, $c))));
+                }
+
+                return $objeto;
+            })->values()->all();
+        @endphp
+
+        <div class="ml-auto flex shrink-0 items-center gap-2 justify-self-end sm:ml-0 sm:justify-self-auto {{ $ordenMovil(2) }}">{{-- Móvil: junto a «Ordenar por» --}}
+            @if ($copiaFilas !== [])
+                <div
+                    class="relative"
+                    x-data="{
+                        abierto: false,
+                        filas: @js($copiaFilas),
+                        columnas: @js($copiaColumnas->pluck('label')->map(fn ($l) => (string) $l)->values()),
+                        filasJson: @js($copiaJson),
+
+                        json() {
+                            return JSON.stringify(this.filasJson, null, 2);
+                        },
+
+                        markdown() {
+                            const celda = (t) => String(t ?? '').replace(/\|/g, '\\|').replace(/\n/g, ' ');
+                            const lineas = [
+                                '| ' + this.columnas.map(celda).join(' | ') + ' |',
+                                '| ' + this.columnas.map(() => '---').join(' | ') + ' |',
+                                ...this.filas.map((f) => '| ' + this.columnas.map((c) => celda(f[c])).join(' | ') + ' |'),
+                            ];
+
+                            return lineas.join('\n');
+                        },
+
+                        async copiar(formato) {
+                            this.abierto = false;
+                            const texto = formato === 'json' ? this.json() : this.markdown();
+
+                            try {
+                                if (navigator.clipboard?.writeText) {
+                                    await navigator.clipboard.writeText(texto);
+                                } else {
+                                    const area = document.createElement('textarea');
+                                    area.value = texto;
+                                    area.style.position = 'fixed';
+                                    area.style.opacity = '0';
+                                    document.body.appendChild(area);
+                                    area.select();
+                                    document.execCommand('copy');
+                                    area.remove();
+                                }
+
+                                window.trackitToast?.('success', this.filas.length + (this.filas.length === 1 ? ' fila copiada' : ' filas copiadas') + ' como ' + (formato === 'json' ? 'JSON' : 'Markdown') + '.', 'Copiado');
+                            } catch (error) {
+                                window.trackitToast?.('error', 'El navegador no permitió copiar al portapapeles.', 'No se pudo copiar');
+                            }
+                        },
+                    }"
+                    x-on:click.outside="abierto = false"
+                    x-on:keydown.escape.window="abierto = false"
+                >
+                    <button
+                        type="button"
+                        x-on:click="abierto = ! abierto"
+                        x-bind:aria-expanded="abierto"
+                        aria-haspopup="menu"
+                        title="Copiar las filas de esta página"
+                        class="flex h-[34px] items-center justify-center gap-1 rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-2.5 text-xs font-medium text-[var(--theme-text)] transition-colors hover:border-[var(--theme-primary-border)] hover:bg-[var(--theme-surface-soft)]"
+                    >
+                        <svg class="h-4 w-4 text-[var(--theme-text-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
+                        <span class="hidden sm:inline">Copiar</span>
+                        <span class="sr-only sm:hidden">Copiar</span>
+                        <svg class="h-3.5 w-3.5 text-[var(--theme-text-muted)] transition-transform" x-bind:class="abierto && 'rotate-180'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                    </button>
+
+                    <div
+                        x-show="abierto"
+                        x-cloak
+                        x-transition.origin.top.right
+                        role="menu"
+                        class="absolute right-0 top-full z-30 mt-1 w-52 overflow-hidden rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface)] py-1 text-left theme-shadow-xl"
+                    >
+                        <button type="button" role="menuitem" x-on:click="copiar('markdown')" class="block w-full px-3 py-2 text-left text-sm text-[var(--theme-text)] hover:bg-[var(--theme-surface-soft)]">
+                            Como Markdown <span class="block text-xs text-[var(--theme-text-muted)]">Tabla para documentos o chats</span>
+                        </button>
+                        <button type="button" role="menuitem" x-on:click="copiar('json')" class="block w-full px-3 py-2 text-left text-sm text-[var(--theme-text)] hover:bg-[var(--theme-surface-soft)]">
+                            Como JSON <span class="block text-xs text-[var(--theme-text-muted)]">Datos para otros sistemas</span>
+                        </button>
+                        <p class="border-t border-[var(--theme-border)] px-3 py-2 text-[11px] text-[var(--theme-text-muted)]">{{ count($copiaFilas) }} {{ count($copiaFilas) === 1 ? 'fila' : 'filas' }} de esta página</p>
+                    </div>
+                </div>
+            @endif
 
         {{-- ====================================================
             ACTUALIZAR TABLA
@@ -194,9 +353,6 @@
                     h-[34px]
 
                     shrink-0
-                    ml-auto
-                    sm:ml-0
-                    {{ $ordenMovil(2) }}
 
                     flex
                     items-center
@@ -238,6 +394,8 @@
                 ><use href="{{ \App\Support\Icono::url('i-613266f') }}"></use></svg>
             </button>
         @endif
+
+        </div>
 
     </div>
 

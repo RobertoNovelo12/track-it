@@ -783,6 +783,19 @@ class AsignacionesIndex extends Component
     |
     */
 
+    /*
+     * Recalcula el caché de Movimientos sin que nadie espere: se llama al
+     * terminar la petición de quien guardó un cambio (SystemCacheService).
+     */
+    public function precalentar(): void
+    {
+        $this->getResumen();
+        $this->getEquiposPorHotel();
+        $this->getActividad();
+        $this->getDisponiblesParaAsignar();
+        $this->getEquiposDisponibles();
+    }
+
     private function getResumen(): array
     {
         $cache =

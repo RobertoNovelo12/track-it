@@ -273,3 +273,17 @@ select:not([multiple]) {
 }
 
 /* Densidad compacta: layouts/partials/densidad-styles.blade.php */
+
+/*
+ * Texto seleccionado (copiar en móvil o con el mouse): fondo con el
+ * color principal de la organización en lugar del azul del navegador.
+ */
+::selection {
+    background-color: var(--theme-primary);
+    color: #fff;
+}
+
+::-moz-selection {
+    background-color: var(--theme-primary);
+    color: #fff;
+}

@@ -1733,6 +1733,9 @@ class EquipoCreate extends Component
                     }
                 }
 
+                // Con responsable (asignación inicial) no queda «Disponible».
+                \App\Support\EstadoAsignado::sincronizar((int) $idEquipo);
+
                 if ($programas !== null) {
                     app(\App\Services\ProgramasService::class)->sincronizarEquipo((int) $idEquipo, $programas);
                 }

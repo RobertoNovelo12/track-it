@@ -8,6 +8,61 @@ use Illuminate\Support\Facades\Cache;
 class SystemCacheService
 {
     /*
+     * Pantallas que se recalculan solas tras un cambio: módulo invalidado
+     * => componentes Livewire con un método precalentar(). Movimientos usa
+     * también la versión de Equipos en sus claves.
+     */
+    private const PRECALENTAR = [
+        'dashboard' => ['dashboard-overview'],
+        'asignaciones' => ['asignaciones-index'],
+        'equipos' => ['asignaciones-index'],
+    ];
+
+    // Componentes por recalcular en esta petición (una vez cada uno).
+    private static array $porPrecalentar = [];
+
+    /*
+     * Tras invalidar un módulo, sus pantallas se recalculan al terminar la
+     * petición (después de enviar la respuesta): la siguiente visita ya las
+     * encuentra listas y nadie espera las consultas.
+     */
+    private function precalentar(string $module): void
+    {
+        if (app()->runningInConsole() || ! isset(self::PRECALENTAR[$module])) {
+            return;
+        }
+
+        $primero = self::$porPrecalentar === [];
+
+        foreach (self::PRECALENTAR[$module] as $componente) {
+            self::$porPrecalentar[$componente] = true;
+        }
+
+        if (! $primero) {
+            return;
+        }
+
+        app()->terminating(function (): void {
+            $componentes = array_keys(self::$porPrecalentar);
+            self::$porPrecalentar = [];
+
+            @set_time_limit(90);
+
+            foreach ($componentes as $nombre) {
+                try {
+                    $componente = \Livewire\Livewire::new($nombre);
+
+                    if (method_exists($componente, 'precalentar')) {
+                        $componente->precalentar();
+                    }
+                } catch (\Throwable $error) {
+                    report($error);
+                }
+            }
+        });
+    }
+
+    /*
     |--------------------------------------------------------------------------
     | CONFIGURACIÓN
     |--------------------------------------------------------------------------
@@ -84,6 +139,8 @@ class SystemCacheService
             $this->moduleVersionKey($module),
             $version
         );
+
+        $this->precalentar($module);
 
         return $version;
     }
