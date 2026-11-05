@@ -550,9 +550,8 @@
                     fecha de nacimiento en Ajustes › Cuenta)
                 ================================================= --}}
                 @php
-                    $atributosCuenta = auth()->user()?->getAttributes() ?? [];
-                    $cuentaIncompleta = array_key_exists('fecha_nacimiento', $atributosCuenta)
-                        && blank($atributosCuenta['fecha_nacimiento']);
+                    // Desactivado: ya no se pide la fecha de nacimiento con un aviso fijo.
+                    $cuentaIncompleta = false;
                 @endphp
 
                 @if ($cuentaIncompleta)

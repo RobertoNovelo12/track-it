@@ -23,7 +23,8 @@
 
 @include('layouts.partials.completar-perfil-script')
 
-@if ($usuarioAviso && $faltaFecha && request()->routeIs('ajustes.index'))
+{{-- Desactivado: ya no se muestra el aviso de fecha de nacimiento en Cuenta. --}}
+@if (false && $usuarioAviso && $faltaFecha && request()->routeIs('ajustes.index'))
     <div
         x-data="{ visible: true }"
         x-show="visible"
