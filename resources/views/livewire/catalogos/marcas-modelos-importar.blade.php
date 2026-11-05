@@ -19,6 +19,10 @@
 
 <div
     class="space-y-5"
+    x-on:dragenter.window="if (esArchivo($event) && ! enMenu($event)) { profundidad++; encima = true; }"
+    x-on:dragleave.window="if (esArchivo($event)) { profundidad = Math.max(0, profundidad - 1); if (profundidad === 0) encima = false; }"
+    x-on:dragover.window="if (esArchivo($event)) { $event.preventDefault(); $event.dataTransfer.dropEffect = enMenu($event) ? 'none' : 'copy'; }"
+    x-on:drop.window="if (esArchivo($event)) { $event.preventDefault(); profundidad = 0; encima = false; if (! enMenu($event)) subir($event.dataTransfer.files?.[0]); }"
     data-listas-sin="{{ $modos['sin']['listas'] }}"
     data-listas-con="{{ $modos['con']['listas'] }}"
     x-data="{
@@ -29,6 +33,18 @@
         encima: false,
         hechos: 0,
         totalImportar: 0,
+        profundidad: 0,
+
+        // Archivo que llegó desde Marcas/Modelos (arrastrado o elegido en «Añadir»).
+        init() {
+            const archivo = window.__trackitArchivoMarcasModelos;
+            window.__trackitArchivoMarcasModelos = null;
+
+            if (archivo) this.subir(archivo);
+        },
+
+        esArchivo(evento) { return Array.from(evento.dataTransfer?.types ?? []).includes('Files'); },
+        enMenu(evento) { return evento.target instanceof Element && !! evento.target.closest('aside, header, nav, #mobileAppHeader, .mi-barra'); },
 
         subir(archivo) {
             if (! archivo || this.subiendo || this.corriendo) return;
@@ -95,9 +111,6 @@
 
         <label
             for="mm-importar-archivo"
-            x-on:dragover.prevent="encima = true"
-            x-on:dragleave.prevent="encima = false"
-            x-on:drop.prevent="encima = false; subir($event.dataTransfer.files?.[0])"
             x-bind:class="encima ? 'border-[var(--theme-primary)] bg-[var(--theme-primary-soft-subtle)]' : 'border-[var(--theme-border-strong)] hover:border-[var(--theme-primary)] hover:bg-[var(--theme-primary-soft-subtle)]'"
             class="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-6 py-8 text-center transition-colors"
         >
