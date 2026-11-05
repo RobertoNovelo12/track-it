@@ -136,6 +136,11 @@ class Encabezado
             'catalogos.index' => ['Administración', [
                 self::miga('Administración', 'catalogos.index'),
             ]],
+            'catalogos.marcas-modelos.importar' => ['Administración', [
+                self::miga('Administración', 'catalogos.index'),
+                self::miga('Marcas y modelos', 'catalogos.index', ['section' => 'marcas']),
+                self::miga('Importar'),
+            ]],
             'catalogos.create' => ['Administración', [
                 self::miga('Administración', 'catalogos.index'),
                 request()->query('tipo') === 'modelo'

@@ -457,6 +457,29 @@ Route::middleware([
         fn () => view('catalogos.create')
     )->name('catalogos.create')->middleware('can:gestionar');
 
+    // Marcas y modelos: importar, exportar y plantillas (Excel / CSV).
+    Route::get(
+        '/catalogos/marcas-modelos/importar',
+        fn () => view('catalogos.marcas-modelos.importar')
+    )->name('catalogos.marcas-modelos.importar')->middleware('can:gestionar');
+
+    Route::get(
+        '/catalogos/marcas-modelos/exportar',
+        fn (\Illuminate\Http\Request $request) => app(\App\Services\CatalogoMarcasModelosArchivo::class)->exportar(
+            $request->query('clase') === 'marca' ? 'marca' : 'modelo',
+            $request->query('formato') === 'xlsx' ? 'xlsx' : 'csv',
+            $request->only(['search', 'estado', 'tipo'])
+        )
+    )->name('catalogos.marcas-modelos.exportar')->middleware('can:gestionar');
+
+    Route::get(
+        '/catalogos/marcas-modelos/plantilla',
+        fn (\Illuminate\Http\Request $request) => app(\App\Services\CatalogoMarcasModelosArchivo::class)->plantilla(
+            $request->query('formato') === 'csv' ? 'csv' : 'xlsx',
+            in_array($request->query('clase'), ['marca', 'modelo'], true) ? $request->query('clase') : 'ambos'
+        )
+    )->name('catalogos.marcas-modelos.plantilla')->middleware('can:gestionar');
+
     Route::get(
     '/catalogos/hoteles/{hotel}/editar',
     function (int $hotel) {
