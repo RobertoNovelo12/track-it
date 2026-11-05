@@ -229,8 +229,12 @@
                     border-[var(--theme-border-strong)]
                     rounded-lg
                     bg-[var(--theme-surface)]
-                    px-4
-                    text-sm
+                    min-w-0
+                    whitespace-nowrap
+                    px-3
+                    sm:px-4
+                    text-xs
+                    sm:text-sm
                     font-medium
                     text-[var(--theme-text-muted)]
                     hover:text-[var(--theme-primary)]
@@ -238,7 +242,7 @@
                 title="Descargar ficha del equipo en PDF"
             >
                 <svg
-                    class="w-4 h-4"
+                    class="w-4 h-4 shrink-0"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -264,8 +268,12 @@
                     border-[var(--theme-danger)]
                     rounded-lg
                     bg-[var(--theme-danger-soft)]
-                    px-4
-                    text-sm
+                    min-w-0
+                    whitespace-nowrap
+                    px-3
+                    sm:px-4
+                    text-xs
+                    sm:text-sm
                     font-medium
                     text-[var(--theme-danger)]
                     hover:opacity-90
@@ -273,7 +281,7 @@
                 "
             >
                 <svg
-                    class="w-4 h-4"
+                    class="w-4 h-4 shrink-0"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
