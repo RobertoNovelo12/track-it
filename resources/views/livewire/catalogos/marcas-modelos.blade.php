@@ -84,7 +84,7 @@
 
             <div class="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
                 {{-- Plantilla --}}
-                <div class="relative" x-data="{ abierto: false }" x-on:click.outside="abierto = false" x-on:keydown.escape.window="abierto = false">
+                <div class="relative" wire:key="marcas-modelos-menu-plantilla" x-data="{ abierto: false }" x-on:click.outside="abierto = false" x-on:keydown.escape.window="abierto = false">
                     <button type="button" x-on:click="abierto = ! abierto" x-bind:aria-expanded="abierto" class="{{ $botonSecundario }}">
                         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0-4-4m4 4 4-4M5 21h14"/></svg>
                         Plantilla
@@ -98,7 +98,7 @@
                 </div>
 
                 {{-- Exportar (con los filtros aplicados) --}}
-                <div class="relative" x-data="{ abierto: false }" x-on:click.outside="abierto = false" x-on:keydown.escape.window="abierto = false">
+                <div class="relative" wire:key="marcas-modelos-menu-exportar" x-data="{ abierto: false }" x-on:click.outside="abierto = false" x-on:keydown.escape.window="abierto = false">
                     <button type="button" x-on:click="abierto = ! abierto" x-bind:aria-expanded="abierto" class="{{ $botonSecundario }}">
                         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><use href="{{ \App\Support\Icono::url('i-12264a0') }}"></use></svg>
                         Exportar
@@ -119,7 +119,7 @@
                 </div>
 
                 {{-- Añadir: uno en el formulario o varios desde un archivo --}}
-                <div class="relative" x-data="{ abierto: false }" x-on:click.outside="abierto = false" x-on:keydown.escape.window="abierto = false">
+                <div class="relative" wire:key="marcas-modelos-menu-anadir" x-data="{ abierto: false }" x-on:click.outside="abierto = false" x-on:keydown.escape.window="abierto = false">
                     <button
                         type="button"
                         x-on:click="abierto = ! abierto"
@@ -171,8 +171,13 @@
             Importar arrastrando (igual que en Inventario): al soltar un Excel
             o CSV en la pestaña se abre la vista previa de importación con ese
             archivo (la página lo sube al cargar).
+
+            wire:key propio: así Livewire no recicla un div del esqueleto
+            (placeholder) para este elemento; si lo recicla, Alpine no
+            inicializa su x-data y la consola muestra «visible is not defined».
         --}}
         <div
+            wire:key="marcas-modelos-soltar-{{ $vista }}"
             x-data="{
                 visible: false,
                 profundidad: 0,
