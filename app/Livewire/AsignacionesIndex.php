@@ -805,7 +805,8 @@ class AsignacionesIndex extends Component
         return $cache->remember(
             self::CACHE_MODULE,
 
-            'index.resumen',
+            // v2: «No asignados» también excluye los equipos con estado BAJA.
+            'index.resumen.v2',
 
             [
                 /*
@@ -906,6 +907,21 @@ class AsignacionesIndex extends Component
                                         WHERE
                                             b.id_equipo =
                                                 e.id_equipo
+                                    )
+
+                                    AND
+
+                                    NOT EXISTS (
+                                        SELECT 1
+
+                                        FROM estados_equipo ee
+
+                                        WHERE
+                                            ee.id_estado_equipo =
+                                                e.id_estado_activo
+
+                                            AND
+                                            ee.clave = 'BAJA'
                                     )
 
                             ) AS equipos_no_asignados,

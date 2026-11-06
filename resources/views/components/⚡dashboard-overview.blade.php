@@ -157,7 +157,7 @@ new class extends Component
             )
         );
 
-        $claveSecciones = $this->systemCache()->key(self::CACHE_MODULE, 'secciones-v3');
+        $claveSecciones = $this->systemCache()->key(self::CACHE_MODULE, 'secciones-v4');
 
         if (\Illuminate\Support\Facades\Cache::has($claveSecciones)) {
             $this->cargarSecciones();
@@ -177,7 +177,7 @@ new class extends Component
         try {
             $data = $this->systemCache()->rememberSimple(
                 self::CACHE_MODULE,
-                'secciones-v3',
+                'secciones-v4',
                 fn () => $this->buildSeccionesData(),
                 self::CACHE_TTL_HOURS
             );
@@ -250,7 +250,7 @@ new class extends Component
     public function precalentar(): void
     {
         $this->systemCache()->rememberSimple(self::CACHE_MODULE, 'kpis', fn () => $this->buildKpiData(), self::CACHE_TTL_HOURS);
-        $this->systemCache()->rememberSimple(self::CACHE_MODULE, 'secciones-v3', fn () => $this->buildSeccionesData(), self::CACHE_TTL_HOURS);
+        $this->systemCache()->rememberSimple(self::CACHE_MODULE, 'secciones-v4', fn () => $this->buildSeccionesData(), self::CACHE_TTL_HOURS);
     }
 
     protected function buildKpiData(): array
@@ -1118,7 +1118,28 @@ new class extends Component
         $inicioBajas = Carbon::now()->startOfMonth()->subMonths(11);
         $finBajas = Carbon::now()->startOfMonth()->addMonth();
 
-        $bajasPeriodo = static fn () => DB::table('bajas as b')
+        /*
+         * Un equipo cuenta como baja si tiene registro en «bajas» o si su
+         * estado es BAJA (p. ej. importado o editado con ese estado): el
+         * mismo criterio que lo saca del inventario vigente, así «Total de
+         * equipos» + bajas = todos los equipos. Fecha: la de la baja; sin
+         * registro, la última actualización del equipo.
+         */
+        $fechaRespaldo = \App\Support\Esquema::tieneColumna('equipos', 'fecha_actualizacion')
+            ? 'e.fecha_actualizacion::date'
+            : 'NULL::date';
+
+        $equiposDeBaja = "SELECT e.id_equipo, e.id_tipo_equipo,
+                COALESCE((SELECT MAX(bx.fecha_baja)::date FROM bajas bx WHERE bx.id_equipo = e.id_equipo), {$fechaRespaldo}) AS fecha_baja
+            FROM equipos e
+            WHERE EXISTS (SELECT 1 FROM bajas bx WHERE bx.id_equipo = e.id_equipo)
+               OR EXISTS (
+                    SELECT 1 FROM estados_equipo ee
+                    WHERE ee.id_estado_equipo = e.id_estado_activo AND ee.clave = 'BAJA'
+               )";
+
+        $bajasPeriodo = static fn () => DB::query()
+            ->fromSub($equiposDeBaja, 'b')
             ->whereNotNull('b.fecha_baja')
             ->where('b.fecha_baja', '>=', $inicioBajas->toDateString())
             ->where('b.fecha_baja', '<', $finBajas->toDateString());
@@ -1132,7 +1153,7 @@ new class extends Component
 
         foreach (
             $bajasPeriodo()
-                ->selectRaw("DATE_TRUNC('month', b.fecha_baja)::date as mes, COUNT(DISTINCT b.id_equipo) as total")
+                ->selectRaw("DATE_TRUNC('month', b.fecha_baja)::date as mes, COUNT(*) as total")
                 ->groupBy('mes')
                 ->get() as $fila
         ) {
@@ -1144,9 +1165,8 @@ new class extends Component
         }
 
         $bajasPorTipoRaw = $bajasPeriodo()
-            ->leftJoin('equipos as e', 'e.id_equipo', '=', 'b.id_equipo')
-            ->leftJoin('tipos_equipo as te', 'te.id_tipo_equipo', '=', 'e.id_tipo_equipo')
-            ->selectRaw('te.nombre as nombre, COUNT(DISTINCT b.id_equipo) as total')
+            ->leftJoin('tipos_equipo as te', 'te.id_tipo_equipo', '=', 'b.id_tipo_equipo')
+            ->selectRaw('te.nombre as nombre, COUNT(*) as total')
             ->groupBy('te.nombre')
             ->orderByDesc('total')
             ->get();
@@ -1166,7 +1186,7 @@ new class extends Component
             'meses' => array_values($bajasPorMes),
             'tipos' => $bajasPorTipo,
             'periodo' => array_sum(array_column($bajasPorMes, 'total')),
-            'historico' => (int) DB::table('bajas')->distinct()->count('id_equipo'),
+            'historico' => (int) DB::query()->fromSub($equiposDeBaja, 'b')->count(),
         ];
 
         return [

@@ -1191,7 +1191,7 @@ class ReportesIndex extends Component
      */
     public function resumenReportes(): array
     {
-        return Cache::remember('reportes:resumen:v1', now()->addMinute(), function (): array {
+        return Cache::remember('reportes:resumen:v2', now()->addMinute(), function (): array {
             $contar = function (string $tabla, ?\Closure $condicion = null): int {
                 try {
                     if (! \App\Support\Esquema::tieneTabla($tabla)) {
@@ -1214,8 +1214,14 @@ class ReportesIndex extends Component
 
             return [
                 'altas' => $contar('equipos'),
-                // Equipos distintos (una baja múltiple tiene una fila por equipo).
-                'bajas' => \App\Support\Esquema::tieneTabla('bajas') ? (int) DB::table('bajas')->distinct()->count('id_equipo') : 0,
+                // Equipos con registro de baja o con estado BAJA (mismo criterio
+                // que el dashboard). Una baja múltiple tiene una fila por equipo.
+                'bajas' => $contar('equipos', fn ($q) => $q->where(function ($q): void {
+                    $q->whereExists(fn ($s) => $s->selectRaw('1')->from('bajas as b')->whereColumn('b.id_equipo', 'equipos.id_equipo'))
+                        ->orWhereExists(fn ($s) => $s->selectRaw('1')->from('estados_equipo as ee')
+                            ->whereColumn('ee.id_estado_equipo', 'equipos.id_estado_activo')
+                            ->where('ee.clave', 'BAJA'));
+                })),
                 'asignaciones' => $contar('asignaciones', fn ($q) => $q->whereNull('fecha_fin')),
                 // Reasignación = movimiento con asignación anterior y nueva.
                 'reasignaciones' => $contar('movimientos', fn ($q) => $q->whereNotNull('id_asignacion_anterior')->whereNotNull('id_asignacion_nueva')),
