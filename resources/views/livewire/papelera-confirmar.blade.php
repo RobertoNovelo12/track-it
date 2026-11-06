@@ -105,7 +105,7 @@
                     @if ($error)
                         <p class="mt-3 text-sm text-[var(--theme-text)]">{{ $error }}</p>
                     @elseif ($nMovibles === 0 && $asignados !== [])
-                        <p class="mt-3 text-sm text-[var(--theme-text)]">Todos los seleccionados que se pueden mover tienen un responsable asignado.</p>
+                        <p class="mt-3 text-sm text-[var(--theme-text)]">{{ $textos['todos'] }}</p>
                     @elseif ($nMovibles > 0)
                         <p class="mt-3 text-sm text-[var(--theme-text)]">
                             Se {{ $nMovibles === 1 ? 'moverá' : 'moverán' }}
@@ -118,7 +118,7 @@
 
                     @if ($asignados !== [])
                         <p class="mt-4 text-sm font-medium text-[var(--theme-text-strong)]">
-                            {{ count($asignados) }} {{ count($asignados) === 1 ? 'tiene' : 'tienen' }} un responsable asignado:
+                            {{ count($asignados) }} {{ count($asignados) === 1 ? $textos['uno'] : $textos['varios'] }}:
                         </p>
 
                         <ul class="mt-2 max-h-48 space-y-2 overflow-y-auto rounded-md border border-[var(--theme-border)] bg-[var(--theme-surface-soft)] px-4 py-3 text-sm text-[var(--theme-text)]">
@@ -127,13 +127,15 @@
                                     <span class="block truncate">{{ $asignado['etiqueta'] }}</span>
                                     @if ($asignado['responsable'])
                                         <span class="block truncate text-xs text-[var(--theme-text-muted)]">Asignado a {{ $asignado['responsable'] }}</span>
+                                    @elseif (! empty($asignado['motivo']))
+                                        <span class="block text-xs text-[var(--theme-text-muted)]">{{ $asignado['motivo'] }}</span>
                                     @endif
                                 </li>
                             @endforeach
                         </ul>
 
                         <p class="mt-2 text-xs text-[var(--theme-text-muted)]">
-                            Con «Desasignar y mover» se registra su devolución (quedan «Disponible») y se mueven junto con los demás.
+                            {{ $textos['explica'] }}
                         </p>
                     @endif
 
@@ -183,11 +185,11 @@
                     ])>
                         @if ($nMovibles > 0 && $asignados !== [] && ! $error)
                             <x-ui.button variant="danger-soft" class="w-full justify-center" wire:click="confirmarVarios(true)" target="confirmarVarios" loading-text="Moviendo…">
-                                Desasignar y mover {{ number_format($nMovibles + count($asignados)) }}
+                                {{ $textos['boton'] }} {{ number_format($nMovibles + count($asignados)) }}
                             </x-ui.button>
 
                             <x-ui.button variant="secondary" class="w-full justify-center" wire:click="confirmarVarios(false)" target="confirmarVarios" loading-text="Moviendo…">
-                                Mover solo {{ number_format($nMovibles) }} (sin los asignados)
+                                Mover solo {{ number_format($nMovibles) }} ({{ $textos['sin'] }})
                             </x-ui.button>
 
                             <button type="button" wire:click="cerrar" wire:loading.attr="disabled" wire:target="confirmarVarios" class="h-9 w-full rounded-md text-sm font-medium text-[var(--theme-text-muted)] transition-colors hover:bg-[var(--theme-surface-soft)] hover:text-[var(--theme-text)]">
@@ -197,7 +199,7 @@
                             <x-ui.button variant="secondary" wire:click="cerrar" disable-target="confirmarVarios">Cancelar</x-ui.button>
 
                             <x-ui.button variant="danger-soft" wire:click="confirmarVarios({{ $asignados !== [] ? 'true' : 'false' }})" target="confirmarVarios" loading-text="Moviendo…">
-                                {{ $asignados !== [] ? 'Desasignar y mover ' . number_format(count($asignados)) : 'Mover ' . number_format($nMovibles) . ' a la papelera' }}
+                                {{ $asignados !== [] ? $textos['boton'] . ' ' . number_format(count($asignados)) : 'Mover ' . number_format($nMovibles) . ' a la papelera' }}
                             </x-ui.button>
                         @else
                             <x-ui.button variant="secondary" wire:click="cerrar">Entendido</x-ui.button>
@@ -206,10 +208,19 @@
                 @elseif ($desasignable && ! $error)
                     <p class="mt-3 text-sm text-[var(--theme-text)]">
                         {{ $nombre }} <strong class="font-semibold text-[var(--theme-text-strong)]">«{{ $etiqueta }}»</strong>
-                        tiene un responsable asignado.
+                        {{ $textos['unoSolo'] }}
                     </p>
 
-                    @if ($responsable)
+                    @if ($tipo !== 'equipo')
+                        <ul class="mt-3 space-y-1.5 rounded-md border border-[var(--theme-border)] bg-[var(--theme-surface-soft)] px-4 py-3 text-sm text-[var(--theme-text)]">
+                            @foreach ($bloqueos as $bloqueo)
+                                <li class="flex items-center justify-between gap-3">
+                                    <span>{{ ucfirst($bloqueo['que']) }}</span>
+                                    <span class="font-semibold text-[var(--theme-text-strong)]">{{ number_format($bloqueo['cantidad']) }}</span>
+                                </li>
+                            @endforeach
+                        </ul>
+                    @elseif ($responsable)
                         <div class="mt-3 rounded-md border border-[var(--theme-border)] bg-[var(--theme-surface-soft)] px-4 py-3">
                             <span class="block text-[10px] font-medium uppercase tracking-wide text-[var(--theme-text-muted)]">Asignado a</span>
                             <span class="mt-0.5 block text-sm font-medium text-[var(--theme-text-strong)]">{{ $responsable }}</span>
@@ -217,7 +228,7 @@
                     @endif
 
                     <p class="mt-2 text-xs text-[var(--theme-text-muted)]">
-                        Se registrará su devolución (quedará «Disponible», sin responsable) y después se moverá a la papelera.
+                        {{ $textos['explicaUno'] }}
                         Un administrador podrá restaurarlo durante {{ \App\Support\PapeleraEntidades::DIAS }} días.
                     </p>
 
@@ -225,7 +236,7 @@
                         <x-ui.button variant="secondary" wire:click="cerrar" disable-target="desasignarYConfirmar">Cancelar</x-ui.button>
 
                         <x-ui.button variant="danger-soft" wire:click="desasignarYConfirmar" target="desasignarYConfirmar" loading-text="Moviendo…">
-                            Desasignar y mover a la papelera
+                            {{ $textos['botonUno'] }}
                         </x-ui.button>
                     </div>
                 @elseif ($bloqueos !== [])

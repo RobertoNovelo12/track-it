@@ -90,11 +90,50 @@ class PapeleraService
 
     /*
      * ¿Todo lo que impide mover se puede resolver desde la papelera?
-     * (hoy: equipo asignado → «Desasignar y mover»).
+     * (equipo asignado → «Desasignar y mover»; proveedor sugerido en
+     * marcas o modelos → «Quitar y mover»).
      */
     public static function soloResolubles(array $bloqueos): bool
     {
-        return $bloqueos !== [] && collect($bloqueos)->every(fn (array $b): bool => ($b['resolver'] ?? null) === 'desasignar');
+        return $bloqueos !== [] && collect($bloqueos)->every(
+            fn (array $b): bool => in_array($b['resolver'] ?? null, ['desasignar', 'desvincular'], true)
+        );
+    }
+
+    /*
+     * «Desvincular»: vacía la columna en los registros que apuntan a los
+     * ids y devuelve, por id, los bloques que guardan qué se desvinculó
+     * (restaurar() los vuelve a apuntar). Dentro de la transacción.
+     */
+    private function desvincular(array $def, array $ids): array
+    {
+        $porId = [];
+
+        foreach ($def['bloqueos'] as $bloqueo) {
+            if (($bloqueo[3] ?? null) !== 'desvincular' || ! Esquema::tieneTabla($bloqueo[0])) {
+                continue;
+            }
+
+            [$tabla, $condicion, , , $columna, $llave] = $bloqueo;
+
+            foreach (DB::select(
+                'UPDATE public."'.$tabla.'" SET "'.$columna.'" = NULL FROM unnest(?::bigint[]) AS __g(__id) '
+                .'WHERE ('.$this->condicionLote($condicion).') RETURNING __g.__id AS __id, "'.$llave.'" AS llave',
+                [$this->listaPg($ids)]
+            ) as $fila) {
+                $porId[(int) $fila->__id][$tabla]['ids'][] = (int) $fila->llave;
+                $porId[(int) $fila->__id][$tabla] += ['columna' => $columna, 'llave' => $llave];
+            }
+        }
+
+        return array_map(
+            fn (array $tablas): array => array_map(
+                fn (string $tabla, array $d): array => ['tabla' => $tabla, 'filas' => [], 'desvincular' => $d],
+                array_keys($tablas),
+                $tablas
+            ),
+            $porId
+        );
     }
 
     public function mover(string $tipo, int $id, bool $desasignar = false): int
@@ -107,7 +146,7 @@ class PapeleraService
         }
 
         $bloqueos = $this->bloqueos($tipo, $id);
-        $desasignar = $desasignar && $tipo === 'equipo' && self::soloResolubles($bloqueos);
+        $desasignar = $desasignar && self::soloResolubles($bloqueos);
 
         if ($bloqueos !== [] && ! $desasignar) {
             throw PapeleraException::bloqueado($bloqueos, $def['ayuda']);
@@ -119,7 +158,7 @@ class PapeleraService
         try {
             $idPapelera = DB::transaction(function () use ($tipo, $id, $def, $etiqueta, $principal, $hijos, $desasignar): int {
                 // 0. Devolución (cierra la asignación) para poder moverlo.
-                if ($desasignar) {
+                if ($desasignar && $tipo === 'equipo') {
                     app(DevolucionService::class)->devolverParaPapelera([$id]);
                 }
 
@@ -138,6 +177,11 @@ class PapeleraService
                             'filas' => array_map(fn ($f) => json_decode($f->fila, true), $filas),
                         ];
                     }
+                }
+
+                // 1b. Desvincular (p. ej. proveedor sugerido en marcas y modelos).
+                if ($desasignar) {
+                    array_push($bloques, ...($this->desvincular($def, [$id])[$id] ?? []));
                 }
 
                 // 2. Quitar de sus tablas: al revés (primero lo que depende).
@@ -257,9 +301,8 @@ class PapeleraService
     {
         $def = PapeleraEntidades::de($tipo);
         $revision = $this->revisarVarios($tipo, $ids);
-        $desasignar = $desasignar && $tipo === 'equipo';
-
-        // Con «desasignar», también los que solo están asignados.
+        // Con «desasignar», también los que solo tienen bloqueos que se
+        // resuelven desde aquí (equipos asignados, proveedor sugerido…).
         $porDesasignar = [];
 
         $movibles = array_values(array_filter(
@@ -294,7 +337,7 @@ class PapeleraService
         try {
             DB::transaction(function () use ($tipo, $def, $revision, $movibles, $lista, $principal, $hijos, $porDesasignar): void {
                 // 0. Devolución de los asignados (cierra su asignación).
-                if ($porDesasignar !== []) {
+                if ($porDesasignar !== [] && $tipo === 'equipo') {
                     app(DevolucionService::class)->devolverParaPapelera($porDesasignar);
                 }
 
@@ -323,6 +366,13 @@ class PapeleraService
 
                     foreach ($porId as $id => $filas) {
                         $bloquesPorId[$id][] = ['tabla' => $tabla, 'filas' => $filas];
+                    }
+                }
+
+                // 1b. Desvincular (p. ej. proveedor sugerido en marcas y modelos).
+                if ($porDesasignar !== []) {
+                    foreach ($this->desvincular($def, $porDesasignar) as $id => $extra) {
+                        array_push($bloquesPorId[$id], ...$extra);
                     }
                 }
 
@@ -446,7 +496,7 @@ class PapeleraService
                         continue;
                     }
 
-                    foreach ($bloque['filas'] as $fila) {
+                    foreach ($bloque['filas'] ?? [] as $fila) {
                         // Mismos ids; OVERRIDING SYSTEM VALUE permite escribir las columnas identity.
                         DB::insert(
                             'INSERT INTO public."'.$tabla.'" OVERRIDING SYSTEM VALUE '
@@ -454,6 +504,29 @@ class PapeleraService
                             [json_encode($fila, JSON_UNESCAPED_UNICODE)]
                         );
                     }
+                }
+
+                // Lo que se desvinculó al moverlo (p. ej. marcas y modelos que
+                // lo tenían como proveedor sugerido) vuelve a apuntarle, si
+                // nadie lo cambió mientras tanto.
+                foreach ($bloques as $bloque) {
+                    $d = $bloque['desvincular'] ?? null;
+                    $tabla = (string) ($bloque['tabla'] ?? '');
+
+                    if (! $d || ! Esquema::tieneTabla($tabla)) {
+                        continue;
+                    }
+
+                    $nombre = '/^[a-z_][a-z0-9_]*$/';
+
+                    if (! preg_match($nombre, $tabla) || ! preg_match($nombre, (string) ($d['columna'] ?? '')) || ! preg_match($nombre, (string) ($d['llave'] ?? ''))) {
+                        continue;
+                    }
+
+                    DB::update(
+                        'UPDATE public."'.$tabla.'" SET "'.$d['columna'].'" = ? WHERE "'.$d['llave'].'" = ANY(?::bigint[]) AND "'.$d['columna'].'" IS NULL',
+                        [(int) $elemento->id_registro, $this->listaPg($d['ids'] ?? [])]
+                    );
                 }
 
                 DB::table('papelera')->where('id_papelera', $idPapelera)->delete();

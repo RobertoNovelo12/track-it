@@ -12,9 +12,14 @@ namespace App\Support;
 |   nombre         Cómo se llama en pantalla («Marca», «Equipo»…).
 |   etiqueta       Expresión SQL (alias «t») con el texto que se muestra.
 |   permiso        Gate necesario para moverlo (gestionar / administrar).
-|   bloqueos       [tabla, condición, «qué es»]: si hay registros vigentes
-|                  que dependen de él, NO se puede borrar y se le dice al
-|                  usuario qué cambiar primero.
+|   bloqueos       [tabla, condición, «qué es», resolver?, columna?, llave?]:
+|                  si hay registros vigentes que dependen de él, NO se puede
+|                  borrar y se le dice al usuario qué cambiar primero.
+|                  resolver (opcional) = se puede arreglar desde la papelera:
+|                    «desasignar»  equipo asignado → se registra su devolución.
+|                    «desvincular» se vacía «columna» en esos registros (llave
+|                                  = su id) y al restaurar se vuelve a poner.
+|   resolver       Textos del botón y de la explicación de ese arreglo.
 |   ayuda          Qué hacer cuando está bloqueado.
 |   hijos          [tabla, condición]: lo que le pertenece y se va con él a
 |                  la papelera (y regresa al restaurar). En orden de
@@ -60,6 +65,7 @@ class PapeleraEntidades
                     ['asignaciones', 'id_equipo = ? AND fecha_fin IS NULL', 'responsable asignado', 'desasignar'],
                 ],
                 'ayuda' => 'Devuelve el equipo (menú › Devolver) y vuelve a intentarlo.',
+                'resolver' => self::TEXTOS_DESASIGNAR,
                 // Las tablas de especificaciones (laptops, monitores…) se agregan solas: PapeleraService::hijos().
                 'hijos' => [
                     ['atributos_equipo', 'id_equipo = ?'],
@@ -262,10 +268,22 @@ class PapeleraEntidades
                 'bloqueos' => [
                     ['equipos', 'id_proveedor = ?', 'equipo(s)'],
                     ['mantenimientos', 'id_proveedor = ?', 'mantenimiento(s)'],
-                    ['marcas', 'id_proveedor_sugerido = ?', 'marca(s) que lo sugieren'],
-                    ['modelos', 'id_proveedor_sugerido = ?', 'modelo(s) que lo sugieren'],
+                    // Solo es el proveedor «sugerido»: se puede quitar desde la papelera.
+                    ['marcas', 'id_proveedor_sugerido = ?', 'marca(s) que lo sugieren', 'desvincular', 'id_proveedor_sugerido', 'id_marca'],
+                    ['modelos', 'id_proveedor_sugerido = ?', 'modelo(s) que lo sugieren', 'desvincular', 'id_proveedor_sugerido', 'id_modelo'],
                 ],
                 'ayuda' => 'Cambia el proveedor en esos registros (o desactívalo para que ya no se ofrezca) y vuelve a intentarlo.',
+                'resolver' => [
+                    'boton' => 'Quitar y mover',
+                    'botonUno' => 'Quitar de marcas y modelos y mover',
+                    'uno' => 'lo sugieren marcas o modelos',
+                    'varios' => 'los sugieren marcas o modelos',
+                    'unoSolo' => 'es el proveedor sugerido de:',
+                    'todos' => 'Todos los seleccionados que se pueden mover son el proveedor sugerido de marcas o modelos.',
+                    'explica' => 'Con «Quitar y mover» esas marcas y modelos se quedan sin proveedor sugerido y los proveedores se mueven junto con los demás. Si restauras un proveedor, vuelve a quedar como sugerido.',
+                    'explicaUno' => 'Esas marcas y modelos se quedarán sin proveedor sugerido y después se moverá a la papelera. Si lo restauras, vuelve a quedar como sugerido.',
+                    'sin' => 'sin esos',
+                ],
                 'hijos' => [],
             ],
 
@@ -284,6 +302,24 @@ class PapeleraEntidades
                 ],
             ],
         ];
+    }
+
+    public const TEXTOS_DESASIGNAR = [
+        'boton' => 'Desasignar y mover',
+        'botonUno' => 'Desasignar y mover a la papelera',
+        'uno' => 'tiene un responsable asignado',
+        'varios' => 'tienen un responsable asignado',
+        'unoSolo' => 'tiene un responsable asignado.',
+        'todos' => 'Todos los seleccionados que se pueden mover tienen un responsable asignado.',
+        'explica' => 'Con «Desasignar y mover» se registra su devolución (quedan «Disponible») y se mueven junto con los demás.',
+        'explicaUno' => 'Se registrará su devolución (quedará «Disponible», sin responsable) y después se moverá a la papelera.',
+        'sin' => 'sin los asignados',
+    ];
+
+    /* Textos de «resolver y mover» del tipo (los de equipo si no define otros). */
+    public static function textosResolver(string $tipo): array
+    {
+        return self::de($tipo)['resolver'] ?? self::TEXTOS_DESASIGNAR;
     }
 
     public static function existe(string $tipo): bool

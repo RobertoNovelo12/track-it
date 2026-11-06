@@ -72,6 +72,9 @@ class PapeleraConfirmar extends Component
     /* Un equipo: a quién está asignado. */
     public ?string $responsable = null;
 
+    /* Textos de «resolver y mover» del tipo (Desasignar / Quitar…). */
+    public array $textos = [];
+
     #[On('papelera-mover')]
     public function abrir(string $tipo, int $id): void
     {
@@ -99,9 +102,10 @@ class PapeleraConfirmar extends Component
             $this->error = 'Ese registro ya no existe. Actualiza la página.';
         } else {
             $this->bloqueos = $servicio->bloqueos($tipo, $id);
-            $this->desasignable = $tipo === 'equipo' && PapeleraService::soloResolubles($this->bloqueos);
+            $this->desasignable = PapeleraService::soloResolubles($this->bloqueos);
+            $this->textos = PapeleraEntidades::textosResolver($tipo);
 
-            if ($this->desasignable) {
+            if ($this->desasignable && $tipo === 'equipo') {
                 $this->responsable = app(\App\Services\DevolucionService::class)->responsablesActivos([$id])[$id] ?? null;
             }
             $this->ayuda = $this->bloqueos !== [] && ! $this->desasignable ? $def['ayuda'] : null;
@@ -141,6 +145,7 @@ class PapeleraConfirmar extends Component
         $this->varios = true;
         $this->tipo = $tipo;
         $this->nombre = $def['nombre'];
+        $this->textos = PapeleraEntidades::textosResolver($tipo);
         $this->volverA = (string) request()->header('Referer', '');
 
         foreach ($ids as $id) {
@@ -150,9 +155,17 @@ class PapeleraConfirmar extends Component
                 continue;
             }
 
-            if (! empty($revision['bloqueos'][$id]) && $tipo === 'equipo' && PapeleraService::soloResolubles($revision['bloqueos'][$id])) {
+            if (! empty($revision['bloqueos'][$id]) && PapeleraService::soloResolubles($revision['bloqueos'][$id])) {
                 $this->asignados[] = $id;
-                $this->asignadosEtiquetas[] = ['etiqueta' => $revision['etiquetas'][$id], 'responsable' => null];
+                $this->asignadosEtiquetas[] = [
+                    'etiqueta' => $revision['etiquetas'][$id],
+                    'responsable' => null,
+                    // Fuera de equipos: qué se va a desvincular («3 marca(s) que lo sugieren»).
+                    'motivo' => $tipo === 'equipo' ? null : ucfirst(implode(', ', array_map(
+                        fn (array $b): string => $b['cantidad'].' '.$b['que'],
+                        $revision['bloqueos'][$id]
+                    ))),
+                ];
 
                 continue;
             }
@@ -170,7 +183,7 @@ class PapeleraConfirmar extends Component
         }
 
         // A quién está asignado cada uno (una sola consulta).
-        if ($this->asignados !== []) {
+        if ($this->asignados !== [] && $tipo === 'equipo') {
             $responsables = app(\App\Services\DevolucionService::class)->responsablesActivos($this->asignados);
 
             foreach ($this->asignados as $i => $idAsignado) {
