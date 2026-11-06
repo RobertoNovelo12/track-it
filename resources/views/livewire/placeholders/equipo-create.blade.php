@@ -1,5 +1,11 @@
 <div aria-busy="true" aria-label="Cargando formulario de equipo">
-    <div class="space-y-5">
+    {{--
+        wire:key distinto al del formulario real: así Livewire reemplaza el
+        esqueleto en lugar de «reciclar» este div como el del x-data (en ese
+        caso Alpine no inicializa sus datos y la consola llena de
+        «… is not defined»).
+    --}}
+    <div class="space-y-5" wire:key="equipo-create-esqueleto">
         {{-- TIPO DE EQUIPO (misma estructura que el formulario) --}}
         <section class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 sm:p-6">
             <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">

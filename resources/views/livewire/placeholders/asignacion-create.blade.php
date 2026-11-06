@@ -1,6 +1,12 @@
 <div>
 
-    <div class="space-y-5">
+    {{--
+        wire:key distinto al del formulario real: así Livewire reemplaza el
+        esqueleto en lugar de «reciclar» este div como el del x-data (en ese
+        caso Alpine no inicializa sus datos y la consola llena de
+        «… is not defined»).
+    --}}
+    <div class="space-y-5" wire:key="asignacion-create-esqueleto">
 
         {{-- ========================================================
             TIPO DE MOVIMIENTO

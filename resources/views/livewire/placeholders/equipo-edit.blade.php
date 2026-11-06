@@ -1,5 +1,6 @@
 <div aria-busy="true" aria-label="Cargando formulario de edición" class="space-y-5">
-    <div class="flex items-center gap-2 sm:gap-3" aria-hidden="true">
+    {{-- wire:key distinto al del formulario: Livewire reemplaza el esqueleto en vez de reciclarlo como el div del x-data. --}}
+    <div class="flex items-center gap-2 sm:gap-3" aria-hidden="true" wire:key="equipo-edit-esqueleto">
         <div class="h-10 w-10 animate-pulse rounded-lg bg-[var(--theme-surface-soft)] sm:w-24"></div>
         <div class="flex flex-1 justify-end gap-2 sm:gap-3">
             <div class="h-10 flex-1 animate-pulse rounded-lg bg-[var(--theme-surface-soft)] sm:w-32 sm:flex-none"></div>
