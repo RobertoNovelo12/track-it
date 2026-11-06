@@ -1810,37 +1810,48 @@
             </div>
 
             @if (count($mantenimientos) > 0)
-
                 <div class="divide-y divide-[var(--theme-border)]">
-
                     @foreach ($mantenimientos as $mantenimiento)
+                        <div wire:key="mantenimiento-{{ $mantenimiento['id'] }}" class="p-4 flex items-start justify-between gap-3">
+                            <div class="min-w-0">
+                                <p class="text-sm font-medium text-[var(--theme-text-strong)]">
+                                    {{ $mantenimiento['tipo'] }}
+                                    @if ($mantenimiento['folio'] !== '')
+                                        <span class="font-normal text-[var(--theme-text-muted)]">· {{ $mantenimiento['folio'] }}</span>
+                                    @endif
+                                </p>
 
-                        <div class="p-4">
+                                <p class="mt-0.5 text-xs text-[var(--theme-text-muted)]">
+                                    {{ $formatDate($mantenimiento['fecha']) }}
+                                    @if ($mantenimiento['fecha_fin'])
+                                        – {{ $formatDate($mantenimiento['fecha_fin']) }}
+                                    @endif
+                                    @if ($mantenimiento['proximo'])
+                                        · Próximo: {{ $formatDate($mantenimiento['proximo']) }}
+                                    @endif
+                                </p>
 
-                            <p
+                                @if ($mantenimiento['falla'] !== '')
+                                    <p class="mt-1 text-xs text-[var(--theme-text)] line-clamp-2">{{ $mantenimiento['falla'] }}</p>
+                                @endif
+                            </div>
 
-                                class="
+                            <div class="shrink-0 flex flex-col items-end gap-1.5">
+                                <x-status-badge :status="$mantenimiento['estado']" />
 
-                                    text-sm
-
-                                    font-medium
-
-                                    text-[var(--theme-text-strong)]
-
-                                "
-
-                            >
-
-                                {{ $mantenimiento['tipo'] ?? 'Mantenimiento' }}
-
-                            </p>
-
+                                @can('gestionar')
+                                    <a
+                                        href="{{ route('mantenimientos.edit', $mantenimiento['id']) }}"
+                                        wire:navigate
+                                        class="text-xs font-medium text-[var(--theme-primary)] hover:underline"
+                                    >
+                                        Ver
+                                    </a>
+                                @endcan
+                            </div>
                         </div>
-
                     @endforeach
-
                 </div>
-
             @else
 
                 <div

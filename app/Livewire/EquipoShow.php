@@ -1048,7 +1048,47 @@ class EquipoShow extends Component
 
                 ->all();
 
-        $mantenimientos = [];
+        /*
+         * Mantenimientos del equipo (los 10 más recientes). Con uno «En
+         * proceso», la ficha muestra el estado «En mantenimiento» aunque el
+         * estado guardado siga en Disponible/Asignado (mismo criterio que
+         * el contador del dashboard).
+         */
+        $mantenimientos = \App\Support\Esquema::tieneTabla('mantenimientos')
+            ? DB::table('mantenimientos as m')
+                ->leftJoin('catalogo_valores as tm', 'tm.id_valor', '=', 'm.id_tipo_mantenimiento')
+                ->leftJoin('catalogo_valores as em', 'em.id_valor', '=', 'm.id_estado_mantenimiento')
+                ->where('m.id_equipo', $this->equipoId)
+                ->orderByDesc('m.fecha_intervencion')
+                ->orderByDesc('m.id_mantenimiento')
+                ->limit(10)
+                ->get([
+                    'm.id_mantenimiento',
+                    'm.folio',
+                    'm.fecha_intervencion',
+                    'm.fecha_fin',
+                    'm.fecha_proximo_mantenimiento',
+                    'm.falla_reportada',
+                    'tm.nombre as tipo',
+                    'em.nombre as estado',
+                    'em.clave as estado_clave',
+                ])
+                ->map(fn ($m): array => [
+                    'id' => (int) $m->id_mantenimiento,
+                    'folio' => (string) ($m->folio ?? ''),
+                    'tipo' => filled($m->tipo) ? (string) $m->tipo : 'Mantenimiento',
+                    'estado' => filled($m->estado) ? (string) $m->estado : 'Sin estado',
+                    'estado_clave' => strtoupper((string) ($m->estado_clave ?? '')),
+                    'fecha' => $m->fecha_intervencion,
+                    'fecha_fin' => $m->fecha_fin,
+                    'proximo' => $m->fecha_proximo_mantenimiento,
+                    'falla' => (string) ($m->falla_reportada ?? ''),
+                ])
+                ->all()
+            : [];
+
+        $enMantenimiento = collect($mantenimientos)
+            ->contains(fn (array $m): bool => $m['estado_clave'] === 'EN_PROCESO');
 
         /*
          * Botón «Editar»: el formulario no se abre para equipos dados de
@@ -1066,6 +1106,10 @@ class EquipoShow extends Component
                     });
             })
             ->exists();
+
+        if ($enMantenimiento && ! $dadoDeBaja) {
+            $equipo['estado'] = 'En mantenimiento';
+        }
 
         /*
          * Programas instalados: la sección aparece si el tipo «Incluye
