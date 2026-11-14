@@ -14,10 +14,7 @@
         no se volverá a mostrar.
     </p>
 
-    <div
-        x-data="{ copiado: false, copiar() { navigator.clipboard?.writeText(@js($credenciales['contrasena'])).then(() => { this.copiado = true; setTimeout(() => this.copiado = false, 2000); }); } }"
-        class="space-y-3"
-    >
+    <div class="space-y-3">
         <div class="rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface-soft)] px-4 py-3">
             <p class="text-xs text-[var(--theme-text-muted)]">Usuario</p>
             <p class="font-mono text-sm text-[var(--theme-text-strong)]">{{ $credenciales['usuario'] }}</p>
@@ -29,11 +26,12 @@
                     <p class="text-xs text-[var(--theme-text-muted)]">Contraseña temporal</p>
                     <p class="break-all font-mono text-sm text-[var(--theme-text-strong)]">{{ $credenciales['contrasena'] }}</p>
                 </div>
+                {{-- Esta pantalla usa el layout de invitado (sin Alpine): JavaScript simple. --}}
                 <button
                     type="button"
-                    x-on:click="copiar()"
+                    data-copiar="{{ $credenciales['contrasena'] }}"
+                    onclick="navigator.clipboard?.writeText(this.dataset.copiar).then(() => { this.textContent = 'Copiada'; setTimeout(() => this.textContent = 'Copiar', 2000); })"
                     class="shrink-0 rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-1.5 text-xs font-medium text-[var(--theme-text)] transition-colors hover:bg-[var(--theme-surface-soft)]"
-                    x-text="copiado ? 'Copiada' : 'Copiar'"
                 >Copiar</button>
             </div>
         </div>

@@ -27,18 +27,35 @@ La plantilla cambia cómo se nombran las unidades en todo el sistema (menús, fo
 
 ## Capturas
 
-| | |
-|---|---|
-| ![Inicio de sesión](docs/capturas/login.png) | ![Dashboard](docs/capturas/dashboard.png) |
-| Inicio de sesión | Dashboard |
-| ![Inventario](docs/capturas/inventario.png) | ![Ficha de equipo](docs/capturas/equipo.png) |
-| Inventario | Ficha de un equipo |
-| ![Movimientos](docs/capturas/movimientos.png) | ![Mantenimientos](docs/capturas/mantenimientos.png) |
-| Asignaciones y movimientos | Mantenimientos |
-| ![Reportes](docs/capturas/reportes.png) | ![Administración](docs/capturas/administracion.png) |
-| Reportes | Administración |
-| ![Configuración inicial](docs/capturas/configuracion-inicial.png) | ![Móvil](docs/capturas/movil.png) |
-| Asistente de configuración inicial | Versión móvil |
+### Inventario
+Filtros de búsqueda por tipo, marca, modelo, serie, factura, estado, edificio y situación.
+
+![Inventario](docs/capturas/inventario.png)
+
+### Asignación y movimientos
+Equipos asignados y disponibles, distribución por edificio y resumen de actividad.
+
+![Asignación y movimientos](docs/capturas/movimientos.png)
+
+### Mantenimientos
+Búsqueda por tipo, estado, técnico, fechas, departamento y número de serie.
+
+![Mantenimientos](docs/capturas/mantenimientos.png)
+
+### Reportes
+Altas, bajas, asignaciones, reasignaciones y mantenimientos, con vista previa del documento en PDF.
+
+![Reportes](docs/capturas/reportes.png)
+
+### Administración
+Tipos de equipo, proveedores, marcas, modelos, programas, edificios, departamentos, ubicaciones, plantillas y organización.
+
+![Administración](docs/capturas/administracion.png)
+
+### Versión móvil
+Vista general con el menú inferior flotante.
+
+<p align="center"><img src="docs/capturas/movil.png" width="320" alt="Versión móvil"></p>
 
 ## Módulos
 
