@@ -69,7 +69,7 @@ class InstanciaController extends Controller
             'apellido_paterno' => ['required', 'string', 'max:100'],
             'apellido_materno' => ['nullable', 'string', 'max:100'],
             'username' => [
-                'required', 'string', 'min:3', 'max:50', 'alpha_dash',
+                'required', 'string', 'min:3', 'max:50', 'regex:/^[A-Za-z0-9._-]+$/',
                 Rule::notIn([RestablecerInstanciaService::USUARIO_TEMPORAL]),
                 Rule::unique('usuarios', 'username'),
             ],
@@ -82,7 +82,7 @@ class InstanciaController extends Controller
             'nombres.required' => 'Escribe tu nombre.',
             'apellido_paterno.required' => 'Escribe tu apellido paterno.',
             'username.required' => 'Elige un nombre de usuario.',
-            'username.alpha_dash' => 'El usuario solo puede tener letras, números, guiones y guiones bajos.',
+            'username.regex' => 'El usuario solo puede tener letras, números, puntos, guiones y guiones bajos, sin espacios.',
             'username.not_in' => 'Ese nombre de usuario está reservado.',
             'username.unique' => 'Ese nombre de usuario ya existe.',
             'correo.required' => 'Escribe tu correo.',
