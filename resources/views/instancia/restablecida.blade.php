@@ -40,8 +40,8 @@
     </div>
 
     <p class="mt-5 text-center text-xs leading-relaxed text-[var(--theme-text-muted)]">
-        Al entrar, el sistema te pedirá crear el primer @plantilla('unidad'), su departamento
-        y tu cuenta de administrador. El usuario temporal se elimina al terminar.
+        Al entrar, el sistema te pedirá elegir la plantilla (hoteles o instituciones), crear la
+        primera sede con su departamento y tu cuenta de administrador. El usuario temporal se elimina al terminar.
     </p>
 
     <a

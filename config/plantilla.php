@@ -5,10 +5,10 @@
 | Plantilla de la instalación
 |--------------------------------------------------------------------------
 |
-| Por defecto se usa la plantilla guardada en configuracion_instalacion.
-| TRACKIT_PLANTILLA permite que un despliegue use otra (por ejemplo,
-| «escuelas» para la versión institución) aunque comparta la misma base.
-| Valores: hoteles, escuelas.
+| Por defecto se usa la plantilla guardada en configuracion_instalacion,
+| que se elige en el asistente de configuración inicial (al restablecer).
+| TRACKIT_PLANTILLA (opcional) la fija para un despliegue: si existe,
+| tiene prioridad y el asistente ya no pregunta. Valores: hoteles, escuelas.
 |
 */
 

@@ -191,6 +191,55 @@ class PlantillaInstalacionService
         return (string) ($etiquetas[$clave] ?? $clave);
     }
 
+    /**
+     * Plantillas disponibles con sus etiquetas (para el asistente de configuración).
+     *
+     * @return array<string, array{nombre: string, etiquetas: array}>
+     */
+    public static function definiciones(): array
+    {
+        return array_map(
+            fn (array $d) => ['nombre' => $d['nombre'], 'etiquetas' => self::conMinusculas($d['etiquetas'])],
+            self::DEFINICIONES
+        );
+    }
+
+    /** Plantilla fijada con TRACKIT_PLANTILLA (si existe, el asistente no pregunta). */
+    public static function forzada(): ?string
+    {
+        $forzada = (string) config('plantilla.forzada', '');
+
+        return $forzada !== '' && isset(self::DEFINICIONES[$forzada]) ? $forzada : null;
+    }
+
+    /**
+     * Cambia la plantilla de la instalación. Solo lo usa el asistente de
+     * configuración inicial; el trigger de configuracion_instalacion lo
+     * permite únicamente con trackit.permitir_cambio_plantilla dentro de
+     * esta transacción.
+     */
+    public function cambiar(string $clave): void
+    {
+        if (! isset(self::DEFINICIONES[$clave])) {
+            throw new LogicException("Plantilla desconocida: {$clave}");
+        }
+
+        DB::transaction(function () use ($clave) {
+            DB::statement("SET LOCAL trackit.permitir_cambio_plantilla = 'on'");
+
+            DB::table('configuracion_instalacion')
+                ->where('id', 1)
+                ->update([
+                    'plantilla' => $clave,
+                    'version_plantilla' => self::DEFINICIONES[$clave]['version'],
+                    'configurada_en' => now(),
+                ]);
+        });
+
+        Cache::forget(self::CACHE_KEY);
+        self::$memoria = null;
+    }
+
     // Formas en minúsculas para usarlas dentro de frases.
     private static function conMinusculas(array $etiquetas): array
     {

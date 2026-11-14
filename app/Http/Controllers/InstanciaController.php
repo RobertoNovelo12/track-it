@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\PlantillaInstalacionService;
 use App\Services\RestablecerInstanciaService;
 use App\Support\PoliticaContrasena;
 use Illuminate\Http\RedirectResponse;
@@ -47,6 +48,9 @@ class InstanciaController extends Controller
 
         return view('instancia.configurar', [
             'sedes' => DB::table('sedes')->where('activo', true)->orderBy('nombre')->get(['id_sede', 'nombre']),
+            'plantillas' => PlantillaInstalacionService::definiciones(),
+            'plantillaForzada' => PlantillaInstalacionService::forzada(),
+            'plantillaActual' => app(PlantillaInstalacionService::class)->actual()['clave'],
         ]);
     }
 
@@ -58,9 +62,13 @@ class InstanciaController extends Controller
             return redirect()->to('/');
         }
 
-        $unidad = \App\Services\PlantillaInstalacionService::t('unidad');
+        $plantillas = PlantillaInstalacionService::definiciones();
+        $forzada = PlantillaInstalacionService::forzada();
+        $elegida = $forzada ?? (string) $request->input('plantilla');
+        $unidad = $plantillas[$elegida]['etiquetas']['unidad'] ?? PlantillaInstalacionService::t('unidad');
 
         $datos = $request->validate([
+            'plantilla' => [$forzada ? 'nullable' : 'required', Rule::in(array_keys($plantillas))],
             'id_sede' => ['nullable', 'integer', Rule::exists('sedes', 'id_sede')],
             'sede_nueva' => ['nullable', 'required_without:id_sede', 'string', 'max:120'],
             'unidad' => ['required', 'string', 'max:150'],
@@ -76,6 +84,8 @@ class InstanciaController extends Controller
             'correo' => ['required', 'email', 'max:150', Rule::unique('usuarios', 'correo')],
             'password' => ['required', 'string', ...PoliticaContrasena::reglas(), 'confirmed'],
         ], PoliticaContrasena::mensajes('password') + [
+            'plantilla.required' => 'Elige el tipo de organización.',
+            'plantilla.in' => 'Elige una plantilla válida.',
             'sede_nueva.required_without' => 'Elige una sede o escribe el nombre de una nueva.',
             'unidad.required' => "Escribe el nombre del {$unidad}.",
             'departamento.required' => 'Escribe el nombre del departamento.',
@@ -92,7 +102,12 @@ class InstanciaController extends Controller
             'password.confirmed' => 'La confirmación de contraseña no coincide.',
         ]);
 
-        DB::transaction(function () use ($datos, $temporal) {
+        DB::transaction(function () use ($datos, $temporal, $forzada) {
+            // Plantilla elegida (Hoteles / Instituciones), salvo que el despliegue la fije.
+            if (! $forzada) {
+                app(PlantillaInstalacionService::class)->cambiar($datos['plantilla']);
+            }
+
             $idSede = $datos['id_sede'] ?? null;
 
             if (! $idSede) {
@@ -142,7 +157,7 @@ class InstanciaController extends Controller
                 'accion' => 'INSTANCIA_CONFIGURADA',
                 'modulo' => 'ADMINISTRACION',
                 'descripcion' => 'Se configuró la instancia: primer '
-                    .\App\Services\PlantillaInstalacionService::t('unidad')
+                    .PlantillaInstalacionService::t('unidad')
                     .', departamento y cuenta de administrador. Se eliminó el usuario temporal.',
                 'fecha_hora' => now(),
             ]);
