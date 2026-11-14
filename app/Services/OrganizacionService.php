@@ -124,7 +124,7 @@ class OrganizacionService
         ],
     ];
 
-    private const CACHE_KEY = 'trackit.organizacion.configuracion.v3';
+    private const CACHE_KEY = 'trackit.organizacion.configuracion.v4';
 
     private ?array $memoria = null;
 
@@ -286,9 +286,26 @@ class OrganizacionService
      */
     public function logoInterfazUrlOscuro(): ?string
     {
+        if (! $this->logoPersonalizado()) {
+            return asset(self::LOGO_INTERFAZ_OSCURO);
+        }
+
+        // Logotipo personalizado: su versión para modo oscuro, si la subieron.
+        return $this->logoOscuroUrl();
+    }
+
+    /** La organización subió un logotipo específico para modo oscuro. */
+    public function logoOscuroPersonalizado(): bool
+    {
         return $this->logoPersonalizado()
-            ? null
-            : asset(self::LOGO_INTERFAZ_OSCURO);
+            && filled($this->configuracion()['logo_oscuro_version'] ?? null);
+    }
+
+    public function logoOscuroUrl(): ?string
+    {
+        return $this->logoOscuroPersonalizado()
+            ? route('organizacion.logo.oscuro', ['version' => $this->configuracion()['logo_oscuro_version']])
+            : null;
     }
 
     /*
@@ -297,7 +314,8 @@ class OrganizacionService
      */
     public function logoInterfazModoOscuro(): string
     {
-        return $this->logoPersonalizado()
+        // Con versión oscura propia (Track IT o la subida) se muestra tal cual.
+        return $this->logoPersonalizado() && ! $this->logoOscuroPersonalizado()
             ? $this->logoModoOscuro()
             : 'original';
     }
@@ -335,25 +353,27 @@ class OrganizacionService
      * Contenido del logotipo personalizado. No se guarda en caché
      * porque el navegador lo conserva gracias a su versión.
      */
-    public function logoContenido(): ?array
+    public function logoContenido(bool $oscuro = false): ?array
     {
+        $prefijo = $oscuro ? 'logo_oscuro_' : 'logo_';
+
         try {
             $fila = DB::table('configuracion_organizacion')
                 ->where('id', 1)
                 ->first([
-                    'logo_base64',
-                    'logo_mime',
-                    'logo_version',
+                    $prefijo.'base64 as base64',
+                    $prefijo.'mime as mime',
+                    $prefijo.'version as version',
                 ]);
         } catch (QueryException) {
             return null;
         }
 
-        if (! $fila || ! filled($fila->logo_base64)) {
+        if (! $fila || ! filled($fila->base64)) {
             return null;
         }
 
-        $contenido = base64_decode($fila->logo_base64, true);
+        $contenido = base64_decode($fila->base64, true);
 
         if ($contenido === false) {
             return null;
@@ -361,8 +381,8 @@ class OrganizacionService
 
         return [
             'contenido' => $contenido,
-            'mime' => $fila->logo_mime,
-            'version' => $fila->logo_version,
+            'mime' => $fila->mime,
+            'version' => $fila->version,
         ];
     }
 
@@ -390,9 +410,13 @@ class OrganizacionService
             'logo_modo_oscuro',
             'logo_color_fondo',
             'color_primario',
+            'logo_oscuro_base64',
+            'logo_oscuro_mime',
+            'logo_oscuro_nombre_original',
+            'logo_oscuro_version',
         ];
 
-        foreach (['logo_color_fondo', 'color_primario'] as $columnaNueva) {
+        foreach (['logo_color_fondo', 'color_primario', 'logo_oscuro_base64', 'logo_oscuro_mime', 'logo_oscuro_nombre_original', 'logo_oscuro_version'] as $columnaNueva) {
             if (array_key_exists($columnaNueva, $cambios) && ! \App\Support\Esquema::tieneColumna('configuracion_organizacion', $columnaNueva)) {
                 unset($cambios[$columnaNueva]);
             }
@@ -445,6 +469,7 @@ class OrganizacionService
                 'actualizado_en',
                 ...(\App\Support\Esquema::tieneColumna('configuracion_organizacion', 'logo_color_fondo') ? ['logo_color_fondo'] : []),
                 ...(\App\Support\Esquema::tieneColumna('configuracion_organizacion', 'color_primario') ? ['color_primario'] : []),
+                ...(\App\Support\Esquema::tieneColumna('configuracion_organizacion', 'logo_oscuro_version') ? ['logo_oscuro_version'] : []),
             ]);
 
         if (! $fila) {
@@ -477,6 +502,7 @@ class OrganizacionService
             'logo_color_fondo' => preg_match('/^#[0-9A-Fa-f]{6}$/', (string) ($fila->logo_color_fondo ?? ''))
                 ? strtoupper($fila->logo_color_fondo)
                 : self::COLOR_FONDO_PREDETERMINADO,
+            'logo_oscuro_version' => $fila->logo_oscuro_version ?? null,
             'color_primario' => preg_match('/^#[0-9A-Fa-f]{6}$/', (string) ($fila->color_primario ?? ''))
                 ? strtoupper($fila->color_primario)
                 : null,
@@ -496,6 +522,7 @@ class OrganizacionService
             'logo_escala' => 100,
             'logo_modo_oscuro' => 'blanco',
             'logo_color_fondo' => self::COLOR_FONDO_PREDETERMINADO,
+            'logo_oscuro_version' => null,
             'color_primario' => null,
             'actualizado_en' => null,
         ];

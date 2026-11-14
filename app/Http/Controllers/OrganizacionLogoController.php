@@ -26,7 +26,11 @@ class OrganizacionLogoController extends Controller
         OrganizacionService $organizacion,
         string $version
     ): Response {
-        $logo = $organizacion->logoContenido();
+        // Misma respuesta para el logotipo principal y su versión de modo oscuro.
+        $oscuro = $request->routeIs('organizacion.logo.oscuro');
+        $ruta = $oscuro ? 'organizacion.logo.oscuro' : 'organizacion.logo';
+
+        $logo = $organizacion->logoContenido($oscuro);
 
         if (! $logo) {
             return redirect()->to(
@@ -35,7 +39,7 @@ class OrganizacionLogoController extends Controller
         }
 
         if (! hash_equals($logo['version'], $version)) {
-            return redirect()->route('organizacion.logo', [
+            return redirect()->route($ruta, [
                 'version' => $logo['version'],
             ]);
         }

@@ -36,6 +36,14 @@ Route::get(
     ->where('version', '[A-Za-z0-9]{8,40}')
     ->name('organizacion.logo');
 
+// Versión del logotipo para modo oscuro (opcional).
+Route::get(
+    '/organizacion/logo-oscuro/{version}',
+    OrganizacionLogoController::class
+)
+    ->where('version', '[A-Za-z0-9]{8,40}')
+    ->name('organizacion.logo.oscuro');
+
 
 /*
 |--------------------------------------------------------------------------

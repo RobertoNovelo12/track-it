@@ -55,6 +55,9 @@ new class extends Component
 
     public $logo = null;
 
+    // Logotipo opcional para modo oscuro (se muestra tal cual en modo oscuro).
+    public $logoOscuro = null;
+
     public int $logoEscala = 100;
 
     public string $logoModoOscuro = 'blanco';
@@ -204,8 +207,10 @@ new class extends Component
         $this->message = '';
         $this->nombreOrganizacion = trim($this->nombreOrganizacion);
 
+        $reglasLogo = $this->reglasLogo();
+
         $validated = $this->validate(
-            $this->reglasLogo() + [
+            $reglasLogo + ['logoOscuro' => $reglasLogo['logo']] + [
                 'nombreOrganizacion' => ['nullable', 'string', 'max:150'],
                 'logoEscala' => [
                     'required',
@@ -221,7 +226,7 @@ new class extends Component
                     'regex:/^#[0-9A-Fa-f]{6}$/',
                 ],
             ],
-            $this->mensajesLogo() + [
+            $this->mensajesLogo() + collect($this->mensajesLogo())->mapWithKeys(fn ($m, $k) => [str_replace('logo.', 'logoOscuro.', $k) => $m])->all() + [
                 'nombreOrganizacion.max' => 'El nombre no puede superar 150 caracteres.',
                 'logoEscala.between' => 'El tamaño debe estar entre '.OrganizacionService::ESCALA_MINIMA.' % y '.OrganizacionService::ESCALA_MAXIMA.' %.',
                 'logoModoOscuro.in' => 'Selecciona una apariencia válida.',
@@ -259,6 +264,28 @@ new class extends Component
             ];
         }
 
+        // Versión para modo oscuro (opcional).
+        if ($this->logoOscuro) {
+            $contenidoOscuro = file_get_contents($this->logoOscuro->getRealPath());
+            $infoOscuro = $contenidoOscuro !== false ? @getimagesizefromstring($contenidoOscuro) : false;
+
+            if (
+                $infoOscuro === false
+                || ! in_array($infoOscuro['mime'], OrganizacionService::LOGO_MIMES, true)
+            ) {
+                throw ValidationException::withMessages([
+                    'logoOscuro' => 'No se pudo leer la imagen. Utiliza un PNG, JPG o WEBP válido.',
+                ]);
+            }
+
+            $cambios += [
+                'logo_oscuro_base64' => base64_encode($contenidoOscuro),
+                'logo_oscuro_mime' => $infoOscuro['mime'],
+                'logo_oscuro_nombre_original' => Str::limit($this->logoOscuro->getClientOriginalName(), 250, ''),
+                'logo_oscuro_version' => substr(sha1($contenidoOscuro), 0, 20),
+            ];
+        }
+
         $this->organizacion()->actualizar($cambios);
 
         $this->registrarBitacora(
@@ -275,11 +302,16 @@ new class extends Component
     {
         abort_unless(auth()->check(), 403);
 
+        // La versión para modo oscuro acompaña al logotipo personalizado: también se quita.
         $this->organizacion()->actualizar([
             'logo_base64' => null,
             'logo_mime' => null,
             'logo_nombre_original' => null,
             'logo_version' => null,
+            'logo_oscuro_base64' => null,
+            'logo_oscuro_mime' => null,
+            'logo_oscuro_nombre_original' => null,
+            'logo_oscuro_version' => null,
         ]);
 
         $this->registrarBitacora('Se restauró el logotipo predeterminado.');
@@ -338,6 +370,28 @@ new class extends Component
     {
         $this->logo = null;
         $this->resetValidation('logo');
+    }
+
+    public function descartarLogoOscuro(): void
+    {
+        $this->logoOscuro = null;
+        $this->resetValidation('logoOscuro');
+    }
+
+    public function quitarLogoOscuro(): void
+    {
+        abort_unless(auth()->check(), 403);
+
+        $this->organizacion()->actualizar([
+            'logo_oscuro_base64' => null,
+            'logo_oscuro_mime' => null,
+            'logo_oscuro_nombre_original' => null,
+            'logo_oscuro_version' => null,
+        ]);
+
+        $this->registrarBitacora('Se quitó el logotipo para modo oscuro.');
+
+        $this->recargar('identidad', 'Se quitó el logotipo para modo oscuro.');
     }
 
     /*
@@ -724,6 +778,25 @@ new class extends Component
         }
     }
 
+    // Logotipo para modo oscuro: el nuevo sin guardar o el guardado.
+    $logoOscuroPrevio = null;
+
+    if ($logoOscuro && ! $errors->has('logoOscuro')) {
+        try {
+            $logoOscuroPrevio = $logoOscuro->temporaryUrl();
+        } catch (\Throwable) {
+            $logoOscuroPrevio = null;
+        }
+    }
+
+    $logoOscuroGuardado = $org->logoOscuroUrl();
+    $tieneLogoOscuro = $logoOscuroPrevio || $logoOscuroGuardado;
+    $puedeLogoOscuro = $logo || $org->logoPersonalizado();
+
+    // Botones de esta sección: más visibles que un enlace de texto.
+    $botonLogo = 'inline-flex h-9 cursor-pointer items-center gap-2 rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-4 text-xs font-medium text-[var(--theme-text-strong)] transition-colors hover:border-[var(--theme-primary-border)] hover:bg-[var(--theme-surface-soft)] peer-focus-visible:ring-2 peer-focus-visible:ring-[var(--theme-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--theme-primary)] disabled:opacity-50';
+    $botonLogoPrincipal = 'inline-flex h-9 cursor-pointer items-center gap-2 rounded-md border border-[var(--theme-primary)] bg-[var(--theme-primary)] px-4 text-xs font-medium text-white transition-colors hover:bg-[var(--theme-primary-hover)] peer-focus-visible:ring-2 peer-focus-visible:ring-offset-2 peer-focus-visible:ring-[var(--theme-primary)]';
+
     $inputClass = 'w-full rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none focus:border-[var(--theme-primary)]';
 @endphp
 
@@ -846,20 +919,19 @@ new class extends Component
                 </p>
 
                 <div class="flex flex-wrap items-center gap-3">
-                    <label
-                        for="org-logo"
-                        class="cursor-pointer rounded-lg border border-[var(--theme-border)] px-4 py-2.5 text-xs text-[var(--theme-text)] hover:bg-[var(--theme-surface-soft)]"
-                    >
-                        {{ $logo ? 'Elegir otra imagen' : 'Reemplazar logotipo' }}
-                    </label>
-
+                    {{-- El campo va antes del botón para que el foco con teclado lo resalte (peer). --}}
                     <input
                         id="org-logo"
                         type="file"
                         wire:model="logo"
                         accept="image/png,image/jpeg,image/webp"
-                        class="sr-only"
+                        class="peer sr-only"
                     >
+
+                    <label for="org-logo" class="{{ $botonLogoPrincipal }}">
+                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4m0 0-4 4m4-4 4 4M5 20h14"/></svg>
+                        {{ $logo ? 'Elegir otra imagen' : ($org->logoPersonalizado() ? 'Reemplazar logotipo' : 'Subir logotipo') }}
+                    </label>
 
                     <span wire:loading wire:target="logo" class="text-xs text-[var(--theme-text-muted)]">
                         Cargando imagen...
@@ -869,7 +941,7 @@ new class extends Component
                         <button
                             type="button"
                             wire:click="descartarLogo"
-                            class="text-xs text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] hover:underline"
+                            class="{{ $botonLogo }}"
                         >
                             Descartar imagen nueva
                         </button>
@@ -878,8 +950,9 @@ new class extends Component
                             type="button"
                             x-on:click="$dispatch('confirmar', { titulo: '¿Restaurar el logotipo predeterminado?', mensaje: 'Se quitará el logotipo personalizado y se usará el de Track IT.', confirmar: 'Restaurar', peligro: false, accion: () => $wire.restaurarLogo() })"
                             wire:loading.attr="disabled"
-                            class="text-xs text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] hover:underline"
+                            class="{{ $botonLogo }}"
                         >
+                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.3-5.7M4 4v4h4"/></svg>
                             Restaurar logotipo predeterminado
                         </button>
                     @endif
@@ -888,6 +961,54 @@ new class extends Component
                 @error('logo')
                     <p class="mt-3 text-xs text-[var(--theme-danger)]">{{ $message }}</p>
                 @enderror
+
+                {{-- Logotipo para modo oscuro (opcional, solo con logotipo personalizado) --}}
+                @if ($puedeLogoOscuro)
+                    <div class="rounded-lg border border-[var(--theme-border)] p-4">
+                        <p class="text-sm font-medium text-[var(--theme-text-strong)]">Logotipo para modo oscuro <span class="font-normal text-[var(--theme-text-muted)]">(opcional)</span></p>
+                        <p class="mt-1 text-xs text-[var(--theme-text-muted)]">
+                            Si tu logotipo no se ve bien sobre fondo oscuro, sube una versión clara. En modo oscuro se mostrará tal cual, sin aplicar la apariencia de abajo.
+                        </p>
+
+                        <div class="mt-3 flex flex-wrap items-center gap-3">
+                            <input
+                                id="org-logo-oscuro"
+                                type="file"
+                                wire:model="logoOscuro"
+                                accept="image/png,image/jpeg,image/webp"
+                                class="peer sr-only"
+                            >
+
+                            <label for="org-logo-oscuro" class="{{ $botonLogo }}">
+                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4m0 0-4 4m4-4 4 4M5 20h14"/></svg>
+                                {{ $logoOscuro ? 'Elegir otra imagen' : ($logoOscuroGuardado ? 'Reemplazar logotipo oscuro' : 'Subir logotipo oscuro') }}
+                            </label>
+
+                            <span wire:loading wire:target="logoOscuro" class="text-xs text-[var(--theme-text-muted)]">
+                                Cargando imagen...
+                            </span>
+
+                            @if ($logoOscuro)
+                                <button type="button" wire:click="descartarLogoOscuro" class="{{ $botonLogo }}">
+                                    Descartar imagen nueva
+                                </button>
+                            @elseif ($logoOscuroGuardado)
+                                <button
+                                    type="button"
+                                    x-on:click="$dispatch('confirmar', { titulo: '¿Quitar el logotipo para modo oscuro?', mensaje: 'En modo oscuro se volverá a usar el logotipo principal con la apariencia elegida.', confirmar: 'Quitar', peligro: false, accion: () => $wire.quitarLogoOscuro() })"
+                                    wire:loading.attr="disabled"
+                                    class="{{ $botonLogo }}"
+                                >
+                                    Quitar logotipo oscuro
+                                </button>
+                            @endif
+                        </div>
+
+                        @error('logoOscuro')
+                            <p class="mt-2 text-xs text-[var(--theme-danger)]">{{ $message }}</p>
+                        @enderror
+                    </div>
+                @endif
 
                 {{-- Tamaño --}}
                 <div class="max-w-xl">
@@ -928,8 +1049,8 @@ new class extends Component
                         <button
                             type="button"
                             x-on:click="escala = 100"
-                            class="shrink-0 rounded-md px-2 py-1 text-xs text-[var(--theme-text-muted)] transition-colors hover:bg-[var(--theme-surface-soft)] hover:text-[var(--theme-text)]"
-                            title="Restablecer al tamaño original"
+                            class="inline-flex h-8 shrink-0 items-center rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 text-xs font-medium text-[var(--theme-text-strong)] transition-colors hover:border-[var(--theme-primary-border)] hover:bg-[var(--theme-surface-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--theme-primary)]"
+                            title="Restablecer al tamaño original (100 %)"
                         >Restablecer</button>
                     </div>
 
@@ -946,7 +1067,13 @@ new class extends Component
                 <div>
                     <p class="mb-2 text-xs text-[var(--theme-text-muted)]">Apariencia en modo oscuro</p>
 
-                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                    @if ($tieneLogoOscuro)
+                        <p class="mb-3 rounded-md border border-[var(--theme-border)] bg-[var(--theme-surface-soft)] px-3 py-2 text-xs text-[var(--theme-text)]">
+                            Hay un logotipo para modo oscuro: en modo oscuro se usa ese y esta apariencia no se aplica.
+                        </p>
+                    @endif
+
+                    <div @class(['grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4', 'opacity-50' => $tieneLogoOscuro])>
                         @foreach (\App\Services\OrganizacionService::MODOS_OSCURO as $clave => $modo)
                             <label
                                 wire:key="org-modo-{{ $clave }}"
@@ -1032,11 +1159,15 @@ new class extends Component
                                 >
                                     @php
                                         // Track IT ya tiene versión oscura: se muestra tal cual, sin filtro.
-                                        $usaVersionOscura = $previa['oscuro'] && ! $logoPrevio && $logoActualOscuro;
+                                        $logoOscuroPreview = $logoOscuroPrevio ?? $logoOscuroGuardado;
+                                        $usaVersionOscura = $previa['oscuro'] && ($logoOscuroPreview || (! $logoPrevio && $logoActualOscuro));
+                                        $srcPrevia = $previa['oscuro'] && $logoOscuroPreview
+                                            ? $logoOscuroPreview
+                                            : ($logoPrevio ?? ($usaVersionOscura ? $logoActualOscuro : $logoActual));
                                     @endphp
 
                                     <img
-                                        src="{{ $logoPrevio ?? ($usaVersionOscura ? $logoActualOscuro : $logoActual) }}"
+                                        src="{{ $srcPrevia }}"
                                         alt="Vista previa en {{ mb_strtolower($previa['titulo']) }}"
                                         @class([
                                             'h-auto max-h-[4.5rem] min-w-0 object-contain',
@@ -1067,7 +1198,7 @@ new class extends Component
                 <x-ui.button
                     type="submit"
                     target="guardarIdentidad"
-                    disable-target="guardarIdentidad,logo"
+                    disable-target="guardarIdentidad,logo,logoOscuro"
                     size="lg"
                     loading-text="Guardando…"
                     class="w-full sm:w-auto"
