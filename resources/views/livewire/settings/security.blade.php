@@ -371,6 +371,7 @@
                     wire:target="startTwoFactorSetup"
 
                     class="
+                        relative
                         shrink-0
 
                         h-9
@@ -401,8 +402,9 @@
                         transition-colors
                     "
                 >
+                    {{-- Estado normal --}}
                     <span
-                        wire:loading.remove
+                        wire:loading.class="invisible"
                         wire:target="startTwoFactorSetup"
 
                         class="
@@ -425,48 +427,32 @@
                     </span>
 
 
+                    {{-- Estado cargando --}}
                     <span
-                        wire:loading
+                        wire:loading.flex
                         wire:target="startTwoFactorSetup"
 
                         class="
-                            inline-flex
+                            absolute
+                            inset-0
+
                             items-center
-                            gap-2
+                            justify-center
                         "
                     >
                         <svg
-                            class="
-                                w-4
-                                h-4
-                                animate-spin
-                            "
+                            class="w-5 h-5 animate-spin"
 
                             viewBox="0 0 24 24"
 
                             fill="none"
-                        >
-                            <circle
-                                class="opacity-25"
 
-                                cx="12"
-                                cy="12"
-                                r="10"
+                            aria-hidden="true"
+                        ><use href="{{ \App\Support\Icono::url('i-ef15586') }}"></use></svg>
 
-                                stroke="currentColor"
-                                stroke-width="4"
-                            />
-
-                            <path
-                                class="opacity-75"
-
-                                fill="currentColor"
-
-                                d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                            />
-                        </svg>
-
-                        Preparando...
+                        <span class="sr-only">
+                            Preparando verificación en dos pasos...
+                        </span>
                     </span>
                 </button>
 
