@@ -1,58 +1,136 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
-
 <p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+  <img src="public/images/track-it/icon-192.png" width="96" alt="Track IT">
 </p>
 
-## About Laravel
+<h1 align="center">Track IT</h1>
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+<p align="center">
+  Sistema web para la gestión de activos tecnológicos: inventario, asignaciones, mantenimientos, bajas y reportes en un solo lugar.
+</p>
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+---
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Contexto
 
-## Learning Laravel
+Track IT nació como proyecto de Residencia Profesional (Ingeniería en Sistemas Computacionales, ITS de Felipe Carrillo Puerto) para el Departamento de Sistemas del Grand Palladium Riviera Maya. El control de los equipos se llevaba entre una plataforma existente, hojas de Excel y formatos en papel, lo que dificultaba saber dónde estaba cada equipo, quién lo tenía y en qué condiciones se encontraba.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+El sistema concentra esa información y deja trazabilidad de cada movimiento durante todo el ciclo de vida del activo: alta, asignación, reasignación, devolución, mantenimiento y baja.
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Funciona con **plantillas de organización**, que se eligen al configurar la instancia:
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+| Plantilla | Unidades | Ejemplo |
+|---|---|---|
+| Hotelería | Hoteles | Cadena hotelera con varios hoteles por sede |
+| Educación | Edificios | Instituto o universidad con varios edificios por campus |
 
-## Agentic Development
+La plantilla cambia cómo se nombran las unidades en todo el sistema (menús, formularios, reportes y actas).
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Capturas
+
+| | |
+|---|---|
+| ![Inicio de sesión](docs/capturas/login.png) | ![Dashboard](docs/capturas/dashboard.png) |
+| Inicio de sesión | Dashboard |
+| ![Inventario](docs/capturas/inventario.png) | ![Ficha de equipo](docs/capturas/equipo.png) |
+| Inventario | Ficha de un equipo |
+| ![Movimientos](docs/capturas/movimientos.png) | ![Mantenimientos](docs/capturas/mantenimientos.png) |
+| Asignaciones y movimientos | Mantenimientos |
+| ![Reportes](docs/capturas/reportes.png) | ![Administración](docs/capturas/administracion.png) |
+| Reportes | Administración |
+| ![Configuración inicial](docs/capturas/configuracion-inicial.png) | ![Móvil](docs/capturas/movil.png) |
+| Asistente de configuración inicial | Versión móvil |
+
+## Módulos
+
+- **Inventario.** Alta de equipos con formularios distintos por tipo de equipo, importación desde Excel o CSV, búsqueda global (Ctrl K), filtros, exportación a PDF y Excel, y escáner de códigos de barras desde el teléfono.
+- **Asignaciones y movimientos.** Asignación a personas o departamentos, asignación múltiple, reasignación, devolución con acta e historial completo por equipo.
+- **Mantenimientos.** Preventivos y correctivos, con prioridad, técnico, refacciones, evidencias y avisos de mantenimientos programados.
+- **Bajas.** Baja individual o múltiple con firmas y acta en PDF.
+- **Reportes.** Altas, bajas, movimientos e inventario en PDF y Excel con el logotipo de la organización.
+- **Administración.** Tipos de equipo y su constructor de formularios, marcas, modelos, programas, proveedores, sedes, edificios u hoteles, departamentos, ubicaciones e identidad visual (nombre, logotipo y color principal).
+- **Seguridad.** Usuarios, roles y permisos, aprobación de registros, solicitudes de cambio de organización y bitácora de auditoría.
+- **Cuenta.** Perfil, verificación en dos pasos (obligatoria para administradores), sesiones activas, notificaciones y preferencias.
+- **Papelera.** Lo eliminado se conserva 30 días y se puede restaurar.
+- **Aplicación instalable.** PWA con notificaciones push y menú móvil propio.
+
+## Tecnologías
+
+- PHP 8.4 y Laravel 13
+- Livewire 4 y Alpine.js
+- Tailwind CSS 4 y Vite
+- PostgreSQL (Supabase)
+- DomPDF y Laravel Excel
+- Google2FA (verificación en dos pasos) y Web Push
+- Docker (PHP 8.4 + Apache) para el despliegue en Render
+
+## Instalación local
+
+Requisitos: PHP 8.4 con Composer (por ejemplo, con [Laravel Herd](https://herd.laravel.com)), Node.js y una base PostgreSQL.
 
 ```bash
-composer require laravel/boost --dev
+git clone https://github.com/RobertoNovelo12/track-it.git
+cd track-it
 
-php artisan boost:install
+composer install
+npm install
+npm run build
+
+cp .env.example .env
+php artisan key:generate   # solo en una instalación nueva
+php artisan migrate
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Con Herd, agrega la carpeta del proyecto en **Settings → General → Herd paths** y abre `http://track-it.test`.
 
-## Contributing
+### Variables de entorno
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+| Variable | Uso |
+|---|---|
+| `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` | Conexión a PostgreSQL. Con Supabase, usa el *session pooler* (puerto 5432). |
+| `APP_KEY` | Cifra sesiones y secretos de la verificación en dos pasos. Debe ser la misma en todos los entornos que comparten base. |
+| `VAPID_SUBJECT`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` | Notificaciones push. Se generan con `php artisan trackit:llaves-push`. |
+| `SOPORTE_EQUIPO`, `SOPORTE_INTEGRANTES`, `SOPORTE_CORREO`, `SOPORTE_TELEFONO`, `SOPORTE_HORARIO` | Contacto de soporte que aparece en Ayuda. |
+| `TRACKIT_PLANTILLA` | Opcional. Fija la plantilla (`hoteles` o `escuelas`); si no existe, se elige en el asistente. |
 
-## Code of Conduct
+## Primer uso y restablecimiento
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Desde **Administración → Plantillas → Restablecer** un administrador puede dejar la instancia como recién instalada. Pide la contraseña, dos confirmaciones y el código del autenticador.
 
-## Security Vulnerabilities
+- **Se elimina:** usuarios, sedes, edificios u hoteles, departamentos, ubicaciones, inventario con sus movimientos, mantenimientos y bajas, bitácora, notificaciones, logotipo y color principal.
+- **Se conserva:** marcas, modelos, tipos de equipo y sus formularios, programas, proveedores, tipos de ubicación, catálogos, roles y permisos.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Después se muestra una sola vez un usuario temporal con contraseña aleatoria. Al entrar, un asistente por pasos pide la plantilla, el nombre, logotipo y color de la organización, la primera sede, el primer edificio u hotel, el primer departamento y la cuenta del administrador.
 
-## License
+## Comandos útiles
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+| Comando | Qué hace |
+|---|---|
+| `php artisan trackit:exportar-entrega` | Genera `database/entrega/salida/track-it-entrega.sql` con la estructura completa y los catálogos, sin usuarios ni inventario. |
+| `php artisan trackit:importar-entrega` | Restaura ese script en una base vacía. |
+| `php artisan trackit:llaves-push` | Genera las llaves VAPID para las notificaciones push. |
+| `php artisan trackit:vaciar-papelera` | Elimina lo que lleva más de 30 días en la papelera (programado a diario). |
+| `php artisan schedule:work` | Ejecuta las tareas programadas en desarrollo. |
+
+## Estructura
+
+```
+app/
+  Http/Controllers/     Controladores (autenticación, instancia, reportes)
+  Http/Middleware/      2FA obligatoria, contraseña temporal, configuración inicial
+  Livewire/             Pantallas y componentes
+  Services/             Lógica de negocio (organización, plantillas, papelera, reportes)
+  Support/              Utilidades compartidas
+database/
+  migrations/           Esquema de la base
+  entrega/              Exportación de la base de entrega
+resources/views/
+  layouts/              Layout principal, menú lateral y menú móvil
+  livewire/             Vistas de los componentes
+  reportes/             Plantillas de PDF
+routes/                 Rutas web, de autenticación y tareas programadas
+docker/                 Configuración de Apache, OPcache y arranque
+```
+
+## Despliegue
+
+El repositorio incluye un `Dockerfile` (PHP 8.4 + Apache) que se usa en Render. Configura las variables de entorno del apartado anterior en el servicio y, en cada despliegue, ejecuta las migraciones con `php artisan migrate --force`.
