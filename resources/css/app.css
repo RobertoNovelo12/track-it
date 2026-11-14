@@ -3,6 +3,15 @@
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 
+/*
+ * Reserva siempre el espacio de la barra de desplazamiento: así el contenido
+ * centrado (p. ej. Administración, max-w-[1600px] mx-auto) no se mueve al
+ * pasar de una pestaña larga a una corta.
+ */
+html {
+    scrollbar-gutter: stable;
+}
+
 @theme {
     /* Poppins: fuente del sistema (public/fonts/poppins). */
     --font-sans: 'Poppins', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
