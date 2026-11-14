@@ -206,6 +206,10 @@ class InstanciaController extends Controller
             DB::table('usuarios')->where('id_usuario', $temporal->id_usuario)->delete();
         });
 
+        // La configuración de la organización va en caché: se olvida ya confirmada la
+        // transacción, para que ninguna petición simultánea conserve el nombre anterior.
+        app(OrganizacionService::class)->olvidar();
+
         Auth::guard('web')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
