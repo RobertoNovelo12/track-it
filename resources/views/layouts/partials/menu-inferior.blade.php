@@ -111,7 +111,7 @@
 
         /* Espacio para que la barra no tape el final del contenido. */
         #contenido-principal {
-            padding-bottom: calc(6rem + env(safe-area-inset-bottom, 0px));
+            padding-bottom: calc(7rem + env(safe-area-inset-bottom, 0px));
         }
 
         /*
@@ -125,30 +125,74 @@
 
         /* Los avisos aparecen por encima de la barra. */
         #trackitToastRegion {
-            bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px));
+            bottom: calc(6.25rem + env(safe-area-inset-bottom, 0px));
+        }
+
+        /*
+         * Barra superior al estilo Material 3 Expressive: translúcida, sin
+         * línea inferior, buscador en cápsula y botones redondos.
+         */
+        #mobileAppHeader {
+            background: color-mix(in srgb, var(--theme-bg) 82%, transparent);
+            border-bottom-color: transparent;
+            -webkit-backdrop-filter: blur(18px) saturate(1.4);
+            backdrop-filter: blur(18px) saturate(1.4);
+        }
+
+        #topQuickSearch .top-search {
+            height: 2.75rem;
+            border-radius: 9999px;
+            border-color: transparent;
+            background: var(--theme-surface-soft);
+        }
+
+        #topQuickSearch .top-search:focus-within {
+            border-color: var(--theme-primary);
+            background: var(--theme-surface);
+        }
+
+        #topQuickSearch .top-search > svg {
+            left: 1rem;
+        }
+
+        #topQuickSearch .top-search-input {
+            padding-left: 2.5rem;
+        }
+
+        #boton-notificaciones,
+        #mobileAppHeader button[aria-haspopup="true"] {
+            border-radius: 9999px;
         }
     }
 
+    /*
+     * Barra flotante al estilo Material 3 Expressive (Android 16):
+     * cápsula separada de los bordes, translúcida, y la sección activa
+     * resaltada con una píldora que se desliza.
+     */
     .mi-barra {
         position: fixed;
-        left: 0;
-        right: 0;
-        bottom: 0;
+        left: 0.75rem;
+        right: 0.75rem;
+        bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
         z-index: 45;
         display: flex;
-        align-items: stretch;
+        align-items: center;
         justify-content: space-around;
-        gap: 0;
-        height: calc(4rem + env(safe-area-inset-bottom, 0px));
-        padding: 0 0.25rem env(safe-area-inset-bottom, 0px);
-        background: var(--theme-surface);
-        border-top: 1px solid var(--theme-border);
-        box-shadow: 0 -6px 18px rgba(0, 0, 0, 0.06);
-        transition: transform 180ms ease-out;
+        gap: 0.125rem;
+        height: 4.25rem;
+        padding: 0 0.375rem;
+        background: color-mix(in srgb, var(--theme-surface) 88%, transparent);
+        -webkit-backdrop-filter: blur(18px) saturate(1.4);
+        backdrop-filter: blur(18px) saturate(1.4);
+        border: 1px solid var(--theme-border);
+        border-radius: 9999px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.16), 0 2px 6px rgba(0, 0, 0, 0.06);
+        transition: transform 220ms cubic-bezier(0.22, 0.8, 0.24, 1);
     }
 
     .mi-barra[data-oculta="true"] {
-        transform: translateY(110%);
+        transform: translateY(calc(100% + 2rem));
     }
 
     .mi-item {
@@ -206,22 +250,26 @@
      */
     .mi-indicador {
         position: absolute;
-        top: 0;
+        top: 0.375rem;
+        bottom: 0.375rem;
         left: 0;
-        width: 1.75rem;
-        height: 3px;
-        border-radius: 0 0 3px 3px;
-        background: var(--theme-primary);
+        width: 4rem;
+        border-radius: 9999px;
+        background: var(--theme-primary-soft);
         opacity: 0;
         pointer-events: none;
         transform: translateX(0);
         transition:
-            transform 280ms cubic-bezier(0.22, 0.8, 0.24, 1),
+            transform 320ms cubic-bezier(0.34, 1.3, 0.5, 1),
+            width 320ms cubic-bezier(0.34, 1.3, 0.5, 1),
             opacity 150ms ease-out;
         will-change: transform;
     }
 
     .mi-item {
+        position: relative;
+        z-index: 1;
+        height: 100%;
         transition: color 180ms ease-out;
     }
 
@@ -244,18 +292,33 @@
         -webkit-tap-highlight-color: transparent;
     }
 
+    /* Escanear: botón principal dentro de la cápsula (forma «squircle» de M3). */
     .mi-escanear-circulo {
-        width: 3rem;
-        height: 3rem;
-        margin-top: -1.25rem;
+        width: 3.25rem;
+        height: 3.25rem;
         display: flex;
         align-items: center;
         justify-content: center;
-        border-radius: 9999px;
+        border-radius: 1.125rem;
         background: var(--theme-primary);
         color: #FFFFFF;
-        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18);
-        border: 3px solid var(--theme-surface);
+        box-shadow: 0 4px 12px color-mix(in srgb, var(--theme-primary) 40%, transparent);
+        transition: border-radius 220ms ease-out, transform 120ms ease-out;
+    }
+
+    .mi-escanear:active .mi-escanear-circulo {
+        border-radius: 9999px;
+        transform: scale(0.94);
+    }
+
+    /* La etiqueta queda para lectores de pantalla (el botón tiene aria-label). */
+    .mi-escanear > span:not(.mi-escanear-circulo) {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
     }
 
     .mi-escanear-circulo svg {
@@ -287,7 +350,7 @@
         flex-direction: column;
         background: var(--theme-surface);
         border-top: 1px solid var(--theme-border);
-        border-radius: 1rem 1rem 0 0;
+        border-radius: 1.75rem 1.75rem 0 0;
         padding-bottom: env(safe-area-inset-bottom, 0px);
         box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.2);
     }
@@ -479,9 +542,14 @@
                 return;
             }
 
-            const barra = indicador.parentElement.getBoundingClientRect();
+            // Píldora del ancho de la sección (M3 Expressive), centrada en ella.
+            const contenedor = indicador.parentElement;
+            const barra = contenedor.getBoundingClientRect();
             const caja = elemento.getBoundingClientRect();
-            const x = caja.left - barra.left + (caja.width - indicador.offsetWidth) / 2;
+            const ancho = Math.max(48, Math.min(caja.width - 4, 96));
+            const x = caja.left - barra.left - contenedor.clientLeft + (caja.width - ancho) / 2;
+
+            indicador.style.width = ancho + 'px';
 
             if (! animar) {
                 indicador.style.transition = 'none';
