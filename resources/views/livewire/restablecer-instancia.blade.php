@@ -27,6 +27,7 @@
                         <li>{{ number_format($conteos['departamentos']) }} departamentos</li>
                         <li>{{ number_format($conteos['equipos']) }} equipos con sus asignaciones, mantenimientos y bajas</li>
                         <li>Bitácora, notificaciones y sesiones abiertas</li>
+                        <li>El logotipo y el color principal (vuelven a los predeterminados)</li>
                     </ul>
                 </div>
                 <div>
@@ -36,7 +37,7 @@
                         <li>Tipos de equipo y sus formularios</li>
                         <li>Programas y proveedores</li>
                         <li>Tipos de ubicación y catálogos</li>
-                        <li>Roles, permisos e identidad visual</li>
+                        <li>Roles y permisos</li>
                     </ul>
                 </div>
             </div>

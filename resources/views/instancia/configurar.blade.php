@@ -23,6 +23,8 @@
     $pasos = array_values(array_filter([
         $plantillaForzada ? null : ['clave' => 'plantilla', 'titulo' => 'Tipo de organización', 'campos' => ['plantilla']],
         ['clave' => 'organizacion', 'titulo' => 'Tu organización', 'campos' => ['organizacion']],
+        ['clave' => 'logo', 'titulo' => 'Logotipo', 'campos' => ['logo']],
+        ['clave' => 'color', 'titulo' => 'Color principal', 'campos' => ['color']],
         ['clave' => 'sede', 'titulo' => 'Primera sede', 'campos' => ['sede']],
         ['clave' => 'unidad', 'titulo' => 'Primer :unidad', 'campos' => ['unidad']],
         ['clave' => 'departamento', 'titulo' => 'Primer departamento', 'campos' => ['departamento']],
@@ -51,6 +53,7 @@
         id="asistente-instancia"
         method="POST"
         action="{{ route('instancia.configurar.guardar') }}"
+        enctype="multipart/form-data"
         novalidate
         data-etiquetas="{{ json_encode($etiquetas) }}"
         data-paso-inicial="{{ $pasoInicial }}"
@@ -105,6 +108,39 @@
                             <input id="organizacion" type="text" name="organizacion" value="{{ old('organizacion') }}" maxlength="150" required class="{{ $campo }}">
                             @error('organizacion') <p class="{{ $error }}">{{ $message }}</p> @enderror
                         </div>
+                        @break
+
+                    @case('logo')
+                        <div>
+                            <h2 class="text-base font-semibold text-[var(--theme-text-strong)]">Sube el logotipo</h2>
+                            <p class="mt-1 text-xs text-[var(--theme-text-muted)]">Se muestra en el menú, el inicio de sesión y los reportes. PNG, JPG o WEBP de hasta 1 MB; mejor PNG con fondo transparente.</p>
+                        </div>
+                        <label for="logo" class="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-md border border-dashed border-[var(--theme-border-strong)] px-4 py-6 text-center transition-colors hover:bg-[var(--theme-surface-soft)]">
+                            <img data-logo-vista alt="Vista previa del logotipo" class="hidden max-h-20 max-w-[220px] object-contain">
+                            <span data-logo-texto class="text-sm text-[var(--theme-text)]">Elegir imagen…</span>
+                            <span class="text-xs text-[var(--theme-text-muted)]">Opcional: si lo omites se usa el logotipo de Track IT.</span>
+                        </label>
+                        <input id="logo" type="file" name="logo" accept="image/png,image/jpeg,image/webp" class="sr-only">
+                        @error('logo') <p class="{{ $error }}">{{ $message }}</p> @enderror
+                        @if ($errors->any() && ! $errors->has('logo'))
+                            <p class="text-xs text-[var(--theme-text-muted)]">Si habías elegido un logotipo, vuelve a seleccionarlo.</p>
+                        @endif
+                        @break
+
+                    @case('color')
+                        <div>
+                            <h2 class="text-base font-semibold text-[var(--theme-text-strong)]">Elige el color principal</h2>
+                            <p class="mt-1 text-xs text-[var(--theme-text-muted)]">Se usa en botones, enlaces y elementos destacados de todo el sistema.</p>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <input id="color" type="color" name="color" value="{{ old('color', $colorActual) }}" required class="h-12 w-16 cursor-pointer rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] p-1">
+                            <div>
+                                <label for="color" class="{{ $etiqueta }}">Color</label>
+                                <span data-color-hex class="font-mono text-sm text-[var(--theme-text-strong)]">{{ strtoupper(old('color', $colorActual)) }}</span>
+                            </div>
+                            <span data-color-muestra class="ml-auto rounded-md px-4 py-2 text-xs font-medium text-white" style="background: {{ old('color', $colorActual) }}">Botón de ejemplo</span>
+                        </div>
+                        @error('color') <p class="{{ $error }}">{{ $message }}</p> @enderror
                         @break
 
                     @case('sede')
@@ -281,7 +317,10 @@
             const campos = [...pasos[actual].querySelectorAll('input')];
 
             for (const campo of campos) {
-                campo.value = campo.type === 'password' || campo.type === 'radio' ? campo.value : campo.value.trim();
+                // Quitar espacios sobrantes solo en campos de texto (el de archivo no admite asignar valor).
+                if (['text', 'email'].includes(campo.type)) {
+                    campo.value = campo.value.trim();
+                }
 
                 if (!campo.checkValidity()) {
                     campo.reportValidity();
@@ -331,6 +370,38 @@
         });
 
         form.querySelectorAll('input[name="plantilla"]').forEach((r) => r.addEventListener('change', actualizarTextos));
+
+        // Vista previa del logotipo elegido.
+        const logo = form.querySelector('#logo');
+        logo?.addEventListener('change', () => {
+            const archivo = logo.files?.[0];
+            const vista = form.querySelector('[data-logo-vista]');
+            const texto = form.querySelector('[data-logo-texto]');
+
+            if (!archivo) {
+                vista.classList.add('hidden');
+                texto.textContent = 'Elegir imagen…';
+                return;
+            }
+
+            if (archivo.size > 1024 * 1024) {
+                logo.value = '';
+                vista.classList.add('hidden');
+                texto.textContent = 'La imagen supera 1 MB. Elige otra.';
+                return;
+            }
+
+            vista.src = URL.createObjectURL(archivo);
+            vista.classList.remove('hidden');
+            texto.textContent = archivo.name + ' · cambiar';
+        });
+
+        // Color: código y botón de ejemplo.
+        const color = form.querySelector('#color');
+        color?.addEventListener('input', () => {
+            form.querySelector('[data-color-hex]').textContent = color.value.toUpperCase();
+            form.querySelector('[data-color-muestra]').style.background = color.value;
+        });
 
         actualizarTextos();
         mostrar(actual);

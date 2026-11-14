@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\OrganizacionService;
 use App\Services\PlantillaInstalacionService;
 use App\Services\RestablecerInstanciaService;
 use App\Support\PoliticaContrasena;
@@ -11,6 +12,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -50,6 +53,7 @@ class InstanciaController extends Controller
             'plantillas' => PlantillaInstalacionService::definiciones(),
             'plantillaForzada' => PlantillaInstalacionService::forzada(),
             'plantillaActual' => app(PlantillaInstalacionService::class)->actual()['clave'],
+            'colorActual' => app(OrganizacionService::class)->colorPrimario() ?? OrganizacionService::COLOR_PRIMARIO_PREDETERMINADO,
         ]);
     }
 
@@ -69,6 +73,12 @@ class InstanciaController extends Controller
         $datos = $request->validate([
             'plantilla' => [$forzada ? 'nullable' : 'required', Rule::in(array_keys($plantillas))],
             'organizacion' => ['required', 'string', 'max:150'],
+            'logo' => [
+                'nullable', 'image', 'mimes:png,jpg,jpeg,webp',
+                'max:'.OrganizacionService::LOGO_TAMANO_MAXIMO_KB,
+                'dimensions:min_width=40,min_height=20,max_width=4000,max_height=4000',
+            ],
+            'color' => ['required', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'sede' => ['required', 'string', 'max:120'],
             'unidad' => ['required', 'string', 'max:150'],
             'departamento' => ['required', 'string', 'max:150'],
@@ -86,6 +96,12 @@ class InstanciaController extends Controller
             'plantilla.required' => 'Elige el tipo de organización.',
             'plantilla.in' => 'Elige una plantilla válida.',
             'organizacion.required' => 'Escribe el nombre de la organización.',
+            'logo.image' => 'El archivo debe ser una imagen.',
+            'logo.mimes' => 'Utiliza una imagen PNG, JPG o WEBP.',
+            'logo.max' => 'El logotipo no puede superar 1 MB.',
+            'logo.dimensions' => 'La imagen debe medir entre 40×20 y 4000×4000 píxeles.',
+            'color.required' => 'Elige el color principal.',
+            'color.regex' => 'Elige un color válido.',
             'sede.required' => 'Escribe el nombre de la sede.',
             'unidad.required' => "Escribe el nombre del {$unidad}.",
             'departamento.required' => 'Escribe el nombre del departamento.',
@@ -102,16 +118,39 @@ class InstanciaController extends Controller
             'password.confirmed' => 'La confirmación de contraseña no coincide.',
         ]);
 
-        DB::transaction(function () use ($datos, $temporal, $forzada) {
+        // Identidad visual: nombre, color principal y (opcional) logotipo.
+        $color = strtoupper($datos['color']);
+        $identidad = [
+            'nombre_organizacion' => trim($datos['organizacion']),
+            'color_primario' => $color === OrganizacionService::COLOR_PRIMARIO_PREDETERMINADO ? null : $color,
+        ];
+
+        if ($request->hasFile('logo')) {
+            $archivo = $request->file('logo');
+            $contenido = file_get_contents($archivo->getRealPath());
+            $info = $contenido !== false ? @getimagesizefromstring($contenido) : false;
+
+            if ($info === false || ! in_array($info['mime'], OrganizacionService::LOGO_MIMES, true)) {
+                throw ValidationException::withMessages([
+                    'logo' => 'No se pudo leer la imagen. Utiliza un PNG, JPG o WEBP válido.',
+                ]);
+            }
+
+            $identidad += [
+                'logo_base64' => base64_encode($contenido),
+                'logo_mime' => $info['mime'],
+                'logo_nombre_original' => Str::limit($archivo->getClientOriginalName(), 250, ''),
+                'logo_version' => substr(sha1($contenido), 0, 20),
+            ];
+        }
+
+        DB::transaction(function () use ($datos, $temporal, $forzada, $identidad) {
             // Plantilla elegida (Hoteles / Instituciones), salvo que el despliegue la fije.
             if (! $forzada) {
                 app(PlantillaInstalacionService::class)->cambiar($datos['plantilla']);
             }
 
-            DB::table('configuracion_organizacion')->where('id', 1)->update([
-                'nombre_organizacion' => trim($datos['organizacion']),
-                'actualizado_en' => now(),
-            ]);
+            app(OrganizacionService::class)->actualizar($identidad);
 
             // Al restablecer se borran las sedes: siempre se crea la primera.
             $idSede = DB::table('sedes')->insertGetId([

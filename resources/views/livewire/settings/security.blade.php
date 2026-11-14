@@ -196,9 +196,11 @@
 
         {{-- ========================================================
             AUTENTICACIÓN EN DOS PASOS
+            (resaltada mientras un administrador no la active: .resaltar-2fa)
         ======================================================== --}}
         <div
             class="
+                {{ ! $twoFactorEnabled && auth()->user()?->esAdministrador() ? 'resaltar-2fa' : '' }}
                 px-4
                 sm:px-5
                 py-4

@@ -118,7 +118,23 @@ class RestablecerInstanciaService
                 }
             }
 
-            // 5. Usuario temporal para configurar la instancia.
+            // 5. Logotipo de fábrica (las columnas logo_* vuelven a su valor predeterminado).
+            $columnasLogo = collect(DB::select("
+                SELECT column_name FROM information_schema.columns
+                WHERE table_schema = 'public' AND table_name = 'configuracion_organizacion' AND column_name LIKE 'logo\\_%'"))
+                ->pluck('column_name');
+
+            // El color principal también vuelve al de fábrica (el asistente lo pide de nuevo).
+            if (\App\Support\Esquema::tieneColumna('configuracion_organizacion', 'color_primario')) {
+                $columnasLogo->push('color_primario');
+            }
+
+            if ($columnasLogo->isNotEmpty()) {
+                DB::statement('UPDATE public.configuracion_organizacion SET '
+                    .$columnasLogo->map(fn ($c) => $this->id($c).' = DEFAULT')->implode(', '));
+            }
+
+            // 6. Usuario temporal para configurar la instancia.
             $idRol = DB::table('roles')->where('nivel', 'admin')->orderByDesc('activo')->orderBy('id_rol')->value('id_rol');
             $idEstado = DB::table('estados_usuario')->where('clave', 'ACTIVO')->value('id_estado_usuario');
 
