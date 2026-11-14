@@ -1107,7 +1107,7 @@ class ReasignacionCreate extends Component
             return $hotel;
         }
 
-        return 'Sin hotel / departamento';
+        return 'Sin '.\App\Services\PlantillaInstalacionService::t('unidad').' / departamento';
     }
 
     /*

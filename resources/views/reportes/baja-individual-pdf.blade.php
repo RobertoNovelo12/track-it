@@ -302,7 +302,7 @@
     <tbody>
         @foreach (
             array_chunk(
-                \App\Livewire\EquipoBaja::FIRMANTES,
+                \App\Livewire\EquipoBaja::firmantes(),
                 2,
                 true
             ) as $fila

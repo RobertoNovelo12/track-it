@@ -175,7 +175,7 @@
                     ['label' => 'Usuario', 'width' => '190px'],
                     ['label' => 'Nombre de usuario', 'width' => '150px'],
                     ['label' => 'Correo', 'width' => '220px'],
-                    ['label' => 'Hotel / departamento', 'width' => '220px'],
+                    ['label' => \App\Services\PlantillaInstalacionService::t('unidad_singular').' / departamento', 'width' => '220px'],
                     ['label' => 'Rol', 'width' => '150px'],
                     ['label' => 'Estado', 'width' => '120px', 'type' => 'status'],
                     ['label' => 'Registro', 'width' => '110px'],

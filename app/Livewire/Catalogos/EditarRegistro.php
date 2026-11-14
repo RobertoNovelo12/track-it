@@ -697,7 +697,7 @@ class EditarRegistro extends Component
         ) {
             $this->addError(
                 'idUnidadUsoComun',
-                'El hotel seleccionado no es válido.'
+                'El '.\App\Services\PlantillaInstalacionService::t('unidad').' seleccionado no es válido.'
             );
 
             return;

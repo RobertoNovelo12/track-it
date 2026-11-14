@@ -99,7 +99,7 @@
             this.errores = {};
             if (this.seleccion.length === 0) this.errores.equipos = ['Agrega al menos un equipo.'];
             if (this.destino === 'persona' && String(this.colaborador ?? '').trim() === '') this.errores.colaborador = ['Busca un usuario o escribe el nombre del colaborador.'];
-            if (! this.idUnidadAsignar) this.errores.idUnidadAsignar = ['Selecciona un hotel.'];
+            if (! this.idUnidadAsignar) this.errores.idUnidadAsignar = ['Selecciona un {{ \App\Services\PlantillaInstalacionService::t('unidad') }}.'];
             if (! this.idDepartamentoAsignar) this.errores.idDepartamentoAsignar = ['Selecciona un departamento.'];
             if (! this.fechaAsignacion) this.errores.fechaAsignacion = ['Selecciona la fecha de asignación.'];
             if (! this.idTipoAsignacion) this.errores.idTipoAsignacion = ['Selecciona el tipo de asignación.'];
@@ -281,8 +281,8 @@
                     x-model="idDepartamentoAsignar"
                     x-options="departamentosDisponibles"
                     label="Departamento *"
-                    placeholder="Selecciona un hotel primero"
-                    x-placeholder="idUnidadAsignar === '' ? 'Selecciona un hotel primero' : 'Buscar departamento…'"
+                    placeholder="Selecciona un {{ \App\Services\PlantillaInstalacionService::t('unidad') }} primero"
+                    x-placeholder="idUnidadAsignar === '' ? 'Selecciona un {{ \App\Services\PlantillaInstalacionService::t('unidad') }} primero' : 'Buscar departamento…'"
                     x-disabled="idUnidadAsignar === ''"
                     :show-clear="false"
                 />

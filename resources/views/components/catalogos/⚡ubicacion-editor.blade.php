@@ -136,7 +136,7 @@ new class extends Component
                         ->exists();
 
                     if ($repetida) {
-                        $fallar('Ya existe una ubicación con ese nombre en ese hotel.');
+                        $fallar('Ya existe una ubicación con ese nombre en ese '.\App\Services\PlantillaInstalacionService::t('unidad').'.');
                     }
                 },
             ],
@@ -150,7 +150,7 @@ new class extends Component
             'nombre.required' => 'Escribe el nombre de la ubicación.',
             'nombre.max' => 'El nombre no puede superar los 150 caracteres.',
             'descripcion.max' => 'La descripción no puede superar los 500 caracteres.',
-            'hotel.exists' => 'El hotel seleccionado ya no existe.',
+            'hotel.exists' => 'El '.\App\Services\PlantillaInstalacionService::t('unidad').' seleccionado ya no existe.',
             'tipo.exists' => 'El tipo seleccionado ya no existe.',
             'departamentoIds.*.exists' => 'Uno de los departamentos seleccionados ya no existe.',
         ]);

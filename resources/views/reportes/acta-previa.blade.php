@@ -280,7 +280,7 @@
                     </span>
                 </div>
                 <div class="field">
-                    <span class="label">Hotel / Departamento anterior</span>
+                    <span class="label">@plantilla('unidad_singular') / Departamento anterior</span>
                     <span class="value">
                         {{ $dato(implode(' / ', array_filter([
                             $anterior['departamento'] ?? null,
@@ -396,7 +396,7 @@
                     </span>
                 </div>
                 <div class="field">
-                    <span class="label">Departamento / Hotel</span>
+                    <span class="label">Departamento / @plantilla('unidad_singular')</span>
                     <span class="value">
                         {{ $dato($hotelNuevo) }}
                     </span>
@@ -476,7 +476,7 @@
                 fines laborales, cuidarlo, reportar incidentes y
                 devolverlo cuando corresponda. Los daños por negligencia
                 o uso indebido se atenderán conforme a las políticas
-                del hotel y la legislación aplicable.
+                @plantilla('de_la_organizacion') y la legislación aplicable.
             @else
                 Declaro recibir los equipos y accesorios descritos en
                 las condiciones indicadas. Me comprometo a utilizarlos
@@ -484,7 +484,7 @@
                 incidente y devolverlos cuando corresponda. En caso
                 de daños ocasionados por mi negligencia o uso indebido,
                 asumiré los costos que correspondan, previa evaluación
-                y conforme a las políticas internas del hotel y la
+                y conforme a las políticas internas @plantilla('de_la_organizacion') y la
                 legislación aplicable.
             @endif
         </div>

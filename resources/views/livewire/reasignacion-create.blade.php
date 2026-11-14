@@ -1399,10 +1399,10 @@
 
                             label="Nuevo Departamento *"
 
-                            placeholder="Selecciona un hotel primero"
+                            placeholder="Selecciona un {{ \App\Services\PlantillaInstalacionService::t('unidad') }} primero"
                             :disabled="true"
 
-                            x-placeholder="idUnidadNueva === '' ? 'Selecciona un hotel primero' : 'Buscar departamento...'"
+                            x-placeholder="idUnidadNueva === '' ? 'Selecciona un {{ \App\Services\PlantillaInstalacionService::t('unidad') }} primero' : 'Buscar departamento...'"
                             x-disabled="idUnidadNueva === ''"
                         />
 

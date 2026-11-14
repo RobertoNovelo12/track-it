@@ -57,7 +57,7 @@
                     </td>
                     <td>
                         <div><strong>Responsable:</strong> {{ $e['responsable'] }}</div>
-                        <div><strong>Hotel:</strong> {{ $e['hotel'] }}</div>
+                        <div><strong>@plantilla('unidad_singular'):</strong> {{ $e['hotel'] }}</div>
                         <div><strong>Departamento:</strong> {{ $e['departamento'] }}</div>
                         <div><strong>Ubicación:</strong> {{ $e['ubicacion'] }}</div>
                     </td>

@@ -33,7 +33,7 @@ class InventarioEquiposExport extends \PhpOffice\PhpSpreadsheet\Cell\StringValue
                 ['Estado', $e['estado']], ['Situación actual', $e['situacion']],
                 ['Responsable actual', $e['responsable']],
                 ['Último responsable registrado', $e['ultimo_responsable']],
-                ['Hotel', $e['hotel']], ['Departamento', $e['departamento']],
+                [\App\Services\PlantillaInstalacionService::t('unidad_singular'), $e['hotel']], ['Departamento', $e['departamento']],
                 ['Ubicación', $e['ubicacion']],
                 ['Fecha de asignación vigente', $e['fecha_asignacion']],
                 ['Fecha de baja', $e['fecha_baja']],
@@ -73,7 +73,7 @@ class InventarioEquiposExport extends \PhpOffice\PhpSpreadsheet\Cell\StringValue
         $filas = [[
             'Código', 'Equipo', 'Tipo', 'Marca', 'Modelo', 'Serie', 'Service Tag',
             'Estado', 'Situación', 'Responsable actual', 'Último responsable',
-            'Hotel', 'Departamento', 'Ubicación', 'Condición',
+            \App\Services\PlantillaInstalacionService::t('unidad_singular'), 'Departamento', 'Ubicación', 'Condición',
             'Host', 'IP', 'MAC', 'Proveedor', 'Factura', 'Compra', 'Garantía',
             'Fecha de registro', 'Fecha de baja', 'Motivo de baja', 'Observaciones de baja', 'Descripción', 'Programas', 'Historial completo', ...$campos,
         ]];

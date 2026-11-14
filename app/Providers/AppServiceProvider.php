@@ -27,6 +27,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Textos que dependen de la plantilla (Hotel / Edificio): @plantilla('unidad_singular')
+        \Illuminate\Support\Facades\Blade::directive(
+            'plantilla',
+            fn (string $clave) => "<?php echo e(\\App\\Services\\PlantillaInstalacionService::t({$clave})); ?>"
+        );
+
         // Las comprobaciones de esquema van en caché (App\Support\Esquema): al migrar se olvidan.
         \Illuminate\Support\Facades\Event::listen(
             \Illuminate\Database\Events\MigrationsEnded::class,

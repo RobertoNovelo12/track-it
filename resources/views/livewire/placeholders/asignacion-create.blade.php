@@ -505,7 +505,7 @@
                             type="text"
                             disabled
 
-                            placeholder="Selecciona un hotel primero"
+                            placeholder="Selecciona un {{ \App\Services\PlantillaInstalacionService::t('unidad') }} primero"
 
                             class="
                                 w-full

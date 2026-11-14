@@ -1045,7 +1045,7 @@ class EquipoBajaMultiple extends Component
             'exists' =>
                 'La opción seleccionada ya no está disponible.',
             'in' =>
-                'Selecciona una opción válida para el hotel.',
+                'Selecciona una opción válida para el '.\App\Services\PlantillaInstalacionService::t('unidad').'.',
             'date_format' =>
                 'Ingresa una fecha válida.',
             'max.string' =>

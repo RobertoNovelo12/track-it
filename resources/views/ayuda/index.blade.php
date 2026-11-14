@@ -14,7 +14,7 @@
         ['Dar de alta un equipo', 'Inventario', [
             'Entra a Inventario y pulsa «Agregar equipo».',
             'Elige el tipo de equipo: el formulario muestra los campos de ese tipo.',
-            'Llena los campos marcados con * (nombre, estado, marca, serie, factura y hotel).',
+            'Llena los campos marcados con * (nombre, estado, marca, serie, factura y '.\App\Services\PlantillaInstalacionService::t('unidad').').',
             'Guarda con el botón o con '.$mod.'+G. El código de inventario y el código de barras se generan solos.',
         ]],
         ['Asignar un equipo', 'Movimientos', [
@@ -66,14 +66,14 @@
      * Preguntas frecuentes: [pregunta, respuesta].
      */
     $preguntas = [
-        ['¿Por qué no veo un equipo que acabo de registrar?', 'Las tablas se actualizan al guardar. Si no aparece, pulsa el botón de actualizar (↻) de la tabla y revisa que no haya filtros activos, como un estado o un hotel distinto.'],
+        ['¿Por qué no veo un equipo que acabo de registrar?', 'Las tablas se actualizan al guardar. Si no aparece, pulsa el botón de actualizar (↻) de la tabla y revisa que no haya filtros activos, como un estado o un '.\App\Services\PlantillaInstalacionService::t('unidad').' distinto.'],
         ['¿Cómo agrego un campo a un tipo de equipo?', 'En Administración › Equipos, edita el tipo y arrastra el campo desde «Campos disponibles» o crea uno nuevo. Márcalo como obligatorio u opcional y guarda la configuración.'],
         ['¿Qué pasa si elimino algo por error?', 'Los registros eliminados van a la Papelera, desde donde un administrador puede restaurarlos. Solo «Eliminar definitivamente» los borra para siempre.'],
         ['¿Por qué no puedo eliminar un proveedor, una marca o un usuario?', 'Porque tiene registros ligados (por ejemplo, equipos con ese proveedor o movimientos de ese usuario). El sistema te indica cuáles son; desactívalo en lugar de eliminarlo para conservar el historial.'],
         ['¿Cómo instalo la aplicación en el celular o la computadora?', 'Pulsa «Instalar aplicación» en el menú lateral. En iPhone, abre Track IT en Safari, pulsa Compartir y luego «Agregar a inicio».'],
         ['¿Cómo activo las notificaciones?', 'En Mi cuenta › Notificaciones activa «Notificaciones en este dispositivo» y acepta el permiso del navegador. Puedes elegir qué avisos recibir.'],
         ['¿Por qué la fecha o la hora se ven diferentes?', 'Las fechas se muestran en la zona horaria que elegiste en Mi cuenta › Preferencias. Revisa que sea la correcta.'],
-        ['El sistema dice que el número de serie ya existe', 'Ya hay un equipo registrado con esa serie. Búscalo en Inventario antes de volver a darlo de alta; puede estar en otro hotel o dado de baja.'],
+        ['El sistema dice que el número de serie ya existe', 'Ya hay un equipo registrado con esa serie. Búscalo en Inventario antes de volver a darlo de alta; puede estar en otro '.\App\Services\PlantillaInstalacionService::t('unidad').' o dado de baja.'],
         ['Salió «Error del servidor al guardar»', 'No es por los datos que capturaste. Revisa si el equipo sí se guardó buscándolo por su serie y, si el problema sigue, envía un reporte desde esta página.'],
         ['¿Cómo cambio mi contraseña o activo la verificación en dos pasos?', 'En Mi cuenta › Seguridad puedes cambiar tu contraseña y activar la verificación en dos pasos.'],
     ];

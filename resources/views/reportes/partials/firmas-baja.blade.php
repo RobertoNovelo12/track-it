@@ -13,7 +13,7 @@
     .firmas-baja td.firma-derecha { padding-left:4px; }
 </style>
 <table class="firmas-baja">
-    @foreach (array_chunk(\App\Livewire\EquipoBaja::FIRMANTES, 2, true) as $fila)
+    @foreach (array_chunk(\App\Livewire\EquipoBaja::firmantes(), 2, true) as $fila)
         <tr>
             @if (count($fila) === 1)<td></td>@endif
             @foreach ($fila as $clave => $titulo)

@@ -48,7 +48,7 @@
             ],
             [
                 ['Propietario / Responsable', $alta['responsable'] ?? null],
-                ['Hotel', $alta['hotel'] ?? null],
+                [\App\Services\PlantillaInstalacionService::t('unidad_singular'), $alta['hotel'] ?? null],
             ],
             [
                 ['Departamento', $alta['departamento'] ?? null],

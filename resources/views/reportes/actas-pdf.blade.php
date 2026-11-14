@@ -728,7 +728,7 @@
 
                     <td>
 
-                        <div class="etiqueta">Hotel / Departamento anterior</div>
+                        <div class="etiqueta">@plantilla('unidad_singular') / Departamento anterior</div>
 
                         <div class="valor">
 
@@ -992,7 +992,7 @@
 
                     <td>
 
-                        <div class="etiqueta">Departamento / Hotel</div>
+                        <div class="etiqueta">Departamento / @plantilla('unidad_singular')</div>
 
                         <div class="valor">
 
@@ -1151,7 +1151,7 @@
 
                 o uso indebido se atenderán conforme a las políticas
 
-                del hotel y la legislación aplicable.
+                @plantilla('de_la_organizacion') y la legislación aplicable.
 
             @else
 
@@ -1169,7 +1169,7 @@
 
                 correspondan, previa evaluación y conforme a las
 
-                políticas internas del hotel y la legislación aplicable.
+                políticas internas @plantilla('de_la_organizacion') y la legislación aplicable.
 
             @endif
 

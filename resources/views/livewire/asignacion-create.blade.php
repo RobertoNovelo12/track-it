@@ -503,7 +503,7 @@
                     ) === ''
                 ) {
                     errors.idUnidadAsignar = [
-                        'Selecciona un hotel.'
+                        'Selecciona un {{ \App\Services\PlantillaInstalacionService::t('unidad') }}.'
                     ];
                 }
 
@@ -1187,7 +1187,7 @@
 
                         {{-- =================================================
                             UBICACIÓN
-                            Depende del hotel y del departamento.
+                            Depende del {{ \App\Services\PlantillaInstalacionService::t('unidad') }} y del departamento.
                         ================================================= --}}
                         <div class="order-8 lg:order-none min-w-0">
 
@@ -1389,11 +1389,11 @@
 
                                 label="Departamento *"
 
-                                placeholder="Selecciona un hotel primero"
+                                placeholder="Selecciona un {{ \App\Services\PlantillaInstalacionService::t('unidad') }} primero"
 
                                 x-placeholder="
                                     idUnidadAsignar === ''
-                                        ? 'Selecciona un hotel primero'
+                                        ? 'Selecciona un {{ \App\Services\PlantillaInstalacionService::t('unidad') }} primero'
                                         : 'Buscar departamento...'
                                 "
 

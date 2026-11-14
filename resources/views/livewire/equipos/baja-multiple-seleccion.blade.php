@@ -12,7 +12,7 @@
         ['key' => 'nombre_equipo', 'label' => 'Equipo', 'sort' => 'equipo', 'strong' => true, 'width' => '280px'],
         ['key' => 'numero_serie', 'label' => 'Número de serie', 'width' => '190px'],
         ['key' => 'marca_modelo', 'label' => 'Marca / Modelo', 'sort' => 'marca', 'width' => '240px', 'value' => fn ($e) => ($e->marca ?: '—').' / '.($e->modelo ?: '—')],
-        ['key' => 'hotel', 'label' => 'Hotel', 'sort' => 'hotel', 'width' => '190px'],
+        ['key' => 'hotel', 'label' => \App\Services\PlantillaInstalacionService::t('unidad_singular'), 'sort' => 'hotel', 'width' => '190px'],
         ['key' => 'estado', 'label' => 'Estado', 'sort' => 'estado', 'type' => 'status', 'width' => '120px'],
     ]"
     :actions="fn ($e) => ['detail' => route('equipos.show', $e->id_equipo)]"

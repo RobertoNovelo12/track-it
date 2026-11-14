@@ -2,7 +2,7 @@
     MÉTRICAS (Administración)
     ------------------------------------------------------------
     <x-admin.metrics :items="[
-        ['label' => 'Total de hoteles', 'value' => 6],
+        ['label' => 'Total de '.\App\Services\PlantillaInstalacionService::t('unidades'), 'value' => 6],
         ['label' => 'Activos', 'value' => 6],
         ['label' => 'Inactivos', 'value' => 0],
     ]" />

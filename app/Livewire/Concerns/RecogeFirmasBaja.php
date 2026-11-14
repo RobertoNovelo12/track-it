@@ -20,6 +20,14 @@ trait RecogeFirmasBaja
         'gerente_financiero' => 'Gerente Financiero',
     ];
 
+    /** FIRMANTES con el cargo del gerente según la plantilla (Hotel / Institución). */
+    public static function firmantes(): array
+    {
+        return array_replace(self::FIRMANTES, [
+            'gerente_hotel' => \App\Services\PlantillaInstalacionService::t('firma_gerente'),
+        ]);
+    }
+
     protected function reglasFirmas(): array
     {
         $rules = [];

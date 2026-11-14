@@ -580,7 +580,7 @@
         </tr>
         <tr>
             <td>
-                <div class="etiqueta">Hotel / Departamento</div>
+                <div class="etiqueta">@plantilla('unidad_singular') / Departamento</div>
                 <div class="valor">{{ $dato($organizacion) }}</div>
             </td>
             <td>
@@ -625,7 +625,7 @@
         El trabajador entrega el equipo descrito y queda liberado de su resguardo a partir de la
         fecha indicada. El Departamento de Sistemas lo recibe en las condiciones señaladas en las
         observaciones. Cualquier faltante o daño no reportado al momento de la entrega se atenderá
-        conforme a las políticas internas del hotel y la legislación aplicable.
+        conforme a las políticas internas @plantilla('de_la_organizacion') y la legislación aplicable.
     </div>
 
     <div class="bloque-firmas">

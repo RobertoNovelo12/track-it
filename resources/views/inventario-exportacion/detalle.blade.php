@@ -28,7 +28,7 @@
         @foreach([
             'Situación administrativa' => $equipo['situacion'],
             'Responsable actual' => $equipo['responsable'],
-            'Hotel' => $equipo['hotel'],
+            \App\Services\PlantillaInstalacionService::t('unidad_singular') => $equipo['hotel'],
             'Departamento' => $equipo['departamento'],
             'Ubicación registrada' => $equipo['ubicacion'],
             'Fecha de asignación vigente' => $equipo['fecha_asignacion'],

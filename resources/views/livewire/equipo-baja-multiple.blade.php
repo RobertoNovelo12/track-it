@@ -261,7 +261,7 @@
                                 for="bm-hotel"
                                 class="mb-2 block text-xs text-[var(--theme-text)]"
                             >
-                                Hotel
+                                @plantilla('unidad_singular')
                                 <span class="text-[var(--theme-danger)]">*</span>
                             </label>
 
@@ -270,7 +270,7 @@
                                 wire:model.live="hotelId"
                                 class="{{ $input }}"
                             >
-                                <option value="">Selecciona un hotel</option>
+                                <option value="">Selecciona un @plantilla('unidad')</option>
 
                                 @foreach ($hoteles as $hotel)
                                     <option value="{{ $hotel->id_unidad }}">

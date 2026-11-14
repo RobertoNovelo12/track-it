@@ -307,7 +307,7 @@ class CrearRegistro extends Component
                 ->exists()
         ) {
             throw ValidationException::withMessages([
-                'idUnidadUsoComun' => 'El hotel seleccionado no es válido.',
+                'idUnidadUsoComun' => 'El '.\App\Services\PlantillaInstalacionService::t('unidad').' seleccionado no es válido.',
             ]);
         }
 

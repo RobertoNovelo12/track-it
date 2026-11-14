@@ -653,7 +653,7 @@
                 <td class="signature-cell">
 
                     <div class="signature-title">
-                        Gerente de hotel/Gerente manager
+                        @plantilla('firma_gerente')
                     </div>
 
                     <div class="signature-body">

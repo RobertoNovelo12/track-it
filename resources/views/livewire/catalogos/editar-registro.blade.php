@@ -662,8 +662,8 @@
                                     'label' => $hotel->nombre,
                                 ])->values()->all()"
 
-                                label="Hotel de uso común"
-                                placeholder="Buscar hotel..."
+                                label="{{ \App\Services\PlantillaInstalacionService::t('unidad_singular') }} de uso común"
+                                placeholder="{{ \App\Services\PlantillaInstalacionService::t('buscar_unidad') }}"
                             />
 
                             @error('idUnidadUsoComun')

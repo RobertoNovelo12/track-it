@@ -1531,7 +1531,7 @@
 
                                 <th class="px-5 py-3 font-medium">
 
-                                    Hotel / Ubicación
+                                    @plantilla('unidad_singular') / Ubicación
 
                                 </th>
 

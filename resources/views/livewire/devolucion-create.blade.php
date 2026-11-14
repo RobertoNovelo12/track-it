@@ -101,7 +101,7 @@
                                 <dd class="text-[var(--theme-text)]">{{ \Illuminate\Support\Carbon::parse($asignacion['fecha_asignacion'])->format('d/m/Y') }}</dd>
                             </div>
                             <div>
-                                <dt class="text-[var(--theme-text-muted)]">Hotel / Departamento</dt>
+                                <dt class="text-[var(--theme-text-muted)]">@plantilla('unidad_singular') / Departamento</dt>
                                 <dd class="text-[var(--theme-text)]">{{ implode(' / ', array_filter([$asignacion['hotel'], $asignacion['departamento']])) ?: '—' }}</dd>
                             </div>
                             <div>

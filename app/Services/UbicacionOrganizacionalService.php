@@ -178,7 +178,7 @@ class UbicacionOrganizacionalService
 
         if (! $unidad) {
             throw ValidationException::withMessages([
-                $campos['unidad'] => 'Selecciona un hotel válido.',
+                $campos['unidad'] => 'Selecciona un '.\App\Services\PlantillaInstalacionService::t('unidad').' válido.',
             ]);
         }
 
@@ -201,13 +201,13 @@ class UbicacionOrganizacionalService
 
         if (! $departamentoValido) {
             throw ValidationException::withMessages([
-                $campos['departamento'] => 'El departamento no está disponible en el hotel seleccionado.',
+                $campos['departamento'] => 'El departamento no está disponible en el '.\App\Services\PlantillaInstalacionService::t('unidad').' seleccionado.',
             ]);
         }
 
         if ($ubicacionId !== null && ! $this->ubicacionPermitida($ubicacionId, $unidadId, $departamentoId)) {
             throw ValidationException::withMessages([
-                $campos['ubicacion'] => 'La ubicación no corresponde al hotel o al departamento seleccionado.',
+                $campos['ubicacion'] => 'La ubicación no corresponde al '.\App\Services\PlantillaInstalacionService::t('unidad').' o al departamento seleccionado.',
             ]);
         }
 

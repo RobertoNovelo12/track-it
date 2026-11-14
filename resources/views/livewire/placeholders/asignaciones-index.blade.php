@@ -377,7 +377,7 @@
                                 text-[var(--theme-text-strong)]
                             "
                         >
-                            Equipos asignados por hotel
+                            Equipos asignados por @plantilla('unidad')
                         </h2>
 
                         <p
@@ -387,7 +387,7 @@
                                 text-[var(--theme-text-muted)]
                             "
                         >
-                            Distribución de equipos en uso por hotel de la organización.
+                            Distribución de equipos en uso por @plantilla('unidad') de la organización.
                         </p>
                     </div>
                 </div>
@@ -417,7 +417,7 @@
                         disabled:opacity-100
                     "
                 >
-                    Todos los hoteles
+                    @plantilla('todas_unidades')
 
                     <svg
                         class="w-3.5 h-3.5"

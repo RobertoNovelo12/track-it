@@ -96,7 +96,7 @@ class AsignacionVarios extends AsignacionCreate
             'equipos.min' => 'Agrega al menos un equipo.',
             'equipos.max' => 'Puedes asignar hasta '.self::MAXIMO.' equipos a la vez.',
             'colaborador.required' => 'Busca un usuario o escribe el nombre del colaborador.',
-            'idUnidadAsignar.required' => 'Selecciona un hotel.',
+            'idUnidadAsignar.required' => 'Selecciona un '.\App\Services\PlantillaInstalacionService::t('unidad').'.',
             'idDepartamentoAsignar.required' => 'Selecciona un departamento.',
             'fechaAsignacion.required' => 'Selecciona la fecha de asignación.',
             'idTipoAsignacion.required' => 'Selecciona el tipo de asignación.',

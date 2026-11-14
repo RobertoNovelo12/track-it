@@ -15,7 +15,7 @@
     <x-data-table
         :rows="$hoteles"
         :columns="[
-            ['key' => 'nombre', 'label' => 'Hotel', 'width' => '240px', 'sort' => 'nombre', 'strong' => true],
+            ['key' => 'nombre', 'label' => \App\Services\PlantillaInstalacionService::t('unidad_singular'), 'width' => '240px', 'sort' => 'nombre', 'strong' => true],
             ['key' => 'codigo', 'label' => 'Código', 'width' => '140px'],
             ['key' => 'estado', 'label' => 'Estado', 'type' => 'status',
                 'value' => fn ($h) => $h->activo ? 'Activo' : 'Inactivo'],
@@ -25,8 +25,8 @@
         :actions="fn ($h) => ['edit' => route('catalogos.hoteles.edit', $h->id_unidad)]"
         :mobile-title="fn ($h) => $h->nombre"
         page-name="hotelesPage"
-        result-singular="hotel encontrado"
-        result-plural="hoteles encontrados"
+        result-singular="{{ \App\Services\PlantillaInstalacionService::t('unidad') }} encontrado"
+        result-plural="{{ \App\Services\PlantillaInstalacionService::t('unidades') }} encontrados"
     />
 
     Columnas (todas las claves son opcionales salvo key/label):

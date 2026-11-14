@@ -118,7 +118,7 @@
                         for="loading-equipment-hotel"
                         class="mb-1.5 block text-xs text-[var(--theme-text-muted)]"
                     >
-                        Hotel *
+                        @plantilla('unidad_singular') *
                     </label>
 
                     <select

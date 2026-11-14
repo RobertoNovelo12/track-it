@@ -734,7 +734,7 @@
 
                 <td>
 
-                    <span class="etiqueta">Hotel</span>
+                    <span class="etiqueta">@plantilla('unidad_singular')</span>
 
                     <span class="valor">
 

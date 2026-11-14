@@ -255,7 +255,7 @@ class AsignacionesIndex extends Component
 
                 $this->addError(
                     'idDepartamentoAsignar',
-                    'El departamento no pertenece al hotel seleccionado.'
+                    'El departamento no pertenece al '.\App\Services\PlantillaInstalacionService::t('unidad').' seleccionado.'
                 );
 
                 return;

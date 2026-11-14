@@ -325,7 +325,7 @@
                     </div>
 
                     <div class="px-3 py-2.5 flex items-start justify-between gap-4">
-                        <span class="text-xs text-[var(--theme-text-muted)]">Hotel</span>
+                        <span class="text-xs text-[var(--theme-text-muted)]">@plantilla('unidad_singular')</span>
                         <span id="user-details-hotel" class="text-xs text-right text-[var(--theme-text)]">—</span>
                     </div>
 

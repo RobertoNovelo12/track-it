@@ -244,7 +244,7 @@
                 ],
                 [
                     'key' => 'organizacion',
-                    'label' => 'Hotel / departamento',
+                    'label' => \App\Services\PlantillaInstalacionService::t('unidad_singular').' / departamento',
                     'width' => '220px',
                     'value' => fn ($usuario) => collect([$usuario->unidad_nombre, $usuario->departamento_nombre])->filter()->implode(' · '),
                     'default' => 'Sin asignar',

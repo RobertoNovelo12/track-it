@@ -126,7 +126,7 @@ new class extends Component
             ->groupBy('id_ubicacion');
 
         return $ubicaciones
-            ->groupBy(fn ($ubicacion) => $ubicacion->hotel ?? 'Generales (cualquier hotel)')
+            ->groupBy(fn ($ubicacion) => $ubicacion->hotel ?? 'Generales (cualquier '.\App\Services\PlantillaInstalacionService::t('unidad').')')
             ->map(fn ($grupo) => $grupo->map(fn ($ubicacion) => [
                 'id' => (string) $ubicacion->id_ubicacion,
                 'nombre' => (string) $ubicacion->nombre,
@@ -220,7 +220,7 @@ new class extends Component
                     'Ya existe otro departamento con este nombre.',
 
                 'hotelIds.array' =>
-                    'La selección de hoteles no es válida.',
+                    'La selección de '.\App\Services\PlantillaInstalacionService::t('unidades').' no es válida.',
 
                 'hotelIds.*.integer' =>
                     'Selecciona hoteles válidos.',
@@ -229,7 +229,7 @@ new class extends Component
                     'Hay hoteles repetidos en la selección.',
 
                 'hotelIds.*.exists' =>
-                    'Uno de los hoteles seleccionados ya no existe.',
+                    'Uno de los '.\App\Services\PlantillaInstalacionService::t('unidades').' seleccionados ya no existe.',
 
                 'ubicacionIds.*.exists' =>
                     'Una de las ubicaciones seleccionadas ya no existe.',
@@ -418,7 +418,7 @@ new class extends Component
             </h2>
 
             <p class="mt-1 text-xs text-[var(--theme-text-muted)]">
-                Marca los hoteles para asignarlos o desmárcalos para retirar la relación.
+                Marca los @plantilla('unidades') para asignarlos o desmárcalos para retirar la relación.
             </p>
 
             <label class="mt-5 flex items-start gap-3 rounded-lg border border-[var(--theme-border)] p-4">
@@ -434,14 +434,14 @@ new class extends Component
                     </span>
 
                     <span class="mt-1 block text-xs text-[var(--theme-text-muted)]">
-                        Incluye automáticamente los hoteles que se creen después.
+                        Incluye automáticamente los @plantilla('unidades') que se creen después.
                     </span>
                 </span>
             </label>
 
             @if ($atiendeTodos)
                 <div class="mt-4 rounded-lg bg-[var(--theme-primary-soft)] p-4 text-sm text-[var(--theme-primary)]">
-                    Este departamento atenderá todos los hoteles.
+                    Este departamento atenderá todos los @plantilla('unidades').
                     Para elegir hoteles específicos, desmarca la opción anterior.
                 </div>
             @else
@@ -463,7 +463,7 @@ new class extends Component
 
                                 @unless ($hotel->activo)
                                     <span class="mt-1 block text-xs text-[var(--theme-text-muted)]">
-                                        Hotel inactivo
+                                        @plantilla('unidad_singular') inactivo
                                     </span>
                                 @endunless
                             </span>
@@ -476,7 +476,7 @@ new class extends Component
                 </div>
 
                 <p class="mt-3 text-xs text-[var(--theme-text-muted)]">
-                    Si no seleccionas ninguno, el departamento quedará sin hoteles asignados.
+                    Si no seleccionas ninguno, el departamento quedará sin @plantilla('unidades') asignados.
                 </p>
             @endif
 
@@ -512,7 +512,7 @@ new class extends Component
 
                         <p class="mt-1 text-xs text-[var(--theme-text-muted)]">
                             Marca dónde trabaja este departamento. Al asignar un equipo solo se ofrecerán estas ubicaciones.
-                            Una ubicación que no esté marcada en ningún departamento queda disponible para todos los de su hotel.
+                            Una ubicación que no esté marcada en ningún departamento queda disponible para todos los de su @plantilla('unidad').
                         </p>
                     </div>
 

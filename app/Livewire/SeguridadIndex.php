@@ -468,7 +468,7 @@ class SeguridadIndex extends Component
                     return [
                         'ok' => false,
                         'message' =>
-                            'Selecciona el hotel que se asignará al usuario.',
+                            'Selecciona el '.\App\Services\PlantillaInstalacionService::t('unidad').' que se asignará al usuario.',
                     ];
                 }
 
@@ -484,7 +484,7 @@ class SeguridadIndex extends Component
                     return [
                         'ok' => false,
                         'message' =>
-                            'El hotel seleccionado no está disponible.',
+                            'El '.\App\Services\PlantillaInstalacionService::t('unidad').' seleccionado no está disponible.',
                     ];
                 }
 

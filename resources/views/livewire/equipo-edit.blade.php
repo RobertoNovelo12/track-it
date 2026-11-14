@@ -1905,7 +1905,7 @@
                             ) === ''
                         ) {
                             errors.idHotel = [
-                                'Selecciona un hotel.'
+                                'Selecciona un @plantilla('unidad').'
                             ];
                         }
 

@@ -202,7 +202,7 @@ class AsignacionCreate extends Component
                         'Busca un usuario o escribe el nombre del colaborador.',
 
                     'idUnidadAsignar.required' =>
-                        'Selecciona un hotel.',
+                        'Selecciona un '.\App\Services\PlantillaInstalacionService::t('unidad').'.',
 
                     'idDepartamentoAsignar.required' =>
                         'Selecciona un departamento.',

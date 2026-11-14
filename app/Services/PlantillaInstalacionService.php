@@ -52,6 +52,10 @@ class PlantillaInstalacionService
                 'incluye_futuras' =>
                     'Incluye los hoteles que se agreguen después.',
 
+                'de_la_organizacion' => 'del hotel',
+
+                'firma_gerente' => 'Gerente de Hotel / General Manager',
+
                 'departamento_singular' => 'Departamento',
                 'departamento_plural' => 'Departamentos',
             ],
@@ -87,6 +91,10 @@ class PlantillaInstalacionService
 
                 'incluye_futuras' =>
                     'Incluye los edificios que se agreguen después.',
+
+                'de_la_organizacion' => 'de la institución',
+
+                'firma_gerente' => 'Responsable del edificio',
 
                 'departamento_singular' => 'Departamento',
                 'departamento_plural' => 'Departamentos',
@@ -129,6 +137,17 @@ class PlantillaInstalacionService
             );
         }
 
+        /*
+         * Un despliegue puede forzar otra plantilla con
+         * TRACKIT_PLANTILLA (config/plantilla.php) sin tocar la base.
+         */
+        $forzada = (string) config('plantilla.forzada', '');
+
+        if ($forzada !== '' && isset(self::DEFINICIONES[$forzada])) {
+            $config->plantilla = $forzada;
+            $config->version_plantilla = self::DEFINICIONES[$forzada]['version'];
+        }
+
         $definition = self::DEFINICIONES[$config->plantilla]
             ?? null;
 
@@ -147,12 +166,37 @@ class PlantillaInstalacionService
             'nombre' => $definition['nombre'],
             'version' => $definition['version'],
             'configurada_en' => $config->configurada_en,
-            'etiquetas' => $definition['etiquetas'],
+            'etiquetas' => self::conMinusculas($definition['etiquetas']),
         ];
     }
 
     public function etiquetas(): array
     {
         return $this->actual()['etiquetas'];
+    }
+
+    /**
+     * Atajo para vistas y mensajes:
+     * PlantillaInstalacionService::t('unidad') => «hotel» / «edificio».
+     * Si la instalación aún no tiene plantilla, usa la de hoteles.
+     */
+    public static function t(string $clave): string
+    {
+        try {
+            $etiquetas = app(self::class)->etiquetas();
+        } catch (\Throwable $e) {
+            $etiquetas = self::conMinusculas(self::DEFINICIONES['hoteles']['etiquetas']);
+        }
+
+        return (string) ($etiquetas[$clave] ?? $clave);
+    }
+
+    // Formas en minúsculas para usarlas dentro de frases.
+    private static function conMinusculas(array $etiquetas): array
+    {
+        return $etiquetas + [
+            'unidad' => mb_strtolower($etiquetas['unidad_singular']),
+            'unidades' => mb_strtolower($etiquetas['unidad_plural']),
+        ];
     }
 }
