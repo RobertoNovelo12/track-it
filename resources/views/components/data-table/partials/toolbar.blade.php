@@ -250,7 +250,7 @@
         @endphp
 
         <div class="ml-auto flex shrink-0 items-center gap-2 justify-self-end sm:ml-0 sm:justify-self-auto {{ $ordenMovil(2) }}">{{-- Móvil: junto a «Ordenar por» --}}
-            @if ($copiaFilas !== [])
+            {{-- Siempre visible (con la tabla vacía avisa que no hay datos). --}}
                 <div
                     class="relative"
                     x-data="{
@@ -276,6 +276,12 @@
 
                         async copiar(formato) {
                             this.abierto = false;
+
+                            if (this.filas.length === 0) {
+                                window.trackitToast?.('info', 'La tabla no tiene registros en esta página.', 'No hay datos para copiar');
+                                return;
+                            }
+
                             const texto = formato === 'json' ? this.json() : this.markdown();
 
                             try {
@@ -331,7 +337,6 @@
                         <p class="border-t border-[var(--theme-border)] px-3 py-2 text-[11px] text-[var(--theme-text-muted)]">{{ count($copiaFilas) }} {{ count($copiaFilas) === 1 ? 'fila' : 'filas' }} de esta página</p>
                     </div>
                 </div>
-            @endif
 
         {{-- ====================================================
             ACTUALIZAR TABLA
