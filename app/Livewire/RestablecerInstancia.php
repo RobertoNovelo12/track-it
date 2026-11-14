@@ -165,6 +165,7 @@ class RestablecerInstancia extends Component
         return view('livewire.restablecer-instancia', [
             'conteos' => [
                 'usuarios' => $contar('usuarios'),
+                'sedes' => $contar('sedes'),
                 'unidades' => $contar('unidades_organizativas'),
                 'departamentos' => $contar('departamentos'),
                 'equipos' => $contar('equipos'),

@@ -22,6 +22,7 @@
                     <p class="text-xs font-semibold uppercase tracking-wide text-[var(--theme-text-strong)]">Se elimina</p>
                     <ul class="mt-2 space-y-1 text-sm text-[var(--theme-text)]">
                         <li>{{ number_format($conteos['usuarios']) }} usuarios (incluida tu cuenta)</li>
+                        <li>{{ number_format($conteos['sedes']) }} sedes</li>
                         <li>{{ number_format($conteos['unidades']) }} @plantilla('unidades') y sus ubicaciones</li>
                         <li>{{ number_format($conteos['departamentos']) }} departamentos</li>
                         <li>{{ number_format($conteos['equipos']) }} equipos con sus asignaciones, mantenimientos y bajas</li>
@@ -34,7 +35,7 @@
                         <li>Marcas y modelos</li>
                         <li>Tipos de equipo y sus formularios</li>
                         <li>Programas y proveedores</li>
-                        <li>Sedes, tipos de ubicación y catálogos</li>
+                        <li>Tipos de ubicación y catálogos</li>
                         <li>Roles, permisos e identidad visual</li>
                     </ul>
                 </div>
@@ -85,7 +86,7 @@
             <form wire:submit="confirmar1" class="max-w-xl space-y-3">
                 <label class="flex items-start gap-3 text-sm text-[var(--theme-text)]">
                     <input type="checkbox" wire:model="entiendo" class="mt-0.5 h-4 w-4 rounded border-[var(--theme-border-strong)]">
-                    <span>Entiendo que se eliminarán todos los usuarios, @plantilla('unidades'), departamentos y el inventario, y que no se puede deshacer.</span>
+                    <span>Entiendo que se eliminarán todos los usuarios, sedes, @plantilla('unidades'), departamentos y el inventario, y que no se puede deshacer.</span>
                 </label>
                 @error('entiendo') <p class="text-xs text-[var(--theme-danger)]">{{ $message }}</p> @enderror
 

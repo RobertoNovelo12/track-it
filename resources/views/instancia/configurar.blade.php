@@ -30,19 +30,22 @@
         <fieldset class="space-y-3">
             <legend class="{{ $titulo }}">1. @plantilla('unidad_singular')</legend>
 
-            <div>
-                <label for="id_sede" class="mb-1 block text-xs text-[var(--theme-text-muted)]">Sede</label>
-                <select id="id_sede" name="id_sede" x-model="sede" class="{{ $campoClase }}">
-                    @foreach ($sedes as $s)
-                        <option value="{{ $s->id_sede }}">{{ $s->nombre }}</option>
-                    @endforeach
-                    <option value="">Nueva sede…</option>
-                </select>
-                @error('id_sede') <p class="mt-1 text-xs text-[var(--theme-danger)]">{{ $message }}</p> @enderror
-            </div>
+            {{-- Tras restablecer no hay sedes: se escribe la primera. Si existen, se puede elegir una. --}}
+            @if ($sedes->isNotEmpty())
+                <div>
+                    <label for="id_sede" class="mb-1 block text-xs text-[var(--theme-text-muted)]">Sede</label>
+                    <select id="id_sede" name="id_sede" x-model="sede" class="{{ $campoClase }}">
+                        @foreach ($sedes as $s)
+                            <option value="{{ $s->id_sede }}">{{ $s->nombre }}</option>
+                        @endforeach
+                        <option value="">Nueva sede…</option>
+                    </select>
+                    @error('id_sede') <p class="mt-1 text-xs text-[var(--theme-danger)]">{{ $message }}</p> @enderror
+                </div>
+            @endif
 
             <div x-show="sede === ''" x-cloak>
-                <input type="text" name="sede_nueva" value="{{ old('sede_nueva') }}" placeholder="Nombre de la nueva sede" maxlength="120" class="{{ $campoClase }}">
+                <input type="text" name="sede_nueva" value="{{ old('sede_nueva') }}" placeholder="{{ $sedes->isEmpty() ? 'Nombre de la sede (p. ej. Campus principal)' : 'Nombre de la nueva sede' }}" maxlength="120" class="{{ $campoClase }}">
                 @error('sede_nueva') <p class="mt-1 text-xs text-[var(--theme-danger)]">{{ $message }}</p> @enderror
             </div>
 

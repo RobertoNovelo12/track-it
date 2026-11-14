@@ -15,9 +15,9 @@ use RuntimeException;
 |
 | Deja el sistema como recién instalado conservando los catálogos:
 | marcas, modelos, tipos de equipo y sus formularios, programas,
-| proveedores, sedes, tipos de ubicación, catálogos, roles y permisos.
+| proveedores, tipos de ubicación, catálogos, roles y permisos.
 |
-| Se vacía todo lo demás: usuarios, edificios (unidades), departamentos,
+| Se vacía todo lo demás: usuarios, sedes, edificios (unidades), departamentos,
 | ubicaciones, inventario, movimientos, mantenimientos, bajas, bitácora,
 | notificaciones y sesiones. Después se crea el usuario temporal
 | «instalacion» con una contraseña aleatoria; al entrar, el asistente
@@ -40,8 +40,8 @@ class RestablecerInstanciaService
         // Equipos: tipos, formularios, marcas, modelos, programas y proveedores
         'tipos_equipo', 'tipo_equipo_secciones', 'tipo_equipo_campos', 'tipo_equipo_campo_opciones',
         'campos_equipo', 'marcas', 'modelos', 'programas', 'tipo_equipo_programa', 'proveedores',
-        // Organización que no depende de los edificios
-        'sedes', 'tipos_ubicacion',
+        // Catálogo de tipos de ubicación (las sedes, edificios, departamentos y ubicaciones se borran)
+        'tipos_ubicacion',
         // Tablas ajenas al sistema actual (se dejan intactas)
         'users', 'assets', 'respaldo_transicion_hoteles',
     ];

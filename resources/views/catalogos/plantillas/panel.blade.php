@@ -42,7 +42,7 @@
                 <div>
                     <h3 class="font-semibold text-[var(--theme-danger)]">Restablecer instancia</h3>
                     <p class="mt-1 text-sm text-[var(--theme-text-muted)]">
-                        Elimina usuarios, {{ mb_strtolower($etiquetas['unidad_plural']) }}, departamentos e inventario.
+                        Elimina usuarios, sedes, {{ mb_strtolower($etiquetas['unidad_plural']) }}, departamentos, ubicaciones e inventario.
                         Conserva marcas, modelos, tipos de equipo y catálogos.
                     </p>
                 </div>
