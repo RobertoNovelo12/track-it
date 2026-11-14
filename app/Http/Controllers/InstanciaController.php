@@ -47,7 +47,6 @@ class InstanciaController extends Controller
         }
 
         return view('instancia.configurar', [
-            'sedes' => DB::table('sedes')->where('activo', true)->orderBy('nombre')->get(['id_sede', 'nombre']),
             'plantillas' => PlantillaInstalacionService::definiciones(),
             'plantillaForzada' => PlantillaInstalacionService::forzada(),
             'plantillaActual' => app(PlantillaInstalacionService::class)->actual()['clave'],
@@ -69,8 +68,8 @@ class InstanciaController extends Controller
 
         $datos = $request->validate([
             'plantilla' => [$forzada ? 'nullable' : 'required', Rule::in(array_keys($plantillas))],
-            'id_sede' => ['nullable', 'integer', Rule::exists('sedes', 'id_sede')],
-            'sede_nueva' => ['nullable', 'required_without:id_sede', 'string', 'max:120'],
+            'organizacion' => ['required', 'string', 'max:150'],
+            'sede' => ['required', 'string', 'max:120'],
             'unidad' => ['required', 'string', 'max:150'],
             'departamento' => ['required', 'string', 'max:150'],
             'nombres' => ['required', 'string', 'max:100'],
@@ -86,7 +85,8 @@ class InstanciaController extends Controller
         ], PoliticaContrasena::mensajes('password') + [
             'plantilla.required' => 'Elige el tipo de organización.',
             'plantilla.in' => 'Elige una plantilla válida.',
-            'sede_nueva.required_without' => 'Elige una sede o escribe el nombre de una nueva.',
+            'organizacion.required' => 'Escribe el nombre de la organización.',
+            'sede.required' => 'Escribe el nombre de la sede.',
             'unidad.required' => "Escribe el nombre del {$unidad}.",
             'departamento.required' => 'Escribe el nombre del departamento.',
             'nombres.required' => 'Escribe tu nombre.',
@@ -108,14 +108,16 @@ class InstanciaController extends Controller
                 app(PlantillaInstalacionService::class)->cambiar($datos['plantilla']);
             }
 
-            $idSede = $datos['id_sede'] ?? null;
+            DB::table('configuracion_organizacion')->where('id', 1)->update([
+                'nombre_organizacion' => trim($datos['organizacion']),
+                'actualizado_en' => now(),
+            ]);
 
-            if (! $idSede) {
-                $idSede = DB::table('sedes')->insertGetId([
-                    'nombre' => trim($datos['sede_nueva']),
-                    'activo' => true,
-                ], 'id_sede');
-            }
+            // Al restablecer se borran las sedes: siempre se crea la primera.
+            $idSede = DB::table('sedes')->insertGetId([
+                'nombre' => trim($datos['sede']),
+                'activo' => true,
+            ], 'id_sede');
 
             $idUnidad = DB::table('unidades_organizativas')->insertGetId([
                 'id_sede' => $idSede,
