@@ -5,7 +5,50 @@
 
 @section('content')
 
+{{-- Diseño del inicio de sesión: logotipo centrado sobre la tarjeta, fondo con un
+    halo del color de la empresa y etiquetas sobre los campos. --}}
+<style>
+    #guestBody {
+        background:
+            radial-gradient(1100px 560px at 50% -12%, color-mix(in srgb, var(--theme-primary) 16%, transparent), transparent 70%),
+            var(--theme-bg);
+    }
+
+    /* El logotipo del encabezado se muestra centrado sobre la tarjeta (ver script). */
+    #guestLogoWrap { display: none; }
+
+    #login-logo { display: flex; justify-content: center; margin-bottom: 1.75rem; }
+
+    #login-vista { width: 100%; max-width: 28rem; }
+
+    #login-vista > div { max-width: none; }
+
+    /* Icono de la tarjeta en un recuadro suave. */
+    #login-vista > div > div:first-child > span {
+        width: 3rem;
+        height: 3rem;
+        display: grid;
+        place-items: center;
+        border-radius: 0.75rem;
+        background: var(--theme-primary-soft);
+        color: var(--theme-primary);
+    }
+
+    #login-vista > div > div:first-child > span svg { width: 1.4rem; height: 1.4rem; stroke-width: 1.6; }
+
+    #login-vista > div > div:first-child { margin-bottom: 0.5rem; }
+
+</style>
+
+<div id="login-vista">
+
+<div id="login-logo"></div>
+
 <x-auth-card heading="Iniciar sesión" icon="user">
+
+    <p class="mb-6 text-center text-sm text-[var(--theme-text-muted)]">
+        Ingresa con tu usuario o correo.
+    </p>
 
     {{-- Mensaje de sesión caducada / error general --}}
     @if (session('status'))
@@ -49,12 +92,16 @@
         ============================================================ --}}
         <div>
 
+            <label for="loginInput" class="mb-1.5 block text-xs font-medium text-[var(--theme-text)]">Usuario o correo</label>
+
+            <div class="relative">
+
             <input
                 id="loginInput"
                 type="text"
                 name="login"
                 value="{{ old('login') }}"
-                placeholder="Nombre de usuario o correo"
+                placeholder="p. ej. maria.lopez o maria@correo.com"
                 autofocus
                 autocomplete="username"
                 class="
@@ -68,7 +115,7 @@
                     rounded-md
 
                     px-4
-                    py-2.5
+                    py-3
 
                     text-sm
                     text-[var(--theme-text)]
@@ -83,6 +130,8 @@
                     transition-colors
                 "
             >
+
+            </div>
 
             @error('login')
 
@@ -106,13 +155,15 @@
         ============================================================ --}}
         <div>
 
+            <label for="password" class="mb-1.5 block text-xs font-medium text-[var(--theme-text)]">Contraseña</label>
+
             <div class="relative">
 
                 <input
                     id="password"
                     type="password"
                     name="password"
-                    placeholder="Contraseña"
+                    placeholder="Escribe tu contraseña"
                     autocomplete="current-password"
                     class="
                         w-full
@@ -124,8 +175,8 @@
 
                         rounded-md
 
-                        px-4
-                        py-2.5
+                        pl-4
+                        py-3
                         pr-10
 
                         text-sm
@@ -233,7 +284,8 @@
             type="submit"
             class="
                 w-full
-                min-h-[44px]
+                min-h-[48px]
+                mt-2
 
                 flex
                 items-center
@@ -245,7 +297,7 @@
                 text-white
 
                 font-medium
-                tracking-wide
+                tracking-[0.06em]
                 text-sm
 
                 rounded-md
@@ -269,7 +321,7 @@
                     gap-2
                 "
             >
-                INGRESAR
+                INICIAR SESIÓN
 
                 <svg
                     class="w-4 h-4"
@@ -327,6 +379,8 @@
 
 </x-auth-card>
 
+</div>
+
 
 <script>
 
@@ -358,6 +412,17 @@
     */
 
     document.addEventListener('DOMContentLoaded', function () {
+
+        /*
+         * Logotipo centrado sobre la tarjeta: se mueve el mismo del encabezado
+         * (así conserva su versión para modo oscuro).
+         */
+        const logo = document.getElementById('guestLogo');
+        const lugarLogo = document.getElementById('login-logo');
+
+        if (logo && lugarLogo) {
+            lugarLogo.appendChild(logo);
+        }
 
         const form =
             document.getElementById('loginForm');
