@@ -112,6 +112,13 @@ class AjustesCuenta extends Component
 
     public array $twoFactorRecoveryCodes = [];
 
+    /*
+     * Administrador que activo 2FA porque era obligatorio
+     * (ExigirDosFactoresAdmin): al cerrar los codigos de
+     * recuperacion vuelve al dashboard.
+     */
+    public bool $irAlDashboardAlTerminar2fa = false;
+
     public string $twoFactorManagementPassword = '';
 
     /*
@@ -1406,6 +1413,10 @@ class AjustesCuenta extends Component
          */
         $this->twoFactorEnabled = true;
 
+        $this->irAlDashboardAlTerminar2fa =
+            method_exists($usuario, 'esAdministrador')
+            && $usuario->esAdministrador();
+
 
         /*
          * Limpiar los demás datos sensibles
@@ -1467,6 +1478,17 @@ class AjustesCuenta extends Component
 
 
         $this->resetValidation();
+
+
+        /*
+         * El administrador ya cumplio con el 2FA obligatorio:
+         * de vuelta al resto del sistema.
+         */
+        if ($this->irAlDashboardAlTerminar2fa) {
+            $this->irAlDashboardAlTerminar2fa = false;
+
+            $this->redirect(route('dashboard'));
+        }
     }
 
 

@@ -9,6 +9,8 @@
     {{-- Administrador sin 2FA (App\Http\Middleware\ExigirDosFactoresAdmin) --}}
     @if (auth()->user()?->esAdministrador() && ! auth()->user()?->hasTwoFactorEnabled())
         <div
+            x-data
+            @two-factor-enabled.window="$el.remove()"
             role="alert"
             class="mb-5 rounded-md border border-[var(--theme-warning-border,#E7C98A)] bg-[var(--theme-warning-soft,#FDF6E7)] px-4 py-3 text-sm text-[var(--theme-text-strong)]"
         >
