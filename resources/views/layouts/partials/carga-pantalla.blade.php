@@ -13,8 +13,9 @@
        ahí cada sección muestra su placeholder (componentes lazy).
 
     Solo en pantallas de hasta 767 px; en PC se mantiene como está.
-    Cubre solo el contenido: el encabezado y el menú inferior quedan
-    visibles y sin desenfoque.
+    Cubre toda la pantalla por debajo del encabezado y del menú
+    inferior (ambos translúcidos y flotantes): así lo que queda detrás
+    de ellos también se tapa. Mientras se ve, no se puede desplazar.
     Va dentro de @persist para seguir visible durante el cambio.
     Estilos propios (no depende de compilar Tailwind).
 ============================================================ --}}
@@ -44,9 +45,11 @@
 <style>
     .tcp {
         position: fixed;
-        inset: 0; /* top y bottom se ajustan al mostrar (encabezado / menú) */
-        /* Debajo del menú inferior (z-index 45) para no tapar «Escanear». */
+        inset: 0;
+        /* Debajo del menú inferior (45) y del encabezado móvil (46). */
         z-index: 44;
+        overscroll-behavior: contain;
+        touch-action: none;
         display: none;
         align-items: center;
         justify-content: center;
@@ -158,28 +161,10 @@
 
             if (src) el.style.setProperty('--tcp-mascara', 'url("' + src.replace(/"/g, '\\"') + '")');
 
-            /*
-             * Solo sobre el contenido: el encabezado (búsqueda, perfil,
-             * notificaciones) y el menú inferior quedan visibles y sin
-             * desenfoque.
-             */
-            const encabezado = document.getElementById('mobileAppHeader');
-            const barra = document.querySelector('.mi-barra');
-            const alto = window.innerHeight;
-            // offsetParent no sirve con elementos fijos: se mira su tamaño.
-            const seVe = (nodo) => !! nodo && nodo.getBoundingClientRect().height > 0
-                && getComputedStyle(nodo).visibility !== 'hidden';
-
-            const arriba = seVe(encabezado)
-                ? Math.max(0, Math.min(alto, encabezado.getBoundingClientRect().bottom))
-                : 0;
-
-            const abajo = seVe(barra) && barra.dataset.oculta !== 'true'
-                ? Math.max(0, alto - barra.getBoundingClientRect().top)
-                : 0;
-
-            el.style.top = arriba + 'px';
-            el.style.bottom = abajo + 'px';
+            // Pantalla completa (encabezado y menú quedan encima) y sin desplazamiento.
+            el.style.top = '0px';
+            el.style.bottom = '0px';
+            document.documentElement.style.overflow = 'hidden';
 
             clearTimeout(salida);
             progreso = 8;
@@ -217,6 +202,7 @@
                 el.dataset.entrando = 'false';
 
                 salida = setTimeout(() => {
+                    document.documentElement.style.overflow = '';
                     el.dataset.visible = 'false';
                     el.setAttribute('aria-hidden', 'true');
                     progreso = 0;

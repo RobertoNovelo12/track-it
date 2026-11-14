@@ -163,6 +163,11 @@
         #mobileAppHeader button[aria-haspopup="true"] {
             border-radius: 9999px;
         }
+
+        /* Encima de la pantalla de carga (z 44), que ahora cubre toda la pantalla. */
+        #mobileAppHeader {
+            z-index: 46;
+        }
     }
 
     /*
@@ -195,9 +200,11 @@
         transform: translateY(calc(100% + 2rem));
     }
 
+    /* Ancho según el texto (así «Movimientos» no queda apretado) y el sobrante repartido. */
     .mi-item {
-        flex: 1 1 0;
+        flex: 1 1 auto;
         min-width: 0;
+        padding: 0 0.625rem;
         min-height: 3rem;
         display: flex;
         flex-direction: column;
@@ -275,8 +282,9 @@
 
     /* Botón central: Escanear. */
     .mi-escanear {
-        flex: 1 1 0;
+        flex: 0 0 auto;
         min-width: 0;
+        padding: 0 0.25rem;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -546,7 +554,7 @@
             const contenedor = indicador.parentElement;
             const barra = contenedor.getBoundingClientRect();
             const caja = elemento.getBoundingClientRect();
-            const ancho = Math.max(48, Math.min(caja.width - 4, 96));
+            const ancho = Math.max(48, caja.width);
             const x = caja.left - barra.left - contenedor.clientLeft + (caja.width - ancho) / 2;
 
             indicador.style.width = ancho + 'px';
