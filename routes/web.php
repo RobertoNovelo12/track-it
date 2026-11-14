@@ -43,9 +43,37 @@ Route::get(
 |--------------------------------------------------------------------------
 */
 
+/*
+|--------------------------------------------------------------------------
+| Instancia restablecida y configuración inicial
+|--------------------------------------------------------------------------
+|
+| Ver App\Services\RestablecerInstanciaService.
+|
+*/
+
+Route::get(
+    '/instancia/restablecida',
+    [\App\Http\Controllers\InstanciaController::class, 'restablecida']
+)->name('instancia.restablecida');
+
+Route::middleware(['active.session', 'auth'])->group(function () {
+    Route::get(
+        '/instancia/configurar',
+        [\App\Http\Controllers\InstanciaController::class, 'configurar']
+    )->name('instancia.configurar');
+
+    Route::post(
+        '/instancia/configurar',
+        [\App\Http\Controllers\InstanciaController::class, 'guardar']
+    )->middleware('throttle:10,1')->name('instancia.configurar.guardar');
+});
+
+
 Route::middleware([
     'active.session',
     'auth',
+    'instancia.pendiente',
     'password.temporal',
     'dosfactores.admin',
 ])->group(function () {
@@ -506,6 +534,12 @@ Route::middleware([
     )
         ->whereNumber('sede')
         ->name('catalogos.sedes.edit')->middleware('can:administrar');
+
+    // Plantillas: restablecer la instancia (App\Livewire\RestablecerInstancia).
+    Route::get(
+        '/catalogos/plantillas/restablecer',
+        fn () => view('catalogos.plantillas.restablecer')
+    )->name('catalogos.plantillas.restablecer')->middleware('can:administrar');
 
 
     /*

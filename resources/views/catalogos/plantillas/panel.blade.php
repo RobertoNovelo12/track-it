@@ -35,5 +35,24 @@
                 <span class="mt-4 block text-sm text-[var(--theme-primary)]">Administrar tipos de equipo →</span>
             </a>
         </div>
+
+        @can('administrar')
+            {{-- Zona de peligro: restablecer la instancia (página propia con verificaciones). --}}
+            <div class="flex flex-col gap-3 rounded-xl border border-[var(--theme-danger)] p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+                <div>
+                    <h3 class="font-semibold text-[var(--theme-danger)]">Restablecer instancia</h3>
+                    <p class="mt-1 text-sm text-[var(--theme-text-muted)]">
+                        Elimina usuarios, {{ mb_strtolower($etiquetas['unidad_plural']) }}, departamentos e inventario.
+                        Conserva marcas, modelos, tipos de equipo y catálogos.
+                    </p>
+                </div>
+                <a
+                    href="{{ route('catalogos.plantillas.restablecer') }}"
+                    class="inline-flex h-9 shrink-0 items-center justify-center rounded-md border border-[var(--theme-danger)] px-4 text-xs font-medium text-[var(--theme-danger)] transition-colors hover:bg-[var(--theme-danger)] hover:text-white"
+                >
+                    Restablecer
+                </a>
+            </div>
+        @endcan
     </div>
 </section>

@@ -28,6 +28,7 @@ class ExigirDosFactoresAdmin
             && method_exists($usuario, 'esAdministrador')
             && $usuario->esAdministrador()
             && ! $usuario->hasTwoFactorEnabled()
+            && ! \App\Services\RestablecerInstanciaService::esUsuarioTemporal($usuario)
             && ! $request->routeIs('ajustes.*', 'logout', 'password.cambiar', 'password.cambiar.guardar')
         ) {
             if ($request->expectsJson()) {

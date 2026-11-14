@@ -62,6 +62,10 @@ return Application::configure(
                 // Administradores: verificación en dos pasos obligatoria.
                 'dosfactores.admin' =>
                     \App\Http\Middleware\ExigirDosFactoresAdmin::class,
+
+                // Usuario temporal tras restablecer: solo el asistente de configuración.
+                'instancia.pendiente' =>
+                    \App\Http\Middleware\ExigirConfiguracionInstancia::class,
             ]);
 
         }
