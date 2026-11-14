@@ -133,10 +133,10 @@
          * línea inferior, buscador en cápsula y botones redondos.
          */
         #mobileAppHeader {
-            background: color-mix(in srgb, var(--theme-bg) 82%, transparent);
+            background: color-mix(in srgb, var(--theme-bg) 62%, transparent);
             border-bottom-color: transparent;
-            -webkit-backdrop-filter: blur(18px) saturate(1.4);
-            backdrop-filter: blur(18px) saturate(1.4);
+            -webkit-backdrop-filter: blur(14px) saturate(1.6);
+            backdrop-filter: blur(14px) saturate(1.6);
         }
 
         #topQuickSearch .top-search {
@@ -187,9 +187,9 @@
         gap: 0.125rem;
         height: 4.25rem;
         padding: 0 0.375rem;
-        background: color-mix(in srgb, var(--theme-surface) 88%, transparent);
-        -webkit-backdrop-filter: blur(18px) saturate(1.4);
-        backdrop-filter: blur(18px) saturate(1.4);
+        background: color-mix(in srgb, var(--theme-surface) 62%, transparent);
+        -webkit-backdrop-filter: blur(14px) saturate(1.6);
+        backdrop-filter: blur(14px) saturate(1.6);
         border: 1px solid var(--theme-border);
         border-radius: 9999px;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.16), 0 2px 6px rgba(0, 0, 0, 0.06);
