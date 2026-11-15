@@ -39,9 +39,15 @@ class ExportarEntrega extends Command
 
     /** Identidad visual de fábrica (configuracion_organizacion). */
     private const IDENTIDAD_FABRICA = [
-        'nombre_organizacion' => 'Grand Palladium Hotels & Resorts',
+        // Sin nombre: se muestra «Track IT» hasta que la organización configure el suyo.
+        'nombre_organizacion' => null,
         'logo_base64' => null, 'logo_mime' => null, 'logo_version' => null, 'logo_nombre_original' => null,
-        'logo_escala' => '100', 'logo_modo_oscuro' => 'blanco', 'logo_color_fondo' => null, 'color_primario' => null,
+        // logo_color_fondo no admite NULL: su valor predeterminado es #FFFFFF.
+        'logo_escala' => '100', 'logo_modo_oscuro' => 'blanco', 'logo_color_fondo' => '#FFFFFF', 'color_primario' => null,
+        'logo_oscuro_base64' => null, 'logo_oscuro_mime' => null, 'logo_oscuro_nombre_original' => null, 'logo_oscuro_version' => null,
+        // Dominios de correo permitidos para registrarse (datos de la organización).
+        // Valores como texto: se escriben entre comillas en el INSERT.
+        'restringir_dominio_correo' => 'false', 'dominios_correo' => '[]',
     ];
 
     private \PDO $pdo;

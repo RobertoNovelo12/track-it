@@ -174,6 +174,14 @@ class OrganizacionService
             ?: self::NOMBRE_PREDETERMINADO;
     }
 
+    /** Nombre que escribió la organización, o null si aún no lo configura. */
+    public function nombreConfigurado(): ?string
+    {
+        $nombre = trim((string) ($this->configuracion()['nombre_organizacion'] ?? ''));
+
+        return $nombre !== '' && $nombre !== self::NOMBRE_PREDETERMINADO ? $nombre : null;
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Dominios de correo

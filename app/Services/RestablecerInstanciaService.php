@@ -136,7 +136,12 @@ class RestablecerInstanciaService
 
             // El nombre de la organización también se borra: hasta configurarlo
             // de nuevo se muestra «Track IT» (OrganizacionService::NOMBRE_PREDETERMINADO).
-            DB::table('configuracion_organizacion')->update(['nombre_organizacion' => null]);
+            // Igual los dominios de correo permitidos para registrarse (datos de la organización).
+            DB::table('configuracion_organizacion')->update([
+                'nombre_organizacion' => null,
+                'restringir_dominio_correo' => false,
+                'dominios_correo' => '[]',
+            ]);
 
             // 6. Usuario temporal para configurar la instancia.
             $idRol = DB::table('roles')->where('nivel', 'admin')->orderByDesc('activo')->orderBy('id_rol')->value('id_rol');

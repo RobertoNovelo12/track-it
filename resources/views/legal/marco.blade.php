@@ -9,9 +9,10 @@
 @section('content')
 
 @php
+    // null mientras la organización no configure su nombre: solo se muestra «Track IT».
     $organizacionLegal = rescue(
-        fn () => app(\App\Services\OrganizacionService::class)->nombre(),
-        \App\Services\OrganizacionService::NOMBRE_PREDETERMINADO,
+        fn () => app(\App\Services\OrganizacionService::class)->nombreConfigurado(),
+        null,
         false
     );
 @endphp
@@ -29,7 +30,7 @@
 
 <article class="legal rounded-lg border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-6 py-8 shadow-sm sm:px-10 sm:py-10">
     <header class="border-b border-[var(--theme-border)] pb-5">
-        <p class="text-xs font-medium uppercase tracking-wide text-[var(--theme-primary)]">Track IT · {{ $organizacionLegal }}</p>
+        <p class="text-xs font-medium uppercase tracking-wide text-[var(--theme-primary)]">Track IT{{ $organizacionLegal ? ' · '.$organizacionLegal : '' }}</p>
         <h1 class="mt-2 text-xl font-semibold text-[var(--theme-text-strong)]">@yield('legal-titulo')</h1>
         <p class="mt-1 text-xs text-[var(--theme-text-muted)]">Última actualización: @yield('legal-actualizado')</p>
     </header>

@@ -1,7 +1,9 @@
 @extends('legal.marco')
 
 @php
-    $org = rescue(fn () => app(\App\Services\OrganizacionService::class)->nombre(), \App\Services\OrganizacionService::NOMBRE_PREDETERMINADO, false);
+    // Sin organización configurada (instalación nueva o restablecida): texto genérico.
+    $org = rescue(fn () => app(\App\Services\OrganizacionService::class)->nombreConfigurado(), null, false)
+        ?? 'la organización responsable de este sistema';
     $correo = config('soporte.correo');
 @endphp
 
