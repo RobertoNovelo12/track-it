@@ -1471,6 +1471,7 @@ document.addEventListener(
         id="trackitRutaActual"
         hidden
         data-ruta="{{ \Illuminate\Support\Facades\Route::currentRouteName() }}"
+        data-titulo="{{ \App\Support\Encabezado::actual()['titulo'] ?? '' }}"
         data-tipo="{{ request()->routeIs('equipos.index') ? (string) request()->query('tipo_activo', '') : '' }}"
     ></span>
 

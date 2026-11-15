@@ -54,7 +54,12 @@
             escribir(clave, JSON.stringify(mapa));
         };
 
-        const tituloDePagina = () => String(document.title || '').split(' | ')[0].trim();
+        // Nombre de la pantalla (el mismo del encabezado: «Inventario»). Viene en cada
+        // página (#trackitRutaActual); document.title puede quedarse con el de la anterior.
+        const tituloDePagina = () => (
+            document.getElementById('trackitRutaActual')?.dataset.titulo
+            || String(document.title || '').split(' | ')[0]
+        ).trim();
 
         const restaurarDesplazamiento = (url) => {
             const y = Number(leerMapa('trackit.volver.scroll')[url] || 0);
