@@ -107,6 +107,13 @@
                     aplicar();
                 }
 
+                /*
+                 * Igual que en el layout principal: avisa del cambio para que
+                 * el logotipo cambie a su versión clara u oscura sin recargar
+                 * (layouts/partials/organizacion-logo-styles).
+                 */
+                window.dispatchEvent(new CustomEvent('trackit-theme-changed', { detail: { theme: resolved } }));
+
             };
 
 
