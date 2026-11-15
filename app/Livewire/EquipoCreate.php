@@ -1066,7 +1066,38 @@ class EquipoCreate extends Component
     |--------------------------------------------------------------------------
     */
 
+    /*
+     * Datos del formulario para el navegador. Los catálogos (tipos y sus
+     * campos, marcas, modelos, edificios, departamentos, ubicaciones…)
+     * van en caché del módulo «catalogos»: con la base remota eran ~11
+     * consultas seguidas (≈ 2 s) en cada carga y en cada actualización
+     * del componente. Se renuevan al editar cualquier catálogo
+     * (SystemCacheService::refreshModule('catalogos')).
+     * Lo que cambia con cada alta (código siguiente, duplicado, cuentas)
+     * se calcula siempre.
+     */
     private function getEquipmentFrontendData(): array
+    {
+        $catalogos = app(\App\Services\SystemCacheService::class)->rememberSimple(
+            'catalogos',
+            'equipo_form.catalogos',
+            fn (): array => $this->datosCatalogosFormulario()
+        );
+
+        return $catalogos + [
+            // Selector de propietario (cuentas existentes).
+            'usuarios' => app(\App\Services\ColaboradoresService::class)->opcionesUsuarios(),
+
+            'defaults' => [
+                'codigoInventarioPreview' =>
+                    $this->codigoInventarioPreview,
+            ],
+
+            'duplicado' => $this->duplicado,
+        ];
+    }
+
+    private function datosCatalogosFormulario(): array
     {
         $childFieldsByType = [];
         $childFieldMetaByType = [];
@@ -1151,9 +1182,6 @@ class EquipoCreate extends Component
                 'id_proveedor'
             ),
 
-            // Selector de propietario (cuentas existentes).
-            'usuarios' => app(\App\Services\ColaboradoresService::class)->opcionesUsuarios(),
-
             'condiciones' => $this->toFrontendOptions(
                 $this->condiciones,
                 'id_valor'
@@ -1188,12 +1216,6 @@ class EquipoCreate extends Component
             'fieldLabels' => $labels,
 
             'dynamicCatalogs' => $catalogs,
-
-            'defaults' => [
-                'codigoInventarioPreview' =>
-                    $this->codigoInventarioPreview,
-            ],
-            'duplicado' => $this->duplicado,
 
             /*
              * Programas: opciones del catálogo y, por tipo, si incluye
@@ -1883,9 +1905,13 @@ class EquipoCreate extends Component
             // El nombre del contador no cambia: se pregunta una vez por petición.
             static $secuencia = null;
 
-            $secuencia ??= DB::selectOne(
-                "select pg_get_serial_sequence('public.equipos', 'id_equipo') as nombre"
-            )?->nombre;
+            // El nombre del contador no cambia: se guarda en caché (una consulta menos).
+            $secuencia ??= \Illuminate\Support\Facades\Cache::rememberForever(
+                'trackit.equipos.secuencia_id',
+                fn () => DB::selectOne(
+                    "select pg_get_serial_sequence('public.equipos', 'id_equipo') as nombre"
+                )?->nombre
+            );
 
             if ($secuencia) {
                 $estado = DB::selectOne('select last_value, is_called from ' . $secuencia);

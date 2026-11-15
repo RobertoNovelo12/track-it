@@ -16,6 +16,23 @@ html {
  * Ajustes > Seguridad: resalta la verificación en dos pasos mientras un
  * administrador no la active (borde que parpadea con el color de la empresa).
  */
+/*
+ * Transición entre una lista y su formulario (layouts/partials/volver-script):
+ * el formulario entra desde la derecha y la lista regresa desde la izquierda.
+ */
+@keyframes tk-entra-adelante {
+    from { opacity: 0; transform: translateX(28px); }
+    to { opacity: 1; transform: none; }
+}
+
+@keyframes tk-entra-atras {
+    from { opacity: 0; transform: translateX(-28px); }
+    to { opacity: 1; transform: none; }
+}
+
+.tk-entra-adelante { animation: tk-entra-adelante 280ms cubic-bezier(0.22, 0.8, 0.24, 1); }
+.tk-entra-atras { animation: tk-entra-atras 280ms cubic-bezier(0.22, 0.8, 0.24, 1); }
+
 @keyframes pulso-2fa {
     0%, 100% {
         box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--theme-primary) 35%, transparent);

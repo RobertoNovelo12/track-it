@@ -18,7 +18,7 @@
 
         <a
             href="{{ route('mantenimientos.create') }}"
-            wire:navigate
+            wire:navigate.hover
             class="
                 inline-flex
                 items-center

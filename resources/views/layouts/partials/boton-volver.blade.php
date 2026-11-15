@@ -22,25 +22,41 @@
         app()->instance('trackit.volver.incluido', true);
     }
 
-    if (! isset($destino)) {
-        $destino = null;
-        $encabezadoVolver = \App\Support\Encabezado::actual();
-        $urlActualVolver = rtrim(url()->current(), '/');
+    /*
+     * Nombre del destino («← Inventario» en vez de «Volver»): el nivel
+     * anterior de la ruta de navegación. Si se regresa a la pantalla
+     * anterior, el navegador pone su nombre (trackitTituloPrevio).
+     */
+    $etiquetaVolver = null;
+    $encabezadoVolver = \App\Support\Encabezado::actual();
+    $urlActualVolver = rtrim(url()->current(), '/');
 
-        foreach (array_reverse($encabezadoVolver['migas'] ?? []) as $migaVolver) {
-            $hrefVolver = $migaVolver['href'] ?? null;
+    foreach (array_reverse($encabezadoVolver['migas'] ?? []) as $migaVolver) {
+        $hrefVolver = $migaVolver['href'] ?? null;
 
-            if ($hrefVolver && rtrim(strtok($hrefVolver, '?'), '/') !== $urlActualVolver) {
-                $destino = $hrefVolver;
-                break;
-            }
+        if (! $hrefVolver || rtrim(strtok($hrefVolver, '?'), '/') === $urlActualVolver) {
+            continue;
+        }
+
+        if (! isset($destino)) {
+            $destino = $hrefVolver;
+        }
+
+        if (rtrim(strtok($hrefVolver, '?'), '/') === rtrim(strtok((string) $destino, '?'), '/')) {
+            $etiquetaVolver = $migaVolver['label'] ?? null;
+            break;
         }
     }
+
+    $destino ??= null;
 @endphp
 
 <a
     href="{{ $destino ?? url('/') }}"
-    x-data="{ visible: {{ $destino ? 'true' : 'false' }} || Boolean(window.trackitPaginaPrevia?.()) }"
+    x-data="{
+        visible: {{ $destino ? 'true' : 'false' }} || Boolean(window.trackitPaginaPrevia?.()),
+        etiqueta: (window.trackitPaginaPrevia?.() && window.trackitTituloPrevio?.()) || @js($etiquetaVolver ?? 'Volver'),
+    }"
     x-show="visible"
     @unless ($destino) x-cloak @endunless
     x-on:click.prevent="window.trackitVolver ? window.trackitVolver(@js($destino)) : (window.location.href = $el.href)"
@@ -49,12 +65,13 @@
         'flex h-9 w-9 md:hidden' => $esMovilVolver,
         'hidden h-10 px-4 md:inline-flex' => ! $esMovilVolver,
     ])
+    x-bind:aria-label="etiqueta === 'Volver' ? 'Volver' : 'Volver a ' + etiqueta"
+    x-bind:title="etiqueta === 'Volver' ? 'Volver' : 'Volver a ' + etiqueta"
     aria-label="Volver"
-    title="Volver"
 >
     <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-d889af1') }}"></use></svg>
 
     @unless ($esMovilVolver)
-        <span>Volver</span>
+        <span class="max-w-[14rem] truncate" x-text="etiqueta">{{ $etiquetaVolver ?? 'Volver' }}</span>
     @endunless
 </a>

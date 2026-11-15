@@ -176,16 +176,23 @@
                 >
                     <a
                         href="{{ route('equipos.create') }}"
-                        wire:navigate
+                        wire:navigate.hover
                         role="menuitem"
-                        x-on:click="
-                            abierto = false;
-                            const tipo = new URLSearchParams(window.location.search).get('tipo_activo');
-                            const destino = new URL($el.getAttribute('href'), window.location.origin);
-                            destino.searchParams.delete('tipo');
-                            if (tipo) destino.searchParams.set('tipo', tipo);
-                            $el.href = destino.toString();
-                        "
+                        x-data="{
+                            // El tipo que se está viendo pasa al formulario. Se calcula al
+                            // acercar el cursor (o el dedo) para que la precarga ya lo lleve.
+                            conTipo() {
+                                const tipo = new URLSearchParams(window.location.search).get('tipo_activo');
+                                const destino = new URL($el.getAttribute('href'), window.location.origin);
+                                destino.searchParams.delete('tipo');
+                                if (tipo) destino.searchParams.set('tipo', tipo);
+                                $el.href = destino.toString();
+                            },
+                        }"
+                        x-on:mouseenter="conTipo()"
+                        x-on:touchstart.passive="conTipo()"
+                        x-on:focus="conTipo()"
+                        x-on:click="conTipo(); abierto = false;"
                         class="block px-4 py-2.5 text-sm text-[var(--theme-text)] transition-colors hover:bg-[var(--theme-surface-soft)] hover:text-[var(--theme-primary)]"
                     >
                         <span class="block font-medium">Agregar equipo</span>
