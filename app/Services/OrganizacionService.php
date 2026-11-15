@@ -42,7 +42,8 @@ class OrganizacionService
 
     public const LOGO_INTERFAZ_OSCURO = 'images/track-it/track-it-logo-oscuro.svg';
 
-    public const NOMBRE_PREDETERMINADO = 'Grand Palladium Hotels & Resorts';
+    /** Nombre mientras la organización no configura el suyo (p. ej. tras restablecer). */
+    public const NOMBRE_PREDETERMINADO = 'Track IT';
 
     public const ESCALA_MINIMA = 50;
 

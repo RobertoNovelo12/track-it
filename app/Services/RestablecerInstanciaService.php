@@ -134,6 +134,10 @@ class RestablecerInstanciaService
                     .$columnasLogo->map(fn ($c) => $this->id($c).' = DEFAULT')->implode(', '));
             }
 
+            // El nombre de la organización también se borra: hasta configurarlo
+            // de nuevo se muestra «Track IT» (OrganizacionService::NOMBRE_PREDETERMINADO).
+            DB::table('configuracion_organizacion')->update(['nombre_organizacion' => null]);
+
             // 6. Usuario temporal para configurar la instancia.
             $idRol = DB::table('roles')->where('nivel', 'admin')->orderByDesc('activo')->orderBy('id_rol')->value('id_rol');
             $idEstado = DB::table('estados_usuario')->where('clave', 'ACTIVO')->value('id_estado_usuario');
