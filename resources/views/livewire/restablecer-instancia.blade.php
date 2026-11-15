@@ -129,7 +129,29 @@
                     <label for="restablecer-frase" class="{{ $etiqueta }}">
                         Escribe <span class="font-mono font-semibold text-[var(--theme-danger)]">{{ \App\Livewire\RestablecerInstancia::FRASE }}</span>
                     </label>
-                    <input id="restablecer-frase" type="text" wire:model="frase" autocomplete="off" autofocus placeholder="{{ \App\Livewire\RestablecerInstancia::FRASE }}" class="{{ $campo }} font-mono uppercase">
+                    {{-- Por seguridad la palabra se escribe a mano: se bloquea pegar
+                         (Ctrl+V, Shift+Insert, menú contextual), arrastrar texto y el
+                         autocompletado del navegador. --}}
+                    <div x-data="{ aviso: false, bloquear(e) { e.preventDefault(); this.aviso = true; clearTimeout(this.t); this.t = setTimeout(() => this.aviso = false, 3000); } }">
+                        <input
+                            id="restablecer-frase"
+                            type="text"
+                            wire:model="frase"
+                            autocomplete="off"
+                            autocorrect="off"
+                            autocapitalize="characters"
+                            spellcheck="false"
+                            autofocus
+                            placeholder="{{ \App\Livewire\RestablecerInstancia::FRASE }}"
+                            x-on:paste="bloquear($event)"
+                            x-on:drop="bloquear($event)"
+                            x-on:dragover.prevent
+                            x-on:contextmenu.prevent
+                            x-on:beforeinput="['insertFromPaste', 'insertFromPasteAsQuotation', 'insertFromDrop', 'insertFromYank', 'insertReplacementText'].includes($event.inputType) && bloquear($event)"
+                            class="{{ $campo }} font-mono uppercase"
+                        >
+                        <p x-show="aviso" x-cloak class="mt-1 text-xs text-[var(--theme-warning)]">Por seguridad, escribe la palabra a mano; no se permite pegar.</p>
+                    </div>
                     @error('frase') <p class="mt-1 text-xs text-[var(--theme-danger)]">{{ $message }}</p> @enderror
                 </div>
 
