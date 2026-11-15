@@ -60,6 +60,10 @@ Route::get(
 |
 */
 
+// Páginas legales (públicas): aviso de privacidad y términos de uso.
+Route::view('/privacidad', 'legal.privacidad')->name('legal.privacidad');
+Route::view('/terminos', 'legal.terminos')->name('legal.terminos');
+
 Route::get(
     '/instancia/restablecida',
     [\App\Http\Controllers\InstanciaController::class, 'restablecida']

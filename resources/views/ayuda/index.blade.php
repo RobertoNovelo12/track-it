@@ -222,6 +222,8 @@
 
     <p class="pb-2 text-center text-xs text-[var(--theme-text-muted)]">
         Track IT · {{ $soporte['equipo'] }} · {{ now()->year }}
+        · <a href="{{ route('legal.privacidad') }}" class="text-[var(--theme-primary)] hover:underline">Aviso de privacidad</a>
+        · <a href="{{ route('legal.terminos') }}" class="text-[var(--theme-primary)] hover:underline">Términos y condiciones</a>
     </p>
 </div>
 @endsection
