@@ -639,6 +639,9 @@ new class extends Component
         app(
             \App\Services\SystemCacheService::class
         )->refreshModule('catalogos');
+
+        // Editor de formularios de tipos de equipo (caché propia).
+        app(\App\Services\SystemCacheService::class)->refreshModule('tipo_equipo_editor');
     }
 };
 

@@ -1382,6 +1382,7 @@ class EditarRegistro extends Component
     private function refrescarCatalogos(): void
     {
         app(\App\Services\SystemCacheService::class)->refreshModule('catalogos');
+        app(\App\Services\SystemCacheService::class)->refreshModule('tipo_equipo_editor');
 
         \Illuminate\Support\Facades\Cache::forget('form.marcas.v2');
         \Illuminate\Support\Facades\Cache::forget('form.modelos.all.v2');

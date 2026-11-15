@@ -38,13 +38,14 @@ new class extends Component
 
 
         /*
-         * Formulario del tipo + sección «Programas» en caché del módulo
-         * «catalogos» (eran ~7 consultas seguidas a la base remota en cada
-         * apertura). Guardar el formulario, los programas o cualquier
-         * catálogo renueva la versión y se vuelve a leer.
+         * Formulario del tipo + sección «Programas» en caché propia
+         * («tipo_equipo_editor»; eran ~25 consultas seguidas a la base remota).
+         * No usa «catalogos» porque esa versión cambia también al crear
+         * equipos. Se renueva al guardar un tipo, sus programas, los tipos
+         * de equipo o los catálogos de registros.
          */
         $this->initialData = app(\App\Services\SystemCacheService::class)->remember(
-            'catalogos',
+            'tipo_equipo_editor',
             'tipo_equipo.editor',
             ['tipo' => $this->tipoEquipoId],
             fn (): array => $this->builder()->load($this->tipoEquipoId) + [

@@ -77,6 +77,13 @@
         window.trackitAplicarLogoTema = aplicar;
 
         document.addEventListener('DOMContentLoaded', aplicar);
+
+        /*
+         * Al navegar, la página nueva llega con el logotipo claro. Se cambia
+         * justo al insertarla (onSwap), antes de pintarse: así el logotipo
+         * no parpadea ni se vuelve a pedir en cada página.
+         */
+        document.addEventListener('livewire:navigating', (e) => e.detail?.onSwap?.(aplicar));
         document.addEventListener('livewire:navigated', aplicar);
         window.addEventListener('trackit-theme-changed', aplicar);
     })();

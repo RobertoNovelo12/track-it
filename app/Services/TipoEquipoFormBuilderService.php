@@ -85,12 +85,12 @@ class TipoEquipoFormBuilderService
         /*
          * La reparación de secciones y campos obligatorios hace ~9 consultas
          * (con la base remota, ~1.7 s). Basta con hacerla una vez por versión
-         * de los catálogos: guardar este formulario o editar cualquier
-         * catálogo renueva la versión (refreshModule('catalogos')) y vuelve
-         * a revisarse.
+         * del editor: guardar este formulario (o un cambio en los tipos de
+         * equipo) renueva la versión (refreshModule('tipo_equipo_editor'))
+         * y vuelve a revisarse.
          */
         $sections = app(\App\Services\SystemCacheService::class)->remember(
-            'catalogos',
+            'tipo_equipo_editor',
             'tipo_equipo.secciones_base',
             ['tipo' => $tipoEquipoId],
             fn (): array => $this->ensureRequiredFields($tipoEquipoId)
@@ -1694,6 +1694,8 @@ class TipoEquipoFormBuilderService
         )->refreshModule(
             'catalogos'
         );
+
+        app(SystemCacheService::class)->refreshModule('tipo_equipo_editor');
 
 
         return $this->load(

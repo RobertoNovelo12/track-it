@@ -64,6 +64,7 @@ class ProgramasService
     {
         app(SystemCacheService::class)->refreshModule('programas');
         app(SystemCacheService::class)->refreshModule('catalogos');
+        app(SystemCacheService::class)->refreshModule('tipo_equipo_editor');
     }
 
     /**

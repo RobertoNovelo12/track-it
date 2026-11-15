@@ -788,6 +788,12 @@ document.addEventListener(
                             MB_CASE_TITLE
                         );
 
+                        // Sin foto de perfil: iniciales, igual que en Ajustes › Cuenta.
+                        $perfilIniciales = mb_strtoupper(
+                            mb_substr((string) ($perfilUsuario->nombres ?? $perfilUsuario->name ?? '?'), 0, 1)
+                            . mb_substr((string) ($perfilUsuario->apellido_paterno ?? ''), 0, 1)
+                        ) ?: '?';
+
                         $perfilUnidad = filled($perfilUsuario->id_unidad ?? null)
                             ? \Illuminate\Support\Facades\Cache::remember(
                                 'layout.usuario.unidad.' . $perfilUsuario->getKey(),
@@ -929,23 +935,20 @@ document.addEventListener(
                                 items-center
                                 justify-center
 
-                                bg-[var(--theme-surface-soft)]
-                                text-[var(--theme-text-muted)]
+                                bg-[var(--theme-primary-soft)]
+                                text-[var(--theme-primary)]
 
-                                group-hover:text-[var(--theme-primary)]
+                                text-xs
+                                font-semibold
 
-                                transition-colors
+                                group-hover:ring-2
+                                group-hover:ring-[var(--theme-primary-border)]
+
+                                transition-shadow
                             "
+                            aria-hidden="true"
                         >
-                            <svg
-                                class="w-5 h-5"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="1.6"
-                                stroke-linecap="round"
-                                aria-hidden="true"
-                            ><use href="{{ \App\Support\Icono::url('i-8464a27') }}"></use></svg>
+                            {{ $perfilIniciales }}
                         </div>
 
 
@@ -1045,15 +1048,13 @@ document.addEventListener(
 
                                         bg-[var(--theme-primary-soft)]
                                         text-[var(--theme-primary)]
+
+                                        text-base
+                                        font-semibold
                                     "
+                                    aria-hidden="true"
                                 >
-                                    <svg
-                                        class="w-7 h-7"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        stroke-width="1.5"
-                                    ><use href="{{ \App\Support\Icono::url('i-8464a27') }}"></use></svg>
+                                    {{ $perfilIniciales }}
                                 </div>
 
 
