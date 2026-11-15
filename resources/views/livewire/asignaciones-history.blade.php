@@ -135,6 +135,7 @@
                 </label>
 
                 <x-searchable-select
+                    input-id="history-type"
                     wire-model="tipo"
                     :empty-as-null="false"
                     placeholder="Selecciona..."

@@ -45,7 +45,18 @@
      */
     'pageSize' => 10,
     'loadingText' => 'Cargando más…',
+
+    /*
+     * id del campo de búsqueda, para que un <label for="..."> externo
+     * lo señale (accesibilidad y autocompletado del navegador).
+     */
+    'inputId' => null,
 ])
+
+@php
+    // Con etiqueta propia y sin inputId, se genera uno estable para enlazarla.
+    $idCampoBusqueda = $inputId ?: (filled($label) ? 'ss-'.substr(md5(($wireModel ?? $xModel ?? '').'|'.$label), 0, 10) : null);
+@endphp
 
 @php
     /*
@@ -578,6 +589,7 @@
 
     @if ($label)
         <label
+            @if ($idCampoBusqueda) for="{{ $idCampoBusqueda }}" @endif
             class="
                 block
                 mb-1.5
@@ -621,6 +633,7 @@
 
         <input
             type="text"
+            @if ($idCampoBusqueda) id="{{ $idCampoBusqueda }}" @endif
 
             x-ref="search"
             x-model="query"

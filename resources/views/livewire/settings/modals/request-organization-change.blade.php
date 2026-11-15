@@ -251,6 +251,7 @@
 
 
                     <x-searchable-select
+                        input-id="organizationChangeField"
                         wire-model="organizationChangeField"
                         :empty-as-null="false"
                         placeholder="Selecciona una opción"

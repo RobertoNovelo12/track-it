@@ -344,6 +344,7 @@
 
 
                     <x-searchable-select
+                        input-id="approvalRoleId"
                         wire-model="approvalRoleId"
                         :empty-as-null="false"
                         placeholder="Selecciona un rol"
