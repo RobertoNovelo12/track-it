@@ -128,6 +128,10 @@
             }
 
             escribir('trackit.volver.actual', actual);
+
+            // El botón «Volver» se dibuja antes de este registro (Alpine inicia al
+            // insertar la página): se avisa para que actualice su texto y destino.
+            window.dispatchEvent(new CustomEvent('trackit-volver-registrado'));
         };
 
         // Nombre de la pantalla anterior (para «← Inventario»).

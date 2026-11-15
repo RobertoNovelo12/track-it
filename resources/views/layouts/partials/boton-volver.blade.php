@@ -54,9 +54,38 @@
 <a
     href="{{ $destino ?? url('/') }}"
     x-data="{
-        visible: {{ $destino ? 'true' : 'false' }} || Boolean(window.trackitPaginaPrevia?.()),
-        etiqueta: (window.trackitPaginaPrevia?.() && window.trackitTituloPrevio?.()) || @js($etiquetaVolver ?? 'Volver'),
+        visible: false,
+        etiqueta: @js($etiquetaVolver ?? 'Volver'),
+
+        /*
+         * Si la pantalla anterior es la misma sección de la ruta de navegación
+         * (p. ej. Administración › Tipos de equipo), se usa ese nombre, más
+         * específico; si no, el nombre de la pantalla anterior.
+         */
+        mismaSeccion(a, b) {
+            try {
+                const x = new URL(a, location.origin);
+                const y = new URL(b, location.origin);
+
+                return x.pathname.replace(/\/$/, '') === y.pathname.replace(/\/$/, '')
+                    && (x.searchParams.get('section') ?? '') === (y.searchParams.get('section') ?? '');
+            } catch (e) {
+                return false;
+            }
+        },
+
+        actualizar() {
+            const destino = @js($destino);
+            const previa = window.trackitPaginaPrevia?.();
+
+            this.visible = Boolean(destino) || Boolean(previa);
+            this.etiqueta = previa && ! (destino && this.mismaSeccion(previa, destino))
+                ? (window.trackitTituloPrevio?.() || @js($etiquetaVolver ?? 'Volver'))
+                : @js($etiquetaVolver ?? 'Volver');
+        },
     }"
+    x-init="actualizar()"
+    x-on:trackit-volver-registrado.window="actualizar()"
     x-show="visible"
     @unless ($destino) x-cloak @endunless
     x-on:click.prevent="window.trackitVolver ? window.trackitVolver(@js($destino)) : (window.location.href = $el.href)"
