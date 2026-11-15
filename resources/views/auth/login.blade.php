@@ -379,6 +379,14 @@
 
 </x-auth-card>
 
+{{-- Páginas legales: al pie de la pantalla (en móvil, debajo de la tarjeta). --}}
+<p class="mt-8 px-4 text-center text-xs text-[var(--theme-text-muted)] sm:fixed sm:inset-x-0 sm:bottom-5 sm:mt-0">
+    Al iniciar sesión aceptas nuestro
+    <a href="{{ route('legal.privacidad') }}" class="underline underline-offset-2 transition-colors hover:text-[var(--theme-text)]">aviso de privacidad</a>
+    y los
+    <a href="{{ route('legal.terminos') }}" class="underline underline-offset-2 transition-colors hover:text-[var(--theme-text)]">términos y condiciones</a>.
+</p>
+
 </div>
 
 
