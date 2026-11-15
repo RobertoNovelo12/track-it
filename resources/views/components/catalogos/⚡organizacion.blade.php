@@ -234,6 +234,13 @@ new class extends Component
             ]
         );
 
+        // El logotipo oscuro acompaña a uno personalizado para modo claro.
+        if ($this->logoOscuro && ! $this->logo && ! $this->organizacion()->logoPersonalizado()) {
+            throw ValidationException::withMessages([
+                'logoOscuro' => 'Primero sube el logotipo para modo claro.',
+            ]);
+        }
+
         $cambios = [
             'nombre_organizacion' => $validated['nombreOrganizacion'] !== ''
                 ? $validated['nombreOrganizacion']
@@ -910,11 +917,12 @@ new class extends Component
             {{-- Logotipo --}}
             <fieldset class="space-y-4 border-t border-[var(--theme-border)] pt-5">
                 <legend class="px-1 text-sm font-semibold text-[var(--theme-text-strong)]">
-                    Logotipo principal
+                    Logotipos
                 </legend>
 
-                <p class="text-xs text-[var(--theme-text-muted)]">
-                    Se muestra en el menú lateral y en las pantallas de inicio de sesión y registro.
+                <p class="text-sm font-medium text-[var(--theme-text-strong)]">Logotipo para modo claro</p>
+                <p class="-mt-3 text-xs text-[var(--theme-text-muted)]">
+                    Se muestra en el menú lateral, en las pantallas de inicio de sesión y registro, y siempre en los documentos y reportes.
                     PNG, JPG o WEBP de hasta 1 MB. Se recomienda un PNG con fondo transparente.
                 </p>
 
@@ -962,13 +970,15 @@ new class extends Component
                     <p class="mt-3 text-xs text-[var(--theme-danger)]">{{ $message }}</p>
                 @enderror
 
-                {{-- Logotipo para modo oscuro (opcional, solo con logotipo personalizado) --}}
-                @if ($puedeLogoOscuro)
+                {{-- Logotipo para modo oscuro (opcional; requiere el de modo claro) --}}
                     <div class="rounded-lg border border-[var(--theme-border)] p-4">
                         <p class="text-sm font-medium text-[var(--theme-text-strong)]">Logotipo para modo oscuro <span class="font-normal text-[var(--theme-text-muted)]">(opcional)</span></p>
                         <p class="mt-1 text-xs text-[var(--theme-text-muted)]">
-                            Si tu logotipo no se ve bien sobre fondo oscuro, sube una versión clara. En modo oscuro se mostrará tal cual, sin aplicar la apariencia de abajo.
+                            Si tu logotipo no se ve bien sobre fondo oscuro, sube una versión clara. En modo oscuro se mostrará tal cual, sin aplicar la apariencia de abajo. Los documentos siempre usan el de modo claro.
                         </p>
+                        @unless ($puedeLogoOscuro)
+                            <p class="mt-2 text-xs text-[var(--theme-warning)]">Primero sube el logotipo para modo claro.</p>
+                        @endunless
 
                         <div class="mt-3 flex flex-wrap items-center gap-3">
                             <input
@@ -977,9 +987,10 @@ new class extends Component
                                 wire:model="logoOscuro"
                                 accept="image/png,image/jpeg,image/webp"
                                 class="peer sr-only"
+                                @disabled(! $puedeLogoOscuro)
                             >
 
-                            <label for="org-logo-oscuro" class="{{ $botonLogo }}">
+                            <label for="org-logo-oscuro" @class([$botonLogo, 'pointer-events-none opacity-50' => ! $puedeLogoOscuro])>
                                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4m0 0-4 4m4-4 4 4M5 20h14"/></svg>
                                 {{ $logoOscuro ? 'Elegir otra imagen' : ($logoOscuroGuardado ? 'Reemplazar logotipo oscuro' : 'Subir logotipo oscuro') }}
                             </label>
@@ -1008,7 +1019,6 @@ new class extends Component
                             <p class="mt-2 text-xs text-[var(--theme-danger)]">{{ $message }}</p>
                         @enderror
                     </div>
-                @endif
 
                 {{-- Tamaño --}}
                 <div class="max-w-xl">

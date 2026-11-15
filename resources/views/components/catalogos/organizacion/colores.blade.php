@@ -10,18 +10,7 @@
     $colorPredeterminado = \App\Services\OrganizacionService::COLOR_PRIMARIO_PREDETERMINADO;
     $colorGuardado = $org->colorPrimario();
 
-    $paleta = [
-        $colorPredeterminado => 'Azul (predeterminado)',
-        '#1E3A8A' => 'Azul marino',
-        '#0F766E' => 'Verde azulado',
-        '#15803D' => 'Verde',
-        '#A16207' => 'Dorado',
-        '#B45309' => 'Ámbar',
-        '#B91C1C' => 'Rojo',
-        '#BE185D' => 'Rosa',
-        '#7C3AED' => 'Violeta',
-        '#374151' => 'Grafito',
-    ];
+    $paleta = \App\Services\OrganizacionService::PALETA_COLORES;
 
     $previas = [
         ['titulo' => 'Modo claro', 'oscuro' => false, 'fondo' => '#FFFCFF', 'superficie' => '#FFFFFF', 'borde' => 'rgba(80, 81, 79, 0.10)', 'texto' => '#1F2023', 'atenuado' => '#7A7B79'],

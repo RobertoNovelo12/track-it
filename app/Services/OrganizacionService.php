@@ -78,6 +78,20 @@ class OrganizacionService
     /** Color principal del sistema cuando la organización no elige uno. */
     public const COLOR_PRIMARIO_PREDETERMINADO = '#247BA0';
 
+    /** Colores sugeridos (Organización › Colores y configuración inicial). */
+    public const PALETA_COLORES = [
+        self::COLOR_PRIMARIO_PREDETERMINADO => 'Azul (predeterminado)',
+        '#1E3A8A' => 'Azul marino',
+        '#0F766E' => 'Verde azulado',
+        '#15803D' => 'Verde',
+        '#A16207' => 'Dorado',
+        '#B45309' => 'Ámbar',
+        '#B91C1C' => 'Rojo',
+        '#BE185D' => 'Rosa',
+        '#7C3AED' => 'Violeta',
+        '#374151' => 'Grafito',
+    ];
+
     /** Color de la placa cuando la apariencia en modo oscuro es «fondo». */
     public const COLOR_FONDO_PREDETERMINADO = '#FFFFFF';
 

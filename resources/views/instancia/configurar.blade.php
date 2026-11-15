@@ -24,6 +24,8 @@
         $plantillaForzada ? null : ['clave' => 'plantilla', 'titulo' => 'Tipo de organización', 'campos' => ['plantilla']],
         ['clave' => 'organizacion', 'titulo' => 'Tu organización', 'campos' => ['organizacion']],
         ['clave' => 'logo', 'titulo' => 'Logotipo', 'campos' => ['logo']],
+        // Solo aparece si se eligió un logotipo (data-requiere-logo).
+        ['clave' => 'logo_oscuro', 'titulo' => 'Logotipo en modo oscuro', 'campos' => ['logo_oscuro', 'logo_modo_oscuro']],
         ['clave' => 'color', 'titulo' => 'Color principal', 'campos' => ['color']],
         ['clave' => 'sede', 'titulo' => 'Primera sede', 'campos' => ['sede']],
         ['clave' => 'unidad', 'titulo' => 'Primer :unidad', 'campos' => ['unidad']],
@@ -34,13 +36,24 @@
     ]));
 
     // Si el servidor devolvió errores, se abre el primer paso que tenga uno.
+    // Un error en el logotipo oscuro se muestra en el paso del logotipo
+    // (los archivos no se conservan tras recargar y ese paso depende de él).
     $pasoInicial = 0;
+    $pasoConError = null;
     foreach ($pasos as $i => $p) {
         if (collect($p['campos'])->contains(fn ($c) => $errors->has($c))) {
-            $pasoInicial = $i;
+            $pasoInicial = $p['clave'] === 'logo_oscuro' ? $i - 1 : $i;
+            $pasoConError = $pasos[$pasoInicial]['titulo'];
             break;
         }
     }
+
+    $paleta = \App\Services\OrganizacionService::PALETA_COLORES;
+    $colorElegido = strtoupper((string) old('color', $colorActual));
+    if (! array_key_exists($colorElegido, $paleta)) {
+        $colorElegido = \App\Services\OrganizacionService::COLOR_PRIMARIO_PREDETERMINADO;
+    }
+    $modoOscuroElegido = (string) old('logo_modo_oscuro', 'original');
 @endphp
 
 @section('content')
@@ -63,7 +76,7 @@
         {{-- Progreso --}}
         <div class="mb-6">
             <div class="mb-2 flex items-center justify-between text-xs text-[var(--theme-text-muted)]">
-                <span>Paso <span data-paso-actual>{{ $pasoInicial + 1 }}</span> de {{ count($pasos) }}</span>
+                <span>Paso <span data-paso-actual>{{ $pasoInicial + 1 }}</span> de <span data-paso-total>{{ count($pasos) - 1 }}</span></span>
                 <span data-paso-titulo></span>
             </div>
             <div class="h-1.5 overflow-hidden rounded-full bg-[var(--theme-surface-soft)]">
@@ -71,10 +84,22 @@
             </div>
         </div>
 
+        {{-- Si el servidor rechazó algo, se dice claramente que aún no se guardó nada. --}}
+        @if ($errors->any())
+            <div role="alert" class="mb-5 rounded-md border border-[var(--theme-danger)] bg-[color-mix(in_srgb,var(--theme-danger)_8%,transparent)] px-4 py-3 text-xs text-[var(--theme-text)]">
+                <p class="font-semibold text-[var(--theme-danger)]">Aún no se guardó la configuración.</p>
+                <p class="mt-1">
+                    Corrige el paso «{{ str_replace(':unidad', $unidad, $pasoConError ?? 'marcado') }}» y vuelve a terminar.
+                    Por seguridad, las contraseñas y las imágenes deben elegirse de nuevo.
+                </p>
+            </div>
+        @endif
+
         @foreach ($pasos as $i => $paso)
             <section
                 data-paso="{{ $i }}"
                 data-titulo="{{ $paso['titulo'] }}"
+                @if ($paso['clave'] === 'logo_oscuro') data-requiere-logo @endif
                 @class(['space-y-4', 'hidden' => $i !== $pasoInicial])
             >
                 @switch($paso['clave'])
@@ -118,27 +143,74 @@
                         <label for="logo" class="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-md border border-dashed border-[var(--theme-border-strong)] px-4 py-6 text-center transition-colors hover:bg-[var(--theme-surface-soft)]">
                             <img data-logo-vista alt="Vista previa del logotipo" class="hidden max-h-20 max-w-[220px] object-contain">
                             <span data-logo-texto class="text-sm text-[var(--theme-text)]">Elegir imagen…</span>
-                            <span class="text-xs text-[var(--theme-text-muted)]">Opcional: si lo omites se usa el logotipo de Track IT.</span>
+                            <span data-logo-ayuda class="text-xs text-[var(--theme-text-muted)]">Opcional: si lo omites se usa el logotipo de Track IT.</span>
                         </label>
                         <input id="logo" type="file" name="logo" accept="image/png,image/jpeg,image/webp" class="sr-only">
+                        <p data-logo-error class="{{ $error }} hidden"></p>
+                        <div data-logo-quitar class="hidden text-center">
+                            <button type="button" class="rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-4 py-2 text-xs font-medium text-[var(--theme-text)] transition-colors hover:bg-[var(--theme-surface-soft)]">
+                                Quitar imagen
+                            </button>
+                        </div>
+                        <p class="text-xs text-[var(--theme-text-muted)]">Este logotipo también se usa en todos los documentos y reportes.</p>
                         @error('logo') <p class="{{ $error }}">{{ $message }}</p> @enderror
-                        @if ($errors->any() && ! $errors->has('logo'))
-                            <p class="text-xs text-[var(--theme-text-muted)]">Si habías elegido un logotipo, vuelve a seleccionarlo.</p>
-                        @endif
+                        @error('logo_oscuro') <p class="{{ $error }}">Logotipo para modo oscuro: {{ $message }}</p> @enderror
+                        @break
+
+                    @case('logo_oscuro')
+                        <div>
+                            <h2 class="text-base font-semibold text-[var(--theme-text-strong)]">¿Cómo se verá en modo oscuro?</h2>
+                            <p class="mt-1 text-xs text-[var(--theme-text-muted)]">Si tu logotipo no se ve bien sobre fondo oscuro, sube una versión clara o elige una apariencia. Puedes cambiarlo después en Organización.</p>
+                        </div>
+
+                        <label for="logo_oscuro" class="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-md border border-dashed border-[var(--theme-border-strong)] bg-[#111416] px-4 py-5 text-center transition-opacity hover:opacity-90">
+                            <img data-oscuro-vista alt="Vista previa en modo oscuro" class="max-h-16 max-w-[200px] object-contain">
+                            <span data-oscuro-texto class="text-sm text-[#F1F3F4]">Subir versión para modo oscuro (opcional)…</span>
+                        </label>
+                        <input id="logo_oscuro" type="file" name="logo_oscuro" accept="image/png,image/jpeg,image/webp" class="sr-only">
+                        <p data-oscuro-error class="{{ $error }} hidden"></p>
+                        <div data-oscuro-quitar class="hidden text-center">
+                            <button type="button" class="rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-4 py-2 text-xs font-medium text-[var(--theme-text)] transition-colors hover:bg-[var(--theme-surface-soft)]">
+                                Quitar imagen
+                            </button>
+                        </div>
+
+                        <div data-modos-oscuro class="space-y-2">
+                            <p class="{{ $etiqueta }}">O elige cómo mostrar el logotipo principal</p>
+                            <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                                @foreach (\App\Services\OrganizacionService::MODOS_OSCURO as $claveModo => $modo)
+                                    <label class="flex cursor-pointer items-start gap-2 rounded-md border border-[var(--theme-border-strong)] px-3 py-2 transition-colors hover:bg-[var(--theme-surface-soft)] has-[:checked]:border-[var(--theme-primary)] has-[:checked]:bg-[var(--theme-primary-soft)]">
+                                        <input type="radio" name="logo_modo_oscuro" value="{{ $claveModo }}" @checked($modoOscuroElegido === $claveModo) class="mt-0.5 accent-[var(--theme-primary)]">
+                                        <span>
+                                            <span class="block text-xs font-medium text-[var(--theme-text-strong)]">{{ $modo['etiqueta'] }}</span>
+                                            <span class="block text-[11px] leading-snug text-[var(--theme-text-muted)]">{{ $modo['descripcion'] }}</span>
+                                        </span>
+                                    </label>
+                                @endforeach
+                            </div>
+                        </div>
+                        @error('logo_modo_oscuro') <p class="{{ $error }}">{{ $message }}</p> @enderror
                         @break
 
                     @case('color')
                         <div>
                             <h2 class="text-base font-semibold text-[var(--theme-text-strong)]">Elige el color principal</h2>
-                            <p class="mt-1 text-xs text-[var(--theme-text-muted)]">Se usa en botones, enlaces y elementos destacados de todo el sistema.</p>
+                            <p class="mt-1 text-xs text-[var(--theme-text-muted)]">Se usa en botones, enlaces y elementos destacados de todo el sistema. Puedes cambiarlo después.</p>
                         </div>
-                        <div class="flex items-center gap-4">
-                            <input id="color" type="color" name="color" value="{{ old('color', $colorActual) }}" required class="h-12 w-16 cursor-pointer rounded-md border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] p-1">
-                            <div>
-                                <label for="color" class="{{ $etiqueta }}">Color</label>
-                                <span data-color-hex class="font-mono text-sm text-[var(--theme-text-strong)]">{{ strtoupper(old('color', $colorActual)) }}</span>
-                            </div>
-                            <span data-color-muestra class="ml-auto rounded-md px-4 py-2 text-xs font-medium text-white" style="background: {{ old('color', $colorActual) }}">Botón de ejemplo</span>
+                        <div class="grid grid-cols-5 gap-3" role="radiogroup" aria-label="Color principal">
+                            @foreach ($paleta as $valorColor => $nombreColor)
+                                <label class="group flex cursor-pointer flex-col items-center gap-1.5" title="{{ $nombreColor }}">
+                                    <input type="radio" name="color" value="{{ $valorColor }}" @checked($colorElegido === $valorColor) required class="peer sr-only">
+                                    <span class="flex h-10 w-10 items-center justify-center rounded-full border border-[var(--theme-border-strong)] ring-offset-2 ring-offset-[var(--theme-surface)] transition-transform group-hover:scale-110 peer-checked:ring-2 peer-checked:ring-[var(--theme-text-strong)] peer-focus-visible:ring-2 peer-focus-visible:ring-[var(--theme-primary)]" style="background-color: {{ $valorColor }}">
+                                        <svg class="hidden h-4 w-4 text-white group-has-[:checked]:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg>
+                                    </span>
+                                    <span class="text-center text-[10px] leading-tight text-[var(--theme-text-muted)]">{{ str_replace(' (predeterminado)', '', $nombreColor) }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                        <div class="flex items-center justify-between rounded-md border border-[var(--theme-border)] px-4 py-3">
+                            <span class="text-xs text-[var(--theme-text-muted)]">Vista previa</span>
+                            <span data-color-muestra class="rounded-md px-4 py-2 text-xs font-medium text-white" style="background: {{ $colorElegido }}">Botón de ejemplo</span>
                         </div>
                         @error('color') <p class="{{ $error }}">{{ $message }}</p> @enderror
                         @break
@@ -280,7 +352,12 @@
         const atras = form.querySelector('[data-atras]');
         const siguiente = form.querySelector('[data-siguiente]');
         const terminar = form.querySelector('[data-terminar]');
+        const logo = form.querySelector('#logo');
+        const logoOscuro = form.querySelector('#logo_oscuro');
         let actual = Number(form.dataset.pasoInicial || 0);
+
+        const LIMITE_BYTES = 1024 * 1024;
+        const TIPOS = ['image/png', 'image/jpeg', 'image/webp'];
 
         const elegida = () => {
             const radio = form.querySelector('input[name="plantilla"]:checked');
@@ -296,20 +373,46 @@
             form.querySelectorAll('[data-unidades]').forEach((el) => { el.textContent = et.unidades; });
         };
 
+        const hayLogo = () => Boolean(logo?.files?.length);
+        const hayLogoOscuro = () => Boolean(logoOscuro?.files?.length);
+
+        // El paso de modo oscuro solo cuenta si se eligió un logotipo.
+        const activo = (n) => !(pasos[n].hasAttribute('data-requiere-logo') && !hayLogo());
+        const activos = () => pasos.map((_, n) => n).filter(activo);
+        const siguienteActivo = (desde, dir) => {
+            for (let n = desde + dir; n >= 0 && n < pasos.length; n += dir) {
+                if (activo(n)) return n;
+            }
+            return null;
+        };
+
+        // Texto del botón: «Omitir» cuando el paso del logotipo queda vacío.
+        const actualizarBotonSiguiente = () => {
+            const enLogo = pasos[actual].contains(logo);
+            siguiente.textContent = enLogo && !hayLogo() ? 'Omitir' : 'Siguiente';
+        };
+
         const mostrar = (i) => {
             actual = i;
             pasos.forEach((p, n) => p.classList.toggle('hidden', n !== i));
 
-            const ultimo = i === pasos.length - 1;
-            atras.classList.toggle('invisible', i === 0);
+            const lista = activos();
+            const posicion = lista.indexOf(i);
+            const ultimo = siguienteActivo(i, 1) === null;
+
+            atras.classList.toggle('invisible', siguienteActivo(i, -1) === null);
             siguiente.classList.toggle('hidden', ultimo);
             terminar.classList.toggle('hidden', !ultimo);
+            actualizarBotonSiguiente();
 
-            form.querySelector('[data-paso-actual]').textContent = i + 1;
+            form.querySelector('[data-paso-actual]').textContent = posicion + 1;
+            form.querySelector('[data-paso-total]').textContent = lista.length;
             form.querySelector('[data-paso-titulo]').textContent = pasos[i].dataset.titulo.replace(':unidad', unidadElegida());
-            form.querySelector('[data-barra]').style.width = ((i + 1) / pasos.length * 100) + '%';
+            form.querySelector('[data-barra]').style.width = ((posicion + 1) / lista.length * 100) + '%';
 
-            pasos[i].querySelector('input:not([type=radio]), input[type=radio]:checked, input[type=radio]')?.focus();
+            if (pasos[i].contains(form.querySelector('[data-oscuro-vista]'))) actualizarVistaOscura();
+
+            pasos[i].querySelector('input:not([type=radio]):not([type=file]), input[type=radio]:checked, input[type=radio]')?.focus();
         };
 
         // Valida solo los campos del paso visible (los obligatorios del navegador).
@@ -344,16 +447,18 @@
         };
 
         siguiente.addEventListener('click', () => {
-            if (pasoValido()) mostrar(actual + 1);
+            const destino = siguienteActivo(actual, 1);
+            if (destino !== null && pasoValido()) mostrar(destino);
         });
 
         atras.addEventListener('click', () => {
-            if (actual > 0) mostrar(actual - 1);
+            const destino = siguienteActivo(actual, -1);
+            if (destino !== null) mostrar(destino);
         });
 
         // Enter avanza al siguiente paso en lugar de enviar el formulario.
         form.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && e.target.tagName === 'INPUT' && actual < pasos.length - 1) {
+            if (e.key === 'Enter' && e.target.tagName === 'INPUT' && siguienteActivo(actual, 1) !== null) {
                 e.preventDefault();
                 siguiente.click();
             }
@@ -371,40 +476,120 @@
 
         form.querySelectorAll('input[name="plantilla"]').forEach((r) => r.addEventListener('change', actualizarTextos));
 
-        // Vista previa del logotipo elegido.
-        const logo = form.querySelector('#logo');
-        logo?.addEventListener('change', () => {
-            const archivo = logo.files?.[0];
-            const vista = form.querySelector('[data-logo-vista]');
-            const texto = form.querySelector('[data-logo-texto]');
+        /*
+         * Imágenes: se revisan aquí las mismas reglas que el servidor
+         * (tipo, 1 MB, 40×20 a 4000×4000 px) para no perder lo capturado
+         * al final por un archivo que el servidor rechazaría.
+         */
+        const revisarImagen = (archivo) => new Promise((resolver) => {
+            if (!TIPOS.includes(archivo.type)) return resolver('Utiliza una imagen PNG, JPG o WEBP.');
+            if (archivo.size > LIMITE_BYTES) return resolver('La imagen supera 1 MB. Elige una más ligera.');
 
-            if (!archivo) {
-                vista.classList.add('hidden');
-                texto.textContent = 'Elegir imagen…';
-                return;
-            }
-
-            if (archivo.size > 1024 * 1024) {
-                logo.value = '';
-                vista.classList.add('hidden');
-                texto.textContent = 'La imagen supera 1 MB. Elige otra.';
-                return;
-            }
-
-            vista.src = URL.createObjectURL(archivo);
-            vista.classList.remove('hidden');
-            texto.textContent = archivo.name + ' · cambiar';
+            const img = new Image();
+            const url = URL.createObjectURL(archivo);
+            img.onload = () => {
+                const { naturalWidth: w, naturalHeight: h } = img;
+                URL.revokeObjectURL(url);
+                resolver(w < 40 || h < 20 || w > 4000 || h > 4000
+                    ? `La imagen mide ${w}×${h} px; debe medir entre 40×20 y 4000×4000 píxeles.`
+                    : null);
+            };
+            img.onerror = () => { URL.revokeObjectURL(url); resolver('No se pudo leer la imagen. Elige otra.'); };
+            img.src = url;
         });
 
-        // Color: código y botón de ejemplo.
-        const color = form.querySelector('#color');
-        color?.addEventListener('input', () => {
-            form.querySelector('[data-color-hex]').textContent = color.value.toUpperCase();
-            form.querySelector('[data-color-muestra]').style.background = color.value;
+        const urls = {};
+        const urlDe = (input) => {
+            const archivo = input?.files?.[0];
+            if (!archivo) return null;
+            if (urls[input.id]?.archivo !== archivo) {
+                if (urls[input.id]) URL.revokeObjectURL(urls[input.id].url);
+                urls[input.id] = { archivo, url: URL.createObjectURL(archivo) };
+            }
+            return urls[input.id].url;
+        };
+
+        // Selector de imagen con vista previa, mensaje de error y botón «Quitar imagen».
+        const prepararSelector = (input, prefijo, textoVacio, alCambiar) => {
+            if (!input) return;
+            const vista = form.querySelector(`[data-${prefijo}-vista]`);
+            const texto = form.querySelector(`[data-${prefijo}-texto]`);
+            const error = form.querySelector(`[data-${prefijo}-error]`);
+            const quitar = form.querySelector(`[data-${prefijo}-quitar]`);
+
+            const pintar = () => {
+                const url = urlDe(input);
+                if (prefijo === 'logo') {
+                    vista.classList.toggle('hidden', !url);
+                    if (url) vista.src = url;
+                }
+                texto.textContent = url ? input.files[0].name + ' · cambiar' : textoVacio;
+                quitar.classList.toggle('hidden', !url);
+                alCambiar?.();
+            };
+
+            input.addEventListener('change', async () => {
+                error.classList.add('hidden');
+                const archivo = input.files?.[0];
+
+                if (archivo) {
+                    const problema = await revisarImagen(archivo);
+                    if (problema) {
+                        input.value = '';
+                        error.textContent = problema;
+                        error.classList.remove('hidden');
+                    }
+                }
+
+                pintar();
+            });
+
+            quitar.querySelector('button').addEventListener('click', () => {
+                input.value = '';
+                error.classList.add('hidden');
+                pintar();
+            });
+
+            input._pintar = pintar;
+        };
+
+        // Vista previa en modo oscuro: la versión subida o el logotipo principal con la apariencia elegida.
+        const actualizarVistaOscura = () => {
+            const vista = form.querySelector('[data-oscuro-vista]');
+            if (!vista) return;
+
+            const propia = urlDe(logoOscuro);
+            const modo = form.querySelector('input[name="logo_modo_oscuro"]:checked')?.value || 'original';
+
+            vista.src = propia || urlDe(logo) || '';
+            vista.classList.toggle('org-logo-preview-dark', !propia);
+            if (propia) vista.removeAttribute('data-dark-mode'); else vista.dataset.darkMode = modo;
+            vista.style.setProperty('--org-logo-bg', '#FFFFFF');
+
+            form.querySelector('[data-modos-oscuro]')?.classList.toggle('hidden', Boolean(propia));
+        };
+
+        prepararSelector(logo, 'logo', 'Elegir imagen…', () => {
+            // Sin logotipo principal no hay versión oscura.
+            if (!hayLogo() && hayLogoOscuro()) {
+                logoOscuro.value = '';
+                logoOscuro._pintar?.();
+            }
+            actualizarBotonSiguiente();
+            mostrar(actual);
         });
+
+        prepararSelector(logoOscuro, 'oscuro', 'Subir versión para modo oscuro (opcional)…', actualizarVistaOscura);
+
+        form.querySelectorAll('input[name="logo_modo_oscuro"]').forEach((r) => r.addEventListener('change', actualizarVistaOscura));
+
+        // Color: botón de ejemplo con el color elegido.
+        form.querySelectorAll('input[name="color"]').forEach((r) => r.addEventListener('change', () => {
+            form.querySelector('[data-color-muestra]').style.background = r.value;
+        }));
 
         actualizarTextos();
-        mostrar(actual);
+        mostrar(activo(actual) ? actual : (siguienteActivo(actual, -1) ?? 0));
     })();
 </script>
 

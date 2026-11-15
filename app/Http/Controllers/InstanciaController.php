@@ -70,14 +70,29 @@ class InstanciaController extends Controller
         $elegida = $forzada ?? (string) $request->input('plantilla');
         $unidad = $plantillas[$elegida]['etiquetas']['unidad'] ?? PlantillaInstalacionService::t('unidad');
 
+        $reglaLogo = [
+            'nullable', 'image', 'mimes:png,jpg,jpeg,webp',
+            'max:'.OrganizacionService::LOGO_TAMANO_MAXIMO_KB,
+            'dimensions:min_width=40,min_height=20,max_width=4000,max_height=4000',
+        ];
+
+        $mensajesLogo = [];
+        foreach (['logo', 'logo_oscuro'] as $campoLogo) {
+            $mensajesLogo += [
+                "{$campoLogo}.uploaded" => 'No se pudo subir la imagen. Elige un archivo más ligero (máximo 1 MB).',
+                "{$campoLogo}.image" => 'El archivo debe ser una imagen.',
+                "{$campoLogo}.mimes" => 'Utiliza una imagen PNG, JPG o WEBP.',
+                "{$campoLogo}.max" => 'El logotipo no puede superar 1 MB.',
+                "{$campoLogo}.dimensions" => 'La imagen debe medir entre 40×20 y 4000×4000 píxeles.',
+            ];
+        }
+
         $datos = $request->validate([
             'plantilla' => [$forzada ? 'nullable' : 'required', Rule::in(array_keys($plantillas))],
             'organizacion' => ['required', 'string', 'max:150'],
-            'logo' => [
-                'nullable', 'image', 'mimes:png,jpg,jpeg,webp',
-                'max:'.OrganizacionService::LOGO_TAMANO_MAXIMO_KB,
-                'dimensions:min_width=40,min_height=20,max_width=4000,max_height=4000',
-            ],
+            'logo' => $reglaLogo,
+            'logo_oscuro' => $reglaLogo,
+            'logo_modo_oscuro' => ['nullable', Rule::in(array_keys(OrganizacionService::MODOS_OSCURO))],
             'color' => ['required', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'sede' => ['required', 'string', 'max:120'],
             'unidad' => ['required', 'string', 'max:150'],
@@ -92,14 +107,11 @@ class InstanciaController extends Controller
             ],
             'correo' => ['required', 'email', 'max:150', Rule::unique('usuarios', 'correo')],
             'password' => ['required', 'string', ...PoliticaContrasena::reglas(), 'confirmed'],
-        ], PoliticaContrasena::mensajes('password') + [
+        ], PoliticaContrasena::mensajes('password') + $mensajesLogo + [
             'plantilla.required' => 'Elige el tipo de organización.',
             'plantilla.in' => 'Elige una plantilla válida.',
             'organizacion.required' => 'Escribe el nombre de la organización.',
-            'logo.image' => 'El archivo debe ser una imagen.',
-            'logo.mimes' => 'Utiliza una imagen PNG, JPG o WEBP.',
-            'logo.max' => 'El logotipo no puede superar 1 MB.',
-            'logo.dimensions' => 'La imagen debe medir entre 40×20 y 4000×4000 píxeles.',
+            'logo_modo_oscuro.in' => 'Elige una apariencia válida.',
             'color.required' => 'Elige el color principal.',
             'color.regex' => 'Elige un color válido.',
             'sede.required' => 'Escribe el nombre de la sede.',
@@ -125,23 +137,40 @@ class InstanciaController extends Controller
             'color_primario' => $color === OrganizacionService::COLOR_PRIMARIO_PREDETERMINADO ? null : $color,
         ];
 
-        if ($request->hasFile('logo')) {
-            $archivo = $request->file('logo');
+        // Logotipos (opcionales): el de modo claro también se usa en los documentos;
+        // el de modo oscuro solo acompaña a uno de modo claro.
+        if ($request->hasFile('logo_oscuro') && ! $request->hasFile('logo')) {
+            throw ValidationException::withMessages([
+                'logo_oscuro' => 'Primero sube el logotipo para modo claro.',
+            ]);
+        }
+
+        $leerLogo = function (string $campo, string $prefijo) use ($request): array {
+            $archivo = $request->file($campo);
             $contenido = file_get_contents($archivo->getRealPath());
             $info = $contenido !== false ? @getimagesizefromstring($contenido) : false;
 
             if ($info === false || ! in_array($info['mime'], OrganizacionService::LOGO_MIMES, true)) {
                 throw ValidationException::withMessages([
-                    'logo' => 'No se pudo leer la imagen. Utiliza un PNG, JPG o WEBP válido.',
+                    $campo => 'No se pudo leer la imagen. Utiliza un PNG, JPG o WEBP válido.',
                 ]);
             }
 
-            $identidad += [
-                'logo_base64' => base64_encode($contenido),
-                'logo_mime' => $info['mime'],
-                'logo_nombre_original' => Str::limit($archivo->getClientOriginalName(), 250, ''),
-                'logo_version' => substr(sha1($contenido), 0, 20),
+            return [
+                "{$prefijo}base64" => base64_encode($contenido),
+                "{$prefijo}mime" => $info['mime'],
+                "{$prefijo}nombre_original" => Str::limit($archivo->getClientOriginalName(), 250, ''),
+                "{$prefijo}version" => substr(sha1($contenido), 0, 20),
             ];
+        };
+
+        if ($request->hasFile('logo')) {
+            $identidad += $leerLogo('logo', 'logo_');
+            $identidad['logo_modo_oscuro'] = $datos['logo_modo_oscuro'] ?? 'original';
+
+            if ($request->hasFile('logo_oscuro')) {
+                $identidad += $leerLogo('logo_oscuro', 'logo_oscuro_');
+            }
         }
 
         DB::transaction(function () use ($datos, $temporal, $forzada, $identidad) {
