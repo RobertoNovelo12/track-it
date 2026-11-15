@@ -82,7 +82,19 @@ class TipoEquipoFormBuilderService
         |
         */
 
-        $sections = $this->ensureRequiredFields($tipoEquipoId);
+        /*
+         * La reparación de secciones y campos obligatorios hace ~9 consultas
+         * (con la base remota, ~1.7 s). Basta con hacerla una vez por versión
+         * de los catálogos: guardar este formulario o editar cualquier
+         * catálogo renueva la versión (refreshModule('catalogos')) y vuelve
+         * a revisarse.
+         */
+        $sections = app(\App\Services\SystemCacheService::class)->remember(
+            'catalogos',
+            'tipo_equipo.secciones_base',
+            ['tipo' => $tipoEquipoId],
+            fn (): array => $this->ensureRequiredFields($tipoEquipoId)
+        );
 
 
         $sectionsById =

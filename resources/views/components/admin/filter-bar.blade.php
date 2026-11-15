@@ -18,16 +18,18 @@
 ============================================================ --}}
 <section {{ $attributes->class('rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-3 sm:p-4') }}>
 
-    <div class="flex flex-col gap-3 lg:flex-row lg:items-center">
+    {{-- Las acciones pasan a la misma fila hasta xl (con el menú lateral, en lg no cabían)
+         y los filtros bajan de renglón cuando no caben junto al buscador. --}}
+    <div class="flex flex-col gap-3 xl:flex-row xl:items-center">
 
         {{-- Buscador y filtros --}}
-        <div class="flex min-w-0 flex-1 flex-col gap-3 sm:flex-row sm:items-center">
+        <div class="flex min-w-0 flex-1 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
             {{ $slot }}
         </div>
 
         {{-- Acciones del apartado --}}
         @isset($actions)
-            <div class="flex shrink-0 flex-wrap items-center gap-2 sm:justify-end">
+            <div class="flex shrink-0 flex-wrap items-center gap-2 sm:justify-end xl:justify-end">
                 {{ $actions }}
             </div>
         @endisset

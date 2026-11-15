@@ -22,9 +22,9 @@
         flex-col
         gap-3
 
-        sm:flex-row
-        sm:items-center
-        sm:justify-between
+        xl:flex-row
+        xl:items-center
+        xl:justify-between
 
         px-4
         py-3
@@ -51,7 +51,7 @@
     ======================================================== --}}
     <div class="flex items-center gap-3">
 
-        <p class="text-xs xl:text-sm text-[var(--theme-text)]">
+        <p class="whitespace-nowrap text-xs xl:text-sm text-[var(--theme-text)]">
 
             Resultados:
 

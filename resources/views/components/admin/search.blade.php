@@ -4,7 +4,7 @@
 ============================================================ --}}
 @props(['label' => 'Buscar'])
 
-<div class="relative min-w-0 flex-1">
+<div class="relative min-w-0 flex-1 sm:min-w-[16rem]">
 
     <div class="pointer-events-none absolute inset-y-0 left-0 flex w-10 items-center justify-center text-[var(--theme-text-muted)]">
         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-f6ba916') }}"></use></svg>

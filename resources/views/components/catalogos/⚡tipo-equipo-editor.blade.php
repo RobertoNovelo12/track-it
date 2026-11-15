@@ -37,16 +37,21 @@ new class extends Component
             $tipoEquipoId;
 
 
-        $this->initialData =
-            $this->builder()
-                ->load(
-                    $this->tipoEquipoId
-                );
-
-        // Sección «Programas» (Incluye programas + predeterminados).
-        $this->initialData['programas'] =
-            app(\App\Services\ProgramasService::class)
-                ->configuracionTipo($this->tipoEquipoId);
+        /*
+         * Formulario del tipo + sección «Programas» en caché del módulo
+         * «catalogos» (eran ~7 consultas seguidas a la base remota en cada
+         * apertura). Guardar el formulario, los programas o cualquier
+         * catálogo renueva la versión y se vuelve a leer.
+         */
+        $this->initialData = app(\App\Services\SystemCacheService::class)->remember(
+            'catalogos',
+            'tipo_equipo.editor',
+            ['tipo' => $this->tipoEquipoId],
+            fn (): array => $this->builder()->load($this->tipoEquipoId) + [
+                'programas' => app(\App\Services\ProgramasService::class)
+                    ->configuracionTipo($this->tipoEquipoId),
+            ]
+        );
     }
 
 
