@@ -23,11 +23,11 @@
     $pasos = array_values(array_filter([
         $plantillaForzada ? null : ['clave' => 'plantilla', 'titulo' => 'Tipo de organización', 'campos' => ['plantilla']],
         ['clave' => 'organizacion', 'titulo' => 'Tu organización', 'campos' => ['organizacion']],
-        ['clave' => 'logo', 'titulo' => 'Logotipo', 'campos' => ['logo']],
-        // Solo aparece si se eligió un logotipo (data-requiere-logo).
-        ['clave' => 'logo_oscuro', 'titulo' => 'Logotipo en modo oscuro', 'campos' => ['logo_oscuro', 'logo_modo_oscuro']],
         ['clave' => 'color', 'titulo' => 'Color principal', 'campos' => ['color']],
         ['clave' => 'sede', 'titulo' => 'Primera sede', 'campos' => ['sede']],
+        ['clave' => 'logo', 'titulo' => 'Logotipo', 'campos' => ['logo']],
+        // Solo aparece si se eligió un logotipo (data-requiere-logo); va justo después del logotipo.
+        ['clave' => 'logo_oscuro', 'titulo' => 'Logotipo en modo oscuro', 'campos' => ['logo_oscuro', 'logo_modo_oscuro']],
         ['clave' => 'unidad', 'titulo' => 'Primer :unidad', 'campos' => ['unidad']],
         ['clave' => 'departamento', 'titulo' => 'Primer departamento', 'campos' => ['departamento']],
         ['clave' => 'nombre', 'titulo' => 'Tus datos', 'campos' => ['nombres', 'apellido_paterno', 'apellido_materno']],
