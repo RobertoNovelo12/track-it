@@ -41,3 +41,23 @@ test('marca, serie y factura respetan la configuración sin alterar los tipos te
     assert.equal(estado.displayFields.find(f => f.key === 'numero_factura').required, false);
     assert.equal(estado.displayFields.some(f => f.key === 'id_marca'), false);
 });
+test('solo muestra marcas con modelos del tipo seleccionado', () => {
+    const {estado} = formulario('?tipo=2');
+    estado.data.marcas = [{value: '10', label: 'Marca de vehículos'}, {value: '20', label: 'Marca tecnológica'}];
+    estado.data.modelos = [{idTipoEquipo: '2', idMarca: '10'}, {idTipoEquipo: '1', idMarca: '20'}];
+    assert.equal(estado.optionsFor({options: 'marcas'}).length, 1);
+    assert.equal(estado.optionsFor({options: 'marcas'})[0].value, '10');
+});
+test('inmuebles e intangibles muestran etiquetas y campos aplicables', () => {
+    const {estado} = formulario('?tipo=2');
+    estado.data.clasificacionPorTipo['2'] = 'inmuebles';
+    estado.data.baseFieldsByType = {'2': {id_marca: {obligatorio: false}, numero_serie: {obligatorio: false}}};
+    assert.equal(estado.displayFields.find(f => f.key === 'nombre_equipo').label, 'Nombre o descripción del inmueble');
+    assert.equal(estado.displayFields.find(f => f.key === 'id_unidad').required, false);
+    assert.equal(estado.displayFields.find(f => f.key === 'id_unidad').label, 'Edificio contenedor (opcional, solo si aplica)');
+    for (const key of ['id_marca','id_modelo','numero_serie']) assert.equal(estado.displayFields.some(f => f.key === key), false);
+    assert.equal(estado.displayFields.find(f => f.key === 'id_proveedor').label, 'Proveedor o vendedor');
+    estado.data.clasificacionPorTipo['2'] = 'intangibles';
+    assert.equal(estado.displayFields.some(f => f.key === 'id_marca'), false);
+    assert.equal(estado.displayFields.find(f => f.key === 'nombre_equipo').label, 'Nombre del software, licencia o intangible');
+});

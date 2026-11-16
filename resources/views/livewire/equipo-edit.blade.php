@@ -327,7 +327,7 @@
                 <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <div class="min-w-0 flex-1">
                         <h2 class="mb-4 text-sm font-semibold text-[var(--theme-text-strong)]">
-                            Tipo de equipo
+                            Tipo de bien
                         </h2>
 
                         <div class="max-w-lg">
@@ -341,7 +341,7 @@
                                 Se muestra como campo de solo lectura con candado.
                             --}}
                             <label class="mb-1.5 block text-xs text-[var(--theme-text-muted)]">
-                                Tipo de equipo *
+                                Tipo de bien *
                             </label>
 
                             <div
@@ -874,7 +874,8 @@
 
                 id_proveedor: {
                     model: 'idProveedor',
-                    label: 'Proveedor',
+                    label: 'Proveedor o vendedor',
+                    alwaysVisible: true,
                     type: 'select',
                     options: 'proveedores',
                 },
@@ -999,6 +1000,15 @@
                 Object.entries(this.base).forEach(
                     ([key, base], index) => {
                         const meta = configured[key];
+                        const clasificacion = this.data.clasificacionPorTipo?.[this.typeId] ?? 'global';
+                        const noAplica = (clasificacion === 'inmuebles' && ['id_marca', 'id_modelo', 'numero_serie'].includes(key))
+                            || (clasificacion === 'intangibles' && ['id_marca', 'id_modelo'].includes(key));
+                        const tieneValorAnterior = String(this.data.initial?.[base.model] ?? '').trim() !== '';
+                        if (noAplica && !meta?.obligatorio && !tieneValorAnterior) return;
+                        const nombres = {global: 'Nombre del equipo o bien', intangibles: 'Nombre del software, licencia o intangible', inmuebles: 'Nombre o descripción del inmueble', vehiculos: 'Nombre o descripción del vehículo'};
+                        const etiqueta = key === 'id_unidad' && clasificacion === 'inmuebles' ? 'Edificio contenedor (opcional, solo si aplica)' : key === 'nombre_equipo' && (!meta?.etiqueta || ['Nombre del equipo', 'Nombre del bien'].includes(meta.etiqueta))
+                            ? nombres[clasificacion] : (key === 'id_proveedor' && (!meta?.etiqueta || meta.etiqueta === 'Proveedor') ? 'Proveedor o vendedor' : (meta?.etiqueta || base.label));
+
 
                         /*
                          * Un campo que ya tiene dato se muestra aunque el tipo no
@@ -1018,11 +1028,11 @@
                             child: false,
 
                             // Ubicación siempre es información adicional opcional.
-                            required: key === 'id_ubicacion'
+                            required: key === 'id_ubicacion' || (clasificacion === 'inmuebles' && key === 'id_unidad')
                                 ? false
                                 : (['id_marca', 'numero_serie', 'numero_factura'].includes(key) ? !!(meta?.obligatorio ?? base.required) : !!(base.required || meta?.obligatorio)),
 
-                            label: meta?.etiqueta || base.label,
+                            label: etiqueta,
                             sectionId: meta?.id_seccion,
                             sectionKey: base.sectionKey || 'general',
                             order: Number(
@@ -1147,6 +1157,11 @@
                 if (field.child) {
                     return this.data.dynamicCatalogs?.[field.catalog]
                         ?? [];
+                }
+
+                if (field.options === 'marcas') {
+                    const permitidas = new Set((this.data.modelos ?? []).filter(modelo => String(modelo.idTipoEquipo) === this.typeId).map(modelo => String(modelo.idMarca)));
+                    return (this.data.marcas ?? []).filter(marca => permitidas.has(String(marca.value)) || String(marca.value) === String(this.data.initial?.idMarca ?? ''));
                 }
 
                 if (field.options === 'modelos') {
@@ -1878,7 +1893,7 @@
 
 
                         if (
-                            String(
+                            this.data.clasificacionPorTipo?.[this.typeId] !== 'inmuebles' && String(
                                 payload.idHotel
                                 ?? ''
                             ) === ''

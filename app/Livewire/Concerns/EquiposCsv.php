@@ -97,7 +97,10 @@ trait EquiposCsv
         $configurados = $this->csvMemo('base', fn () => $this->getConfiguredBaseFields())[$tipoId] ?? [];
         $columnas = [];
 
+        $esInmueble = app(\App\Services\ClasificacionBienService::class)->esInmueble($tipoId);
+
         foreach ($this->csvBase() as $clave => [$modelo, $etiqueta, $tipo, $obligatorio]) {
+            if ($clave === 'id_unidad' && $esInmueble) { $obligatorio = false; }
             if (in_array($clave, ['id_marca', 'numero_serie', 'numero_factura'], true)) {
                 if (($configurados[$clave]['visible'] ?? true) === false) { continue; }
                 $obligatorio = $configurados[$clave]['obligatorio'] ?? $obligatorio;
@@ -1062,7 +1065,12 @@ trait EquiposCsv
             $porColumna[$this->csvNormalizar($encabezado)] = $fila[$i] ?? '';
         }
 
-        $tipoTexto = trim((string) ($porColumna['tipo de equipo'] ?? ''));
+        $tipoTexto = trim((string) ($porColumna['tipo de bien'] ?? $porColumna['tipo de equipo'] ?? ''));
+        foreach (['nombre del equipo o bien', 'nombre del bien', 'nombre del software, licencia o intangible', 'nombre o descripcion del inmueble', 'nombre o descripcion del vehiculo'] as $alias) {
+            if (isset($porColumna[$alias]) && !isset($porColumna['nombre del equipo'])) { $porColumna['nombre del equipo'] = $porColumna[$alias]; }
+        }
+        $porColumna['proveedor'] ??= $porColumna['proveedor o vendedor'] ?? '';
+        $porColumna['edificio'] ??= $porColumna['edificio contenedor (opcional, solo si aplica)'] ?? '';
         $tipoId = $this->csvBuscar($tipoTexto, $this->csvMemo('lista.tipos', fn () => $this->getTiposEquipoProperty()), 'id_tipo_equipo');
 
         if ($tipoId === null) {

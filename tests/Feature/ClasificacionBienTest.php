@@ -68,6 +68,35 @@ class ClasificacionBienTest extends TestCase
         (new ClasificacionBienService)->validar('', 1);
     }
 
+    public function test_inmueble_no_necesita_otro_edificio(): void
+    {
+        DB::table('tipos_equipo')->insert(['id_tipo_equipo' => 20, 'clasificacion_bien' => 'inmuebles']);
+        $s = new ClasificacionBienService;
+        $this->assertSame(['id_unidad' => null, 'id_departamento' => null, 'id_ubicacion' => null], $s->inmuebleSinUnidad(['idTipoEquipo' => 20, 'idHotel' => '', 'idDepartamento' => '', 'idUbicacion' => '']));
+        $this->assertNull($s->inmuebleSinUnidad(['idTipoEquipo' => 20, 'idHotel' => 1]));
+        $this->assertFalse($s->esInmueble(99));
+        $reporte = new \App\Services\InventarioGlobalReporteService;
+        $this->assertSame('Edificio A · Biblioteca', $reporte->celda(['descripcion' => 'Edificio A', 'uso_destino' => 'Biblioteca'], 'descripcion_uso'));
+    }
+
+    public function test_marca_debe_corresponder_al_tipo_y_conserva_la_marca_historica(): void
+    {
+        Schema::create('modelos', function (Blueprint $t) {
+            $t->integer('id_tipo_equipo'); $t->integer('id_marca'); $t->boolean('activo');
+        });
+        Schema::create('equipos', function (Blueprint $t) {
+            $t->integer('id_equipo'); $t->integer('id_marca');
+        });
+        DB::table('modelos')->insert(['id_tipo_equipo' => 2, 'id_marca' => 10, 'activo' => true]);
+        DB::table('equipos')->insert(['id_equipo' => 1, 'id_marca' => 20]);
+        $s = new ClasificacionBienService;
+        $s->validarMarca(2, 10);
+        $s->validarMarca(2, null);
+        $s->validarMarca(2, 20, 1);
+        $this->expectException(ValidationException::class);
+        $s->validarMarca(2, 20);
+    }
+
     public function test_alta_y_edicion_leen_los_mismos_campos_y_validan_sus_valores(): void
     {
         (new ClasificacionBienService)->completarCampos(20, 'vehiculos', ['general' => 1, 'informacion_tipo' => 2]);

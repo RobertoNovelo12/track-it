@@ -48,7 +48,7 @@
                     <div class="min-w-0 flex-1">
                         <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
                             <h2 class="text-sm font-semibold text-[var(--theme-text-strong)]">
-                                Tipo de equipo
+                                Tipo de bien
                             </h2>
 
                             {{-- Llenar desde archivo (Excel o CSV): la primera fila (plantilla de Tipos de equipo). --}}
@@ -67,8 +67,8 @@
                             <x-searchable-select
                                 x-model="values.idTipoEquipo"
                                 x-options="(data.tiposEquipo ?? []).filter(tipo => data.clasificacionPorTipo[tipo.value] === values.clasificacionBien)"
-                                label="Tipo de equipo *"
-                                placeholder="Buscar tipo de equipo..."
+                                label="Tipo de bien *"
+                                placeholder="Buscar tipo de bien..."
                             />
 
                             <p
@@ -386,7 +386,8 @@
 
                 id_proveedor: {
                     model: 'idProveedor',
-                    label: 'Proveedor',
+                    label: 'Proveedor o vendedor',
+                    alwaysVisible: true,
                     type: 'select',
                     options: 'proveedores',
                 },
@@ -527,6 +528,10 @@
                         });
 
                     this.values = next;
+                    if (!this.optionsFor({options: 'marcas'}).some(marca => String(marca.value) === String(this.values.idMarca))) {
+                        this.values.idMarca = '';
+                        this.values.idModelo = '';
+                    }
                     this.errors = {};
 
                     // Al cambiar de tipo vienen marcados sus predeterminados.
@@ -641,6 +646,15 @@
                 Object.entries(this.base).forEach(
                     ([key, base], index) => {
                         const meta = configured[key];
+                        const clasificacion = this.data.clasificacionPorTipo?.[this.typeId] ?? 'global';
+                        const noAplica = (clasificacion === 'inmuebles' && ['id_marca', 'id_modelo', 'numero_serie'].includes(key))
+                            || (clasificacion === 'intangibles' && ['id_marca', 'id_modelo'].includes(key));
+                        const tieneValorAnterior = String(this.data.initial?.[base.model] ?? '').trim() !== '';
+                        if (noAplica && !meta?.obligatorio && !tieneValorAnterior) return;
+                        const nombres = {global: 'Nombre del equipo o bien', intangibles: 'Nombre del software, licencia o intangible', inmuebles: 'Nombre o descripción del inmueble', vehiculos: 'Nombre o descripción del vehículo'};
+                        const etiqueta = key === 'id_unidad' && clasificacion === 'inmuebles' ? 'Edificio contenedor (opcional, solo si aplica)' : key === 'nombre_equipo' && (!meta?.etiqueta || ['Nombre del equipo', 'Nombre del bien'].includes(meta.etiqueta))
+                            ? nombres[clasificacion] : (key === 'id_proveedor' && (!meta?.etiqueta || meta.etiqueta === 'Proveedor') ? 'Proveedor o vendedor' : (meta?.etiqueta || base.label));
+
 
                         if (['id_marca', 'numero_serie', 'numero_factura'].includes(key) && meta?.visible === false) { return; }
 
@@ -654,13 +668,13 @@
                             child: false,
 
                             // Ubicación siempre es información adicional opcional.
-                            required: key === 'id_ubicacion'
+                            required: key === 'id_ubicacion' || (clasificacion === 'inmuebles' && key === 'id_unidad')
                                 ? false
                                 : (['id_marca', 'numero_serie', 'numero_factura'].includes(key) ? !!(meta?.obligatorio ?? base.required) : !!(base.required || meta?.obligatorio)),
 
                             label: key === 'propietario'
                                 ? 'Responsable'
-                                : (meta?.etiqueta || base.label),
+                                : etiqueta,
                             sectionId: meta?.id_seccion,
                             sectionKey: base.sectionKey || 'general',
                             order: Number(
@@ -814,6 +828,11 @@
                 if (field.child) {
                     return this.data.dynamicCatalogs?.[field.catalog]
                         ?? [];
+                }
+
+                if (field.options === 'marcas') {
+                    const permitidas = new Set((this.data.modelos ?? []).filter(modelo => String(modelo.idTipoEquipo) === this.typeId).map(modelo => String(modelo.idMarca)));
+                    return (this.data.marcas ?? []).filter(marca => permitidas.has(String(marca.value)));
                 }
 
                 if (field.options === 'modelos') {

@@ -19,6 +19,30 @@ class ClasificacionBienService
         return DB::table('tipos_equipo')->pluck('clasificacion_bien', 'id_tipo_equipo')->all();
     }
 
+    public function esInmueble(int $tipoId): bool
+    {
+        return DB::table('tipos_equipo')->where('id_tipo_equipo', $tipoId)->value('clasificacion_bien') === 'inmuebles';
+    }
+
+    public function inmuebleSinUnidad(array $payload): ?array
+    {
+        if (!empty($payload['idHotel']) || !$this->esInmueble((int) ($payload['idTipoEquipo'] ?? 0))) { return null; }
+        $datos = \Illuminate\Support\Facades\Validator::make($payload, [
+            'idDepartamento' => ['nullable', 'integer', \Illuminate\Validation\Rule::exists('departamentos', 'id_departamento')->where('activo', true)],
+            'idUbicacion' => ['nullable', 'prohibited'],
+        ], ['idUbicacion.prohibited' => 'Para indicar una ubicación interna, selecciona primero el edificio contenedor.'])->validate();
+        return ['id_unidad' => null, 'id_departamento' => filled($datos['idDepartamento'] ?? null) ? (int) $datos['idDepartamento'] : null, 'id_ubicacion' => null];
+    }
+
+    public function validarMarca(int $tipoId, mixed $marcaId, ?int $equipoId = null): void
+    {
+        if (! $marcaId) { return; }
+        if ($equipoId && DB::table('equipos')->where('id_equipo', $equipoId)->where('id_marca', $marcaId)->exists()) { return; }
+        if (! DB::table('modelos')->where('id_tipo_equipo', $tipoId)->where('id_marca', $marcaId)->where('activo', true)->exists()) {
+            throw ValidationException::withMessages(['idMarca' => 'La marca no corresponde al tipo seleccionado. Configura su modelo en Administración → Marcas y modelos.']);
+        }
+    }
+
     public function validar(string $clasificacion, int $tipoId): void
     {
         if (! isset(self::OPCIONES[$clasificacion]) || ! DB::table('tipos_equipo')
@@ -48,7 +72,8 @@ class ClasificacionBienService
             'resguardatario' => ['Resguardatario', 'text'],
         ];
         $campos = match ($clasificacion) {
-            'global', 'intangibles' => $comunes,
+            'global' => $comunes,
+            'intangibles' => $comunes + ['desarrollador' => ['Desarrollador o fabricante', 'text']],
             'vehiculos' => [
                 'placas' => ['Placas de circulación', 'text'],
                 'anio_vehiculo' => ['Año', 'number'],
@@ -83,7 +108,7 @@ class ClasificacionBienService
         }
 
         if ($ajustarVisibilidad) {
-            $clavesReporte = array_unique(array_merge(array_keys($comunes), ['placas', 'anio_vehiculo', 'uso_destino', 'institucion_responsable', 'domicilio_inmueble', 'tipo_posesion', 'titulo_propiedad']));
+            $clavesReporte = array_unique(array_merge(array_keys($comunes), ['desarrollador', 'placas', 'anio_vehiculo', 'uso_destino', 'institucion_responsable', 'domicilio_inmueble', 'tipo_posesion', 'titulo_propiedad']));
             $todos = DB::table('campos_equipo')->whereIn('clave', array_merge($clavesReporte, array_map(fn ($clave) => 'institucion_'.$clave, $clavesReporte)))->pluck('id_campo');
             DB::table('tipo_equipo_campos')->where('id_tipo_equipo', $tipoId)->whereIn('id_campo', $todos)->whereNotIn('id_campo', $ids)->update(['visible' => false]);
             DB::table('tipo_equipo_campos')->where('id_tipo_equipo', $tipoId)->whereIn('id_campo', $ids)->update(['visible' => true]);

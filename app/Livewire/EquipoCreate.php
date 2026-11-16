@@ -154,6 +154,9 @@ class EquipoCreate extends Component
 
         private function validarOrganizacion(array $payload): array
     {
+        $sinUnidad = app(\App\Services\ClasificacionBienService::class)->inmuebleSinUnidad($payload);
+        if ($sinUnidad !== null) { return $sinUnidad; }
+
         $datos = Validator::make(
             $payload,
             [
@@ -1468,7 +1471,7 @@ class EquipoCreate extends Component
                 ],
 
                 'idHotel' => [
-                    'required',
+                    app(\App\Services\ClasificacionBienService::class)->esInmueble((int) $payload['idTipoEquipo']) ? 'nullable' : 'required',
                     'integer',
                     'min:1',
                 ],
@@ -1486,6 +1489,7 @@ class EquipoCreate extends Component
         )->validate();
 
         $tipoId = (int) $validated['idTipoEquipo'];
+        app(\App\Services\ClasificacionBienService::class)->validarMarca($tipoId, $validated['idMarca'] ?? null);
 
         $definitions = $this->configuredChildFields(
             $tipoId

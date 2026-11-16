@@ -97,6 +97,9 @@ class EquipoEdit extends Component
     private function validarOrganizacion(array $payload): array
 
     {
+        $sinUnidad = app(\App\Services\ClasificacionBienService::class)->inmuebleSinUnidad($payload);
+        if ($sinUnidad !== null) { return $sinUnidad; }
+
 
         $datos = Validator::make(
 
@@ -2078,6 +2081,7 @@ class EquipoEdit extends Component
         }
 
         return [
+            'clasificacionPorTipo' => app(\App\Services\ClasificacionBienService::class)->porTipo(),
 
             'estados' => $this->toFrontendOptions(
 
@@ -2440,7 +2444,7 @@ class EquipoEdit extends Component
 
                 ],
 
-                'idHotel' => ['required', 'integer', 'min:1'],
+                'idHotel' => [app(\App\Services\ClasificacionBienService::class)->esInmueble((int) $payload['idTipoEquipo']) ? 'nullable' : 'required', 'integer', 'min:1'],
 
                 'childData' => [
 
@@ -2455,6 +2459,7 @@ class EquipoEdit extends Component
         $organizacion = $this->validarOrganizacion($payload);
 
         $tipoNuevo = (int) $validated['idTipoEquipo'];
+        app(\App\Services\ClasificacionBienService::class)->validarMarca($tipoNuevo, $validated['idMarca'] ?? null, $this->equipoId);
 
         $definitions = $this->configuredChildFields(
 
