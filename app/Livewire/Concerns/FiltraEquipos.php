@@ -595,6 +595,10 @@ trait FiltraEquipos
             });
 
         match ($situacion) {
+            'en_resguardo' => $query->whereExists(function (Builder $q): void {
+                $q->selectRaw('1')->from('bajas_resguardo as br_situacion')
+                    ->whereColumn('br_situacion.id_equipo', 'e.id_equipo')->whereNull('br_situacion.fecha_completada');
+            }),
             'asignados' => $query->whereExists(function (Builder $q): void {
                 $q->selectRaw('1')
                     ->from('asignaciones as a_situacion')

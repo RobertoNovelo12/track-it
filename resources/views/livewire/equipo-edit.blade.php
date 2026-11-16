@@ -331,6 +331,10 @@
                         </h2>
 
                         <div class="max-w-lg">
+                            <div class="mb-4">
+                                <label class="mb-1.5 block text-xs text-[var(--theme-text-muted)]">Clasificación del bien</label>
+                                <div class="rounded-md border border-[var(--theme-border)] bg-[var(--theme-surface-soft)] px-3 py-2 text-sm" aria-readonly="true">{{ \App\Services\ClasificacionBienService::OPCIONES[app(\App\Services\ClasificacionBienService::class)->porTipo()[$tipoEquipoOriginal]] }}</div>
+                            </div>
                             {{--
                                 Bloqueado: cambiar el tipo borraría los datos específicos
                                 ya capturados (p. ej. «Información de Teléfono»).
@@ -1002,6 +1006,8 @@
                          */
                         const tieneDato = String(this.data?.initial?.[base.model] ?? '').trim() !== '';
 
+                        if (['id_marca', 'numero_serie', 'numero_factura'].includes(key) && meta?.visible === false && !tieneDato) { return; }
+
                         if (!base.required && !base.alwaysVisible && !meta && !tieneDato) {
                             return;
                         }
@@ -1014,7 +1020,7 @@
                             // Ubicación siempre es información adicional opcional.
                             required: key === 'id_ubicacion'
                                 ? false
-                                : !!(base.required || meta?.obligatorio),
+                                : (['id_marca', 'numero_serie', 'numero_factura'].includes(key) ? !!(meta?.obligatorio ?? base.required) : !!(base.required || meta?.obligatorio)),
 
                             label: meta?.etiqueta || base.label,
                             sectionId: meta?.id_seccion,
@@ -1865,38 +1871,11 @@
                             ];
                         }
 
-                        if (
-                            String(
-                                payload.idMarca
-                                ?? ''
-                            ) === ''
-                        ) {
-                            errors.idMarca = [
-                                'Selecciona una marca.'
-                            ];
-                        }
 
-                        if (
-                            String(
-                                payload.numeroFactura
-                                ?? ''
-                            ).trim() === ''
-                        ) {
-                            errors.numeroFactura = [
-                                'El número de factura es obligatorio.'
-                            ];
-                        }
 
-                        if (
-                            String(
-                                payload.numeroSerie
-                                ?? ''
-                            ).trim() === ''
-                        ) {
-                            errors.numeroSerie = [
-                                'El número de serie es obligatorio.'
-                            ];
-                        }
+
+
+
 
                         if (
                             String(

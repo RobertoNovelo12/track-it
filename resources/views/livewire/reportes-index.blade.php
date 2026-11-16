@@ -616,7 +616,7 @@
 
         $tabs = [
 
-            'altas' => 'Altas',
+            'altas' => 'Inventario global',
 
             'bajas' => 'Bajas',
 
@@ -630,7 +630,7 @@
 
         $resumenes = [
 
-            'altas' => 'Equipos registrados en el sistema.',
+            'altas' => 'Inventario completo y formatos de intangibles, inmuebles y vehículos.',
 
             'bajas' => 'Equipos incluidos en procesos de baja.',
 
@@ -845,6 +845,20 @@
 
                     <div class="grid gap-4 md:grid-cols-2">
 
+                        <div x-show="activo === 'altas'" class="md:col-span-2">
+                            <label class="mb-1.5 block text-xs font-medium">Formato del inventario</label>
+                            <select wire:model="formatoInventario" x-on:change="$wire.set('formatoInventario', $event.target.value, false); precargadas = {}; sugerenciasAbiertas = false; consultaSugerenciasVersion++; nombreEquipoVisible = null; $wire.set('busquedaActivo', '', false); $wire.set('tipoEquipo', '', false); vistaLocalVacia = true; $wire.buscarAutomaticamente()" class="{{ $campoClase }}">
+                                @foreach (\App\Services\InventarioGlobalReporteService::FORMATOS as $clave => $nombre)<option value="{{ $clave }}">{{ $nombre }}</option>@endforeach
+                            </select>
+                        </div>
+                        <div x-show="activo === 'bajas'" class="md:col-span-2">
+                            <label class="mb-1.5 block text-xs font-medium">Formato de bajas</label>
+                            <select wire:model="formatoBaja" x-on:change="$wire.set('formatoBaja', $event.target.value, false); precargadas = {}; sugerenciasAbiertas = false; consultaSugerenciasVersion++; nombreEquipoVisible = null; $wire.set('busquedaActivo', '', false); $wire.set('estado', '', false); vistaLocalVacia = true; $wire.buscarAutomaticamente()" class="{{ $campoClase }}">
+                                <option value="completadas">Completadas · Acta de baja</option>
+                                <option value="resguardo">En resguardo · Inventario pendiente de revisión</option>
+                            </select>
+                            <p class="mt-2 text-xs text-[var(--theme-text-muted)]">En resguardo: el equipo sigue en la institución. Completada: salida confirmada; el acta permanece en el historial.</p>
+                        </div>
                         {{-- BUSCAR ACTIVO --}}
 
                         <div class="relative block md:col-span-2" x-on:click.outside="sugerenciasAbiertas = false">
@@ -923,6 +937,7 @@
                         />
 
                         {{-- ESTADO --}}
+                        <div x-show="!(activo === 'bajas' && $wire.formatoBaja === 'resguardo')">
 
                         <x-searchable-select
 
@@ -946,6 +961,7 @@
 
                         />
 
+                        </div>
                         {{-- FECHA INICIAL --}}
 
                         <label class="block">
@@ -1148,8 +1164,8 @@
                         medir() {
                             const disponible = this.$el.clientWidth;
                             if (! disponible) return;
-                            this.escala = Math.min(1, disponible / 816);
-                            this.izquierda = Math.max(0, (disponible - 816) / 2);
+                            this.escala = Math.min(1, disponible / ((this.activo === 'altas' || (this.activo === 'bajas' && $wire.formatoBaja === 'resguardo')) ? 1587 : 816));
+                            this.izquierda = Math.max(0, (disponible - ((this.activo === 'altas' || (this.activo === 'bajas' && $wire.formatoBaja === 'resguardo')) ? 1587 : 816)) / 2);
                             this.alto = Math.ceil(this.$refs.hoja.scrollHeight * this.escala);
                         },
                     }"
@@ -1164,8 +1180,7 @@
                 >
                     <div
                         x-ref="hoja"
-                        :style="{ transform: 'scale(' + escala + ')', left: izquierda + 'px' }"
-                        style="width: 816px; min-height: 1056px; transform-origin: top left;"
+                        x-bind:style="{ width: (activo === 'altas' || (activo === 'bajas' && $wire.formatoBaja === 'resguardo')) ? '1587px' : '816px', minHeight: (activo === 'altas' || (activo === 'bajas' && $wire.formatoBaja === 'resguardo')) ? '1123px' : '1056px', transformOrigin: 'top left', transform: 'scale(' + escala + ')', left: izquierda + 'px' }"
                         class="absolute top-0 bg-white shadow-md"
                     >
 
@@ -1176,15 +1191,14 @@
 
                     <div x-show="activo === 'altas'">
 
-                        @include('reportes.alta-previa', [
-
-                            'alta' => []
-
-                        ])
+                        @include('reportes.inventario-global-tabla', ['filas' => [], 'formato' => $formatoInventario, 'mensajeVacio' => 'Selecciona los filtros para consultar el inventario.'])
 
                     </div>
 
                     <div x-show="activo === 'bajas'">
+                        @if ($formatoBaja === 'resguardo')
+                            @include('reportes.inventario-global-tabla', ['filas'=>[], 'formato'=>'resguardo'])
+                        @else
 
                         @include('reportes.baja-acta-previa', [
 
@@ -1198,6 +1212,7 @@
 
                         ])
 
+                        @endif
                     </div>
 
                     <div x-show="activo === 'asignaciones'">
@@ -1263,33 +1278,11 @@
                 <div x-show="!vistaLocalVacia" x-cloak>
 
                     @if ($tipoSeleccionado === 'altas')
-
-                        @if (!$previewReady)
-
-                            @include('reportes.alta-previa', [
-
-                                'alta' => []
-
-                            ])
-
-                        @elseif (empty($previewDocument))
-
-                            <div class="rounded-lg bg-white p-6 text-center text-sm text-slate-600">
-
-                                No se encontraron altas con estos filtros.
-
-                            </div>
-
-                        @else
-
-                            @include('reportes.alta-previa', [
-
-                                'alta' => $previewDocument
-
-                            ])
-
-                        @endif
-
+                        @include('reportes.inventario-global-tabla', ['filas' => $previewDocument['filas'] ?? [], 'formato' => $formatoInventario])
+                        <p style="padding:12px;color:#475569;font-size:10px;">Vista previa: hasta 20 de {{ $previewTotal }} bienes. Las descargas incluyen todos los resultados. Los campos sin información se muestran como «Sin dato».</p>
+                    @elseif ($tipoSeleccionado === 'bajas' && $formatoBaja === 'resguardo')
+                        @include('reportes.inventario-global-tabla', ['filas'=>$previewDocument['filas'] ?? [], 'formato'=>'resguardo'])
+                        <p style="padding:12px;font-size:10px;">Vista previa: hasta 20 de {{ $previewTotal }} equipos. La descarga incluye todos los resultados.</p>
                     @elseif ($tipoSeleccionado === 'bajas')
 
                         @if (!$previewReady)
@@ -1468,7 +1461,7 @@
             empty-title="Sin reportes"
             empty-variant="empty"
             empty-message="Todavía no se han generado reportes."
-            :mobile-title="fn ($reporte) => $tabs[$reporte->tipo_reporte] ?? ucfirst($reporte->tipo_reporte)"
+            :mobile-title="fn ($reporte) => (in_array($reporte->tipo_reporte, ['inventario_global','bajas_resguardo']) ? ($reporte->tipo_reporte === 'bajas_resguardo' ? 'Bajas en resguardo' : 'Inventario global') : ($reporte->tipo_reporte === 'altas' ? 'Altas' : ($tabs[$reporte->tipo_reporte] ?? ucfirst($reporte->tipo_reporte))))"
             :mobile-subtitle="fn ($reporte) => \App\Support\Fecha::conHora($reporte->fecha_generacion, '')"
             :columns="[
                 [
@@ -1476,7 +1469,7 @@
                     'label' => 'Tipo de reporte',
                     'width' => '160px',
                     'strong' => true,
-                    'value' => fn ($reporte) => $tabs[$reporte->tipo_reporte] ?? ucfirst($reporte->tipo_reporte),
+                    'value' => fn ($reporte) => (in_array($reporte->tipo_reporte, ['inventario_global','bajas_resguardo']) ? ($reporte->tipo_reporte === 'bajas_resguardo' ? 'Bajas en resguardo' : 'Inventario global') : ($reporte->tipo_reporte === 'altas' ? 'Altas' : ($tabs[$reporte->tipo_reporte] ?? ucfirst($reporte->tipo_reporte)))),
                     'mobile' => false,
                 ],
                 [

@@ -60,9 +60,13 @@
                         </div>
 
                         <div class="max-w-lg">
+                            <div class="mb-4">
+                                <x-searchable-select x-model="values.clasificacionBien" x-options="Object.entries(data.clasificaciones).map(([value, label]) => ({value, label}))" label="Clasificación del bien *" placeholder="Seleccionar clasificación..." />
+                                <p x-show="errorFor('clasificacionBien')" x-text="errorFor('clasificacionBien')" class="mt-1 text-xs text-[var(--theme-danger)]"></p>
+                            </div>
                             <x-searchable-select
                                 x-model="values.idTipoEquipo"
-                                x-options="data.tiposEquipo"
+                                x-options="(data.tiposEquipo ?? []).filter(tipo => data.clasificacionPorTipo[tipo.value] === values.clasificacionBien)"
                                 label="Tipo de equipo *"
                                 placeholder="Buscar tipo de equipo..."
                             />
@@ -438,6 +442,7 @@
             emptyValues() {
                 return Object.fromEntries([
                     ['idTipoEquipo', ''],
+                    ['clasificacionBien', ''],
 
                     ...Object.values(this.base).map(
                         field => [field.model, '']
@@ -486,6 +491,13 @@
                     };
                 }
 
+                this.values.clasificacionBien = this.data.clasificacionPorTipo[this.values.idTipoEquipo] ?? '';
+                this.$watch('values.clasificacionBien', value => {
+                    if (!this.suspendDependencies && this.values.idTipoEquipo && this.data.clasificacionPorTipo[this.values.idTipoEquipo] !== value) {
+                        this.values.idTipoEquipo = '';
+                    }
+                });
+
                 // Programas: los del equipo duplicado o los predeterminados del tipo.
                 this.programas = Array.isArray(duplicado?.programas)
                     ? duplicado.programas.map(String)
@@ -506,6 +518,7 @@
                     const next = this.emptyValues();
 
                     next.idTipoEquipo = value;
+                    next.clasificacionBien = this.values.clasificacionBien;
 
                     Object.values(this.base)
                         .filter(field => field.required)
@@ -629,6 +642,8 @@
                     ([key, base], index) => {
                         const meta = configured[key];
 
+                        if (['id_marca', 'numero_serie', 'numero_factura'].includes(key) && meta?.visible === false) { return; }
+
                         if (!base.required && !base.alwaysVisible && !meta) {
                             return;
                         }
@@ -641,7 +656,7 @@
                             // Ubicación siempre es información adicional opcional.
                             required: key === 'id_ubicacion'
                                 ? false
-                                : !!(base.required || meta?.obligatorio),
+                                : (['id_marca', 'numero_serie', 'numero_factura'].includes(key) ? !!(meta?.obligatorio ?? base.required) : !!(base.required || meta?.obligatorio)),
 
                             label: key === 'propietario'
                                 ? 'Responsable'
@@ -887,6 +902,7 @@
                 const payload = this.emptyValues();
 
                 payload.idTipoEquipo = this.typeId;
+                payload.clasificacionBien = this.values.clasificacionBien;
                 payload.childData = {};
 
                 /*
@@ -913,6 +929,9 @@
             validateSnapshot(payload) {
                 const errors = {};
 
+                if (!payload.clasificacionBien) {
+                    errors.clasificacionBien = ['Selecciona la clasificación del bien.'];
+                }
                 if (!payload.idTipoEquipo) {
                     errors.idTipoEquipo = [
                         'Selecciona un tipo de equipo.',
@@ -1041,6 +1060,7 @@
                         ...(resultado.childData ?? {}),
                     };
                     this.errors = {};
+                    this.values.clasificacionBien = this.data.clasificacionPorTipo[resultado.base.idTipoEquipo] ?? '';
                     this.programas = this.programasPredeterminados(resultado.base.idTipoEquipo);
                     this.$nextTick(() => { this.suspendDependencies = false; });
 

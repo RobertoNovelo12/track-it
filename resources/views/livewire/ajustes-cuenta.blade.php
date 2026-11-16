@@ -114,9 +114,10 @@
 
     @include('livewire.settings.modals.change-password')
 
-    @include('livewire.settings.modals.two-factor')
-
-    @include('livewire.settings.modals.manage-two-factor')
+    @if (config('auth.two_factor_enabled'))
+        @include('livewire.settings.modals.two-factor')
+        @include('livewire.settings.modals.manage-two-factor')
+    @endif
 
     @include('livewire.settings.modals.active-sessions')
 

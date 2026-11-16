@@ -1686,7 +1686,7 @@ class EquipoEdit extends Component
         $rows = DB::table('tipo_equipo_campos as tec')
             ->join('campos_equipo as ce', 'ce.id_campo', '=', 'tec.id_campo')
             ->where('ce.activo', true)
-            ->where('tec.visible', true)
+            ->where(fn ($q) => $q->where('tec.visible', true)->orWhereIn('ce.clave', ['id_marca', 'numero_serie', 'numero_factura']))
             ->whereIn('tec.origen_dato', ['equipos', 'asignacion'])
             ->orderBy('tec.orden')
             ->get([
@@ -1696,6 +1696,7 @@ class EquipoEdit extends Component
                 'tec.etiqueta',
                 'tec.id_seccion',
                 'tec.obligatorio',
+                'tec.visible',
                 'tec.orden',
             ]);
 
@@ -1703,7 +1704,8 @@ class EquipoEdit extends Component
             $result[(int) $row->id_tipo_equipo][(string) $row->clave] = [
                 'etiqueta' => $row->etiqueta ?: $row->nombre,
                 'id_seccion' => $row->id_seccion !== null ? (int) $row->id_seccion : null,
-                'obligatorio' => (bool) $row->obligatorio,
+                'obligatorio' => (bool) $row->visible && (bool) $row->obligatorio,
+                'visible' => (bool) $row->visible,
                 'orden' => (int) $row->orden,
             ];
         }
@@ -2359,6 +2361,7 @@ class EquipoEdit extends Component
             ->where('id_equipo', $this->equipoId)
             ->value('id_tipo_equipo');
 
+        $requeridosBase = app(\App\Services\ClasificacionBienService::class)->requeridosBase((int) $payload['idTipoEquipo']);
         $validated = Validator::make(
 
             $payload,
@@ -2399,13 +2402,13 @@ class EquipoEdit extends Component
 
                 'idMarca' => [
 
-                    'required',
+                    ($requeridosBase['id_marca'] ?? true) ? 'required' : 'nullable',
 
                 ],
 
                 'numeroSerie' => [
 
-                    'required',
+                    ($requeridosBase['numero_serie'] ?? true) ? 'required' : 'nullable',
 
                     'string',
 
@@ -2429,7 +2432,7 @@ class EquipoEdit extends Component
 
                 'numeroFactura' => [
 
-                    'required',
+                    ($requeridosBase['numero_factura'] ?? true) ? 'required' : 'nullable',
 
                     'string',
 
@@ -2604,7 +2607,7 @@ class EquipoEdit extends Component
 
                         'id_marca' =>
 
-                            (int) $validated['idMarca'],
+                            $this->nullableInt($validated['idMarca'] ?? null),
 
                         'direccion_mac' => $this->nullableString(
 
@@ -2612,17 +2615,9 @@ class EquipoEdit extends Component
 
                         ),
 
-                        'numero_factura' => trim(
+                        'numero_factura' => $this->nullableString($validated['numeroFactura'] ?? null),
 
-                            (string) $validated['numeroFactura']
-
-                        ),
-
-                        'numero_serie' => trim(
-
-                            (string) $validated['numeroSerie']
-
-                        ),
+                        'numero_serie' => $this->nullableString($validated['numeroSerie'] ?? null),
 
                         'id_proveedor' => $this->nullableInt(
 
@@ -2664,7 +2659,7 @@ class EquipoEdit extends Component
 
                     ]);
 
-                if ($configNuevo) {
+                if ($configNuevo && collect($definitions)->contains(fn (array $field): bool => ($field['origen_dato'] ?? null) === 'tabla_tipo')) {
 
                     $exists = DB::table(
 

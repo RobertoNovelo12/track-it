@@ -1099,6 +1099,7 @@ class AjustesCuenta extends Component
 
     public function startTwoFactorSetup(): void
     {
+        abort_unless(config('auth.two_factor_enabled'), 403);
         $usuario = auth()->user();
 
         if (! $usuario) {
@@ -1229,6 +1230,7 @@ class AjustesCuenta extends Component
 
     public function confirmTwoFactorSetup(): void
     {
+        abort_unless(config('auth.two_factor_enabled'), 403);
         $validated = $this->validate([
             'twoFactorCode' => [
                 'required',
@@ -1520,6 +1522,7 @@ class AjustesCuenta extends Component
 
     public function regenerateTwoFactorRecoveryCodes(): void
     {
+        abort_unless(config('auth.two_factor_enabled'), 403);
         $validated = $this->validate([
             'twoFactorManagementPassword' => [
                 'required',
@@ -1652,6 +1655,7 @@ class AjustesCuenta extends Component
 
     public function disableTwoFactor(): void
     {
+        abort_unless(config('auth.two_factor_enabled'), 403);
         $validated = $this->validate([
             'twoFactorManagementPassword' => [
                 'required',

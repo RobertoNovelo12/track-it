@@ -25,7 +25,7 @@ class TwoFactorChallengeController extends Controller
     public function create(
         Request $request
     ): View|RedirectResponse {
-        if (! $this->hasValidPendingLogin($request)) {
+        if (! config('auth.two_factor_enabled') || ! $this->hasValidPendingLogin($request)) {
             $this->clearPendingLogin($request);
 
             return redirect()
@@ -82,7 +82,7 @@ class TwoFactorChallengeController extends Controller
          * Verificar primero que exista
          * un login pendiente vigente.
          */
-        if (! $this->hasValidPendingLogin($request)) {
+        if (! config('auth.two_factor_enabled') || ! $this->hasValidPendingLogin($request)) {
             $this->clearPendingLogin($request);
 
             return redirect()

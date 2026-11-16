@@ -51,7 +51,7 @@ class MantenimientosDepartamentosTest extends TestCase
 
         Livewire::test(MantenimientosIndex::class)
             ->assertViewHas('departamentos', fn ($items) => $items->count() === 2 && $items->where('nombre', 'Spa y Recreación')->count() === 1)
-            ->set('areaDepartamento', 'departamento:1')->call('aplicarFiltros')
+            ->set('hotelDepartamento', 'departamento:1')->call('aplicarFiltros')
             ->assertViewHas('mantenimientos', fn ($items) => $items->total() === 5)
             ->assertDontSee('OTRO')
             ->call('limpiarFiltros')

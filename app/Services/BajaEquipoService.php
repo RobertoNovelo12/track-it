@@ -92,6 +92,8 @@ class BajaEquipoService
             ->where('id_equipo', $idEquipo)
             ->update(['id_estado_activo' => (int) $idEstadoEquipoBaja]);
 
+        app(BajaResguardoService::class)->completar($idEquipo);
+
         DB::table('asignaciones')
             ->where('id_equipo', $idEquipo)
             ->whereNull('fecha_fin')

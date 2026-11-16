@@ -84,6 +84,11 @@ class EquipoBaja extends Component
 
         // Cargar información real del equipo actual.
         $this->cargarEquipo();
+        $resguardo = app(\App\Services\BajaResguardoService::class)->pendiente($this->equipoId);
+        if ($resguardo) {
+            $this->motivoBaja = $resguardo->motivo;
+            $this->comentariosBaja = $resguardo->observaciones ?? '';
+        }
     }
 
     /*
@@ -580,7 +585,6 @@ class EquipoBaja extends Component
         ], [
             'numeroTicket.required' => 'Ingresa el número de tiket.',
             'numeroTicket.max' => 'El número de tiket puede tener hasta 26 caracteres.',
-            'numeroTicket.max' => 'El número de tiket no debe superar 20 dígitos.',
             'motivoBaja.required' =>
                 'Ingresa el motivo de la baja.',
             'fechaBaja.required' =>
@@ -809,6 +813,8 @@ class EquipoBaja extends Component
 
                         'fecha_registro' => now(),
                     ], 'id_baja');
+
+                app(\App\Services\BajaResguardoService::class)->completar($this->equipoId);
 
                 /*
                  * Fotografías de la baja.
@@ -1091,6 +1097,16 @@ class EquipoBaja extends Component
 
     public function render()
     {
-        return view('livewire.equipo-baja');
+        return view('livewire.equipo-baja', ['resguardoPendiente' => app(\App\Services\BajaResguardoService::class)->pendiente($this->equipoId)]);
+    }
+
+    public function guardarEnResguardo(): void
+    {
+        Gate::authorize('gestionar');
+        $datos = $this->validate(['motivoBaja'=>'required|string|max:500', 'fechaBaja'=>'required|date|before_or_equal:today', 'comentariosBaja'=>'nullable|string|max:2000']);
+        app(\App\Services\BajaResguardoService::class)->guardar($this->equipoId, $datos['fechaBaja'], $datos['motivoBaja'], $datos['comentariosBaja'] ?? null, (int) auth()->id());
+        app(SystemCacheService::class)->refreshModule('equipos');
+        app(SystemCacheService::class)->refreshModule('reportes');
+        $this->dispatch('baja-formulario-validado', message: 'Equipo en resguardo. Permanece en la institución, pendiente de revisión.');
     }
 }

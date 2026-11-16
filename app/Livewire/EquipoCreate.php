@@ -1026,7 +1026,7 @@ class EquipoCreate extends Component
                 'tec.id_campo'
             )
             ->where('ce.activo', true)
-            ->where('tec.visible', true)
+            ->where(fn ($q) => $q->where('tec.visible', true)->orWhereIn('ce.clave', ['id_marca', 'numero_serie', 'numero_factura']))
             ->whereIn('tec.origen_dato', [
                 'equipos',
                 'asignacion',
@@ -1039,6 +1039,7 @@ class EquipoCreate extends Component
                 'tec.etiqueta',
                 'tec.id_seccion',
                 'tec.obligatorio',
+                'tec.visible',
                 'tec.orden',
             ]);
 
@@ -1052,7 +1053,8 @@ class EquipoCreate extends Component
                     ? (int) $row->id_seccion
                     : null,
 
-                'obligatorio' => (bool) $row->obligatorio,
+                'obligatorio' => (bool) $row->visible && (bool) $row->obligatorio,
+                'visible' => (bool) $row->visible,
                 'orden' => (int) $row->orden,
             ];
         }
@@ -1157,6 +1159,8 @@ class EquipoCreate extends Component
                 'id_estado_equipo'
             ),
 
+            'clasificaciones' => \App\Services\ClasificacionBienService::OPCIONES,
+            'clasificacionPorTipo' => app(\App\Services\ClasificacionBienService::class)->porTipo(),
             'tiposEquipo' => $this->toFrontendOptions(
                 $this->tiposEquipo,
                 'id_tipo_equipo'
@@ -1418,8 +1422,12 @@ class EquipoCreate extends Component
         \Illuminate\Support\Facades\Gate::authorize('gestionar');
 
         $payload = $this->normalizePayload($payload);
+        app(\App\Services\ClasificacionBienService::class)->validar(
+            (string) ($payload['clasificacionBien'] ?? ''), (int) ($payload['idTipoEquipo'] ?? 0)
+        );
         $organizacion = $this->validarOrganizacion($payload);
 
+        $requeridosBase = app(\App\Services\ClasificacionBienService::class)->requeridosBase((int) $payload['idTipoEquipo']);
         $validated = Validator::make(
             $payload,
             [
@@ -1443,18 +1451,18 @@ class EquipoCreate extends Component
                 ],
 
                 'idMarca' => [
-                    'required',
+                    ($requeridosBase['id_marca'] ?? true) ? 'required' : 'nullable',
                 ],
 
                 'numeroSerie' => [
-                    'required',
+                    ($requeridosBase['numero_serie'] ?? true) ? 'required' : 'nullable',
                     'string',
                     'max:255',
                     // Repetido: se revisa dentro de la transacción, con bloqueo.
                 ],
 
                 'numeroFactura' => [
-                    'required',
+                    ($requeridosBase['numero_factura'] ?? true) ? 'required' : 'nullable',
                     'string',
                     'max:255',
                 ],
@@ -1532,7 +1540,7 @@ class EquipoCreate extends Component
 
                 DB::select('select pg_advisory_xact_lock(hashtext(?))', ['equipo-serie:' . $serie]);
 
-                if (DB::table('equipos')->whereRaw('LOWER(numero_serie) = ?', [$serie])->exists()) {
+                if ($serie !== '' && DB::table('equipos')->whereRaw('LOWER(numero_serie) = ?', [$serie])->exists()) {
                     throw \Illuminate\Validation\ValidationException::withMessages([
                         'numeroSerie' => 'Ya hay un equipo registrado con el número de serie «'
                             . $validated['numeroSerie'] . '». Búscalo en Inventario antes de volver a darlo de alta.',
@@ -1567,17 +1575,17 @@ class EquipoCreate extends Component
                             ),
 
                             'id_marca' =>
-                                (int) $validated['idMarca'],
+                                $this->nullableInt($validated['idMarca'] ?? null),
 
                             'direccion_mac' => $this->nullableString(
                                 $payload['direccionMac']
                             ),
 
                             'numero_factura' =>
-                                $validated['numeroFactura'],
+                                $this->nullableString($validated['numeroFactura'] ?? null),
 
                             'numero_serie' =>
-                                $validated['numeroSerie'],
+                                $this->nullableString($validated['numeroSerie'] ?? null),
 
                             'id_proveedor' => $this->nullableInt(
                                 $payload['idProveedor']

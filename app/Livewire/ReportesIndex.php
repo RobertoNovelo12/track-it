@@ -52,6 +52,7 @@ class ReportesIndex extends Component
 
 
     use WithPagination;
+    use \App\Livewire\Concerns\ReporteInventarioGlobal;
 
     protected $paginationTheme = 'tailwind';
 
@@ -100,6 +101,12 @@ class ReportesIndex extends Component
     #[\Livewire\Attributes\Renderless]
     public function obtenerSugerenciasRapidas(string $tipo, string $texto = '', int $pagina = 1): array
     {
+        if ($tipo === 'altas' || ($tipo === 'bajas' && $this->formatoBaja === 'resguardo')) {
+            $this->validarFormatoInventario();
+            $filas = app(\App\Services\InventarioGlobalReporteService::class)->query($tipo === 'bajas' ? 'resguardo' : $this->formatoInventario, ['busqueda' => mb_substr($texto, 0, 255)])
+                ->offset((max(1, $pagina) - 1) * 10)->limit(11)->get();
+            return ['registros' => $filas->take(10)->map(fn ($fila) => ['id' => $fila->id_equipo, 'nombre' => $fila->descripcion, 'codigo' => $fila->inventario, 'serie' => $fila->serie])->all(), 'hayMas' => $filas->count() > 10];
+        }
         $tipo = app(ReporteDataService::class)->normalizarTipo($tipo);
         $texto = trim($texto);
         $pagina = max(1, $pagina);
@@ -319,7 +326,7 @@ class ReportesIndex extends Component
 
             ->contains(fn ($valor) => filled($valor));
 
-        if (!$hayFiltros) {
+        if (!$hayFiltros && $this->tipoReporte !== 'altas' && !$this->esBajaEnResguardo()) {
 
             $this->vaciarVistaPrevia();
 
@@ -366,6 +373,10 @@ class ReportesIndex extends Component
         $filtros = $this->filtros();
 
         try {
+            if ($tipo === 'altas' || $this->esBajaEnResguardo()) {
+                $this->consultarInventarioGlobal();
+                return;
+            }
 
             $documento = match ($tipo) {
 
@@ -474,6 +485,7 @@ class ReportesIndex extends Component
     public function generarPdf(ReporteDataService $reportes)
 
     {
+        if (($this->tiposReporte[0] ?? 'altas') === 'altas' || $this->esBajaEnResguardo()) { return $this->generarInventarioGlobal('pdf'); }
         // Permiso por rol (ver AppServiceProvider).
         \Illuminate\Support\Facades\Gate::authorize('gestionar');
 
@@ -899,6 +911,7 @@ class ReportesIndex extends Component
         ReporteDataService $reportes
 
     ) {
+        if (($this->tiposReporte[0] ?? 'altas') === 'altas' || $this->esBajaEnResguardo()) { return $this->generarInventarioGlobal(strtolower(trim($extension))); }
         // Permiso por rol (ver AppServiceProvider).
         \Illuminate\Support\Facades\Gate::authorize('gestionar');
 
@@ -1405,6 +1418,7 @@ class ReportesIndex extends Component
         // Lee solo datos ya cacheados: nunca consulta PostgreSQL durante render.
         $listasIniciales = [];
         foreach (['altas', 'bajas', 'asignaciones', 'reasignaciones', 'mantenimientos'] as $tipoLista) {
+            if ($tipoLista === 'altas' || ($tipoLista === 'bajas' && $this->formatoBaja === 'resguardo')) { continue; }
             $lote = Cache::get('reportes:selector:v1:' . $tipoLista);
             if (is_array($lote) && isset($lote['registros'])) {
                 $listasIniciales[$tipoLista] = $lote;
@@ -1594,7 +1608,7 @@ class ReportesIndex extends Component
 
     }
 
-    private function rules(): array
+    protected function rules(): array
 
     {
 
@@ -1630,7 +1644,7 @@ class ReportesIndex extends Component
 
     }
 
-    private function messages(): array
+    protected function messages(): array
 
     {
 

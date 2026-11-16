@@ -4,6 +4,9 @@ use App\Models\User;
 
 return [
 
+    // Interruptor temporal: conserva los secretos y códigos para reactivar 2FA.
+    'two_factor_enabled' => (bool) env('AUTH_TWO_FACTOR_ENABLED', false),
+
     /*
     |--------------------------------------------------------------------------
     | Authentication Defaults

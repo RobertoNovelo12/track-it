@@ -5,14 +5,14 @@ const path = require('node:path');
 
 const views = path.resolve(__dirname, '../../resources/views/livewire');
 const shared = 'livewire.equipos.estado-alpine';
-const expression = fs.readFileSync(path.join(views, 'equipos/estado-alpine.blade.php'), 'utf8');
+const crearEstado = require('./inventario-helper.cjs');
 
 test('el estado conservado desde el placeholder permite exportar tras la carga diferida', async () => {
     for (const file of ['placeholders/equipos-index.blade.php', 'equipos-index.blade.php']) {
         const html = fs.readFileSync(path.join(views, file), 'utf8');
         assert.ok(html.includes(`x-data="@include('${shared}')"`));
     }
-    const state = new Function('window', `return (${expression})`)({});
+    const state = crearEstado({});
     assert.equal(state.filtersOpen, false);
     assert.equal(state.exportando, false);
     const calls = [];
@@ -34,7 +34,7 @@ test('el estado conservado desde el placeholder permite exportar tras la carga d
 
 test('la exportación recupera su estado cuando falla la descarga', async () => {
     const messages = [];
-    const state = new Function('window', `return (${expression})`)({
+    const state = crearEstado({
         trackitToast: (type, text) => {
             if (type === 'error') messages.push(text);
         },

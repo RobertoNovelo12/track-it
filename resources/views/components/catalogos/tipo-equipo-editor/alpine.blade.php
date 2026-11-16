@@ -1282,7 +1282,8 @@
                         payload,
                         this.programas.disponible
                             ? { incluye: this.programas.incluye, seleccion: this.programas.seleccion }
-                            : null
+                            : null,
+                        this.tipo.clasificacion_bien
                     );
 
                     if (

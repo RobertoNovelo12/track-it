@@ -1,6 +1,15 @@
 {{-- ============================================================
     ENCABEZADO DEL CONSTRUCTOR
 ============================================================ --}}
+<div class="mb-4 max-w-lg">
+    <label for="clasificacion-tipo-bien" class="mb-1.5 block text-sm">Clasificación del bien *</label>
+    <select id="clasificacion-tipo-bien" x-model="tipo.clasificacion_bien" x-on:change="hasChanges = true" class="w-full rounded-md border border-[var(--theme-border)] bg-[var(--theme-surface)] px-3 py-2 text-sm">
+        @foreach (\App\Services\ClasificacionBienService::OPCIONES as $clave => $nombre)
+            <option value="{{ $clave }}">{{ $nombre }}</option>
+        @endforeach
+    </select>
+    <p class="mt-1 text-xs text-[var(--theme-text-muted)]">Se aplica a todos los bienes de este tipo. Al guardar se agregan los campos de su reporte.</p>
+</div>
 <div
     class="
         flex

@@ -990,6 +990,28 @@ class EquipoShow extends Component
 
             $this->cargarAsignaciones();
 
+        $atributos = DB::table('atributos_equipo as a')
+            ->join('campos_equipo as c', 'c.id_campo', '=', 'a.id_campo')
+            ->join('tipo_equipo_campos as tc', function ($join) use ($equipo) {
+                $join->on('tc.id_campo', '=', 'c.id_campo')->where('tc.id_tipo_equipo', $equipo['id_tipo_equipo']);
+            })
+            ->leftJoin('catalogo_valores as cv', function ($join) {
+                $join->on('cv.id_catalogo', '=', 'tc.id_catalogo')->whereRaw('CAST(cv.id_valor AS TEXT) = a.valor');
+            })
+            ->leftJoin('tipo_equipo_campo_opciones as op', function ($join) {
+                $join->on('op.id_tipo_campo', '=', 'tc.id_tipo_campo')->whereRaw('CAST(op.id_opcion AS TEXT) = a.valor');
+            })
+            ->where('a.id_equipo', $this->equipoId)->where('tc.origen_dato', 'atributo')->where('tc.visible', true)
+            ->orderBy('tc.orden')->get(['c.clave', 'c.tipo_control', 'c.nombre', 'tc.etiqueta', 'a.valor', 'cv.nombre as catalogo', 'op.nombre as opcion'])
+            ->map(fn ($campo) => [
+                'campo' => $campo->clave, 'label' => $campo->etiqueta ?: $campo->nombre,
+                'value' => $campo->tipo_control === 'boolean' ? (filter_var($campo->valor, FILTER_VALIDATE_BOOLEAN) ? 'Sí' : 'No') : ($campo->catalogo ?? $campo->opcion ?? $campo->valor ?? '—'),
+            ])->all();
+        $especificaciones = array_merge($especificaciones, $atributos);
+        $clasificacionBien = \App\Services\ClasificacionBienService::OPCIONES[
+            app(\App\Services\ClasificacionBienService::class)->porTipo()[$equipo['id_tipo_equipo']]
+        ];
+
         // Solo la vigente: si se devolvió, el equipo no tiene responsable.
         $asignacionActual = collect($asignaciones)
             ->first(fn (array $asignacion) => empty($asignacion['fecha_fin']));
@@ -1124,6 +1146,7 @@ class EquipoShow extends Component
             'livewire.equipo-show',
             compact(
                 'equipo',
+                'clasificacionBien',
                 'especificaciones',
                 'asignacionActual',
                 'movimientos',

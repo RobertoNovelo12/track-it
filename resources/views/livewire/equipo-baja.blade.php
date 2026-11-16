@@ -465,7 +465,19 @@
     | Dar de baja del módulo Inventario.
     --}}
 
+    <div class="mb-4 rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 text-sm">
+        @if ($resguardoPendiente)
+            <strong>Baja en resguardo desde {{ \Carbon\Carbon::parse($resguardoPendiente->fecha_resguardo)->format('d/m/Y') }}.</strong>
+            El equipo sigue en la institución. Completa la baja únicamente después de revisarlo y confirmar su salida.
+        @else
+            <strong>Resguardo:</strong> guarda el motivo, la fecha y las observaciones para mantener el equipo pendiente de revisión.
+            Las firmas, fotografías y el acta se registran al completar la baja.
+        @endif
+    </div>
     <div class="mb-5 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-end">
+        @if (!$resguardoPendiente)
+            <button type="button" wire:click="guardarEnResguardo" wire:loading.attr="disabled" data-guardar class="inline-flex h-10 items-center rounded-lg border border-[var(--theme-border)] px-4 text-sm font-medium">Guardar baja en resguardo</button>
+        @endif
 
         <div class="flex flex-wrap items-center gap-3">
 
@@ -481,6 +493,7 @@
             <button
                 type="button"
                 wire:click="confirmar"
+                wire:confirm="¿Confirmas que el equipo fue revisado y que su salida de la institución está autorizada? Se completará la baja y se conservará el acta en el historial."
                 wire:loading.attr="disabled"
                 wire:target="confirmar"
                 data-guardar
@@ -537,7 +550,7 @@
                     wire:loading.remove
                     wire:target="confirmar"
                 >
-                    Dar de baja y generar PDF
+                    Completar baja y generar PDF
                 </span>
 
                 {{-- TEXTO CARGANDO --}}

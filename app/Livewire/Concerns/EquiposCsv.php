@@ -98,6 +98,10 @@ trait EquiposCsv
         $columnas = [];
 
         foreach ($this->csvBase() as $clave => [$modelo, $etiqueta, $tipo, $obligatorio]) {
+            if (in_array($clave, ['id_marca', 'numero_serie', 'numero_factura'], true)) {
+                if (($configurados[$clave]['visible'] ?? true) === false) { continue; }
+                $obligatorio = $configurados[$clave]['obligatorio'] ?? $obligatorio;
+            }
             // Modelo y Responsable siempre (Responsable crea la asignación al importar).
             if (! $obligatorio && ! in_array($clave, ['id_modelo', 'propietario'], true) && ! array_key_exists($clave, $configurados)) {
                 continue;
@@ -1067,6 +1071,7 @@ trait EquiposCsv
 
         $errores = [];
         $payload = ['idTipoEquipo' => (string) $tipoId, 'childData' => []];
+        $payload['clasificacionBien'] = DB::table('tipos_equipo')->where('id_tipo_equipo', $tipoId)->value('clasificacion_bien');
         $this->csvFaltantesFila = [];
         $textoMarca = '';
         $marcaFalta = false;

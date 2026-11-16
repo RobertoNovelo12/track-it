@@ -64,15 +64,16 @@ class EquipoBajaMultipleTest extends TestCase
     public function test_ticket_preview_validation_and_mode_switch(): void
     {
         $component = Livewire::test(EquipoBajaMultiple::class)->set('seleccionados', ['1'])->call('siguiente');
-        $component->set('numeroTicket', '99273')->assertSee('GPRVM-99273')
-            ->set('numeroTicket', 'GPRVM-99273')->call('guardar')->assertHasErrors('numeroTicket')
-            ->set('numeroTicket', '12abc')->call('guardar')->assertHasErrors('numeroTicket');
+        $component->set('numeroTicket', '99273')->assertSee('99273')->assertDontSee('GPRVM-99273')
+            ->set('numeroTicket', 'GPRVM-99273')->call('guardar')->assertHasNoErrors('numeroTicket')
+            ->set('numeroTicket', '12abc')->call('guardar')->assertHasNoErrors('numeroTicket')
+            ->set('numeroTicket', str_repeat('A', 27))->call('guardar')->assertHasErrors('numeroTicket');
         DB::table('bajas')->where('id_equipo', 1)->delete();
         DB::table('equipos')->where('id_equipo', 1)->update(['id_estado_activo' => 2]);
         Livewire::withQueryParams(['equipos' => '1,12', 'modo' => 'conjunta'])->test(EquipoBajaMultiple::class)
             ->set('numeroTicket', '99273')->call('volver')->assertSet('modo', 'elegir')
             ->assertViewHas('equipos', null)->assertViewHas('documento', [])
-            ->call('todasEnUnDocumento')->assertSet('numeroTicket', '99273')->assertSee('GPRVM-99273');
+            ->call('todasEnUnDocumento')->assertSet('numeroTicket', '99273')->assertSee('99273')->assertDontSee('GPRVM-99273');
     }
 
     public function test_cancel_skips_current_equipment_and_last_returns_to_inventory(): void
@@ -156,7 +157,7 @@ class EquipoBajaMultipleTest extends TestCase
         $this->assertSame(ReporteGenerado::first()->getKey(), session('descargar_reporte'));
         $reporte = ReporteGenerado::firstOrFail();
         $this->assertSame(2, $reporte->total_registros);
-        $this->assertSame('GPRVM-99273', $reporte->filtros['baja_multiple']['numero_ticket']);
+        $this->assertSame('99273', $reporte->filtros['baja_multiple']['numero_ticket']);
         $this->assertStringStartsWith('%PDF-', Storage::disk('local')->get($reporte->ruta_archivo));
         $descarga = app(\App\Http\Controllers\ReporteController::class)->download($reporte);
         $this->assertSame('application/pdf', $descarga->headers->get('Content-Type'));
@@ -209,7 +210,7 @@ class EquipoBajaMultipleTest extends TestCase
             ->set('autoriza', 'Responsable')->set('puesto', 'Sistemas')->set('firmas', $firmas)
             ->call('guardar')->assertHasNoErrors()->assertRedirect(route('equipos.index'));
         $this->assertSame(12, DB::table('bajas')->count());
-        $this->assertSame(2, DB::table('bajas')->where('numero_ticket', 'GPRVM-99273')->count());
+        $this->assertSame(2, DB::table('bajas')->where('numero_ticket', '99273')->count());
         $this->assertSame($firmas, json_decode(DB::table('bajas')->where('id_equipo', 12)->value('firmas'), true));
         $this->assertSame(1, DB::table('equipos')->where('id_equipo', 12)->value('id_estado_activo'));
     }
@@ -267,7 +268,7 @@ class EquipoBajaMultipleTest extends TestCase
     public function test_preview_reads_current_organization_logo(): void
     {
         $marca = \Mockery::mock(\App\Services\OrganizacionService::class)->makePartial();
-        $marca->shouldReceive('logoUrl')->andReturn('https://example.test/logo-v2.png');
+        $marca->shouldReceive('logoDocumentosUrl')->andReturn('https://example.test/logo-v2.png');
         $marca->shouldReceive('nombre')->andReturn('Organización de prueba');
         $this->app->instance(\App\Services\OrganizacionService::class, $marca);
         Livewire::test(EquipoBajaMultiple::class)->set('seleccionados', ['1'])->call('siguiente')

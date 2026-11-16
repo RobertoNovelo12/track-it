@@ -64,13 +64,25 @@ new class extends Component
 
     public function saveConfiguration(
         array $fields,
-        ?array $programas = null
+        ?array $programas = null,
+        ?string $clasificacion = null
     ): array {
-        $resultado = $this->builder()
-            ->save(
-                $this->tipoEquipoId,
-                $fields
-            );
+        \Illuminate\Support\Facades\Gate::authorize('gestionar');
+        $clasificacion ??= DB::table('tipos_equipo')->where('id_tipo_equipo', $this->tipoEquipoId)->value('clasificacion_bien');
+        \Illuminate\Support\Facades\Validator::make(['clasificacion' => $clasificacion], [
+            'clasificacion' => ['required', \Illuminate\Validation\Rule::in(array_keys(\App\Services\ClasificacionBienService::OPCIONES))],
+        ])->validate();
+        $resultado = DB::transaction(function () use ($fields, $clasificacion) {
+            $anterior = DB::table('tipos_equipo')->where('id_tipo_equipo', $this->tipoEquipoId)->value('clasificacion_bien');
+            $resultado = $this->builder()->save($this->tipoEquipoId, $fields);
+            if ($anterior !== $clasificacion) {
+                DB::table('tipos_equipo')->where('id_tipo_equipo', $this->tipoEquipoId)->update(['clasificacion_bien' => $clasificacion]);
+                $secciones = $this->builder()->ensureRequiredFields($this->tipoEquipoId);
+                app(\App\Services\ClasificacionBienService::class)->completarCampos($this->tipoEquipoId, $clasificacion, collect($secciones)->pluck('id_seccion', 'clave')->all(), true);
+                $resultado = $this->builder()->load($this->tipoEquipoId);
+            }
+            return $resultado;
+        });
 
         /*
          * Programas del tipo: se guardan con el mismo botón

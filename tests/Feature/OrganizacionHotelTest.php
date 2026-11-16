@@ -86,7 +86,7 @@ class OrganizacionHotelTest extends TestCase
         $this->assertDatabaseHas('asignaciones', ['id_unidad' => 7, 'id_departamento' => 1]);
         $method = new \ReflectionMethod(ReporteActasService::class, 'responsable');
         $datos = $method->invoke(app(ReporteActasService::class), 1);
-        $this->assertSame('Servicios Compartidos', $datos['area']);
+        $this->assertSame('Servicios Compartidos', $datos['hotel']);
         $this->assertSame('Sistemas', $datos['departamento']);
         $this->assertSame('Sede', $datos['sede']);
     }

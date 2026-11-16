@@ -273,7 +273,9 @@
                         </p>
 
 
-                        @if ($twoFactorEnabled)
+                        @if (! config('auth.two_factor_enabled'))
+                            <span class="text-xs text-[var(--theme-text-muted)]">Suspendida temporalmente</span>
+                        @elseif ($twoFactorEnabled)
 
                             <span
                                 class="
@@ -345,7 +347,9 @@
                             text-[var(--theme-text-muted)]
                         "
                     >
-                        @if ($twoFactorEnabled)
+                        @if (! config('auth.two_factor_enabled'))
+                            La verificación en dos pasos está suspendida. Tu configuración se conserva para reactivarla más adelante.
+                        @elseif ($twoFactorEnabled)
 
                             Tu cuenta requiere un código generado por tu aplicación
                             autenticadora al iniciar sesión.
@@ -362,7 +366,9 @@
             </div>
 
 
-            @if (! $twoFactorEnabled)
+            @if (! config('auth.two_factor_enabled'))
+                <span class="text-xs text-[var(--theme-text-muted)]">Desactivada temporalmente</span>
+            @elseif (! $twoFactorEnabled)
 
                 <button
                     type="button"

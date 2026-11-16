@@ -42,6 +42,7 @@ class EquiposIndex extends Component
      */
     public const SITUACIONES = [
         'vigentes' => 'Equipos vigentes',
+        'en_resguardo' => 'Bajas en resguardo',
         'asignados' => 'Asignados',
         'sin_asignar' => 'Sin asignar',
         'en_mantenimiento' => 'En mantenimiento',
@@ -177,7 +178,7 @@ class EquiposIndex extends Component
      * garantia_vencida, garantia_por_vencer.
      */
     #[Url]
-    public ?string $situacion = null;
+    public ?string $situacion = 'vigentes';
 
     /*
      * Programa instalado (Administración › Programas): solo los
@@ -451,7 +452,7 @@ class EquiposIndex extends Component
         $this->direccionIp = null;
         $this->estado = null;
         $this->hotelFiltro = null;
-        $this->situacion = null;
+        $this->situacion = 'vigentes';
         $this->programa = null;
 
         $this->resetPage();
@@ -882,7 +883,9 @@ class EquiposIndex extends Component
                 'te.nombre as tipo_equipo_nombre',
                 'ma.nombre as marca_nombre',
                 'mo.nombre as modelo_nombre',
-                'ee.nombre as estado_nombre',
+                DB::raw(\Illuminate\Support\Facades\Schema::hasTable('bajas_resguardo')
+                    ? "CASE WHEN EXISTS (SELECT 1 FROM bajas_resguardo br WHERE br.id_equipo = e.id_equipo AND br.fecha_completada IS NULL) THEN 'Baja en resguardo' ELSE ee.nombre END as estado_nombre"
+                    : 'ee.nombre as estado_nombre'),
                 'ee.clave as estado_clave',
 
                 // Por separado para «Copiar como JSON» (la tabla los combina).

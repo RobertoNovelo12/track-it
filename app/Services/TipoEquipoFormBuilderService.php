@@ -10,9 +10,6 @@ class TipoEquipoFormBuilderService
     private const PROTECTED_FIELDS = [
         'nombre_equipo',
         'id_estado_activo',
-        'id_marca',
-        'numero_serie',
-        'numero_factura',
         'id_unidad',
     ];
 
@@ -62,6 +59,7 @@ class TipoEquipoFormBuilderService
                 'nombre',
                 'descripcion',
                 'activo',
+                'clasificacion_bien',
             ]);
 
 
@@ -745,6 +743,7 @@ class TipoEquipoFormBuilderService
 
         return [
             'tipo' => [
+                'clasificacion_bien' => $tipo->clasificacion_bien,
                 'id' =>
                     (int) $tipo->id_tipo_equipo,
 
@@ -1722,6 +1721,10 @@ class TipoEquipoFormBuilderService
                 ->pluck('id_seccion', 'clave')
                 ->all();
 
+            app(ClasificacionBienService::class)->completarCampos(
+                $tipoEquipoId, $tipo->clasificacion_bien ?? 'global', $sectionIds
+            );
+
             /*
             * Clave => nombre, control, fuente de opciones, sección inicial.
             */
@@ -1853,7 +1856,7 @@ class TipoEquipoFormBuilderService
             */
             DB::table('tipo_equipo_campos')
                 ->where('id_tipo_equipo', $tipoEquipoId)
-                ->whereIn('id_campo', $fieldIds->values()->all())
+                ->whereIn('id_campo', collect($fieldIds)->only(self::PROTECTED_FIELDS)->values()->all())
                 ->update([
                     'visible' => true,
                     'obligatorio' => true,

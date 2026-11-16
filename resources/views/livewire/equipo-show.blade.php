@@ -609,13 +609,13 @@
 
                     <dt class="text-xs text-[var(--theme-text-muted)]">
 
-                        Tipo
+                        Clasificación / Tipo
 
                     </dt>
 
                     <dd class="text-xs font-medium text-[var(--theme-text)] text-right">
 
-                        {{ $equipo['tipo_equipo'] ?? '—' }}
+                        {{ $clasificacionBien }} / {{ $equipo['tipo_equipo'] ?? '—' }}
 
                     </dd>
 

@@ -218,7 +218,7 @@ class AuthenticatedSessionController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        if ($user->hasTwoFactorEnabled()) {
+        if (config('auth.two_factor_enabled') && $user->hasTwoFactorEnabled()) {
 
             /*
              * Rotamos el ID de sesión después de
