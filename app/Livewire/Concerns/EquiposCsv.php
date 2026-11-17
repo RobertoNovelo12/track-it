@@ -97,16 +97,20 @@ trait EquiposCsv
         $configurados = $this->csvMemo('base', fn () => $this->getConfiguredBaseFields())[$tipoId] ?? [];
         $columnas = [];
 
-        $esInmueble = app(\App\Services\ClasificacionBienService::class)->esInmueble($tipoId);
+        $clasificaciones = $this->csvMemo('clasificaciones', fn () => app(\App\Services\ClasificacionBienService::class)->porTipo());
+        $esInmueble = ($clasificaciones[$tipoId] ?? null) === 'inmuebles';
 
         foreach ($this->csvBase() as $clave => [$modelo, $etiqueta, $tipo, $obligatorio]) {
-            if ($clave === 'id_unidad' && $esInmueble) { $obligatorio = false; }
             if (in_array($clave, ['id_marca', 'numero_serie', 'numero_factura'], true)) {
                 if (($configurados[$clave]['visible'] ?? true) === false) { continue; }
                 $obligatorio = $configurados[$clave]['obligatorio'] ?? $obligatorio;
+            } else {
+                $obligatorio = $obligatorio || ($configurados[$clave]['obligatorio'] ?? false);
             }
-            // Modelo y Responsable siempre (Responsable crea la asignación al importar).
-            if (! $obligatorio && ! in_array($clave, ['id_modelo', 'propietario'], true) && ! array_key_exists($clave, $configurados)) {
+            if ($clave === 'id_ubicacion' || ($clave === 'id_unidad' && $esInmueble)) { $obligatorio = false; }
+            // Estos campos también están disponibles en el formulario sin configuración adicional.
+            // Responsable crea la asignación; Proveedor identifica al vendedor.
+            if (! $obligatorio && ! in_array($clave, ['id_modelo', 'propietario', 'id_proveedor', 'id_unidad'], true) && ! array_key_exists($clave, $configurados)) {
                 continue;
             }
 
@@ -1024,8 +1028,9 @@ trait EquiposCsv
         }
 
         $primera = preg_split('/\r\n|\r|\n/', $contenido, 2)[0] ?? '';
+        $sinEntrecomillados = preg_replace('/"(?:[^"]|"")*"/', '', $primera) ?? $primera;
         $separador = collect([',', ';', "\t"])
-            ->sortByDesc(fn ($s) => substr_count($primera, $s))
+            ->sortByDesc(fn ($s) => substr_count($sinEntrecomillados, $s))
             ->first();
 
         $flujo = fopen('php://temp', 'r+');
@@ -1079,7 +1084,8 @@ trait EquiposCsv
 
         $errores = [];
         $payload = ['idTipoEquipo' => (string) $tipoId, 'childData' => []];
-        $payload['clasificacionBien'] = DB::table('tipos_equipo')->where('id_tipo_equipo', $tipoId)->value('clasificacion_bien');
+        $clasificaciones = $this->csvMemo('clasificaciones', fn () => app(\App\Services\ClasificacionBienService::class)->porTipo());
+        $payload['clasificacionBien'] = $clasificaciones[$tipoId] ?? null;
         $this->csvFaltantesFila = [];
         $textoMarca = '';
         $marcaFalta = false;

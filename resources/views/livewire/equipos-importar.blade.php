@@ -128,8 +128,8 @@
             try {
                 let resultado = { pendientes: total };
 
-                // Lotes pequeños (hasta 10): la barra avanza aunque sean pocos equipos.
-                const porLote = Math.max(1, Math.min(10, Math.ceil(total / 10)));
+                // Una fila por petición evita acumular la latencia de la base remota.
+                const porLote = 1;
                 this.avance = 2;
 
                 // Medición: tiempo total (navegador) y del servidor por lote.

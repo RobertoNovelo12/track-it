@@ -34,7 +34,7 @@ class EquiposImportar extends EquipoCreate
 
     private const MAXIMO_FILAS = 500;
 
-    private const POR_LOTE = 10;
+    private const POR_LOTE = 1;
 
     public $archivo = null;
 
@@ -111,8 +111,14 @@ class EquiposImportar extends EquipoCreate
             return;
         }
 
+        // Usar el encabezado interno también para la revisión y corrección de catálogos.
+        $encabezados = array_map(
+            fn ($e) => $this->csvNormalizar($e) === 'tipo de bien' ? 'Tipo de equipo' : $e,
+            $encabezados
+        );
+
         if (! in_array('tipo de equipo', array_map(fn ($e) => $this->csvNormalizar($e), $encabezados), true)) {
-            $this->addError('archivo', 'Falta la columna «Tipo de equipo». Descarga la plantilla en Administración › Equipos.');
+            $this->addError('archivo', 'Falta la columna «Tipo de bien» o «Tipo de equipo». Descarga la plantilla en Administración › Equipos.');
 
             return;
         }
@@ -265,14 +271,25 @@ class EquiposImportar extends EquipoCreate
     private function revisarExistentes(array &$vista, array $datos): void
     {
         $indiceCodigo = null;
+        $indiceInstitucional = null;
 
         foreach ($datos['encabezados'] as $i => $encabezado) {
             if ($this->csvNormalizar($encabezado) === 'codigo de inventario') {
                 $indiceCodigo = $i;
             }
+            if ($this->csvNormalizar($encabezado) === 'numero de inventario institucional') {
+                $indiceInstitucional = $i;
+            }
         }
 
         $codigoDe = fn (array $fila) => $indiceCodigo === null ? '' : trim((string) ($datos['filas'][$fila['fila']][$indiceCodigo] ?? ''));
+        $institucionalDe = fn (array $fila) => $indiceInstitucional === null ? '' : mb_strtolower(trim((string) ($datos['filas'][$fila['fila']][$indiceInstitucional] ?? '')));
+        $institucionales = collect($vista)->map($institucionalDe)->filter()->unique()->values()->all();
+        $porInstitucional = $institucionales === [] ? [] : DB::table('atributos_equipo as a')
+            ->join('campos_equipo as c', 'c.id_campo', '=', 'a.id_campo')
+            ->whereIn('c.clave', ['inventario_institucional', 'institucion_inventario_institucional'])
+            ->whereIn(DB::raw('LOWER(TRIM(a.valor))'), $institucionales)
+            ->get(['a.id_equipo', 'a.valor'])->groupBy(fn ($a) => mb_strtolower(trim($a->valor)))->all();
 
         $codigos = collect($vista)->map($codigoDe)->filter()->map(fn ($c) => mb_strtolower($c))->unique()->values()->all();
         $series = collect($vista)->pluck('serie')->filter()->map(fn ($s) => mb_strtolower($s))->unique()->values()->all();
@@ -298,6 +315,13 @@ class EquiposImportar extends EquipoCreate
                 }
             } else {
                 $id = $fila['serie'] !== '' ? ($porSerie[mb_strtolower($fila['serie'])] ?? null) : null;
+                $coincidencias = $porInstitucional[$institucionalDe($fila)] ?? collect();
+                if ($coincidencias->pluck('id_equipo')->unique()->count() > 1) {
+                    $vista[$i]['estado'] = 'error';
+                    $vista[$i]['mensajes'][] = 'El número de inventario institucional coincide con varios bienes. Revisa los registros existentes.';
+                    continue;
+                }
+                $id ??= $coincidencias->isNotEmpty() ? (int) $coincidencias->first()->id_equipo : null;
             }
 
             if ($id !== null) {
