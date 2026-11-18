@@ -2486,9 +2486,14 @@ class EquipoEdit extends Component
         // Misma marca de tiempo para la base de datos y para la pantalla.
         $momentoGuardado = now();
 
+        // Marca o modelo escritos que no existen («texto:…»): se crean al guardar.
+        $marcasRapidas = new \App\Services\MarcasModelosRapidosService();
+
         $record = DB::transaction(
 
             function () use (
+
+                $marcasRapidas,
 
                 $momentoGuardado,
 
@@ -2566,6 +2571,11 @@ class EquipoEdit extends Component
 
                 }
 
+                // Marca y modelo: los elegidos o, si se escribieron nuevos, se crean
+                // («Falta información») y quedan disponibles para otros equipos.
+                $idMarca = $marcasRapidas->marca($validated['idMarca'] ?? null);
+                $idModelo = $marcasRapidas->modelo($payload['idModelo'], $idMarca, $tipoNuevo);
+
                 DB::table('equipos')
 
                     ->where(
@@ -2598,11 +2608,7 @@ class EquipoEdit extends Component
 
                             $tipoNuevo,
 
-                        'id_modelo' => $this->nullableInt(
-
-                            $payload['idModelo']
-
-                        ),
+                        'id_modelo' => $idModelo,
 
                         'fecha_compra' => $this->nullableString(
 
@@ -2610,9 +2616,8 @@ class EquipoEdit extends Component
 
                         ),
 
-                        'id_marca' =>
-
-                            $this->nullableInt($validated['idMarca'] ?? null),
+                        // Puede quedar vacía si el formulario del tipo no la exige.
+                        'id_marca' => $idMarca,
 
                         'direccion_mac' => $this->nullableString(
 
@@ -2855,6 +2860,9 @@ class EquipoEdit extends Component
         // Asignado a alguien: no puede quedar como «Disponible».
         \App\Support\EstadoAsignado::sincronizar((int) $this->equipoId);
 
+        // Marcas o modelos creados: las listas de los formularios y de Administración se renuevan.
+        $marcasRapidas->refrescarSiHuboCambios();
+
         $this->invalidateEquipoCaches();
 
         $notificaciones = app(\App\Services\NotificacionService::class);
@@ -2900,7 +2908,7 @@ class EquipoEdit extends Component
 
             'message' =>
 
-                'Los cambios se guardaron correctamente.',
+                trim('Los cambios se guardaron correctamente. ' . ($marcasRapidas->aviso() ?? '')),
 
             'record' => $record,
 

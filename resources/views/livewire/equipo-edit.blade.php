@@ -424,8 +424,34 @@
                                     class="mb-1.5 block text-xs text-[var(--theme-text-muted)]"
                                 ></label>
 
+                                {{--
+                                    MARCA Y MODELO: si no existe, se escribe el nombre y se
+                                    crea al guardar (queda en Administración › Marcas y
+                                    modelos con «Falta información»).
+                                --}}
+                                <template x-if="field.type === 'select' && !field.child && ['idMarca', 'idModelo'].includes(field.model)">
+                                    <div>
+                                        <x-searchable-select
+                                            x-model="fieldValues(field)[field.model]"
+                                            x-options="optionsFor(field)"
+                                            x-disabled="disabledField(field)"
+                                            allow-custom
+                                            custom-hint="se creará"
+                                            placeholder="Busca o escribe un nombre nuevo"
+                                        />
+
+                                        <p
+                                            x-show="String(fieldValues(field)[field.model] ?? '').startsWith('texto:')"
+                                            class="mt-1.5 text-xs text-[var(--theme-warning)]"
+                                            x-text="field.model === 'idMarca'
+                                                ? 'Marca nueva: se creará al guardar y podrás completar sus datos en Administración › Marcas.'
+                                                : 'Modelo nuevo: se creará al guardar y podrás completar sus datos en Administración › Modelos.'"
+                                        ></p>
+                                    </div>
+                                </template>
+
                                 {{-- LISTAS --}}
-                                <template x-if="field.type === 'select'">
+                                <template x-if="field.type === 'select' && !(!field.child && ['idMarca', 'idModelo'].includes(field.model))">
                                     <div>
                                         <x-searchable-select
                                             x-model="fieldValues(field)[field.model]"
