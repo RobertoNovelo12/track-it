@@ -61,6 +61,7 @@
 
             this.clearBuilderDrag();
             this.draggingUid = uid;
+            this.iniciarAutoDesplazamiento();
 
             if (event.dataTransfer) {
                 event.dataTransfer.effectAllowed = 'move';
@@ -208,10 +209,76 @@
         },
 
         clearBuilderDrag() {
+            this.detenerAutoDesplazamiento();
             this.hoveredSectionId = null;
             this.hoveredFieldUid = null;
             this.hoveredAfter = false;
             this.cancelFieldDrag();
+        },
+
+        /*
+         * Mientras se arrastra un campo, el navegador no deja usar la rueda
+         * del mouse (arrastrar y soltar nativo). Al acercar el campo al borde
+         * superior o inferior de la ventana, la página se desplaza sola: más
+         * rápido cuanto más cerca del borde. Así se puede llevar un campo de
+         * hasta abajo al inicio (y al revés).
+         */
+        iniciarAutoDesplazamiento() {
+            this.detenerAutoDesplazamiento();
+
+            let y = null;
+            let cuadro = null;
+
+            // En captura: las secciones detienen la propagación de dragover.
+            const alMover = (evento) => {
+                if (evento.clientY > 0) y = evento.clientY;
+            };
+
+            const fin = () => this.detenerAutoDesplazamiento();
+
+            const paso = () => {
+                if (y !== null) {
+                    const alto = window.innerHeight;
+                    const zona = Math.max(60, Math.min(140, alto * 0.18));
+                    // Encabezado fijo arriba (~64 px) y barra inferior en celular.
+                    const limiteArriba = 64 + zona;
+                    const limiteAbajo = alto - zona;
+                    const maximo = 26;
+                    let velocidad = 0;
+
+                    if (y < limiteArriba) {
+                        velocidad = -Math.ceil(Math.min(1, (limiteArriba - y) / zona) * maximo);
+                    } else if (y > limiteAbajo) {
+                        velocidad = Math.ceil(Math.min(1, (y - limiteAbajo) / zona) * maximo);
+                    }
+
+                    if (velocidad !== 0) {
+                        window.scrollBy(0, velocidad);
+                    }
+                }
+
+                cuadro = requestAnimationFrame(paso);
+            };
+
+            window.addEventListener('dragover', alMover, true);
+            window.addEventListener('dragend', fin, true);
+            window.addEventListener('drop', fin, true);
+            cuadro = requestAnimationFrame(paso);
+
+            this.quitarAutoDesplazamiento = () => {
+                window.removeEventListener('dragover', alMover, true);
+                window.removeEventListener('dragend', fin, true);
+                window.removeEventListener('drop', fin, true);
+                if (cuadro) cancelAnimationFrame(cuadro);
+            };
+        },
+
+        detenerAutoDesplazamiento() {
+            if (typeof this.quitarAutoDesplazamiento === 'function') {
+                this.quitarAutoDesplazamiento();
+            }
+
+            this.quitarAutoDesplazamiento = null;
         },
     }"
     class="overflow-hidden rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)]"
