@@ -540,6 +540,12 @@ class EquipoShow extends Component
 
             ])
 
+            // Dirección IP (campo opcional de algunos tipos).
+            ->when(
+                \App\Support\Esquema::tieneColumna('equipos', 'direccion_ip'),
+                fn ($consulta) => $consulta->addSelect('e.direccion_ip')
+            )
+
             // Ubicación del equipo (campo «Ubicación» del tipo).
             ->when(
                 \App\Services\UbicacionOrganizacionalService::equiposTienenUbicacion(),
@@ -574,260 +580,169 @@ class EquipoShow extends Component
 
     }
 
-    protected function cargarEspecificaciones(
+    /*
+     * Campos del formulario configurado para el tipo (Administración ›
+     * Tipos de equipo): solo los visibles. «base» son columnas de equipos
+     * (factura, compra, proveedor, IP…); «extra» son las especificaciones
+     * propias del tipo (atributos o tabla del tipo).
+     */
+    protected function camposDelTipo(int $tipoId): array
+    {
+        $filas = DB::table('tipo_equipo_campos as tec')
+            ->join('campos_equipo as ce', 'ce.id_campo', '=', 'tec.id_campo')
+            ->where('tec.id_tipo_equipo', $tipoId)
+            ->where('ce.activo', true)
+            ->where('tec.visible', true)
+            ->orderBy('tec.orden')
+            ->orderBy('tec.id_tipo_campo')
+            ->get([
+                'tec.id_tipo_campo',
+                'tec.id_campo',
+                'tec.origen_dato',
+                'tec.tabla_destino',
+                'tec.columna_destino',
+                'tec.fuente_opciones',
+                'tec.id_catalogo',
+                'tec.etiqueta',
+                'ce.clave',
+                'ce.nombre',
+                'ce.tipo_control',
+            ]);
 
-        array $equipo
+        $base = [];
+        $extra = [];
 
-    ): array {
+        foreach ($filas as $fila) {
+            $campo = (array) $fila;
+            $campo['etiqueta'] = trim((string) $fila->etiqueta) !== '' ? $fila->etiqueta : $fila->nombre;
 
-        $tipoId =
-
-            (int) (
-
-                $equipo['id_tipo_equipo']
-
-                ?? 0
-
-            );
-
-        $config =
-
-            $this->childConfig()[$tipoId]
-
-            ?? null;
-
-        if (!$config) {
-
-            return [];
-
+            if ($fila->origen_dato === 'equipos') {
+                $base[(string) $fila->clave] = $campo['etiqueta'];
+            } elseif (in_array($fila->origen_dato, ['atributo', 'tabla_tipo'], true)) {
+                $extra[] = $campo;
+            }
         }
 
-        $tabla =
+        return ['base' => $base, 'extra' => $extra];
+    }
 
-            $config['table'];
-
-        $row = DB::table($tabla)
-
-            ->where(
-
-                'id_equipo',
-
-                $this->equipoId
-
-            )
-
-            ->first();
-
-        if (!$row) {
-
-            return [];
-
-        }
-
-        $row =
-
-            (array) $row;
-
-        $catalogIds = [];
-
-        foreach (
-
-            $config['fields'] as $campo => $tipo
-
-        ) {
-
-            if (
-
-                $tipo === 'catalog' &&
-
-                !empty($row[$campo])
-
-            ) {
-
-                $catalogIds[] =
-
-                    (int) $row[$campo];
-
+    /*
+     * Datos generales opcionales: solo los que el formulario del tipo usa
+     * (antes se mostraban siempre Host, MAC, Garantía y Condición, campos
+     * de versiones anteriores que ya no se capturan).
+     */
+    protected function camposGenerales(array $equipo, array $base): array
+    {
+        $formatoFecha = function ($valor): string {
+            if (blank($valor)) {
+                return '—';
             }
 
-        }
+            try {
+                return \Carbon\Carbon::parse($valor)->format('d/m/Y');
+            } catch (\Throwable) {
+                return (string) $valor;
+            }
+        };
 
-        $catalogos = [];
-
-        if (!empty($catalogIds)) {
-
-            $catalogos =
-
-                DB::table('catalogo_valores')
-
-                    ->whereIn(
-
-                        'id_valor',
-
-                        array_unique($catalogIds)
-
-                    )
-
-                    ->pluck(
-
-                        'nombre',
-
-                        'id_valor'
-
-                    )
-
-                    ->all();
-
-        }
-
-        $labels =
-
-            $this->fieldLabels();
+        $opcionales = [
+            'direccion_ip' => fn () => $equipo['direccion_ip'] ?? null,
+            'numero_factura' => fn () => $equipo['numero_factura'] ?? null,
+            'fecha_compra' => fn () => $formatoFecha($equipo['fecha_compra'] ?? null),
+            'id_proveedor' => fn () => $equipo['proveedor'] ?? null,
+        ];
 
         $resultado = [];
 
-        foreach (
+        foreach ($base as $clave => $etiqueta) {
+            if (! isset($opcionales[$clave])) {
+                continue;
+            }
 
-            $config['fields']
-
-            as $campo => $tipo
-
-        ) {
-
-            $valor =
-
-                $row[$campo]
-
-                ?? null;
+            $valor = $opcionales[$clave]();
 
             $resultado[] = [
-
-                'campo' =>
-
-                    $campo,
-
-                'label' =>
-
-                    $labels[$campo]
-
-                    ?? $campo,
-
-                'value' =>
-
-                    $this->formatearEspecificacion(
-
-                        $campo,
-
-                        $valor,
-
-                        $tipo,
-
-                        $catalogos
-
-                    ),
-
+                'label' => $etiqueta,
+                'value' => filled($valor) ? (string) $valor : '—',
             ];
-
         }
 
         return $resultado;
+    }
 
+    protected function cargarEspecificaciones(
+        array $equipo,
+        array $campos
+    ): array {
+        if ($campos === []) {
+            return [];
+        }
+
+        // Valores guardados como atributos del equipo.
+        $atributos = DB::table('atributos_equipo')
+            ->where('id_equipo', $this->equipoId)
+            ->whereNotNull('id_campo')
+            ->pluck('valor', 'id_campo')
+            ->all();
+
+        // Valores en la tabla propia del tipo (solo tablas conocidas).
+        $tablasConocidas = collect($this->childConfig())->pluck('table')->all();
+        $filasTabla = [];
+
+        foreach (collect($campos)->where('origen_dato', 'tabla_tipo')->pluck('tabla_destino')->unique() as $tabla) {
+            if (in_array($tabla, $tablasConocidas, true) && \App\Support\Esquema::tieneTabla($tabla)) {
+                $filasTabla[$tabla] = (array) (DB::table($tabla)->where('id_equipo', $this->equipoId)->first() ?? []);
+            }
+        }
+
+        // Nombres de las opciones de las listas.
+        $selects = collect($campos)->where('tipo_control', 'select');
+        $opcionesPropias = DB::table('tipo_equipo_campo_opciones')
+            ->whereIn('id_tipo_campo', $selects->where('fuente_opciones', 'personalizado')->pluck('id_tipo_campo')->all() ?: [0])
+            ->pluck('nombre', 'id_opcion')
+            ->all();
+        $opcionesCatalogo = DB::table('catalogo_valores')
+            ->whereIn('id_catalogo', $selects->where('fuente_opciones', 'catalogo')->pluck('id_catalogo')->filter()->all() ?: [0])
+            ->pluck('nombre', 'id_valor')
+            ->all();
+
+        $resultado = [];
+
+        foreach ($campos as $campo) {
+            $valor = $campo['origen_dato'] === 'atributo'
+                ? ($atributos[$campo['id_campo']] ?? null)
+                : ($filasTabla[$campo['tabla_destino']][$campo['columna_destino']] ?? null);
+
+            $resultado[] = [
+                'campo' => $campo['clave'],
+                'label' => $campo['etiqueta'],
+                'value' => $this->formatearEspecificacion($campo, $valor, $opcionesPropias, $opcionesCatalogo),
+            ];
+        }
+
+        return $resultado;
     }
 
     protected function formatearEspecificacion(
-
-        string $campo,
-
+        array $campo,
         mixed $valor,
-
-        string $tipo,
-
-        array $catalogos
-
+        array $opcionesPropias,
+        array $opcionesCatalogo
     ): string {
-
-        if (
-
-            $valor === null ||
-
-            $valor === ''
-
-        ) {
-
+        if ($valor === null || $valor === '') {
             return '—';
-
         }
 
-        if ($tipo === 'catalog') {
-
-            return
-
-                $catalogos[(int) $valor]
-
-                ?? '—';
-
-        }
-
-        if ($tipo === 'boolean') {
-
-            return filter_var(
-
-                $valor,
-
-                FILTER_VALIDATE_BOOLEAN
-
-            )
-
-                ? 'Sí'
-
-                : 'No';
-
-        }
-
-        if ($tipo === 'date') {
-
-            try {
-
-                return \Carbon\Carbon::parse(
-
-                    $valor
-
-                )->format('d/m/Y');
-
-            } catch (\Throwable) {
-
-                return (string) $valor;
-
-            }
-
-        }
-
-        if ($campo === 'ram_gb') {
-
-            return $valor . ' GB';
-
-        }
-
-        if ($campo === 'almacenamiento_gb') {
-
-            return $valor . ' GB';
-
-        }
-
-        if ($campo === 'tamano_pulgadas') {
-
-            return $valor . '"';
-
-        }
-
-        if ($campo === 'capacidad_va') {
-
-            return $valor . ' VA';
-
-        }
-
-        return (string) $valor;
-
+        return match ($campo['tipo_control']) {
+            'boolean' => in_array($valor, [true, 1, '1', 'true', 't'], true) ? 'Sí' : 'No',
+            'date' => rescue(fn () => \Carbon\Carbon::parse($valor)->format('d/m/Y'), (string) $valor, false),
+            'select' => (string) (match ($campo['fuente_opciones']) {
+                'personalizado' => $opcionesPropias[(int) $valor] ?? $valor,
+                'catalogo' => $opcionesCatalogo[(int) $valor] ?? $valor,
+                default => $valor,
+            }),
+            default => (string) $valor,
+        };
     }
 
     protected function cargarAsignaciones(): array
@@ -978,13 +893,12 @@ class EquipoShow extends Component
 
             $this->cargarEquipo();
 
-        $especificaciones =
+        // Solo los campos del formulario configurado para este tipo.
+        $camposTipo = $this->camposDelTipo((int) ($equipo['id_tipo_equipo'] ?? 0));
 
-            $this->cargarEspecificaciones(
+        $camposGenerales = $this->camposGenerales($equipo, $camposTipo['base']);
 
-                $equipo
-
-            );
+        $especificaciones = $this->cargarEspecificaciones($equipo, $camposTipo['extra']);
 
         $asignaciones =
 
@@ -1147,6 +1061,7 @@ class EquipoShow extends Component
             compact(
                 'equipo',
                 'clasificacionBien',
+                'camposGenerales',
                 'especificaciones',
                 'asignacionActual',
                 'movimientos',

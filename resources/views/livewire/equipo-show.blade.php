@@ -727,133 +727,19 @@
 
                 </div>
 
-                <div class="flex justify-between gap-4">
+                {{-- Datos opcionales del formulario del tipo (factura, compra, proveedor, IP…).
+                     Host, MAC, Garantía y Condición ya no se capturan: no se muestran. --}}
+                @foreach ($camposGenerales as $item)
+                    <div class="flex justify-between gap-4">
+                        <dt class="text-xs text-[var(--theme-text-muted)]">
+                            {{ $item['label'] }}
+                        </dt>
 
-                    <dt class="text-xs text-[var(--theme-text-muted)]">
-
-                        Condición
-
-                    </dt>
-
-                    <dd class="text-xs font-medium text-[var(--theme-text)] text-right">
-
-                        {{ $equipo['condicion'] ?? '—' }}
-
-                    </dd>
-
-                </div>
-
-                <div class="flex justify-between gap-4">
-
-                    <dt class="text-xs text-[var(--theme-text-muted)]">
-
-                        Host
-
-                    </dt>
-
-                    <dd class="text-xs font-medium text-[var(--theme-text)] text-right">
-
-                        {{ $equipo['host'] ?? '—' }}
-
-                    </dd>
-
-                </div>
-
-                <div class="flex justify-between gap-4">
-
-                    <dt class="text-xs text-[var(--theme-text-muted)]">
-
-                        Dirección MAC
-
-                    </dt>
-
-                    <dd
-
-                        class="
-
-                            text-xs
-
-                            font-medium
-
-                            text-[var(--theme-text)]
-
-                            text-right
-
-                            break-all
-
-                        "
-
-                    >
-
-                        {{ $equipo['direccion_mac'] ?? '—' }}
-
-                    </dd>
-
-                </div>
-
-                <div class="flex justify-between gap-4">
-
-                    <dt class="text-xs text-[var(--theme-text-muted)]">
-
-                        Factura
-
-                    </dt>
-
-                    <dd class="text-xs font-medium text-[var(--theme-text)] text-right">
-
-                        {{ $equipo['numero_factura'] ?? '—' }}
-
-                    </dd>
-
-                </div>
-
-                <div class="flex justify-between gap-4">
-
-                    <dt class="text-xs text-[var(--theme-text-muted)]">
-
-                        Fecha de compra
-
-                    </dt>
-
-                    <dd class="text-xs font-medium text-[var(--theme-text)] text-right">
-
-                        {{ $formatDate($equipo['fecha_compra'] ?? null) }}
-
-                    </dd>
-
-                </div>
-
-                <div class="flex justify-between gap-4">
-
-                    <dt class="text-xs text-[var(--theme-text-muted)]">
-
-                        Garantía
-
-                    </dt>
-
-                    <dd class="text-xs font-medium text-[var(--theme-text)] text-right">
-
-                        {{ $formatDate($equipo['fecha_fin_garantia'] ?? null) }}
-
-                    </dd>
-
-                </div>
-
-                <div class="flex justify-between gap-4">
-
-                    <dt class="text-xs text-[var(--theme-text-muted)]">
-
-                        Proveedor
-
-                    </dt>
-
-                    <dd class="text-xs font-medium text-[var(--theme-text)] text-right">
-
-                        {{ $equipo['proveedor'] ?? '—' }}
-
-                    </dd>
-
-                </div>
+                        <dd class="text-xs font-medium text-[var(--theme-text)] text-right break-words">
+                            {{ $item['value'] }}
+                        </dd>
+                    </div>
+                @endforeach
 
             </dl>
 
