@@ -381,6 +381,12 @@
                                         <span class="min-w-0 truncate">{{ $texto }}</span>
                                     @endif
 
+                                    {{-- Aviso junto al texto (columna 'badge' => fn ($row) => texto|null) --}}
+                                    @php $insignia = ($columna['badge'] ?? null) instanceof \Closure ? ($columna['badge'])($row) : null; @endphp
+                                    @if (filled($insignia))
+                                        <span class="shrink-0 whitespace-nowrap rounded-md bg-[var(--theme-warning-soft)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--theme-warning)]">{{ $insignia }}</span>
+                                    @endif
+
                                     @if ($copiable)
                                         <button
                                             type="button"

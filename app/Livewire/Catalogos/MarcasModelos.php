@@ -1445,6 +1445,11 @@ class MarcasModelos extends Component
                                 'm.fecha_creacion',
                                 'm.fecha_actualizacion',
 
+                                // Creada desde el alta de un equipo: «Falta información».
+                                \App\Support\Esquema::tieneColumna('marcas', 'pendiente_revision')
+                                    ? 'm.pendiente_revision'
+                                    : DB::raw('false AS pendiente_revision'),
+
                                 DB::raw(
                                     'COALESCE(em.total_equipos, 0) AS total_equipos'
                                 ),
@@ -1508,6 +1513,9 @@ class MarcasModelos extends Component
 
                                     'totalModelos' =>
                                         (int) $marca->total_modelos,
+
+                                    'pendiente' =>
+                                        (bool) ($marca->pendiente_revision ?? false),
 
                                     'editUrl' =>
                                         route(
@@ -1900,6 +1908,11 @@ class MarcasModelos extends Component
                                 'mo.fecha_creacion',
                                 'mo.fecha_actualizacion',
 
+                                // Creado desde el alta de un equipo: «Falta información».
+                                \App\Support\Esquema::tieneColumna('modelos', 'pendiente_revision')
+                                    ? 'mo.pendiente_revision'
+                                    : DB::raw('false AS pendiente_revision'),
+
                                 'm.id_marca',
                                 'm.nombre as marca_nombre',
 
@@ -1935,6 +1948,9 @@ class MarcasModelos extends Component
                                 fn ($modelo): array => [
                                     'id' =>
                                         (int) $modelo->id_modelo,
+
+                                    'pendiente' =>
+                                        (bool) ($modelo->pendiente_revision ?? false),
 
                                     'nombre' =>
                                         (string) $modelo->nombre,

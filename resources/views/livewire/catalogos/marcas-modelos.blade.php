@@ -283,7 +283,7 @@
 
             :columns="[
                 ['key' => 'id', 'label' => 'ID', 'width' => '90px', 'sort' => 'id', 'mobile' => false],
-                ['key' => 'nombre', 'label' => 'Marca', 'width' => '20%', 'sort' => 'nombre', 'strong' => true],
+                ['key' => 'nombre', 'label' => 'Marca', 'width' => '20%', 'sort' => 'nombre', 'strong' => true, 'badge' => fn ($m) => ($m->pendiente ?? false) ? 'Falta información' : null],
                 ['key' => 'descripcion', 'label' => 'Descripción', 'width' => '26%', 'default' => 'Sin descripción', 'mobile' => 'filled'],
                 ['key' => 'activo', 'label' => 'Estado', 'width' => '110px', 'sort' => 'activo', 'type' => 'status', 'value' => $estadoTexto],
                 ['key' => 'totalModelos', 'label' => 'Modelos', 'width' => '100px', 'sort' => 'totalModelos'],
@@ -328,7 +328,7 @@
 
             :columns="[
                 ['key' => 'id', 'label' => 'ID', 'width' => '90px', 'sort' => 'id', 'mobile' => false],
-                ['key' => 'nombre', 'label' => 'Modelo', 'width' => '19%', 'sort' => 'nombre', 'strong' => true],
+                ['key' => 'nombre', 'label' => 'Modelo', 'width' => '19%', 'sort' => 'nombre', 'strong' => true, 'badge' => fn ($m) => ($m->pendiente ?? false) ? 'Falta información' : null],
                 ['key' => 'marcaNombre', 'label' => 'Marca', 'width' => '14%', 'sort' => 'marcaNombre'],
                 ['key' => 'tipoEquipoNombre', 'label' => 'Tipo de equipo', 'width' => '15%', 'sort' => 'tipoEquipoNombre'],
                 ['key' => 'descripcion', 'label' => 'Descripción', 'width' => '18%', 'default' => 'Sin descripción', 'mobile' => 'filled'],

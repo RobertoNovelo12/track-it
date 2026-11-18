@@ -1522,8 +1522,12 @@ class EquipoCreate extends Component
             ? $colaboradores->resolver($propietarioCapturado, $propietarioCapturado)
             : null;
 
+        // Marca o modelo escritos que no existen («texto:…»): se crean al guardar.
+        $marcasRapidas = new \App\Services\MarcasModelosRapidosService();
+
         $idEquipo = DB::transaction(
             function () use (
+                $marcasRapidas,
                 $colaboradores,
                 $colaboradorPropietario,
                 $payload,
@@ -1551,6 +1555,15 @@ class EquipoCreate extends Component
                     ]);
                 }
 
+                // Marca y modelo: los elegidos o, si se escribieron nuevos, se crean
+                // («Falta información») y quedan disponibles para otros equipos.
+                $idMarca = $marcasRapidas->marca($validated['idMarca'] ?? null);
+                $idModelo = $marcasRapidas->modelo(
+                    $payload['idModelo'],
+                    $idMarca,
+                    (int) $validated['idTipoEquipo']
+                );
+
                 $idEquipo = DB::table('equipos')
                     ->insertGetId(
                         [
@@ -1570,16 +1583,14 @@ class EquipoCreate extends Component
                             'id_tipo_equipo' =>
                                 (int) $validated['idTipoEquipo'],
 
-                            'id_modelo' => $this->nullableInt(
-                                $payload['idModelo']
-                            ),
+                            'id_modelo' => $idModelo,
 
                             'fecha_compra' => $this->nullableString(
                                 $payload['fechaCompra']
                             ),
 
-                            'id_marca' =>
-                                $this->nullableInt($validated['idMarca'] ?? null),
+                            // Puede quedar vacía si el formulario del tipo no la exige.
+                            'id_marca' => $idMarca,
 
                             'direccion_mac' => $this->nullableString(
                                 $payload['direccionMac']
@@ -1778,6 +1789,9 @@ class EquipoCreate extends Component
             }
         );
 
+        // Marcas o modelos creados: las listas del formulario y de Administración se renuevan.
+        $marcasRapidas->refrescarSiHuboCambios();
+
         // La tabla de Inventario guarda sus páginas en caché: sin esto el
         // equipo nuevo solo aparecía al aplicar un filtro.
         if (! $this->importandoCsv) {
@@ -1813,9 +1827,12 @@ class EquipoCreate extends Component
             'ok' => true,
 
             'message' =>
-                ($colaboradorPropietario['sin_cuenta'] ?? false)
-                    ? 'Equipo añadido. «' . $colaboradorPropietario['nombre'] . '» no tiene cuenta: un administrador deberá crearla en Seguridad y roles.'
-                    : 'Equipo añadido correctamente.',
+                trim(
+                    (($colaboradorPropietario['sin_cuenta'] ?? false)
+                        ? 'Equipo añadido. «' . $colaboradorPropietario['nombre'] . '» no tiene cuenta: un administrador deberá crearla en Seguridad y roles.'
+                        : 'Equipo añadido correctamente.')
+                    . ' ' . ($marcasRapidas->aviso() ?? '')
+                ),
 
             'record' => [
                 'id' => $idEquipo,

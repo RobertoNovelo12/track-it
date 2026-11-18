@@ -492,6 +492,11 @@ class EditarRegistro extends Component
                                 $validated['comentarios']
                             ),
 
+                        // Al completarla aquí deja de marcarse «Falta información».
+                        ...(\App\Support\Esquema::tieneColumna($this->tipo === 'marca' ? 'marcas' : 'modelos', 'pendiente_revision')
+                            ? ['pendiente_revision' => false]
+                            : []),
+
                         'fecha_actualizacion' =>
                             now(),
                     ]);
@@ -817,6 +822,11 @@ class EditarRegistro extends Component
                             $this->nullableTrim(
                                 $validated['comentarios']
                             ),
+
+                        // Al completarla aquí deja de marcarse «Falta información».
+                        ...(\App\Support\Esquema::tieneColumna($this->tipo === 'marca' ? 'marcas' : 'modelos', 'pendiente_revision')
+                            ? ['pendiente_revision' => false]
+                            : []),
 
                         'fecha_actualizacion' =>
                             now(),

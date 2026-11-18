@@ -209,6 +209,15 @@
                         {{ $tituloTarjeta($row) }}
                     </p>
 
+                    {{-- Aviso de la primera columna con 'badge' (p. ej. «Falta información») --}}
+                    @php
+                        $columnaInsignia = $columnasMovil->first(fn ($c) => ($c['badge'] ?? null) instanceof \Closure);
+                        $insigniaTarjeta = $columnaInsignia ? ($columnaInsignia['badge'])($row) : null;
+                    @endphp
+                    @if (filled($insigniaTarjeta))
+                        <span class="mt-1 inline-flex rounded-md bg-[var(--theme-warning-soft)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--theme-warning)]">{{ $insigniaTarjeta }}</span>
+                    @endif
+
                     @if (filled($subtitulo))
                         <p class="mt-1 text-xs text-[var(--theme-text-muted)]">
                             {{ $subtitulo }}
