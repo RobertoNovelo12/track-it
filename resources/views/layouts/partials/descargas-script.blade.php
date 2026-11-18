@@ -85,9 +85,33 @@
             };
 
             try {
-                const respuesta = await fetch(url.href, { credentials: 'same-origin' });
+                const respuesta = await fetch(url.href, {
+                    credentials: 'same-origin',
+                    headers: { 'X-Trackit-Descarga': '1' },
+                });
                 const tipo = respuesta.headers.get('Content-Type') || '';
                 const adjunto = /attachment/i.test(respuesta.headers.get('Content-Disposition') || '');
+
+                // Archivo no disponible (con su motivo): aviso, sin salir de la página.
+                if (! respuesta.ok && tipo.includes('application/json')) {
+                    clearTimeout(temporizador);
+
+                    let mensaje = 'No se pudo descargar el archivo.';
+
+                    try {
+                        mensaje = (await respuesta.json())?.message || mensaje;
+                    } catch (error) {
+                        // Se usa el mensaje general.
+                    }
+
+                    if (aviso && window.trackitToastActualizar) {
+                        window.trackitToastActualizar(aviso, 'error', mensaje, 'Archivo no disponible');
+                    } else {
+                        window.trackitToast?.('error', mensaje, 'Archivo no disponible');
+                    }
+
+                    return;
+                }
 
                 // Una página (inicio de sesión, error, sin permiso): mostrarla tal cual.
                 if (! respuesta.ok || (tipo.includes('text/html') && ! adjunto)) {

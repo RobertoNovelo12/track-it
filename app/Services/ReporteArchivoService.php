@@ -51,6 +51,11 @@ class ReporteArchivoService
     {
         $filtros = (array) ($reporte->filtros ?? []);
 
+        // Inventario (p. ej. «inventario_global», exportado desde Inventario).
+        if (str_starts_with((string) $reporte->tipo_reporte, 'inventario')) {
+            return $this->regenerarInventario($reporte, $filtros);
+        }
+
         $tipos = array_values(array_filter((array) ($filtros['tipos_reporte'] ?? [])));
 
         if ($tipos === [] && $reporte->tipo_reporte && $reporte->tipo_reporte !== 'multiple') {
@@ -92,6 +97,81 @@ class ReporteArchivoService
                 return false;
             }
         } else {
+            return false;
+        }
+
+        if ($reporte->ruta_archivo !== $ruta) {
+            $reporte->forceFill(['ruta_archivo' => $ruta])->save();
+        }
+
+        return true;
+    }
+
+    /*
+     * Reporte de inventario (tabla de equipos): se vuelve a generar con los
+     * filtros guardados y los datos actuales, igual que la exportación de
+     * Inventario (InventarioDocumentoService).
+     */
+    private function regenerarInventario(ReporteGenerado $reporte, array $filtros): bool
+    {
+        $formato = strtoupper((string) $reporte->formato);
+
+        if (! in_array($formato, ['PDF', 'XLSX'], true)) {
+            return false;
+        }
+
+        $texto = trim((string) ($filtros['busqueda'] ?? ''));
+
+        $filas = \Illuminate\Support\Facades\DB::table('equipos as e')
+            ->select('e.id_equipo')
+            ->when($texto !== '', function ($consulta) use ($texto): void {
+                $patron = '%'.mb_strtolower($texto).'%';
+                $consulta->where(function ($q) use ($patron): void {
+                    $q->whereRaw('LOWER(e.codigo_inventario) LIKE ?', [$patron])
+                        ->orWhereRaw('LOWER(e.nombre_equipo) LIKE ?', [$patron])
+                        ->orWhereRaw('LOWER(COALESCE(e.numero_serie, \'\')) LIKE ?', [$patron]);
+                });
+            })
+            ->when(is_numeric($filtros['tipo_equipo'] ?? null), fn ($q) => $q->where('e.id_tipo_equipo', (int) $filtros['tipo_equipo']))
+            ->when(is_numeric($filtros['estado'] ?? null), fn ($q) => $q->where('e.id_estado_activo', (int) $filtros['estado']))
+            ->when(is_numeric($filtros['marca'] ?? null), fn ($q) => $q->where('e.id_marca', (int) $filtros['marca']))
+            ->when(is_numeric($filtros['modelo'] ?? null), fn ($q) => $q->where('e.id_modelo', (int) $filtros['modelo']))
+            ->when(filled($filtros['fecha_inicio'] ?? null), fn ($q) => $q->whereDate('e.fecha_registro', '>=', $filtros['fecha_inicio']))
+            ->when(filled($filtros['fecha_fin'] ?? null), fn ($q) => $q->whereDate('e.fecha_registro', '<=', $filtros['fecha_fin']))
+            ->orderBy('e.codigo_inventario')
+            ->get();
+
+        $equipos = app(InventarioDocumentoService::class)->preparar($filas);
+
+        if ($equipos === []) {
+            return false;
+        }
+
+        $ruta = $reporte->ruta_archivo
+            ?: 'reportes/'.basename((string) ($reporte->nombre_archivo ?: 'inventario-'.$reporte->id_reporte.'.'.strtolower($formato)));
+
+        if ($formato === 'PDF') {
+            // Un inventario completo (cientos de equipos) no cabe en los 128 MB por omisión de dompdf.
+            @ini_set('memory_limit', '512M');
+            @set_time_limit(180);
+
+            $pdf = Pdf::loadView('inventario-exportacion.tabla', [
+                'equipos' => $equipos,
+                'generadoEn' => $reporte->fecha_generacion ?? now(),
+            ])->setPaper('letter', 'portrait');
+
+            $pdf->setOption([
+                'enable_font_subsetting' => true,
+                'enable_remote' => false,
+                'enable_php' => false,
+            ]);
+
+            $contenido = $pdf->output();
+        } else {
+            $contenido = Excel::raw(new \App\Exports\InventarioEquiposExport($equipos), ExcelWriter::XLSX);
+        }
+
+        if (! Storage::disk('local')->put($ruta, $contenido)) {
             return false;
         }
 

@@ -12,8 +12,10 @@
 ============================================================ --}}
 @php
     $temaServidor = null;
-    $logoUrl = asset(\App\Services\OrganizacionService::LOGO_PREDETERMINADO);
-    $logoAlt = 'Grand Palladium';
+    // Mismo logotipo que la interfaz: el de la organización o Track IT (con su versión oscura).
+    $logoUrl = asset(\App\Services\OrganizacionService::LOGO_INTERFAZ);
+    $logoUrlOscuro = asset(\App\Services\OrganizacionService::LOGO_INTERFAZ_OSCURO);
+    $logoAlt = 'Track IT';
     $logoModoOscuro = 'original';
     $logoAncho = 170;
     $inicioUrl = url('/');
@@ -28,9 +30,10 @@
 
     try {
         $organizacion = app(\App\Services\OrganizacionService::class);
-        $logoUrl = $organizacion->logoUrl();
+        $logoUrl = $organizacion->logoInterfazUrl();
+        $logoUrlOscuro = $organizacion->logoInterfazUrlOscuro();
         $logoAlt = $organizacion->nombre();
-        $logoModoOscuro = $organizacion->logoModoOscuro();
+        $logoModoOscuro = $organizacion->logoInterfazModoOscuro();
         $logoAncho = $organizacion->logoAncho(170);
     } catch (\Throwable $e) {
         // Se conserva el logotipo predeterminado.
@@ -261,6 +264,7 @@
     <main class="error-card tono-{{ $tono }}">
         <img
             src="{{ $logoUrl }}"
+            @if ($logoUrlOscuro) data-src-claro="{{ $logoUrl }}" data-src-oscuro="{{ $logoUrlOscuro }}" @endif
             alt="{{ $logoAlt }}"
             data-dark-mode="{{ $logoModoOscuro }}"
             style="--org-logo-w: {{ $logoAncho }}px;"

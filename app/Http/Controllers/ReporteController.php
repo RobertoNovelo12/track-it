@@ -33,6 +33,18 @@ class ReporteController extends Controller
 
     public function download(ReporteGenerado $reporte)
     {
+        /*
+         * Descarga desde la página (layouts/partials/descargas-script): si el
+         * archivo no se puede obtener, se responde con un aviso en lugar de
+         * abrir la página de error.
+         */
+        if (request()->header('X-Trackit-Descarga') === '1'
+            && ! app(\App\Services\ReporteArchivoService::class)->asegurar($reporte)) {
+            return response()->json([
+                'message' => 'El archivo de este reporte no está disponible y no se pudo volver a generar. Genera el reporte de nuevo.',
+            ], 404);
+        }
+
         $this->validarArchivo($reporte);
 
         return Storage::disk('local')->download(

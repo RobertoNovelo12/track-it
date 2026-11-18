@@ -49,6 +49,10 @@ class InventarioDocumentoService
             );
         }
 
+        // Con cientos de equipos dompdf supera los 128 MB por omisión (~190 MB con 165).
+        @ini_set('memory_limit', '512M');
+        @set_time_limit(180);
+
         $pdf = Pdf::loadView('inventario-exportacion.tabla', [
             'equipos' => $equipos,
             'generadoEn' => now(),
