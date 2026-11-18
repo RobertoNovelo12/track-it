@@ -1138,6 +1138,33 @@
 
                 </span>
 
+                {{-- Mientras llegan los datos del equipo o de los filtros --}}
+                <span
+                    wire:loading.flex
+                    wire:target="seleccionarSugerencia,limpiarFiltros,busquedaActivo,tipoEquipo,estado,fechaInicio,fechaFin,modelo,marca"
+                    class="ml-auto hidden items-center gap-2 text-xs text-[var(--theme-text-muted)]"
+                >
+                    <x-ui.spinner size="sm" />
+                    Cargando…
+                </span>
+
+            </div>
+
+            {{--
+                Velo sobre la hoja mientras se cargan los datos: sin esto la
+                vista previa parecía congelada al elegir un equipo.
+            --}}
+            <div
+                wire:loading.flex
+                wire:target="seleccionarSugerencia,limpiarFiltros,busquedaActivo,tipoEquipo,estado,fechaInicio,fechaFin,modelo,marca"
+                class="absolute inset-x-4 top-[62px] bottom-4 z-10 hidden flex-col items-center justify-center gap-3 rounded-md bg-[color-mix(in_srgb,var(--theme-surface)_72%,transparent)] backdrop-blur-[2px]"
+                role="status"
+                aria-live="polite"
+            >
+                <span class="flex items-center gap-3 rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface)] px-4 py-3 text-sm font-medium text-[var(--theme-text-strong)] shadow-sm">
+                    <x-ui.spinner size="lg" class="text-[var(--theme-primary)]" />
+                    <span>Cargando vista previa…</span>
+                </span>
             </div>
 
             <div
