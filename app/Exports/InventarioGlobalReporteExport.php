@@ -31,6 +31,7 @@ class InventarioGlobalReporteExport extends StringValueBinder implements FromArr
     }
     public function styles(Worksheet $sheet): array
     {
+        $sheet->getPageSetup()->setOrientation(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_LANDSCAPE)->setFitToWidth(1)->setFitToHeight(0);
         if (! $this->incluirPresentacion) { return []; }
         $fin = Coordinate::stringFromColumnIndex(count(app(InventarioGlobalReporteService::class)->columnas($this->formato)));
         $sheet->mergeCells('A1:'.$fin.'1');

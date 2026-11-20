@@ -101,6 +101,7 @@ class InventarioEquiposExport extends \PhpOffice\PhpSpreadsheet\Cell\StringValue
 
     public function styles(Worksheet $sheet): array
     {
+        $sheet->getPageSetup()->setOrientation(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_LANDSCAPE)->setFitToWidth(1)->setFitToHeight(0);
         $sheet->getStyle($sheet->calculateWorksheetDimension())->applyFromArray([
             'font' => ['name' => 'Arial', 'size' => 11, 'color' => ['rgb' => '000000']],
             'borders' => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN, 'color' => ['rgb' => '000000']]],

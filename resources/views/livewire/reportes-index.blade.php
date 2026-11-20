@@ -36,7 +36,7 @@
 
         async precargarListas() {
             // Priorizar lo que el usuario está viendo; no esperar otras categorías.
-            const tipos = ['altas', 'bajas', 'asignaciones', 'reasignaciones', 'mantenimientos'];
+            const tipos = ['altas', 'bajas', 'asignaciones', 'reasignaciones'];
             const pendientes = [this.activo, ...tipos.filter(tipo => tipo !== this.activo)];
             const cargar = async (tipo) => {
                 if (this.precargadas[tipo]) return this.precargadas[tipo];
@@ -164,9 +164,9 @@
 
             'estado',
 
-            'fechaInicio',
+            'mesInicio',
 
-            'fechaFin',
+            'mesFin',
 
             'modelo',
 
@@ -624,7 +624,6 @@
 
             'reasignaciones' => 'Reasignación',
 
-            'mantenimientos' => 'Mantenimiento',
 
         ];
 
@@ -638,7 +637,6 @@
 
             'reasignaciones' => 'Cambios de asignación de equipos.',
 
-            'mantenimientos' => 'Historial de mantenimientos.',
 
         ];
 
@@ -650,7 +648,6 @@
 
             'asignaciones' => 'Estado de asignación',
 
-            'mantenimientos' => 'Estado de mantenimiento',
 
             default => 'Estado del activo',
 
@@ -847,16 +844,20 @@
 
                         <div x-show="activo === 'altas'" class="md:col-span-2">
                             <label class="mb-1.5 block text-xs font-medium">Formato del inventario</label>
-                            <select wire:model="formatoInventario" x-on:change="$wire.set('formatoInventario', $event.target.value, false); precargadas = {}; sugerenciasAbiertas = false; consultaSugerenciasVersion++; nombreEquipoVisible = null; $wire.set('busquedaActivo', '', false); $wire.set('tipoEquipo', '', false); vistaLocalVacia = true; $wire.buscarAutomaticamente()" class="{{ $campoClase }}">
-                                @foreach (\App\Services\InventarioGlobalReporteService::FORMATOS as $clave => $nombre)<option value="{{ $clave }}">{{ $nombre }}</option>@endforeach
+                            <select wire:model="formatoInventario" x-bind:style="{ color: $wire.formatoInventario ? 'var(--theme-text)' : 'var(--theme-text-muted)' }" x-on:change="$wire.set('formatoInventario', $event.target.value, false); precargadas = {}; sugerenciasAbiertas = false; consultaSugerenciasVersion++; nombreEquipoVisible = null; $wire.set('busquedaActivo', '', false); $wire.set('tipoEquipo', '', false); vistaLocalVacia = true; $wire.buscarAutomaticamente()" class="{{ $campoClase }}">
+                                <option value="" style="color:var(--theme-text-muted);">Seleccionar tipo de reporte…</option>
+                                @foreach (\App\Services\InventarioGlobalReporteService::FORMATOS as $clave => $nombre)<option value="{{ $clave }}" style="color:var(--theme-text);">{{ $nombre }}</option>@endforeach
                             </select>
+                            @error('formatoInventario')<p class="mt-1 text-xs text-[var(--theme-danger)]">{{ $message }}</p>@enderror
                         </div>
                         <div x-show="activo === 'bajas'" class="md:col-span-2">
                             <label class="mb-1.5 block text-xs font-medium">Formato de bajas</label>
-                            <select wire:model="formatoBaja" x-on:change="$wire.set('formatoBaja', $event.target.value, false); precargadas = {}; sugerenciasAbiertas = false; consultaSugerenciasVersion++; nombreEquipoVisible = null; $wire.set('busquedaActivo', '', false); $wire.set('estado', '', false); vistaLocalVacia = true; $wire.buscarAutomaticamente()" class="{{ $campoClase }}">
-                                <option value="completadas">Completadas · Acta de baja</option>
-                                <option value="resguardo">En resguardo · Inventario pendiente de revisión</option>
+                            <select wire:model="formatoBaja" x-bind:style="{ color: $wire.formatoBaja ? 'var(--theme-text)' : 'var(--theme-text-muted)' }" x-on:change="$wire.set('formatoBaja', $event.target.value, false); precargadas = {}; sugerenciasAbiertas = false; consultaSugerenciasVersion++; nombreEquipoVisible = null; $wire.set('busquedaActivo', '', false); $wire.set('estado', '', false); vistaLocalVacia = true; $wire.buscarAutomaticamente()" class="{{ $campoClase }}">
+                                <option value="" style="color:var(--theme-text-muted);">Seleccionar tipo de reporte…</option>
+                                <option value="completadas" style="color:var(--theme-text);">Completadas · Acta de baja</option>
+                                <option value="resguardo" style="color:var(--theme-text);">En resguardo · Inventario pendiente de revisión</option>
                             </select>
+                            @error('formatoBaja')<p class="mt-1 text-xs text-[var(--theme-danger)]">{{ $message }}</p>@enderror
                             <p class="mt-2 text-xs text-[var(--theme-text-muted)]">En resguardo: el equipo sigue en la institución. Completada: salida confirmada; el acta permanece en el historial.</p>
                         </div>
                         {{-- BUSCAR ACTIVO --}}
@@ -968,21 +969,21 @@
 
                             <span class="mb-1.5 block text-xs font-medium text-[var(--theme-text)]">
 
-                                Fecha inicial
+                                Mes inicial
 
                             </span>
 
                             <input
 
-                                type="date"
+                                type="month"
 
-                                wire:model="fechaInicio"
+                                wire:model="mesInicio"
 
                                 class="{{ $campoClase }}"
 
                             >
 
-                            @error('fechaInicio')
+                            @error('mesInicio')
 
                                 <span class="mt-1 block text-xs text-[var(--theme-danger)]">
 
@@ -1000,21 +1001,21 @@
 
                             <span class="mb-1.5 block text-xs font-medium text-[var(--theme-text)]">
 
-                                Fecha final
+                                Mes final
 
                             </span>
 
                             <input
 
-                                type="date"
+                                type="month"
 
-                                wire:model="fechaFin"
+                                wire:model="mesFin"
 
                                 class="{{ $campoClase }}"
 
                             >
 
-                            @error('fechaFin')
+                            @error('mesFin')
 
                                 <span class="mt-1 block text-xs text-[var(--theme-danger)]">
 
@@ -1027,6 +1028,7 @@
                         </label>
 
                         {{-- MODELO --}}
+                        <p class="md:col-span-2 text-xs text-[var(--theme-text-muted)]">El rango incluye ambos meses completos. Puedes seleccionar el mismo mes en ambos campos.</p>
 
                         <x-searchable-select
 
@@ -1106,7 +1108,6 @@
                             ['Equipos dados de baja', $resumen['bajas']],
                             ['Asignaciones activas', $resumen['asignaciones']],
                             ['Reasignaciones', $resumen['reasignaciones']],
-                            ['Mantenimientos', $resumen['mantenimientos']],
                             ['Reportes generados', $resumen['reportes']],
                         ] as [$nombreCifra, $valorCifra])
                             <div class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] px-4 py-3.5">
@@ -1191,8 +1192,8 @@
                         medir() {
                             const disponible = this.$el.clientWidth;
                             if (! disponible) return;
-                            this.escala = Math.min(1, disponible / ((this.activo === 'altas' || (this.activo === 'bajas' && $wire.formatoBaja === 'resguardo')) ? 1587 : 816));
-                            this.izquierda = Math.max(0, (disponible - ((this.activo === 'altas' || (this.activo === 'bajas' && $wire.formatoBaja === 'resguardo')) ? 1587 : 816)) / 2);
+                            this.escala = Math.min(1, disponible / (!['asignaciones', 'reasignaciones'].includes(this.activo) ? 1587 : 816));
+                            this.izquierda = Math.max(0, (disponible - (!['asignaciones', 'reasignaciones'].includes(this.activo) ? 1587 : 816)) / 2);
                             this.alto = Math.ceil(this.$refs.hoja.scrollHeight * this.escala);
                         },
                     }"
@@ -1207,7 +1208,7 @@
                 >
                     <div
                         x-ref="hoja"
-                        x-bind:style="{ width: (activo === 'altas' || (activo === 'bajas' && $wire.formatoBaja === 'resguardo')) ? '1587px' : '816px', minHeight: (activo === 'altas' || (activo === 'bajas' && $wire.formatoBaja === 'resguardo')) ? '1123px' : '1056px', transformOrigin: 'top left', transform: 'scale(' + escala + ')', left: izquierda + 'px' }"
+                        x-bind:style="{ width: !['asignaciones', 'reasignaciones'].includes(activo) ? '1587px' : '816px', minHeight: !['asignaciones', 'reasignaciones'].includes(activo) ? '1123px' : '1056px', transformOrigin: 'top left', transform: 'scale(' + escala + ')', left: izquierda + 'px' }"
                         class="absolute top-0 bg-white shadow-md"
                     >
 
@@ -1218,12 +1219,14 @@
 
                     <div x-show="activo === 'altas'">
 
-                        @include('reportes.inventario-global-tabla', ['filas' => [], 'formato' => $formatoInventario, 'mensajeVacio' => 'Selecciona los filtros para consultar el inventario.'])
+                        <p style="padding:60px;text-align:center;color:#64748b;font-size:28px;">{{ $formatoInventario === '' ? 'Selecciona un formato de inventario para ver la vista previa.' : 'Actualizando vista previa…' }}</p>
 
                     </div>
 
                     <div x-show="activo === 'bajas'">
-                        @if ($formatoBaja === 'resguardo')
+                        @if ($formatoBaja === '')
+                            <p style="padding:60px;text-align:center;color:#64748b;font-size:28px;">Selecciona un tipo de reporte de bajas para ver la vista previa.</p>
+                        @elseif ($formatoBaja === 'resguardo')
                             @include('reportes.inventario-global-tabla', ['filas'=>[], 'formato'=>'resguardo'])
                         @else
 
@@ -1282,21 +1285,7 @@
 
                     </div>
 
-                    <div x-show="activo === 'mantenimientos'">
 
-                        @include('reportes.mantenimiento-previa', [
-
-                            'm' => [
-
-                                'equipo' => [],
-
-                                'refacciones' => []
-
-                            ]
-
-                        ])
-
-                    </div>
 
                 </div>
 
@@ -1305,8 +1294,14 @@
                 <div x-show="!vistaLocalVacia" x-cloak>
 
                     @if ($tipoSeleccionado === 'altas')
+                        @if ($formatoInventario !== '' && $previewReady)
                         @include('reportes.inventario-global-tabla', ['filas' => $previewDocument['filas'] ?? [], 'formato' => $formatoInventario])
                         <p style="padding:12px;color:#475569;font-size:10px;">Vista previa: hasta 20 de {{ $previewTotal }} bienes. Las descargas incluyen todos los resultados. Los campos sin información se muestran como «Sin dato».</p>
+                        @else
+                            <p style="padding:60px;text-align:center;color:#64748b;font-size:28px;">Selecciona un formato de inventario para ver la vista previa.</p>
+                        @endif
+                    @elseif ($tipoSeleccionado === 'bajas' && $formatoBaja === '')
+                        <p style="padding:60px;text-align:center;color:#64748b;font-size:28px;">Selecciona un tipo de reporte de bajas para ver la vista previa.</p>
                     @elseif ($tipoSeleccionado === 'bajas' && $formatoBaja === 'resguardo')
                         @include('reportes.inventario-global-tabla', ['filas'=>$previewDocument['filas'] ?? [], 'formato'=>'resguardo'])
                         <p style="padding:12px;font-size:10px;">Vista previa: hasta 20 de {{ $previewTotal }} equipos. La descarga incluye todos los resultados.</p>
@@ -1392,40 +1387,6 @@
                             @include('reportes.acta-previa', [
 
                                 'acta' => $previewDocument
-
-                            ])
-
-                        @endif
-
-                    @elseif ($tipoSeleccionado === 'mantenimientos')
-
-                        @if (!$previewReady)
-
-                            @include('reportes.mantenimiento-previa', [
-
-                                'm' => [
-
-                                    'equipo' => [],
-
-                                    'refacciones' => []
-
-                                ]
-
-                            ])
-
-                        @elseif (empty($previewDocument))
-
-                            <div class="rounded-lg bg-white p-6 text-center text-sm text-slate-600">
-
-                                No se encontraron mantenimientos con estos filtros.
-
-                            </div>
-
-                        @else
-
-                            @include('reportes.mantenimiento-previa', [
-
-                                'm' => $previewDocument
 
                             ])
 

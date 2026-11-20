@@ -1990,6 +1990,7 @@ class EquipoEdit extends Component
                 $labels[$key] = $field['etiqueta'];
 
                 $childFieldMetaByType[$tipoId][$key] = [
+                    'clave' => $field['clave'],
 
                     'orden' => (int) $field['orden'],
 
@@ -2467,6 +2468,7 @@ class EquipoEdit extends Component
 
         );
 
+        $payload = app(\App\Services\ImportesBienService::class)->calcular($payload, $definitions);
         $values = $this->validatedChildData(
 
             $payload['childData'],

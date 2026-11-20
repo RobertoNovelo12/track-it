@@ -330,6 +330,7 @@ Route::middleware([
     |--------------------------------------------------------------------------
     */
 
+    Route::get('/asignaciones/comodatos', fn () => view('asignaciones.comodatos'))->name('asignaciones.comodatos')->middleware('can:gestionar');
     Route::get('/asignaciones/bajas', fn () => view('asignaciones.bajas'))
         ->name('asignaciones.bajas')->middleware('can:gestionar');
 

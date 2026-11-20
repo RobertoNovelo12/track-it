@@ -39,7 +39,7 @@ class InventarioDocumentoService
             $pdf = Pdf::loadView('inventario-exportacion.ficha', [
                 'equipo' => $equipos[0],
                 'generadoEn' => now(),
-            ])->setPaper('letter', 'portrait');
+            ])->setPaper('letter', 'landscape');
             $this->opcionesPdf($pdf);
 
             return response()->streamDownload(
@@ -56,7 +56,7 @@ class InventarioDocumentoService
         $pdf = Pdf::loadView('inventario-exportacion.tabla', [
             'equipos' => $equipos,
             'generadoEn' => now(),
-        ])->setPaper('letter', 'portrait');
+        ])->setPaper('letter', 'landscape');
         $this->opcionesPdf($pdf);
 
         return response()->streamDownload(

@@ -14,7 +14,7 @@
 
         @page {
 
-            size: letter portrait;
+            size: letter landscape;
 
             margin: 0;
 

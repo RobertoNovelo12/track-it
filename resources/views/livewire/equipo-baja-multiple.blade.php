@@ -424,10 +424,10 @@
                         role="region"
                         aria-label="Vista previa del documento de baja múltiple"
                     >
-                        @include(
+<div x-data="{ escala: 1, alto: 816, medir() { this.escala = Math.min(1, this.$el.clientWidth / 1056); this.alto = this.$refs.pagina.scrollHeight * this.escala; } }" x-init="$nextTick(() => medir()); const ro = new ResizeObserver(() => medir()); ro.observe($el); ro.observe($refs.pagina);" :style="{ height: alto + 'px' }" style="position:relative;width:100%;overflow:hidden;"><div x-ref="pagina" :style="{ transform: 'scale(' + escala + ')' }" style="width:1056px;min-height:816px;transform-origin:top left;background:white;">@include(
                             'reportes.partials.baja-multiple-documento',
-                            ['documento' => $documento]
-                        )
+                            ['documento' => $documento, 'mostrarEspaciosFotos'=>true]
+                        )</div></div>
                     </div>
 
                     <p class="mt-3 text-center text-xs text-[var(--theme-text-muted)]">

@@ -40,12 +40,6 @@ class NotificacionService
             'tipo' => 'ASIGNACION',
             'defecto' => true,
         ],
-        'mantenimientos' => [
-            'columna' => 'notificar_mantenimientos',
-            'soloGestion' => true,
-            'tipo' => 'MANTENIMIENTO',
-            'defecto' => true,
-        ],
         'equipos' => [
             'columna' => 'notificar_cambios_equipos',
             'tipo' => 'EQUIPO',

@@ -180,7 +180,7 @@ class NotificationsPanel extends Component
          * y se elimina antes de construir el listado.
          */
         if (! $preferences['mantener_historial']) {
-            DB::table('notificaciones')
+            DB::table('notificaciones')->where('tipo', '<>', 'MANTENIMIENTO')
                 ->where(
                     'id_usuario',
                     $userId
@@ -197,7 +197,7 @@ class NotificationsPanel extends Component
          * Consulta base de las notificaciones del usuario.
          */
         $query =
-            DB::table('notificaciones')
+            DB::table('notificaciones')->where('tipo', '<>', 'MANTENIMIENTO')
                 ->where(
                     'id_usuario',
                     $userId
@@ -320,7 +320,7 @@ class NotificationsPanel extends Component
         }
 
 
-        $notification = DB::table('notificaciones')
+        $notification = DB::table('notificaciones')->where('tipo', '<>', 'MANTENIMIENTO')
             ->where(
                 'id_notificacion',
                 $notificationId
@@ -358,7 +358,7 @@ class NotificationsPanel extends Component
          * y se elimina en lugar de conservarla como leída.
          */
         if (! $preferences['mantener_historial']) {
-            DB::table('notificaciones')
+            DB::table('notificaciones')->where('tipo', '<>', 'MANTENIMIENTO')
                 ->where(
                     'id_notificacion',
                     $notificationId
@@ -386,7 +386,7 @@ class NotificationsPanel extends Component
          * La conservamos y solamente la marcamos como leída.
          */
         elseif (! (bool) $notification->leida) {
-            DB::table('notificaciones')
+            DB::table('notificaciones')->where('tipo', '<>', 'MANTENIMIENTO')
                 ->where(
                     'id_notificacion',
                     $notificationId
@@ -500,7 +500,7 @@ class NotificationsPanel extends Component
          * y eliminarla definitivamente.
          */
         if (! $preferences['mantener_historial']) {
-            $deleted = DB::table('notificaciones')
+            $deleted = DB::table('notificaciones')->where('tipo', '<>', 'MANTENIMIENTO')
                 ->where(
                     'id_notificacion',
                     $notificationId
@@ -533,7 +533,7 @@ class NotificationsPanel extends Component
         /*
          * Con historial, conservamos la fila.
          */
-        $updated = DB::table('notificaciones')
+        $updated = DB::table('notificaciones')->where('tipo', '<>', 'MANTENIMIENTO')
             ->where(
                 'id_notificacion',
                 $notificationId
@@ -614,7 +614,7 @@ class NotificationsPanel extends Component
          * ninguna debe permanecer almacenada.
          */
         if (! $preferences['mantener_historial']) {
-            DB::table('notificaciones')
+            DB::table('notificaciones')->where('tipo', '<>', 'MANTENIMIENTO')
                 ->where(
                     'id_usuario',
                     $userId
@@ -640,7 +640,7 @@ class NotificationsPanel extends Component
          * Conservamos todas las filas y solamente
          * actualizamos las que aún estaban pendientes.
          */
-        DB::table('notificaciones')
+        DB::table('notificaciones')->where('tipo', '<>', 'MANTENIMIENTO')
             ->where(
                 'id_usuario',
                 $userId
@@ -701,7 +701,7 @@ class NotificationsPanel extends Component
          * El WHERE por id_usuario evita eliminar
          * notificaciones de cualquier otro usuario.
          */
-        $deleted = DB::table('notificaciones')
+        $deleted = DB::table('notificaciones')->where('tipo', '<>', 'MANTENIMIENTO')
             ->where(
                 'id_notificacion',
                 $notificationId
@@ -758,7 +758,7 @@ class NotificationsPanel extends Component
          * Eliminar exclusivamente las
          * notificaciones del usuario autenticado.
          */
-        DB::table('notificaciones')
+        DB::table('notificaciones')->where('tipo', '<>', 'MANTENIMIENTO')
             ->where(
                 'id_usuario',
                 $userId
@@ -896,7 +896,7 @@ class NotificationsPanel extends Component
 
 
         $this->unreadCount =
-            DB::table('notificaciones')
+            DB::table('notificaciones')->where('tipo', '<>', 'MANTENIMIENTO')
                 ->where(
                     'id_usuario',
                     $userId

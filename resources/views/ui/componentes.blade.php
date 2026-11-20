@@ -234,7 +234,7 @@
                 Error
             </x-ui.button>
 
-            <x-ui.button variant="secondary" size="sm" @click="window.trackitToast('warning', 'El equipo tiene un mantenimiento vencido.')">
+            <x-ui.button variant="secondary" size="sm" @click="window.trackitToast('warning', 'La garantía del equipo está vencida.')">
                 Advertencia
             </x-ui.button>
 

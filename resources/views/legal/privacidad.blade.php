@@ -33,14 +33,14 @@
     <li><strong>Datos laborales:</strong> puesto, departamento, edificio o unidad y sede a la que perteneces.</li>
     <li><strong>Datos de acceso y seguridad:</strong> contraseña (guardada cifrada, nunca en texto plano), configuración de la verificación en dos pasos, fecha de nacimiento usada como pregunta de seguridad y fecha del último acceso.</li>
     <li><strong>Datos de uso:</strong> dirección IP, tipo de dispositivo y navegador de tus sesiones, y el registro de acciones realizadas en el sistema (bitácora).</li>
-    <li><strong>Datos de operación:</strong> equipos asignados a tu nombre, movimientos, mantenimientos, bajas, firmas y evidencias que se adjunten en actas y reportes.</li>
+    <li><strong>Datos de operación:</strong> equipos asignados a tu nombre, movimientos, bajas, firmas y evidencias que se adjunten en actas y reportes.</li>
 </ul>
 <p>No se solicitan datos personales sensibles.</p>
 
 <h2>3. Para qué se usan</h2>
 <ul>
     <li>Crear y administrar tu cuenta y verificar tu identidad al iniciar sesión.</li>
-    <li>Registrar el inventario tecnológico, las asignaciones de equipos, los mantenimientos y las bajas.</li>
+    <li>Registrar el inventario tecnológico, las asignaciones de equipos, las bajas.</li>
     <li>Generar actas, reportes y documentos de entrega y recepción de equipos.</li>
     <li>Enviarte notificaciones del sistema (en la aplicación, por correo o notificaciones push si las activas).</li>
     <li>Proteger la seguridad del sistema, detectar accesos no autorizados y mantener un historial de auditoría.</li>

@@ -1139,6 +1139,7 @@ class EquipoCreate extends Component
                 $labels[$key] = $field['etiqueta'];
 
                 $childFieldMetaByType[$tipoId][$key] = [
+                    'clave' => $field['clave'],
                     'id_campo' => $field['id_campo'],
                     'id_seccion' => $field['id_seccion'],
                     'etiqueta' => $field['etiqueta'],
@@ -1495,6 +1496,7 @@ class EquipoCreate extends Component
             $tipoId
         );
 
+        $payload = app(\App\Services\ImportesBienService::class)->calcular($payload, $definitions);
         $values = $this->validatedChildData(
             $payload['childData'],
             $definitions

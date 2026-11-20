@@ -191,7 +191,7 @@ class PapeleraIndex extends Component
     {
         $buscar = trim($this->buscar);
 
-        return DB::table('papelera')
+        return DB::table('papelera')->where('tipo', '<>', 'mantenimiento')
             ->when($this->tipo !== '' && PapeleraEntidades::existe($this->tipo), fn ($q) => $q->where('tipo', $this->tipo))
             ->when($buscar !== '', fn ($q) => $q->where(function ($sub) use ($buscar): void {
                 $patron = '%'.addcslashes($buscar, '%_\\').'%';
@@ -205,6 +205,7 @@ class PapeleraIndex extends Component
     public function render(): View
     {
         $nombres = PapeleraEntidades::nombres();
+        unset($nombres['mantenimiento']);
 
         $elementos = $this->consulta()
             ->select(['id_papelera', 'tipo', 'id_registro', 'etiqueta', 'detalle', 'eliminado_por_nombre', 'eliminado_en', 'expira_en'])
@@ -221,7 +222,7 @@ class PapeleraIndex extends Component
         return view('livewire.papelera-index', [
             'elementos' => $elementos,
             'tipos' => collect($nombres)->map(fn ($nombre, $clave) => ['value' => $clave, 'label' => $nombre])->sortBy('label')->values()->all(),
-            'total' => DB::table('papelera')->count(),
+            'total' => DB::table('papelera')->where('tipo', '<>', 'mantenimiento')->count(),
         ]);
     }
 }

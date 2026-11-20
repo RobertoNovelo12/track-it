@@ -6,7 +6,7 @@ const assert = require('node:assert/strict');
 
 function formulario(search = '', duplicado = null) {
     const source = fs.readFileSync(path.resolve(__dirname, '../../resources/views/livewire/equipo-create.blade.php'), 'utf8');
-    const script = source.split('<script>')[1].split('</script>')[0].replace(/@js\([^\n]+\)/g, '"Edificio"');
+    const script = source.split('<script>')[1].split('</script>')[0].replace("@include('livewire.partials.formulario-patrimonial-js')", () => fs.readFileSync(path.resolve(__dirname, '../../resources/views/livewire/partials/formulario-patrimonial-js.blade.php'), 'utf8')).replace(/@js\([^\n]+\)/g, '"Edificio"');
     let factory;
     vm.runInNewContext(script, {Alpine: {data: (_, fn) => factory = fn}, URLSearchParams, window: {location: {search}}});
     const estado = factory({clasificacionPorTipo: {'1': 'global', '2': 'vehiculos'}, tiposEquipo: [{value: '1'}, {value: '2'}], duplicado});

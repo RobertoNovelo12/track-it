@@ -847,9 +847,9 @@
 
                 </div>
 
-                <div class="h-[600px] min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain pr-1 [scrollbar-width:thin] [scrollbar-color:#64748b_transparent] mx-auto w-full border border-[var(--theme-border)] bg-white shadow-md">
+                <div class="h-[600px] min-h-0 overflow-auto overscroll-contain pr-1 [scrollbar-width:thin] [scrollbar-color:#64748b_transparent] mx-auto w-full border border-[var(--theme-border)] bg-white shadow-md">
 
-@include('reportes.partials.baja-documento', ['documento'=>['equipo'=>$equipo, 'fecha'=>$fechaBaja, 'solicitante'=>$solicitante, 'motivo'=>$motivoBaja]])
+<div x-data="{ escala: 1, alto: 816, medir() { this.escala = Math.min(1, this.$el.clientWidth / 1056); this.alto = this.$refs.pagina.scrollHeight * this.escala; } }" x-init="$nextTick(() => medir()); const ro = new ResizeObserver(() => medir()); ro.observe($el); ro.observe($refs.pagina);" :style="{ height: alto + 'px' }" style="position:relative;width:100%;overflow:hidden;"><div x-ref="pagina" :style="{ transform: 'scale(' + escala + ')' }" style="width:1056px;min-height:816px;transform-origin:top left;background:white;">@include('reportes.partials.baja-documento', ['documento'=>['equipo'=>$equipo, 'fecha'=>$fechaBaja, 'solicitante'=>$solicitante, 'motivo'=>$motivoBaja, 'fotos'=>collect(['Vista frontal'=>$fotoFrontal,'Vista trasera'=>$fotoTrasera,'Vista lateral 1'=>$fotoLateral1,'Vista lateral 2'=>$fotoLateral2])->map(fn ($foto) => $foto ? $foto->temporaryUrl() : null)->all()], 'mostrarEspaciosFotos'=>true])</div></div>
 
                 </div>
 

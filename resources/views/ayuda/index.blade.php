@@ -34,10 +34,10 @@
             'Para reasignar, elige el nuevo responsable; para devolver, indica el motivo.',
             'Guarda: el cambio queda en el historial del equipo.',
         ]],
-        ['Registrar un mantenimiento', 'Mantenimientos', [
-            'Entra a Mantenimientos y pulsa «Nuevo mantenimiento».',
-            'Elige el equipo y el tipo (preventivo o correctivo).',
-            'Escribe la fecha, lo que se hizo y quién lo realizó, y guarda.',
+        ['Consultar y finalizar bajas', 'Movimientos', [
+            'Entra a Movimientos › Nuevo movimiento › Bajas.',
+            'Elige bajas en resguardo o completadas y filtra por meses, semanas o fechas.',
+            'En resguardo, selecciona los equipos y pulsa Finalizar bajas. Indica fecha y autorización y confirma.',
         ]],
         ['Dar de baja y generar el acta', 'Bajas', [
             'Abre la ficha del equipo o selecciona varios en Inventario.',

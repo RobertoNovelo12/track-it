@@ -45,7 +45,7 @@ class InventarioGlobalReporteService
         $this->columnas($formato);
         $atributos = ['inventario_institucional', 'costo_unitario', 'iva', 'total', 'partida', 'procedimiento_adquisicion', 'fuente_financiamiento', 'institucion_responsable', 'domicilio_inmueble', 'tipo_posesion', 'titulo_propiedad', 'placas', 'anio_vehiculo', 'uso_destino', 'resguardatario'];
         $datos = DB::table('atributos_equipo as a')->leftJoin('campos_equipo as c', 'c.id_campo', '=', 'a.id_campo')->select('a.id_equipo')->groupBy('a.id_equipo');
-        if ($formato === 'comodato') {
+        if (false) {
             $atributos = array_merge($atributos, ['solicitante', 'escuela', 'comodato', 'periodo']);
         }
         foreach ($atributos as $clave) {
@@ -59,6 +59,9 @@ class InventarioGlobalReporteService
             ->selectRaw("COALESCE((SELECT a.nombre_colaborador FROM asignaciones a WHERE a.id_equipo = e.id_equipo AND a.fecha_fin IS NULL ORDER BY a.fecha_asignacion DESC, a.id_asignacion DESC LIMIT 1), datos.resguardatario) as resguardatario");
         foreach ($atributos as $clave) { if ($clave !== 'resguardatario') { $query->addSelect('datos.'.$clave); } }
         if ($formato === 'global_resumido') { $query->addSelect('datos.total as valor_libros'); }
+        if ($formato === 'comodato') {
+            $query->join('comodatos as co', 'co.id_equipo', '=', 'e.id_equipo')->addSelect(['co.solicitante','co.escuela','co.numero as comodato','co.inicio as periodo_inicio','co.fin as periodo_fin']);
+        }
         $query->whereNotExists(function ($q) {
             $q->selectRaw('1')->from('bajas as baja_completada')->whereColumn('baja_completada.id_equipo', 'e.id_equipo');
         });
@@ -71,7 +74,7 @@ class InventarioGlobalReporteService
         foreach (['tipo_equipo' => 'e.id_tipo_equipo', 'estado' => 'e.id_estado_activo', 'marca' => 'e.id_marca', 'modelo' => 'e.id_modelo'] as $filtro => $columna) {
             if (!empty($filtros[$filtro])) { $query->where($columna, $filtros[$filtro]); }
         }
-        $fecha = $formato === 'resguardo' ? 'br.fecha_resguardo' : 'e.fecha_registro';
+        $fecha = $formato === 'comodato' ? 'co.inicio' : ($formato === 'resguardo' ? 'br.fecha_resguardo' : 'e.fecha_registro');
         if (!empty($filtros['fecha_inicio'])) { $query->whereDate($fecha, '>=', $filtros['fecha_inicio']); }
         if (!empty($filtros['fecha_fin'])) { $query->whereDate($fecha, '<=', $filtros['fecha_fin']); }
         if (filled($filtros['busqueda'] ?? null)) {
@@ -88,6 +91,7 @@ class InventarioGlobalReporteService
     public function celda(object|array $fila, string $clave): string
     {
         $valor = data_get($fila, $clave);
+        if ($clave === 'periodo' && data_get($fila, 'periodo_inicio')) { return \Carbon\Carbon::parse(data_get($fila, 'periodo_inicio'))->format('d/m/Y').' al '.\Carbon\Carbon::parse(data_get($fila, 'periodo_fin'))->format('d/m/Y'); }
         if ($clave === 'descripcion_uso') {
             $valor = collect([data_get($fila, 'descripcion'), data_get($fila, 'uso_destino')])->filter()->implode(' · ');
         }

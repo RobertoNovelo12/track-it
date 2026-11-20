@@ -151,7 +151,6 @@ class AjustesCuenta extends Component
 
     public bool $notificarAsignacionesMovimientos = true;
 
-    public bool $notificarMantenimientos = true;
 
     public bool $notificarCambiosEquipos = true;
 
@@ -253,8 +252,7 @@ class AjustesCuenta extends Component
             $this->notificarAsignacionesMovimientos =
                 (bool) $preferenciasNotificaciones->notificar_asignaciones_movimientos;
 
-            $this->notificarMantenimientos =
-                (bool) $preferenciasNotificaciones->notificar_mantenimientos;
+
 
             $this->notificarCambiosEquipos =
                 (bool) $preferenciasNotificaciones->notificar_cambios_equipos;
@@ -2054,8 +2052,6 @@ class AjustesCuenta extends Component
                             'notificar_asignaciones_movimientos' =>
                                 $this->notificarAsignacionesMovimientos,
 
-                            'notificar_mantenimientos' =>
-                                $this->notificarMantenimientos,
 
                             'notificar_cambios_equipos' =>
                                 $this->notificarCambiosEquipos,

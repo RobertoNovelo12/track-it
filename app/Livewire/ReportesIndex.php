@@ -22,7 +22,6 @@ use App\Services\ReporteBajasActaService;
 
 use App\Services\ReporteDataService;
 
-use App\Services\ReporteMantenimientoActaService;
 
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -70,6 +69,10 @@ class ReportesIndex extends Component
 
     public string $fechaFin = '';
 
+    public string $mesInicio = '';
+
+    public string $mesFin = '';
+
     public string $modelo = '';
 
     public string $marca = '';
@@ -101,6 +104,12 @@ class ReportesIndex extends Component
     #[\Livewire\Attributes\Renderless]
     public function obtenerSugerenciasRapidas(string $tipo, string $texto = '', int $pagina = 1): array
     {
+        if ($tipo === 'bajas' && $this->formatoBaja === '') {
+            return ['registros' => [], 'hayMas' => false];
+        }
+        if ($tipo === 'altas' && $this->formatoInventario === '') {
+            return ['registros' => [], 'hayMas' => false];
+        }
         if ($tipo === 'altas' || ($tipo === 'bajas' && $this->formatoBaja === 'resguardo')) {
             $this->validarFormatoInventario();
             $filas = app(\App\Services\InventarioGlobalReporteService::class)->query($tipo === 'bajas' ? 'resguardo' : $this->formatoInventario, ['busqueda' => mb_substr($texto, 0, 255)])
@@ -222,6 +231,8 @@ class ReportesIndex extends Component
 
         $this->fechaFin = '';
 
+        $this->mesInicio = $this->mesFin = '';
+
         $this->modelo = '';
 
         $this->marca = '';
@@ -286,6 +297,17 @@ class ReportesIndex extends Component
 
     {
 
+        if (in_array($property, ['mesInicio', 'mesFin'], true)) {
+            $fecha = $property === 'mesInicio' ? 'fechaInicio' : 'fechaFin';
+            $mes = $this->{$property};
+            $this->{$fecha} = '';
+            if (preg_match('/^[1-9][0-9]{3}-(0[1-9]|1[0-2])$/', $mes)) {
+                $dia = \Carbon\Carbon::createFromFormat('!Y-m', $mes);
+                $this->{$fecha} = ($property === 'mesInicio' ? $dia->startOfMonth() : $dia->endOfMonth())->toDateString();
+            }
+            $this->vaciarVistaPrevia();
+        }
+
         if (in_array($property, [
 
             'busquedaActivo',
@@ -321,6 +343,15 @@ class ReportesIndex extends Component
     {
 
         $this->tipoReporte = $this->tiposReporte[0] ?? 'altas';
+
+        if (($this->tipoReporte === 'altas' && $this->formatoInventario === '') || ($this->tipoReporte === 'bajas' && $this->formatoBaja === '')) {
+            $this->vaciarVistaPrevia();
+            $this->resetValidation('formatoInventario');
+            $this->resetValidation('formatoBaja');
+            $this->errorMessage = '';
+            $this->dispatch('reportes-previa-lista');
+            return;
+        }
 
         $hayFiltros = collect($this->filtros())
 
@@ -390,7 +421,7 @@ class ReportesIndex extends Component
 
                     ReporteBajasActaService::class
 
-                )->obtener($filtros, 1, true)->first(),
+                )->obtener($filtros, 20, true)->pipe(function ($bajas) { $filas = []; foreach ($bajas as $baja) { $filas = array_merge($filas, app(\App\Services\DatosDocumentoBajaService::class)->filas(!empty($baja['conjunta']) ? $baja['documento'] : $baja)); } return $filas ? ['filas' => $filas] : null; }),
 
                 'asignaciones', 'reasignaciones' => app(
 
@@ -398,11 +429,7 @@ class ReportesIndex extends Component
 
                 )->obtener($tipo, $filtros, 1)->first(),
 
-                'mantenimientos' => app(
 
-                    ReporteMantenimientoActaService::class
-
-                )->obtener($filtros, 1)->first(),
 
                 default => null,
 
@@ -451,6 +478,8 @@ class ReportesIndex extends Component
     public function limpiarFiltros(): void
 
     {
+
+        $this->mesInicio = $this->mesFin = '';
 
         $this->reset([
 
@@ -548,9 +577,7 @@ class ReportesIndex extends Component
 
                 : null;
 
-        $esReporteMantenimiento = $esUnSoloTipo
 
-            && $tipoSeleccionado === 'mantenimientos';
 
         try {
 
@@ -569,14 +596,6 @@ class ReportesIndex extends Component
                     ReporteActasService::class
 
                 )->obtener($tipoActa, $filtros);
-
-            } elseif ($esReporteMantenimiento) {
-
-                $datos = app(
-
-                    ReporteMantenimientoActaService::class
-
-                )->obtener($filtros);
 
             } elseif ($esReporteAltas) {
 
@@ -732,7 +751,7 @@ class ReportesIndex extends Component
 
                     ]
 
-                )->setPaper('letter', 'portrait');
+                )->setPaper('letter', 'landscape');
 
             } elseif ($tipoActa !== null) {
 
@@ -745,26 +764,6 @@ class ReportesIndex extends Component
                         'actas' => $datos,
 
                         'tipoActa' => $tipoActa,
-
-                        'filtros' => $filtros,
-
-                        'generadoPor' => $this->nombreUsuario(),
-
-                        'generadoEn' => now(),
-
-                    ]
-
-                )->setPaper('letter', 'portrait');
-
-            } elseif ($esReporteMantenimiento) {
-
-                $pdf = Pdf::loadView(
-
-                    'reportes.mantenimiento-pdf',
-
-                    [
-
-                        'mantenimientos' => $datos,
 
                         'filtros' => $filtros,
 
@@ -794,7 +793,7 @@ class ReportesIndex extends Component
 
                     ]
 
-                )->setPaper('letter', 'portrait');
+                )->setPaper('letter', 'landscape');
 
             } else {
 
@@ -1204,7 +1203,7 @@ class ReportesIndex extends Component
      */
     public function resumenReportes(): array
     {
-        return Cache::remember('reportes:resumen:v2', now()->addMinute(), function (): array {
+        return Cache::remember('reportes:resumen:v3', now()->addMinute(), function (): array {
             $contar = function (string $tabla, ?\Closure $condicion = null): int {
                 try {
                     if (! \App\Support\Esquema::tieneTabla($tabla)) {
@@ -1238,8 +1237,7 @@ class ReportesIndex extends Component
                 'asignaciones' => $contar('asignaciones', fn ($q) => $q->whereNull('fecha_fin')),
                 // Reasignación = movimiento con asignación anterior y nueva.
                 'reasignaciones' => $contar('movimientos', fn ($q) => $q->whereNotNull('id_asignacion_anterior')->whereNotNull('id_asignacion_nueva')),
-                'mantenimientos' => $contar('mantenimientos'),
-                'reportes' => $contar('reportes_generados'),
+                'reportes' => $contar('reportes_generados', fn ($q) => $q->where('tipo_reporte', '<>', 'mantenimientos')),
             ];
         });
     }
@@ -1280,14 +1278,14 @@ class ReportesIndex extends Component
 
         $datosHistorial = $cache->remember(
             'reportes',
-            'index.historial.v2',
+            'index.historial.v3',
             [
                 'sort' => $sort,
                 'per_page' => $perPage,
                 'page' => $pagina,
             ],
             function () use ($sort, $perPage, $pagina): array {
-                $paginador = ReporteGenerado::query()
+                $paginador = ReporteGenerado::query()->where('tipo_reporte', '<>', 'mantenimientos')
                     ->with('usuario')
                     ->orderBy('fecha_generacion', $sort)
                     ->paginate($perPage, ['*'], 'historialPage', $pagina);
@@ -1417,7 +1415,7 @@ class ReportesIndex extends Component
 
         // Lee solo datos ya cacheados: nunca consulta PostgreSQL durante render.
         $listasIniciales = [];
-        foreach (['altas', 'bajas', 'asignaciones', 'reasignaciones', 'mantenimientos'] as $tipoLista) {
+        foreach (['altas', 'bajas', 'asignaciones', 'reasignaciones'] as $tipoLista) {
             if ($tipoLista === 'altas' || ($tipoLista === 'bajas' && $this->formatoBaja === 'resguardo')) { continue; }
             $lote = Cache::get('reportes:selector:v1:' . $tipoLista);
             if (is_array($lote) && isset($lote['registros'])) {
@@ -1526,13 +1524,7 @@ class ReportesIndex extends Component
 
             ],
 
-            'mantenimientos' => [
 
-                'mantenimientos',
-
-                'id_estado_mantenimiento',
-
-            ],
 
             default => [
 
@@ -1556,7 +1548,6 @@ class ReportesIndex extends Component
             [
                 'tipo' => $this->tipoReporte,
                 'equipos_version' => $cache->moduleVersion('equipos'),
-                'mantenimientos_version' => $cache->moduleVersion('mantenimientos'),
                 'catalogos_version' => $cache->moduleVersion('catalogos'),
             ],
 
@@ -1614,6 +1605,10 @@ class ReportesIndex extends Component
 
         return [
 
+            'mesInicio' => ['nullable', 'date_format:Y-m', 'regex:/^[1-9][0-9]{3}-(0[1-9]|1[0-2])$/'],
+            'formatoBaja' => ($this->tiposReporte[0] ?? '') === 'bajas' ? ['required', 'in:completadas,resguardo'] : ['nullable'],
+            'mesFin' => ['nullable', 'date_format:Y-m', 'regex:/^[1-9][0-9]{3}-(0[1-9]|1[0-2])$/', ...($this->mesInicio !== '' ? ['after_or_equal:mesInicio'] : [])],
+
             'tipoEquipo' => ['nullable'],
 
             'estado' => ['nullable'],
@@ -1632,7 +1627,7 @@ class ReportesIndex extends Component
 
                 'date',
 
-                'after_or_equal:fechaInicio',
+                ...($this->fechaInicio !== '' ? ['after_or_equal:fechaInicio'] : []),
 
             ],
 
@@ -1649,6 +1644,14 @@ class ReportesIndex extends Component
     {
 
         return [
+
+            'mesInicio.date_format' => 'Selecciona un mes inicial válido.',
+            'formatoBaja.required' => 'Selecciona un tipo de reporte de bajas.',
+            'formatoBaja.in' => 'Selecciona un tipo de reporte de bajas válido.',
+            'mesInicio.regex' => 'Selecciona un mes inicial válido.',
+            'mesFin.date_format' => 'Selecciona un mes final válido.',
+            'mesFin.regex' => 'Selecciona un mes final válido.',
+            'mesFin.after_or_equal' => 'El mes final debe ser igual o posterior al mes inicial.',
 
             'fechaInicio.date' =>
 

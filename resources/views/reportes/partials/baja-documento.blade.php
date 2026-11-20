@@ -17,13 +17,16 @@
     </table>
 @endif
 @include('reportes.partials.firmas-inventario')
-@if(collect($fotos)->filter()->isNotEmpty())
-    <div style="page-break-before:always;">
+@if(($mostrarEspaciosFotos ?? false) || collect($fotos)->filter()->isNotEmpty())
+    @php
+        $fotosHoja = ($mostrarEspaciosFotos ?? false) ? array_replace(array_fill_keys(['Vista frontal','Vista trasera','Vista lateral 1','Vista lateral 2'], null), $fotos) : collect($fotos)->filter()->all();
+    @endphp
+    <div style="page-break-before:always;{{ ($mostrarEspaciosFotos ?? false) ? 'margin-top:40px;border-top:12px solid #e2e8f0;padding-top:24px;min-height:720px;' : '' }}">
     @if($logo)<img src="{{ $logo }}" style="max-width:140px;max-height:70px;" alt="Logo de la organización">@endif
     <h3>Evidencia fotográfica</h3>
     <table style="width:100%;table-layout:fixed;">
-    @foreach(array_chunk(collect($fotos)->filter()->all(), 2, true) as $grupo)
-        <tr>@foreach($grupo as $titulo=>$imagen)<td style="text-align:center;padding:12px;vertical-align:top;"><p>{{ $titulo }}</p><img src="{{ $imagen }}" style="max-width:280px;max-height:230px;"></td>@endforeach</tr>
+    @foreach(array_chunk($fotosHoja, 2, true) as $grupo)
+        <tr>@foreach($grupo as $titulo=>$imagen)<td style="text-align:center;padding:12px;vertical-align:top;"><p>{{ $titulo }}</p>@if($imagen)<img src="{{ $imagen }}" style="max-width:280px;max-height:230px;">@else<div style="height:230px;border:1px solid #aaa;color:#64748b;padding-top:80px;box-sizing:border-box;">Fotografía pendiente</div>@endif</td>@endforeach</tr>
     @endforeach
     </table></div>
 @endif

@@ -145,7 +145,7 @@
                         </thead>
 
                         <tbody class="divide-y divide-[var(--theme-border)] text-[var(--theme-text)]">
-                            @foreach ([['ACT-000101', 'Laptop Dell Latitude', 'Asignado'], ['ACT-000102', 'Impresora HP LaserJet', 'Disponible'], ['ACT-000103', 'Switch Cisco 24 puertos', 'En mantenimiento']] as $filaEjemplo)
+                            @foreach ([['ACT-000101', 'Laptop Dell Latitude', 'Asignado'], ['ACT-000102', 'Impresora HP LaserJet', 'Disponible'], ['ACT-000103', 'Switch Cisco 24 puertos', 'Disponible']] as $filaEjemplo)
                                 <tr>
                                     @foreach ($filaEjemplo as $dato)
                                         <td @class(['px-4', 'py-1 text-xs' => $densidad === 'compacta', 'py-2.5 text-sm' => $densidad !== 'compacta']) x-bind:class="{ 'py-1 text-xs': densidad === 'compacta', 'py-2.5 text-sm': densidad !== 'compacta' }">{{ $dato }}</td>
@@ -162,7 +162,7 @@
                 <div class="min-w-0">
                     <p class="text-sm font-medium text-[var(--theme-text)]">Columnas de los formularios</p>
                     <p class="mt-0.5 text-xs text-[var(--theme-text-muted)]">
-                        En pantallas grandes, los formularios (alta de equipos, mantenimientos, catálogos…) se acomodan en tres o en dos columnas. Con dos, cada campo es más ancho. En el celular siempre es una.
+                        En pantallas grandes, los formularios (alta de equipos, catálogos…) se acomodan en tres o en dos columnas. Con dos, cada campo es más ancho. En el celular siempre es una.
                     </p>
                 </div>
 

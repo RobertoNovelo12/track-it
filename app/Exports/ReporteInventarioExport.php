@@ -72,6 +72,7 @@ WithCustomCsvSettings
 
     public function styles(Worksheet $sheet): array
     {
+        $sheet->getPageSetup()->setOrientation($this->datos->isNotEmpty() && $this->datos->every(fn ($fila) => in_array(data_get($fila, 'tipo_reporte'), ['asignaciones', 'reasignaciones'], true)) ? 'portrait' : 'landscape')->setFitToWidth(1)->setFitToHeight(0);
         $sheet->getStyle($sheet->calculateWorksheetDimension())->applyFromArray([
             'font' => ['name' => 'Arial', 'size' => 11, 'color' => ['rgb' => '000000']],
             'borders' => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN, 'color' => ['rgb' => '000000']]],

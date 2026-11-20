@@ -101,6 +101,7 @@ class Encabezado
                 self::miga('Historial'),
             ]],
 
+            'asignaciones.comodatos' => ['Asignación y movimientos', [self::miga('Movimientos', 'asignaciones.index'), self::miga('Comodatos')]],
             'asignaciones.bajas' => ['Movimientos · Bajas', [
                 self::miga('Movimientos', 'asignaciones.index'),
                 self::miga('Bajas'),

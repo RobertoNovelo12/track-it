@@ -246,7 +246,8 @@
                                             ? field.type
                                             : 'text'"
                                         :step="field.type === 'number' ? 'any' : null"
-                                        x-model="values[field.model]"
+                                        x-model="valoresEntrada(field)[field.model]"
+                                        :readonly="totalAutomatico(field)"
                                         :placeholder="field.placeholder || trackitFormatoCampo(field.key + ' ' + (field.label ?? '')).ejemplo || ''"
                                         :inputmode="field.type === 'text' ? (trackitFormatoCampo(field.key + ' ' + (field.label ?? '')).inputmode ?? null) : null"
                                         :maxlength="trackitFormatoCampo(field.key + ' ' + (field.label ?? '')).maxlength ?? null"
@@ -310,7 +311,9 @@
 
     @script
     <script>
+        @include('livewire.partials.formulario-patrimonial-js')
         Alpine.data('equipmentCreate', data => ({
+            ...formularioPatrimonial,
             data: data ?? {},
             values: {},
             errors: {},
@@ -406,7 +409,8 @@
 
                 fecha_compra: {
                     model: 'fechaCompra',
-                    label: 'Fecha de compra',
+                    label: 'Fecha de adquisición',
+                    alwaysVisible: true,
                     type: 'date',
                 },
 
@@ -478,6 +482,8 @@
             },
 
             init() {
+                this.porcentajeCapturado = null;
+                this.importesModificados = false;
                 this.values = this.emptyValues();
 
                 /*
@@ -511,6 +517,8 @@
                 const duplicado = this.data.duplicado ?? null;
 
                 if (duplicado?.base) {
+                    this.porcentajeCapturado = null;
+                    this.importesModificados = false;
                     this.values = {
                         ...this.emptyValues(),
                         ...duplicado.base,
@@ -553,6 +561,8 @@
                             next[field.model] = this.values[field.model];
                         });
 
+                    this.porcentajeCapturado = null;
+                    this.importesModificados = false;
                     this.values = next;
                     if (!this.optionsFor({options: 'marcas'}).some(marca => String(marca.value) === String(this.values.idMarca))) {
                         this.values.idMarca = '';
@@ -731,6 +741,7 @@
                             key,
                             model: key,
                             child: true,
+                            claveInterna: meta.clave,
 
                             type: catalog
                                 ? 'select'
@@ -757,7 +768,7 @@
                     }
                 );
 
-                return fields;
+                return this.prepararCamposPatrimoniales(fields);
             },
 
             get displaySections() {
@@ -949,6 +960,7 @@
                 payload.idTipoEquipo = this.typeId;
                 payload.clasificacionBien = this.values.clasificacionBien;
                 payload.childData = {};
+                Object.assign(payload, this.payloadImportes());
 
                 /*
                  * Enviar únicamente valores de campos mostrados.
@@ -1049,6 +1061,8 @@
 
             clearForm() {
                 this.suspendDependencies = true;
+                this.porcentajeCapturado = null;
+                this.importesModificados = false;
                 this.values = this.emptyValues();
                 this.programas = [];
                 this.programasBuscar = '';
@@ -1099,6 +1113,8 @@
                     }
 
                     this.suspendDependencies = true;
+                    this.porcentajeCapturado = null;
+                    this.importesModificados = false;
                     this.values = {
                         ...this.emptyValues(),
                         ...resultado.base,
@@ -1128,8 +1144,10 @@
             restoreSnapshot(payload) {
                 this.suspendDependencies = true;
 
-                const { childData, programas, ...base } = payload;
+                const { childData, programas, ivaPorcentaje, ...base } = payload;
 
+                this.porcentajeCapturado = ivaPorcentaje ?? null;
+                this.importesModificados = Object.prototype.hasOwnProperty.call(payload, 'ivaPorcentaje');
                 this.values = {
                     ...this.emptyValues(),
                     ...base,

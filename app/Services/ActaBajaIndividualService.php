@@ -83,7 +83,7 @@ class ActaBajaIndividualService
             'reportes.baja-individual-pdf',
             compact('documento')
         )
-            ->setPaper('letter')
+            ->setPaper('letter', 'landscape')
             ->output();
 
         $nombre = 'BAJA-EQUIPO-'.$idBaja.'.pdf';

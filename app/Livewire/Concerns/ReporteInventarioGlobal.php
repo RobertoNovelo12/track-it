@@ -63,7 +63,7 @@ trait ReporteInventarioGlobal
             $ruta = 'reportes/'.$nombre;
             $fechaCorte = $this->fechaFin ?: now()->toDateString();
             $contenido = $extension === 'pdf'
-                ? \Barryvdh\DomPDF\Facade\Pdf::loadView('reportes.inventario-global-pdf', compact('filas', 'formato', 'fechaCorte'))->setPaper(in_array($formato, ['global', 'intangibles', 'comodato']) ? 'a3' : 'a4', $formato === 'global_resumido' ? 'portrait' : 'landscape')->output()
+                ? \Barryvdh\DomPDF\Facade\Pdf::loadView('reportes.inventario-global-pdf', compact('filas', 'formato', 'fechaCorte'))->setPaper(in_array($formato, ['global', 'intangibles', 'comodato']) ? 'a3' : 'a4', 'landscape')->output()
                 : \Maatwebsite\Excel\Facades\Excel::raw(new InventarioGlobalReporteExport($filas, $formato, $fechaCorte, $extension !== 'csv'), $extension === 'xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV);
             if (!Storage::disk('local')->put($ruta, $contenido)) { throw new \RuntimeException('No se pudo guardar el reporte.'); }
             $registro = ReporteGenerado::create(['id_usuario' => auth()->id(), 'tipo_reporte' => $formato === 'resguardo' ? 'bajas_resguardo' : 'inventario_global', 'formato' => strtoupper($extension),

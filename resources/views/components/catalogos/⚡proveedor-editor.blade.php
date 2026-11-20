@@ -164,7 +164,7 @@ new class extends Component
 
         <section class="{{ $seccion }}">
             <h2 class="text-sm font-semibold text-[var(--theme-text-strong)]">Información del proveedor</h2>
-            <p class="mt-1 mb-5 text-xs text-[var(--theme-text-muted)]">Se elige al dar de alta un equipo, en los mantenimientos en garantía y como proveedor sugerido de marcas y modelos.</p>
+            <p class="mt-1 mb-5 text-xs text-[var(--theme-text-muted)]">Se elige al dar de alta un equipo y como proveedor sugerido de marcas y modelos.</p>
 
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>

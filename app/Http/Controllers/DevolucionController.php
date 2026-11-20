@@ -25,7 +25,7 @@ class DevolucionController extends Controller
         $nombre = 'acta-devolucion-' . ($acta['codigo_inventario'] ?: $movimiento) . '.pdf';
 
         return Pdf::loadView('reportes.devolucion-acta-pdf', ['acta' => $acta])
-            ->setPaper('letter', 'portrait')
+            ->setPaper('letter', 'landscape')
             ->stream($nombre);
     }
 }

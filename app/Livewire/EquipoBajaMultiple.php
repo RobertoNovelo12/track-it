@@ -885,7 +885,7 @@ class EquipoBajaMultiple extends Component
                 'reportes.baja-multiple-pdf',
                 compact('documento')
             )
-                ->setPaper('a4', count($documento['equipos']) >= 2 ? 'landscape' : 'portrait')
+                ->setPaper('a4', 'landscape')
                 ->output();
 
             if (!Storage::disk('local')->put(

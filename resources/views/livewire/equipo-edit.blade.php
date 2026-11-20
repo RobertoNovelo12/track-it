@@ -509,8 +509,8 @@
                                             ? field.type
                                             : 'text'"
                                         :step="field.type === 'number' ? 'any' : null"
-                                        x-model="fieldValues(field)[field.model]"
-                                        x-bind:readonly="!field.child && field.model === 'propietario'"
+                                        x-model="valoresEntrada(field)[field.model]"
+                                        x-bind:readonly="totalAutomatico(field) || (!field.child && field.model === 'propietario')"
                                         :placeholder="field.placeholder || trackitFormatoCampo(field.key + ' ' + (field.label ?? '')).ejemplo || ''"
                                         :inputmode="field.type === 'text' ? (trackitFormatoCampo(field.key + ' ' + (field.label ?? '')).inputmode ?? null) : null"
                                         :maxlength="trackitFormatoCampo(field.key + ' ' + (field.label ?? '')).maxlength ?? null"
@@ -637,9 +637,11 @@
     ============================================================ --}}
     @script
         <script>
+            @include('livewire.partials.formulario-patrimonial-js')
             Alpine.data(
                 'equipmentEdit',
                 (data) => ({
+                    ...formularioPatrimonial,
                     data: data ?? {},
 
                     successVisible: false,
@@ -894,7 +896,8 @@
 
                 fecha_compra: {
                     model: 'fechaCompra',
-                    label: 'Fecha de compra',
+                    label: 'Fecha de adquisición',
+                    alwaysVisible: true,
                     type: 'date',
                 },
 
@@ -1089,6 +1092,7 @@
                             key,
                             model: key,
                             child: true,
+                            claveInterna: meta.clave,
 
                             type: catalog
                                 ? 'select'
@@ -1115,7 +1119,7 @@
                     }
                 );
 
-                return fields;
+                return this.prepararCamposPatrimoniales(fields);
             },
 
             get displaySections() {
@@ -1308,6 +1312,8 @@
                                  */
                                 this.idModelo = '';
                                 this.childData = {};
+                                this.porcentajeCapturado = null;
+                                this.importesModificados = false;
 
                                 // Tipo nuevo sin programas elegidos: sus predeterminados.
                                 if (this.programas.length === 0) {
@@ -1752,6 +1758,7 @@
 
                     captureSnapshot() {
                         return {
+                            ...this.payloadImportes(),
                             nombreEquipo:
                                 String(
                                     this.nombreEquipo

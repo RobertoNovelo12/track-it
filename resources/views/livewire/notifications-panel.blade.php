@@ -710,7 +710,6 @@
                                             $iconosNotificacion = [
                                                 'SEGURIDAD' => ['M12 3l7 3v5c0 4.8-2.8 8-7 10-4.2-2-7-5.2-7-10V6l7-3z', 'M9.5 12l1.7 1.7L15 10'],
                                                 'ASIGNACION' => ['M8 7h12', 'M16 3l4 4-4 4', 'M16 17H4', 'M8 13l-4 4 4 4'],
-                                                'MANTENIMIENTO' => ['M14.7 6.3a4 4 0 0 0-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4 2.5-2.5z'],
                                                 'EQUIPO' => ['M4 5h16v11H4z', 'M9 20h6', 'M12 16v4'],
                                                 'USUARIOS' => ['M16 20v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1', 'M9.5 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z', 'M21 20v-1a4 4 0 0 0-3-3.9', 'M15.5 4.1a3.5 3.5 0 0 1 0 6.8'],
                                                 'REPORTE' => ['M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z', 'M14 3v5h5', 'M9 13h6', 'M9 17h4'],
@@ -823,7 +822,6 @@
                                                 $etiquetaTipo = [
                                                     'SEGURIDAD' => 'Seguridad',
                                                     'ASIGNACION' => 'Asignación',
-                                                    'MANTENIMIENTO' => 'Mantenimiento',
                                                     'EQUIPO' => 'Equipo',
                                                     'USUARIOS' => 'Usuarios',
                                                     'REPORTE' => 'Reporte',

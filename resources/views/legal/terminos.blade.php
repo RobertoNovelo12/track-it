@@ -24,7 +24,7 @@
 <h2>1. Uso del sistema</h2>
 <p>
     Track IT es una herramienta interna para registrar y dar seguimiento al inventario tecnológico, sus asignaciones,
-    mantenimientos y bajas. Debe usarse únicamente para fines relacionados con las actividades de {{ $org }}.
+    bajas. Debe usarse únicamente para fines relacionados con las actividades de {{ $org }}.
 </p>
 
 <h2>2. Cuentas y acceso</h2>

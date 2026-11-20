@@ -28,9 +28,7 @@ new class extends Component
 
     public int $equiposDisponibles = 0;
 
-    public int $enMantenimiento = 0;
 
-    public int $mantenimientosVencidos = 0;
 
     public int $garantiasVencidas = 0;
 
@@ -45,7 +43,6 @@ new class extends Component
 
     public int $porcentajeAsignados = 0;
 
-    public int $porcentajeMantenimiento = 0;
 
 
     /*
@@ -56,9 +53,7 @@ new class extends Component
 
     public array $antiguedadEquipos = [];
 
-    public array $estadoMantenimientos = [];
 
-    public array $mantenimientosPorMes = [];
 
     public array $equiposPorTipo = [];
 
@@ -151,13 +146,13 @@ new class extends Component
         $this->aplicarKpis(
             $this->systemCache()->rememberSimple(
                 self::CACHE_MODULE,
-                'kpis',
+                'kpis-sin-mantenimiento',
                 fn () => $this->buildKpiData(),
                 self::CACHE_TTL_HOURS
             )
         );
 
-        $claveSecciones = $this->systemCache()->key(self::CACHE_MODULE, 'secciones-v4');
+        $claveSecciones = $this->systemCache()->key(self::CACHE_MODULE, 'secciones-v5');
 
         if (\Illuminate\Support\Facades\Cache::has($claveSecciones)) {
             $this->cargarSecciones();
@@ -177,7 +172,7 @@ new class extends Component
         try {
             $data = $this->systemCache()->rememberSimple(
                 self::CACHE_MODULE,
-                'secciones-v4',
+                'secciones-v5',
                 fn () => $this->buildSeccionesData(),
                 self::CACHE_TTL_HOURS
             );
@@ -191,8 +186,6 @@ new class extends Component
         }
 
         $this->antiguedadEquipos = $data['antiguedadEquipos'] ?? [];
-        $this->estadoMantenimientos = $data['estadoMantenimientos'] ?? [];
-        $this->mantenimientosPorMes = $data['mantenimientosPorMes'] ?? [];
         $this->equiposPorTipo = $data['equiposPorTipo'] ?? [];
         $this->bajas = $data['bajas'] ?? [];
         $this->actividadReciente = $data['actividadReciente'] ?? [];
@@ -212,12 +205,9 @@ new class extends Component
         $this->totalEquipos = (int) ($data['totalEquipos'] ?? 0);
         $this->equiposAsignados = (int) ($data['equiposAsignados'] ?? 0);
         $this->equiposDisponibles = (int) ($data['equiposDisponibles'] ?? 0);
-        $this->enMantenimiento = (int) ($data['enMantenimiento'] ?? 0);
-        $this->mantenimientosVencidos = (int) ($data['mantenimientosVencidos'] ?? 0);
         $this->garantiasVencidas = (int) ($data['garantiasVencidas'] ?? 0);
         $this->garantiasPorVencer = (int) ($data['garantiasPorVencer'] ?? 0);
         $this->porcentajeAsignados = (int) ($data['porcentajeAsignados'] ?? 0);
-        $this->porcentajeMantenimiento = (int) ($data['porcentajeMantenimiento'] ?? 0);
         $this->alertas = $data['alertas'] ?? [];
     }
 
@@ -249,8 +239,8 @@ new class extends Component
      */
     public function precalentar(): void
     {
-        $this->systemCache()->rememberSimple(self::CACHE_MODULE, 'kpis', fn () => $this->buildKpiData(), self::CACHE_TTL_HOURS);
-        $this->systemCache()->rememberSimple(self::CACHE_MODULE, 'secciones-v4', fn () => $this->buildSeccionesData(), self::CACHE_TTL_HOURS);
+        $this->systemCache()->rememberSimple(self::CACHE_MODULE, 'kpis-sin-mantenimiento', fn () => $this->buildKpiData(), self::CACHE_TTL_HOURS);
+        $this->systemCache()->rememberSimple(self::CACHE_MODULE, 'secciones-v5', fn () => $this->buildSeccionesData(), self::CACHE_TTL_HOURS);
     }
 
     protected function buildKpiData(): array
@@ -304,24 +294,12 @@ new class extends Component
                 (SELECT COUNT(*) FROM vig) AS total,
                 (SELECT COUNT(*) FROM vig WHERE fecha_fin_garantia IS NOT NULL AND fecha_fin_garantia::date < ?) AS garantias_vencidas,
                 (SELECT COUNT(*) FROM vig WHERE fecha_fin_garantia IS NOT NULL AND fecha_fin_garantia BETWEEN ? AND ?) AS garantias_por_vencer,
-                (SELECT COUNT(DISTINCT a.id_equipo) FROM asignaciones a JOIN vig ON vig.id_equipo = a.id_equipo WHERE a.fecha_fin IS NULL) AS asignados,
-                (SELECT COUNT(m.id_mantenimiento) FROM mantenimientos m
-                    JOIN vig ON vig.id_equipo = m.id_equipo
-                    LEFT JOIN catalogo_valores cv ON cv.id_valor = m.id_estado_mantenimiento
-                    WHERE cv.clave = 'EN_PROCESO') AS en_mantenimiento,
-                (SELECT COUNT(m.id_mantenimiento) FROM mantenimientos m
-                    JOIN vig ON vig.id_equipo = m.id_equipo
-                    LEFT JOIN catalogo_valores cv ON cv.id_valor = m.id_estado_mantenimiento
-                    WHERE cv.clave NOT IN ('COMPLETADO', 'CANCELADO')
-                    AND m.fecha_proximo_mantenimiento IS NOT NULL
-                    AND m.fecha_proximo_mantenimiento::date < ?) AS mantenimientos_vencidos",
-            [$hoy, $hoy, $today->copy()->addDays(30)->toDateString(), $hoy]
+                (SELECT COUNT(DISTINCT a.id_equipo) FROM asignaciones a JOIN vig ON vig.id_equipo = a.id_equipo WHERE a.fecha_fin IS NULL) AS asignados",
+            [$hoy, $hoy, $today->copy()->addDays(30)->toDateString()]
         );
 
         $totalEquipos = (int) ($kpi->total ?? 0);
         $equiposAsignados = (int) ($kpi->asignados ?? 0);
-        $enMantenimiento = (int) ($kpi->en_mantenimiento ?? 0);
-        $mantenimientosVencidos = (int) ($kpi->mantenimientos_vencidos ?? 0);
         $garantiasVencidas = (int) ($kpi->garantias_vencidas ?? 0);
         $garantiasPorVencer = (int) ($kpi->garantias_por_vencer ?? 0);
 
@@ -335,8 +313,7 @@ new class extends Component
         $equiposDisponibles =
             max(
                 $totalEquipos
-                    - $equiposAsignados
-                    - $enMantenimiento,
+                    - $equiposAsignados,
                 0
             );
 
@@ -360,17 +337,7 @@ new class extends Component
                 : 0;
 
 
-        $porcentajeMantenimiento =
-            $totalEquipos > 0
 
-                ? (int) round(
-                    (
-                        $enMantenimiento
-                        / $totalEquipos
-                    ) * 100
-                )
-
-                : 0;
 
 
         /*
@@ -381,23 +348,7 @@ new class extends Component
 
         $alertas = [
 
-            [
-                'title' =>
-                    'Mantenimientos vencidos',
 
-                'description' =>
-                    $mantenimientosVencidos
-                    . ' registro(s) con seguimiento atrasado.',
-
-                'count' =>
-                    $mantenimientosVencidos,
-
-                'color' =>
-                    '#D9775B',
-
-                'soft' =>
-                    'rgba(217, 119, 91, 0.12)',
-            ],
 
 
             [
@@ -463,12 +414,9 @@ new class extends Component
             'totalEquipos' => $totalEquipos,
             'equiposAsignados' => $equiposAsignados,
             'equiposDisponibles' => $equiposDisponibles,
-            'enMantenimiento' => $enMantenimiento,
-            'mantenimientosVencidos' => $mantenimientosVencidos,
             'garantiasVencidas' => $garantiasVencidas,
             'garantiasPorVencer' => $garantiasPorVencer,
             'porcentajeAsignados' => $porcentajeAsignados,
-            'porcentajeMantenimiento' => $porcentajeMantenimiento,
             'alertas' => $alertas,
         ];
     }
@@ -586,382 +534,6 @@ new class extends Component
 
         /*
         |--------------------------------------------------------------------------
-        | ESTADOS DE MANTENIMIENTO
-        |--------------------------------------------------------------------------
-        */
-
-        $estadoMantenimientosRaw =
-            DB::table(
-                'catalogos as c'
-            )
-
-                ->join(
-                    'catalogo_valores as cv',
-                    'cv.id_catalogo',
-                    '=',
-                    'c.id_catalogo'
-                )
-
-                ->leftJoin(
-                    'mantenimientos as m',
-                    'm.id_estado_mantenimiento',
-                    '=',
-                    'cv.id_valor'
-                )
-
-                ->where(
-                    'c.clave',
-                    'estado_mantenimiento'
-                )
-
-                ->whereIn(
-                    'cv.clave',
-                    [
-                        'PROGRAMADO',
-                        'EN_PROCESO',
-                        'COMPLETADO',
-                        'CANCELADO',
-                    ]
-                )
-
-                ->select(
-                    'cv.id_valor',
-                    'cv.clave',
-                    'cv.nombre',
-
-                    DB::raw(
-                        'COUNT(m.id_mantenimiento) as total'
-                    )
-                )
-
-                ->groupBy(
-                    'cv.id_valor',
-                    'cv.clave',
-                    'cv.nombre'
-                )
-
-                ->orderBy(
-                    'cv.id_valor'
-                )
-
-                ->get();
-
-
-        $estadoConfig = [
-
-            'PROGRAMADO' => [
-                'label' => 'Programado',
-                'color' => '#D9A441',
-            ],
-
-            'EN_PROCESO' => [
-                'label' => 'En proceso',
-                'color' => '#3BA5D9',
-            ],
-
-            'COMPLETADO' => [
-                'label' => 'Completado',
-                'color' => '#6BB38E',
-            ],
-
-            'CANCELADO' => [
-                'label' => 'Cancelado',
-                'color' => '#D9775B',
-            ],
-
-        ];
-
-
-        $estadoMantenimientos = [];
-
-
-        foreach (
-            $estadoConfig
-            as $clave => $config
-        ) {
-
-            $found =
-                $estadoMantenimientosRaw
-                    ->firstWhere(
-                        'clave',
-                        $clave
-                    );
-
-
-            $estadoMantenimientos[] = [
-
-                'key' =>
-                    $clave,
-
-                'label' =>
-                    $config['label'],
-
-                'count' =>
-                    (int) (
-                        $found->total
-                        ?? 0
-                    ),
-
-                'color' =>
-                    $config['color'],
-
-            ];
-        }
-
-
-        $maxEstado =
-            max(
-                collect(
-                    $estadoMantenimientos
-                )
-                    ->pluck('count')
-                    ->max() ?? 0,
-                1
-            );
-
-
-        $estadoMantenimientos =
-            collect(
-                $estadoMantenimientos
-            )
-
-                ->map(
-                    function (
-                        $item
-                    ) use (
-                        $maxEstado
-                    ) {
-
-                        $item['percentage'] =
-                            (int) round(
-                                (
-                                    $item['count']
-                                    / $maxEstado
-                                ) * 100
-                            );
-
-
-                        return $item;
-                    }
-                )
-
-                ->values()
-
-                ->all();
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | MANTENIMIENTOS POR MES
-        |--------------------------------------------------------------------------
-        */
-
-        $startMonth =
-            Carbon::now()
-                ->startOfMonth()
-                ->subMonths(11);
-
-
-        $endMonth =
-            Carbon::now()
-                ->endOfMonth();
-
-
-        $mantenimientosRaw =
-            DB::table(
-                'mantenimientos as m'
-            )
-
-                ->leftJoin(
-                    'catalogo_valores as cv',
-                    'cv.id_valor',
-                    '=',
-                    'm.id_tipo_mantenimiento'
-                )
-
-                ->whereNotNull(
-                    'm.fecha_intervencion'
-                )
-
-                ->whereBetween(
-                    'm.fecha_intervencion',
-                    [
-                        $startMonth
-                            ->toDateString(),
-
-                        $endMonth
-                            ->toDateString(),
-                    ]
-                )
-
-                ->selectRaw("
-                    DATE_TRUNC(
-                        'month',
-                        m.fecha_intervencion
-                    )::date as mes,
-
-                    cv.clave as tipo,
-
-                    COUNT(*) as total
-                ")
-
-                ->groupBy(
-                    'mes',
-                    'tipo'
-                )
-
-                ->orderBy(
-                    'mes'
-                )
-
-                ->get();
-
-
-        $monthMap = [];
-
-
-        foreach (
-            range(
-                0,
-                11
-            )
-            as $offset
-        ) {
-
-            $month =
-                $startMonth
-                    ->copy()
-                    ->addMonths(
-                        $offset
-                    );
-
-
-            $key =
-                $month
-                    ->format(
-                        'Y-m-01'
-                    );
-
-
-            $monthMap[$key] = [
-
-                'label' =>
-                    $this->monthLabel(
-                        $month
-                    ),
-
-                'preventivo' =>
-                    0,
-
-                'correctivo' =>
-                    0,
-
-            ];
-        }
-
-
-        foreach (
-            $mantenimientosRaw
-            as $row
-        ) {
-
-            $mes =
-                Carbon::parse(
-                    $row->mes
-                )
-                    ->format(
-                        'Y-m-01'
-                    );
-
-
-            if (
-                !isset(
-                    $monthMap[$mes]
-                )
-            ) {
-                continue;
-            }
-
-
-            if (
-                $row->tipo
-                === 'PREVENTIVO'
-            ) {
-
-                $monthMap[$mes]['preventivo'] =
-                    (int) $row->total;
-            }
-
-
-            if (
-                $row->tipo
-                === 'CORRECTIVO'
-            ) {
-
-                $monthMap[$mes]['correctivo'] =
-                    (int) $row->total;
-            }
-        }
-
-
-        $maxMantenimientosMes =
-            max(
-                collect(
-                    $monthMap
-                )
-                    ->map(
-                        fn ($item) =>
-                            max(
-                                $item['preventivo'],
-                                $item['correctivo']
-                            )
-                    )
-                    ->max() ?? 0,
-                1
-            );
-
-
-        $mantenimientosPorMes =
-            collect(
-                $monthMap
-            )
-
-                ->map(
-                    function (
-                        $item
-                    ) use (
-                        $maxMantenimientosMes
-                    ) {
-
-                        $item['preventivo_percentage'] =
-                            (int) round(
-                                (
-                                    $item['preventivo']
-                                    / $maxMantenimientosMes
-                                ) * 100
-                            );
-
-
-                        $item['correctivo_percentage'] =
-                            (int) round(
-                                (
-                                    $item['correctivo']
-                                    / $maxMantenimientosMes
-                                ) * 100
-                            );
-
-
-                        return $item;
-                    }
-                )
-
-                ->values()
-
-                ->all();
-
-
-        /*
-        |--------------------------------------------------------------------------
         | ACTIVIDAD RECIENTE
         |--------------------------------------------------------------------------
         */
@@ -970,6 +542,7 @@ new class extends Component
             DB::table(
                 'bitacora_auditoria as b'
             )
+                ->whereRaw("UPPER(COALESCE(b.modulo, '')) NOT IN ('MANTENIMIENTO', 'MANTENIMIENTOS')")
 
                 ->leftJoin(
                     'usuarios as u',
@@ -1193,8 +766,6 @@ new class extends Component
             'bajas' => $bajas,
             'equiposPorTipo' => $equiposPorTipo,
             'antiguedadEquipos' => $antiguedadEquipos,
-            'estadoMantenimientos' => $estadoMantenimientos,
-            'mantenimientosPorMes' => $mantenimientosPorMes,
             'actividadReciente' => $actividadReciente,
         ];
     }
@@ -1329,22 +900,8 @@ new class extends Component
                 'estado' => 'info',
                 'icono' => '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
             ],
-            [
-                'valor' => $enMantenimiento,
-                'etiqueta' => 'En mantenimiento',
-                'detalle' => $enMantenimiento > 0 ? $porcentajeDe($enMantenimiento) . '% del inventario' : 'Ninguno en proceso',
-                'situacion' => 'en_mantenimiento',
-                'estado' => 'info',
-                'icono' => '<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/>',
-            ],
-            [
-                'valor' => $mantenimientosVencidos,
-                'etiqueta' => 'Mantenimientos vencidos',
-                'detalle' => $mantenimientosVencidos > 0 ? 'Con seguimiento atrasado' : 'Sin atrasos',
-                'situacion' => 'mantenimiento_vencido',
-                'estado' => $mantenimientosVencidos > 0 ? 'peligro' : 'ok',
-                'icono' => '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
-            ],
+
+
             [
                 'valor' => $garantiasVencidas,
                 'etiqueta' => 'Garantías vencidas',
@@ -1470,15 +1027,12 @@ new class extends Component
 
         $donaAsignacion = $dona([
             ['label' => 'Asignados', 'count' => $equiposAsignados, 'color' => '#3BA5D9', 'situacion' => 'asignados'],
-            ['label' => 'En mantenimiento', 'count' => $enMantenimiento, 'color' => '#D9A441', 'situacion' => 'en_mantenimiento'],
             ['label' => 'Disponibles', 'count' => $equiposDisponibles, 'color' => '#6BB38E', 'situacion' => 'sin_asignar'],
         ]);
 
         // Secciones que dependen de la segunda carga (para error / skeleton).
         $seccionesDiferidas = [
-            'mensual' => ['titulo' => 'Mantenimientos por mes', 'descripcion' => 'Preventivos y correctivos de los últimos 12 meses.', 'clase' => 'md:col-span-2', 'forma' => 'columnas'],
             'tipos' => ['titulo' => 'Equipos por tipo', 'descripcion' => 'Inventario vigente agrupado por tipo de equipo.', 'clase' => '', 'forma' => 'barras'],
-            'estados' => ['titulo' => 'Estado de mantenimientos', 'descripcion' => 'Intervenciones registradas según su estado.', 'clase' => '', 'forma' => 'dona'],
             'antiguedad' => ['titulo' => 'Antigüedad de equipos', 'descripcion' => 'Según la fecha de compra registrada.', 'clase' => 'md:col-span-2 xl:col-span-1', 'forma' => 'columnas'],
             'bajas' => ['titulo' => 'Bajas de equipos', 'descripcion' => 'Equipos dados de baja en los últimos 12 meses.', 'clase' => 'md:col-span-2 xl:col-span-3', 'forma' => 'columnas'],
         ];
@@ -1543,102 +1097,6 @@ new class extends Component
         @if ($seccionesListas)
 
             {{-- ====================================================
-                MANTENIMIENTOS POR MES
-            ==================================================== --}}
-            @php
-                $preventivosAnio = array_sum(array_column($mantenimientosPorMes, 'preventivo'));
-                $correctivosAnio = array_sum(array_column($mantenimientosPorMes, 'correctivo'));
-                $mesActual = $mantenimientosPorMes === [] ? ['preventivo' => 0, 'correctivo' => 0] : $mantenimientosPorMes[array_key_last($mantenimientosPorMes)];
-                $maximoMes = 0;
-
-                foreach ($mantenimientosPorMes as $mes) {
-                    $maximoMes = max($maximoMes, (int) $mes['preventivo'], (int) $mes['correctivo']);
-                }
-
-                // Escala con 4 divisiones enteras.
-                $escalaMes = $maximoMes <= 4 ? 4 : (int) (ceil($maximoMes / 4) * 4);
-                $altoBarra = fn (int $valor) => $valor > 0 ? max(round($valor / $escalaMes * 100, 2), 3) : 0;
-            @endphp
-
-            <section class="{{ $claseTarjeta }} md:col-span-2">
-                <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                    <div>
-                        <h3 class="text-sm font-semibold text-[var(--theme-text-strong)]">Mantenimientos por mes</h3>
-                        <p class="mt-1 text-xs text-[var(--theme-text-muted)]">Preventivos y correctivos de los últimos 12 meses.</p>
-                    </div>
-
-                    <dl class="flex shrink-0 gap-2">
-                        <div class="rounded-lg bg-[var(--theme-surface-soft)] px-3 py-1.5">
-                            <dt class="flex items-center gap-1.5 text-[10px] text-[var(--theme-text-muted)]"><span class="h-2 w-2 rounded-full bg-[#3BA5D9]"></span>Preventivos</dt>
-                            <dd class="text-base font-semibold tabular-nums text-[var(--theme-text-strong)]">{{ number_format($preventivosAnio) }}</dd>
-                        </div>
-                        <div class="rounded-lg bg-[var(--theme-surface-soft)] px-3 py-1.5">
-                            <dt class="flex items-center gap-1.5 text-[10px] text-[var(--theme-text-muted)]"><span class="h-2 w-2 rounded-full bg-[#6BB38E]"></span>Correctivos</dt>
-                            <dd class="text-base font-semibold tabular-nums text-[var(--theme-text-strong)]">{{ number_format($correctivosAnio) }}</dd>
-                        </div>
-                        <div class="rounded-lg bg-[var(--theme-surface-soft)] px-3 py-1.5">
-                            <dt class="text-[10px] text-[var(--theme-text-muted)]">Este mes</dt>
-                            <dd class="text-base font-semibold tabular-nums text-[var(--theme-text-strong)]">{{ number_format((int) $mesActual['preventivo'] + (int) $mesActual['correctivo']) }}</dd>
-                        </div>
-                    </dl>
-                </div>
-
-                <div class="relative mt-5 flex min-h-[200px] flex-1 gap-2">
-                    {{-- Eje Y --}}
-                    <div class="flex w-6 shrink-0 flex-col justify-between pb-6 text-right text-[10px] tabular-nums text-[var(--theme-text-muted)]" aria-hidden="true">
-                        @for ($marca = 4; $marca >= 0; $marca--)
-                            <span class="-translate-y-1/2 leading-none first:translate-y-0 last:translate-y-0">{{ (int) ($escalaMes / 4 * $marca) }}</span>
-                        @endfor
-                    </div>
-
-                    <div class="relative flex min-w-0 flex-1 flex-col">
-                        {{-- Líneas guía --}}
-                        <div class="pointer-events-none absolute inset-x-0 top-0 bottom-6 flex flex-col justify-between" aria-hidden="true">
-                            @for ($marca = 0; $marca < 5; $marca++)
-                                <span class="block border-t {{ $marca === 4 ? 'border-[var(--theme-border-strong)]' : 'border-dashed border-[var(--theme-border)]' }}"></span>
-                            @endfor
-                        </div>
-
-                        <div class="relative grid flex-1 grid-cols-12 gap-1 sm:gap-2">
-                            @foreach ($mantenimientosPorMes as $mes)
-                                <div class="group relative flex min-w-0 flex-col">
-                                    <div class="flex flex-1 items-end justify-center gap-[3px] rounded-t-md transition-colors group-hover:bg-[var(--theme-surface-soft)]">
-                                        <div
-                                            x-data="dashboardColumn({{ $altoBarra((int) $mes['preventivo']) }})"
-                                            x-init="init()"
-                                            x-bind:style="{ height: height + '%' }"
-                                            class="w-full max-w-[14px] rounded-t-[4px] bg-[#3BA5D9] transition-[height] duration-1000 ease-out"
-                                        ></div>
-                                        <div
-                                            x-data="dashboardColumn({{ $altoBarra((int) $mes['correctivo']) }})"
-                                            x-init="init()"
-                                            x-bind:style="{ height: height + '%' }"
-                                            class="w-full max-w-[14px] rounded-t-[4px] bg-[#6BB38E] transition-[height] duration-1000 ease-out"
-                                        ></div>
-                                    </div>
-
-                                    <span class="mt-2 h-4 truncate text-center text-[10px] text-[var(--theme-text-muted)]">{{ $mes['label'] }}</span>
-
-                                    {{-- Detalle al pasar el cursor --}}
-                                    <div class="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1 hidden -translate-x-1/2 whitespace-nowrap rounded-md border border-[var(--theme-border)] bg-[var(--theme-surface)] px-2.5 py-1.5 text-[11px] theme-shadow-xl group-hover:block">
-                                        <p class="font-semibold text-[var(--theme-text-strong)]">{{ $mes['label'] }}</p>
-                                        <p class="text-[var(--theme-text)]"><span class="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-[#3BA5D9]"></span>{{ $mes['preventivo'] }} preventivo(s)</p>
-                                        <p class="text-[var(--theme-text)]"><span class="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-[#6BB38E]"></span>{{ $mes['correctivo'] }} correctivo(s)</p>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
-
-                    @if ($preventivosAnio + $correctivosAnio === 0)
-                        <p class="pointer-events-none absolute inset-0 flex items-center justify-center pb-6 text-xs text-[var(--theme-text-muted)]">
-                            Sin mantenimientos en los últimos 12 meses.
-                        </p>
-                    @endif
-                </div>
-            </section>
-
-            {{-- ====================================================
                 EQUIPOS POR TIPO
             ==================================================== --}}
             <section class="{{ $claseTarjeta }}">
@@ -1678,57 +1136,6 @@ new class extends Component
                         @endforeach
                     </ul>
                 @endif
-            </section>
-
-            {{-- ====================================================
-                ESTADO DE MANTENIMIENTOS
-            ==================================================== --}}
-            @php
-                $donaEstados = $dona($estadoMantenimientos);
-            @endphp
-
-            <section class="{{ $claseTarjeta }}">
-                <h3 class="text-sm font-semibold text-[var(--theme-text-strong)]">Estado de mantenimientos</h3>
-                <p class="mt-1 text-xs text-[var(--theme-text-muted)]">Intervenciones registradas según su estado.</p>
-
-                <div class="mt-4 flex flex-1 items-center gap-5">
-                    <div
-                        x-data="dashboardBar()"
-                        x-init="init()"
-                        class="relative h-32 w-32 shrink-0 transition duration-700 ease-out"
-                        x-bind:class="ready ? 'opacity-100 scale-100' : 'opacity-0 scale-95'"
-                    >
-                        <svg class="h-32 w-32 -rotate-90" viewBox="0 0 120 120" aria-hidden="true">
-                            <circle cx="60" cy="60" r="{{ $donaEstados['radio'] }}" fill="none" stroke="var(--theme-surface-soft)" stroke-width="14"/>
-                            @foreach ($donaEstados['segmentos'] as $segmento)
-                                @if ($segmento['largo'] > 0)
-                                    <circle
-                                        cx="60" cy="60" r="{{ $donaEstados['radio'] }}" fill="none"
-                                        stroke="{{ $segmento['color'] }}" stroke-width="14"
-                                        stroke-dasharray="{{ round($segmento['largo'], 2) }} {{ round($donaEstados['circunferencia'], 2) }}"
-                                        stroke-dashoffset="{{ round($segmento['desfase'], 2) }}"
-                                    />
-                                @endif
-                            @endforeach
-                        </svg>
-
-                        <div class="absolute inset-0 flex flex-col items-center justify-center">
-                            <span class="text-2xl font-semibold leading-none text-[var(--theme-text-strong)]">{{ number_format($donaEstados['total']) }}</span>
-                            <span class="mt-1 text-[10px] text-[var(--theme-text-muted)]">registros</span>
-                        </div>
-                    </div>
-
-                    <ul class="min-w-0 flex-1 space-y-2.5">
-                        @foreach ($donaEstados['segmentos'] as $segmento)
-                            <li class="flex items-center gap-2 text-xs">
-                                <span class="h-2.5 w-2.5 shrink-0 rounded-full" style="background: {{ $segmento['color'] }};"></span>
-                                <span class="min-w-0 flex-1 truncate text-[var(--theme-text)]">{{ $segmento['label'] }}</span>
-                                <span class="font-semibold tabular-nums text-[var(--theme-text-strong)]">{{ number_format($segmento['count']) }}</span>
-                                <span class="w-8 text-right text-[11px] tabular-nums text-[var(--theme-text-muted)]">{{ $segmento['porcentaje'] }}%</span>
-                            </li>
-                        @endforeach
-                    </ul>
-                </div>
             </section>
 
             {{-- ====================================================

@@ -7,7 +7,6 @@ new class extends Component {
 
     public int $totalActivos = 0;
     public int $equiposAsignados = 0;
-    public int $enMantenimiento = 0;
     public int $stockDisponible = 0;
 
 
@@ -33,13 +32,7 @@ new class extends Component {
                     SELECT COUNT(DISTINCT id_equipo)
                     FROM asignaciones
                     WHERE fecha_fin IS NULL
-                ) AS equipos_asignados,
-
-                (
-                    SELECT COUNT(DISTINCT id_equipo)
-                    FROM mantenimientos
-                    WHERE hora_fin IS NULL
-                ) AS en_mantenimiento
+                ) AS equipos_asignados
         ');
 
 
@@ -49,14 +42,12 @@ new class extends Component {
         $this->equiposAsignados =
             (int) $row->equipos_asignados;
 
-        $this->enMantenimiento =
-            (int) $row->en_mantenimiento;
+
 
 
         $this->stockDisponible = max(
             $this->totalActivos
-                - $this->equiposAsignados
-                - $this->enMantenimiento,
+                - $this->equiposAsignados,
             0
         );
     }
@@ -383,111 +374,6 @@ new class extends Component {
                 "
             >
                 Equipos Asignados
-            </p>
-
-        </div>
-
-    </div>
-
-
-
-    {{-- ========================================================
-        EN MANTENIMIENTO
-    ======================================================== --}}
-    <div
-        class="
-            bg-[var(--theme-surface)]
-
-            border-2
-            border-[var(--theme-border-strong)]
-
-            rounded-lg
-
-            px-4
-            sm:px-5
-
-            py-5
-
-            flex
-            flex-col
-
-            sm:flex-row
-            sm:items-center
-
-            gap-3
-            sm:gap-5
-
-            transition-[border-color,box-shadow]
-            duration-200
-
-            hover:border-[var(--theme-text-muted)]
-            hover:shadow-[0_4px_12px_var(--theme-shadow)]
-        "
-    >
-
-        <div
-            class="
-                w-12
-                h-12
-
-                sm:w-14
-                sm:h-14
-
-                shrink-0
-
-                rounded-lg
-
-                flex
-                items-center
-                justify-center
-
-                bg-[var(--theme-surface-soft)]
-                text-[var(--theme-text)]
-            "
-        >
-            <svg
-                class="
-                    w-6
-                    h-6
-
-                    sm:w-7
-                    sm:h-7
-                "
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.5"
-            ><use href="{{ \App\Support\Icono::url('i-4aff7ed') }}"></use></svg>
-        </div>
-
-
-        <div class="min-w-0">
-
-            <p
-                class="
-                    text-2xl
-                    sm:text-3xl
-
-                    font-semibold
-
-                    text-[var(--theme-text-strong)]
-                "
-            >
-                {{ number_format($enMantenimiento) }}
-            </p>
-
-
-            <p
-                class="
-                    mt-1
-
-                    text-[11px]
-                    sm:text-xs
-
-                    text-[var(--theme-text-muted)]
-                "
-            >
-                En Mantenimiento
             </p>
 
         </div>
