@@ -54,13 +54,6 @@
      */
     $opcionesMas = array_values(array_filter([
         [
-            'label' => 'Mantenimientos',
-            'route' => 'mantenimientos.index',
-            'activo' => request()->routeIs('mantenimientos.*'),
-            'icon' => 'mantenimientos',
-            'visible' => $puedeGestionar,
-        ],
-        [
             'label' => 'Reportes',
             'route' => 'reportes.index',
             'activo' => request()->routeIs('reportes.*'),
@@ -972,9 +965,6 @@
                     @if ($opcion['activo']) aria-current="page" @endif
                 >
                     @switch($opcion['icon'])
-                        @case('mantenimientos')
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-4a00501') }}"></use></svg>
-                            @break
 
                         @case('reportes')
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-6a3320d') }}"></use></svg>

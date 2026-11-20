@@ -747,6 +747,7 @@ class EquipoBajaMultiple extends Component
             \App\Services\OrganizacionService::class
         );
 
+        $detalles = app(\App\Services\DatosDocumentoBajaService::class)->equipos($equipos->pluck('id_equipo')->map(fn ($id) => (int) $id)->all());
         return [
             'logo' => $organizacion->logoDocumentosUrl(),
             'organizacion' => $organizacion->nombre(),
@@ -777,7 +778,7 @@ class EquipoBajaMultiple extends Component
             'puesto' => $this->puesto,
 
             'equipos' => $equipos
-                ->map(fn ($e) => (array) $e)
+                ->map(fn ($e) => array_merge((array) $e, $detalles[$e->id_equipo] ?? []))
                 ->all(),
 
             'folio' => 'Por asignar',
@@ -803,33 +804,12 @@ class EquipoBajaMultiple extends Component
 
         $equipos = $this->validarSeleccion();
 
-        $departamentos = Departamento::disponiblesParaUnidad(
-            (int) $this->hotelId
-        )
-            ->pluck('id_departamento')
-            ->all();
-
         $this->validate([
-            'solicitante' => [
-                'required', 'string', 'max:255'
-            ],
-            'hotelId' => [
-                'required',
-                'integer',
-                Rule::exists(
-                    'unidades_organizativas',
-                    'id_unidad'
-                )->where('activo', true),
-            ],
-            'departamentoId' => [
-                'required',
-                'integer',
-                Rule::in($departamentos),
-            ],
+            'solicitante' => ['required', 'string', 'max:255'],
             'fechaBaja' => [
                 'required', 'date_format:Y-m-d'
             ],
-            'numeroTicket' => ['required', 'string', 'max:26'], // texto libre (columna de 26)
+            'numeroTicket' => ['nullable', 'string', 'max:26'], // texto libre (columna de 26)
             'motivoBaja' => [
                 'required', 'string', 'max:500'
             ],
@@ -837,10 +817,10 @@ class EquipoBajaMultiple extends Component
                 'nullable', 'string', 'max:500'
             ],
             'autoriza' => [
-                'required', 'string', 'max:255'
+                'nullable', 'string', 'max:255'
             ],
             'puesto' => [
-                'required', 'string', 'max:255'
+                'nullable', 'string', 'max:255'
             ],
             'fotoFrontal' => $this->reglasFoto(),
             'fotoTrasera' => $this->reglasFoto(),
@@ -905,7 +885,7 @@ class EquipoBajaMultiple extends Component
                 'reportes.baja-multiple-pdf',
                 compact('documento')
             )
-                ->setPaper('letter')
+                ->setPaper('a4', count($documento['equipos']) >= 2 ? 'landscape' : 'portrait')
                 ->output();
 
             if (!Storage::disk('local')->put(
@@ -951,7 +931,8 @@ class EquipoBajaMultiple extends Component
                                 (int) auth()->id(),
                                 $documento['folio'],
                                 $this->nombresFirmas(),
-                                $documento['numero_ticket']
+                                $documento['numero_ticket'],
+                                trim($this->solicitante)
                             );
 
                             $idsDadosDeBaja[] =

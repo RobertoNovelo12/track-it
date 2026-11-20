@@ -8,9 +8,9 @@ use Illuminate\Validation\ValidationException;
 
 class BajaResguardoService
 {
-    public function guardar(int $equipoId, string $fecha, string $motivo, ?string $observaciones, int $usuarioId): void
+    public function guardar(int $equipoId, string $fecha, string $motivo, ?string $observaciones, int $usuarioId, ?string $solicitante = null): void
     {
-        DB::transaction(function () use ($equipoId, $fecha, $motivo, $observaciones, $usuarioId): void {
+        DB::transaction(function () use ($equipoId, $fecha, $motivo, $observaciones, $usuarioId, $solicitante): void {
             $equipo = DB::table('equipos')->where('id_equipo', $equipoId)->lockForUpdate()->first();
             if (!$equipo) { throw ValidationException::withMessages(['motivoBaja' => 'El equipo ya no existe.']); }
             $baja = DB::table('estados_equipo')->where('id_estado_equipo', $equipo->id_estado_activo)->where('clave', 'BAJA')->exists();
@@ -21,7 +21,7 @@ class BajaResguardoService
                 throw ValidationException::withMessages(['motivoBaja' => 'Este equipo ya está en resguardo. Revisa y completa su baja cuando corresponda.']);
             }
             DB::table('bajas_resguardo')->insert(['id_equipo' => $equipoId, 'fecha_resguardo' => $fecha,
-                'motivo' => trim($motivo), 'observaciones' => trim((string) $observaciones) ?: null, 'registrado_por' => $usuarioId]);
+                'solicitante' => $solicitante, 'motivo' => trim($motivo), 'observaciones' => trim((string) $observaciones) ?: null, 'registrado_por' => $usuarioId]);
             DB::table('bitacora_auditoria')->insert(['id_usuario'=>$usuarioId,'accion'=>'EQUIPO_EN_RESGUARDO','modulo'=>'EQUIPOS',
                 'descripcion'=>'Equipo '.$equipo->codigo_inventario.' pendiente de revisión para baja: '.trim($motivo),'fecha_hora'=>now()]);
         });

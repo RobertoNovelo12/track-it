@@ -33,7 +33,8 @@ class BajaEquipoService
         int $usuarioId,
         ?string $referencia = null,
         array $firmas = [],
-        ?string $numeroTicket = null
+        ?string $numeroTicket = null,
+        ?string $solicitante = null
     ): string {
         $equipo = DB::table('equipos')
             ->where('id_equipo', $idEquipo)
@@ -74,6 +75,7 @@ class BajaEquipoService
 
         DB::table('bajas')->insert([
             'folio' => $folio,
+            'solicitante' => $solicitante ?? app(BajaResguardoService::class)->pendiente($idEquipo)?->solicitante,
             'numero_ticket' => $numeroTicket,
             'id_equipo' => $idEquipo,
             'id_motivo_baja' => (int) $idMotivoOtro,

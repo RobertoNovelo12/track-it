@@ -229,94 +229,7 @@
                         Información general de la baja
                     </h2>
 
-                    <div class="grid gap-4 sm:grid-cols-2">
-                        @include('livewire.equipos.numero-ticket')
-
-                        <div>
-                            <label
-                                for="bm-solicitante"
-                                class="mb-2 block text-xs text-[var(--theme-text)]"
-                            >
-                                Quién solicita la baja
-                                <span class="text-[var(--theme-danger)]">*</span>
-                            </label>
-
-                            <input
-                                id="bm-solicitante"
-                                wire:model.live.debounce.350ms="solicitante"
-                                maxlength="255"
-                                placeholder="Ingresa el nombre completo"
-                                class="{{ $input }}"
-                            >
-
-                            @error('solicitante')
-                                <p class="mt-1 text-xs text-[var(--theme-danger)]">
-                                    {{ $message }}
-                                </p>
-                            @enderror
-                        </div>
-
-                        <div>
-                            <label
-                                for="bm-hotel"
-                                class="mb-2 block text-xs text-[var(--theme-text)]"
-                            >
-                                @plantilla('unidad_singular')
-                                <span class="text-[var(--theme-danger)]">*</span>
-                            </label>
-
-                            <select
-                                id="bm-hotel"
-                                wire:model.live="hotelId"
-                                class="{{ $input }}"
-                            >
-                                <option value="">Selecciona un @plantilla('unidad')</option>
-
-                                @foreach ($hoteles as $hotel)
-                                    <option value="{{ $hotel->id_unidad }}">
-                                        {{ $hotel->nombre }}
-                                    </option>
-                                @endforeach
-                            </select>
-
-                            @error('hotelId')
-                                <p class="mt-1 text-xs text-[var(--theme-danger)]">
-                                    {{ $message }}
-                                </p>
-                            @enderror
-                        </div>
-
-                        <div>
-                            <label
-                                for="bm-departamento"
-                                class="mb-2 block text-xs text-[var(--theme-text)]"
-                            >
-                                Departamento
-                                <span class="text-[var(--theme-danger)]">*</span>
-                            </label>
-
-                            <select
-                                id="bm-departamento"
-                                wire:model.live="departamentoId"
-                                class="{{ $input }}"
-                                @disabled(!$hotelId)
-                            >
-                                <option value="">Selecciona un departamento</option>
-
-                                @foreach ($departamentos as $departamento)
-                                    <option value="{{ $departamento->id_departamento }}">
-                                        {{ $departamento->nombre }}
-                                    </option>
-                                @endforeach
-                            </select>
-
-                            @error('departamentoId')
-                                <p class="mt-1 text-xs text-[var(--theme-danger)]">
-                                    {{ $message }}
-                                </p>
-                            @enderror
-                        </div>
-
+                    <div class="grid gap-4 sm:grid-cols-2"><div><label class="mb-2 block text-xs text-[var(--theme-text)]">Solicitante *</label><input wire:model.live.debounce.350ms="solicitante" maxlength="255" placeholder="Nombre completo de quien solicita la baja" class="h-10 w-full rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface)] px-3 text-sm"><p class="text-xs text-[var(--theme-danger)]">@error('solicitante') {{ $message }} @enderror</p></div>
                         <div>
                             <label
                                 for="bm-fecha"
@@ -366,33 +279,6 @@
                         @enderror
                     </div>
 
-                    <div>
-                        <label
-                            for="bm-observaciones"
-                            class="mb-2 block text-xs text-[var(--theme-text)]"
-                        >
-                            Observaciones
-                        </label>
-
-                        <textarea
-                            id="bm-observaciones"
-                            wire:model.live.debounce.350ms="observaciones"
-                            maxlength="500"
-                            rows="3"
-                            placeholder="Ingresa las observaciones de la baja"
-                            class="{{ $input }}"
-                        ></textarea>
-
-                        <p class="mt-1 text-right text-xs text-[var(--theme-text-muted)]">
-                            {{ mb_strlen($observaciones) }}/500
-                        </p>
-
-                        @error('observaciones')
-                            <p class="mt-1 text-xs text-[var(--theme-danger)]">
-                                {{ $message }}
-                            </p>
-                        @enderror
-                    </div>
                 </section>
 
                 {{-- FOTOGRAFÍAS --}}
@@ -545,50 +431,11 @@
                     </div>
 
                     <p class="mt-3 text-center text-xs text-[var(--theme-text-muted)]">
-                        Vista preliminar. El tiket capturado se incluirá en el acta.
+                        Vista preliminar del acta de baja.
                     </p>
                 </section>
 
-                @include('livewire.equipos.firmas-baja')
 
-                <section class="{{ $panel }}">
-                    <h2 class="mb-4 font-semibold text-[var(--theme-text-strong)]">
-                        Autorización
-                    </h2>
-
-                    <div class="grid gap-4 sm:grid-cols-2">
-
-                        @foreach ([
-                            'autoriza' => 'Quién autoriza',
-                            'puesto' => 'Puesto',
-                        ] as $campo => $titulo)
-
-                            <div>
-                                <label
-                                    for="bm-{{ $campo }}"
-                                    class="mb-2 block text-xs text-[var(--theme-text)]"
-                                >
-                                    {{ $titulo }}
-                                    <span class="text-[var(--theme-danger)]">*</span>
-                                </label>
-
-                                <input
-                                    id="bm-{{ $campo }}"
-                                    wire:model.live.debounce.350ms="{{ $campo }}"
-                                    maxlength="255"
-                                    class="{{ $input }}"
-                                >
-
-                                @error($campo)
-                                    <p class="mt-1 text-xs text-[var(--theme-danger)]">
-                                        {{ $message }}
-                                    </p>
-                                @enderror
-                            </div>
-
-                        @endforeach
-                    </div>
-                </section>
             </div>
         </form>
 

@@ -2035,7 +2035,7 @@ document.addEventListener(
             $avisosSesion[] = session('toast');
         }
 
-        foreach (['mantenimientoCreado', 'mantenimientoActualizado', 'success', 'usuarioCreado', 'organizacion_mensaje'] as $claveAviso) {
+        foreach (['success', 'usuarioCreado', 'organizacion_mensaje'] as $claveAviso) {
             if (is_string(session($claveAviso)) && session($claveAviso) !== '') {
                 $avisosSesion[] = ['type' => 'success', 'message' => session($claveAviso)];
             }

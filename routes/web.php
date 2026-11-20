@@ -270,34 +270,6 @@ Route::middleware([
 
     /*
     |--------------------------------------------------------------------------
-    | Mantenimientos
-    |--------------------------------------------------------------------------
-    */
-
-    Route::get(
-        '/mantenimientos',
-        fn () => view('mantenimientos.index')
-    )->name('mantenimientos.index')->middleware('can:gestionar');
-
-    Route::get(
-        '/mantenimientos/crear',
-        fn () => view('mantenimientos.create')
-    )->name('mantenimientos.create')->middleware('can:gestionar');
-
-    Route::get(
-        '/mantenimientos/{mantenimiento}/editar',
-        function (int $mantenimiento) {
-            return view('mantenimientos.edit', [
-                'mantenimientoId' => $mantenimiento,
-            ]);
-        }
-    )
-        ->whereNumber('mantenimiento')
-        ->name('mantenimientos.edit')->middleware('can:gestionar');
-
-
-    /*
-    |--------------------------------------------------------------------------
     | Generación de reportes
     |--------------------------------------------------------------------------
     */
@@ -357,6 +329,9 @@ Route::middleware([
     | Asignaciones y movimientos
     |--------------------------------------------------------------------------
     */
+
+    Route::get('/asignaciones/bajas', fn () => view('asignaciones.bajas'))
+        ->name('asignaciones.bajas')->middleware('can:gestionar');
 
     Route::get(
         '/asignaciones',

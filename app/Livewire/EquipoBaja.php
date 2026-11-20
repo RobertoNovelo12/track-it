@@ -25,6 +25,7 @@ class EquipoBaja extends Component
     public int $equipoId;
     public array $equipo = [];
 
+    public string $solicitante = '';
     public string $numeroTicket = '';
     public string $motivoBaja = '';
     public string $fechaBaja = '';
@@ -86,6 +87,7 @@ class EquipoBaja extends Component
         $this->cargarEquipo();
         $resguardo = app(\App\Services\BajaResguardoService::class)->pendiente($this->equipoId);
         if ($resguardo) {
+            $this->solicitante = $resguardo->solicitante ?? '';
             $this->motivoBaja = $resguardo->motivo;
             $this->comentariosBaja = $resguardo->observaciones ?? '';
         }
@@ -488,6 +490,7 @@ class EquipoBaja extends Component
                     $equipo->fecha_registro ?? null
                 ),
         ];
+        $this->equipo = array_merge($this->equipo, app(\App\Services\DatosDocumentoBajaService::class)->equipos([$this->equipoId])[$this->equipoId] ?? []);
     }
 
     /*
@@ -557,7 +560,8 @@ class EquipoBaja extends Component
         Gate::authorize('gestionar');
 
         $validated = $this->validate([
-            'numeroTicket' => ['required', 'string', 'max:26'], // texto libre (columna de 26)
+            'solicitante' => ['required', 'string', 'max:255'],
+            'numeroTicket' => ['nullable', 'string', 'max:26'], // texto libre (columna de 26)
             'motivoBaja' => [
                 'required',
                 'string',
@@ -573,7 +577,7 @@ class EquipoBaja extends Component
                 'max:2000',
             ],
             'autoriza' => [
-                'required',
+                'nullable',
                 'string',
                 'max:255',
             ],
@@ -764,6 +768,7 @@ class EquipoBaja extends Component
                 $idBaja = DB::table('bajas')
                     ->insertGetId([
                         'folio' => $folio,
+                        'solicitante' => trim($validated['solicitante']),
                         'numero_ticket' => trim($validated['numeroTicket']),
 
                         'id_equipo' =>
@@ -1103,8 +1108,8 @@ class EquipoBaja extends Component
     public function guardarEnResguardo(): void
     {
         Gate::authorize('gestionar');
-        $datos = $this->validate(['motivoBaja'=>'required|string|max:500', 'fechaBaja'=>'required|date|before_or_equal:today', 'comentariosBaja'=>'nullable|string|max:2000']);
-        app(\App\Services\BajaResguardoService::class)->guardar($this->equipoId, $datos['fechaBaja'], $datos['motivoBaja'], $datos['comentariosBaja'] ?? null, (int) auth()->id());
+        $datos = $this->validate(['solicitante' => ['required', 'string', 'max:255'], 'motivoBaja'=>'required|string|max:500', 'fechaBaja'=>'required|date|before_or_equal:today', 'comentariosBaja'=>'nullable|string|max:2000']);
+        app(\App\Services\BajaResguardoService::class)->guardar($this->equipoId, $datos['fechaBaja'], $datos['motivoBaja'], $datos['comentariosBaja'] ?? null, (int) auth()->id(), $datos['solicitante']);
         app(SystemCacheService::class)->refreshModule('equipos');
         app(SystemCacheService::class)->refreshModule('reportes');
         $this->dispatch('baja-formulario-validado', message: 'Equipo en resguardo. Permanece en la institución, pendiente de revisión.');

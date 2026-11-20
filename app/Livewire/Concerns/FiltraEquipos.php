@@ -614,24 +614,6 @@ trait FiltraEquipos
                     ->whereNull('a_situacion.fecha_fin');
             }),
 
-            'en_mantenimiento' => $query->whereExists(function (Builder $q): void {
-                $q->selectRaw('1')
-                    ->from('mantenimientos as m_situacion')
-                    ->join('catalogo_valores as cv_situacion', 'cv_situacion.id_valor', '=', 'm_situacion.id_estado_mantenimiento')
-                    ->whereColumn('m_situacion.id_equipo', 'e.id_equipo')
-                    ->where('cv_situacion.clave', 'EN_PROCESO');
-            }),
-
-            'mantenimiento_vencido' => $query->whereExists(function (Builder $q) use ($hoy): void {
-                $q->selectRaw('1')
-                    ->from('mantenimientos as m_situacion')
-                    ->join('catalogo_valores as cv_situacion', 'cv_situacion.id_valor', '=', 'm_situacion.id_estado_mantenimiento')
-                    ->whereColumn('m_situacion.id_equipo', 'e.id_equipo')
-                    ->whereNotIn('cv_situacion.clave', ['COMPLETADO', 'CANCELADO'])
-                    ->whereNotNull('m_situacion.fecha_proximo_mantenimiento')
-                    ->whereDate('m_situacion.fecha_proximo_mantenimiento', '<', $hoy);
-            }),
-
             'garantia_vencida' => $query
                 ->whereNotNull('e.fecha_fin_garantia')
                 ->whereDate('e.fecha_fin_garantia', '<', $hoy),

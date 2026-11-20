@@ -45,8 +45,6 @@ class EquiposIndex extends Component
         'en_resguardo' => 'Bajas en resguardo',
         'asignados' => 'Asignados',
         'sin_asignar' => 'Sin asignar',
-        'en_mantenimiento' => 'En mantenimiento',
-        'mantenimiento_vencido' => 'Mantenimiento vencido',
         'garantia_vencida' => 'Garantía vencida',
         'garantia_por_vencer' => 'Garantía por vencer (30 días)',
     ];

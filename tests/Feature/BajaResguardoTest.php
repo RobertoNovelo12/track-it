@@ -30,6 +30,7 @@ class BajaResguardoTest extends TestCase
         Schema::create('asignaciones', function (Blueprint $t) { $t->integer('id_equipo'); $t->timestamp('fecha_fin')->nullable(); });
         Schema::create('bitacora_auditoria', function (Blueprint $t) { $t->integer('id_usuario'); foreach (['accion','modulo','descripcion','fecha_hora'] as $c) { $t->text($c); } });
         (require database_path('migrations/2026_11_11_000100_create_bajas_resguardo.php'))->up();
+        (require database_path('migrations/2026_11_19_200000_add_solicitante_to_bajas.php'))->up();
         DB::table('equipos')->insert(['id_equipo'=>1,'codigo_inventario'=>'ACT-1','id_estado_activo'=>1]);
         DB::table('estados_equipo')->insert([['id_estado_equipo'=>1,'clave'=>'DISPONIBLE'],['id_estado_equipo'=>2,'clave'=>'BAJA']]);
         DB::table('catalogos')->insert([['id_catalogo'=>1,'clave'=>'motivo_baja'],['id_catalogo'=>2,'clave'=>'estado_baja']]);

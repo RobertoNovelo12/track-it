@@ -629,8 +629,6 @@
 
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 
-                    @include('livewire.equipos.numero-ticket')
-
                     {{-- MOTIVO --}}
 
                     <div>
@@ -658,6 +656,7 @@
                         @enderror
                     </div>
 
+<div><label class="mb-2 block text-xs text-[var(--theme-text)]">Solicitante *</label><input wire:model.live.debounce.350ms="solicitante" maxlength="255" placeholder="Nombre completo de quien solicita la baja" class="h-10 w-full rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface)] px-3 text-sm"><p class="text-xs text-[var(--theme-danger)]">@error('solicitante') {{ $message }} @enderror</p></div>
                     {{-- FECHA --}}
 
                     <div>
@@ -682,34 +681,6 @@
                             </p>
                         @enderror
                     </div>
-
-                </div>
-
-                {{-- COMENTARIOS --}}
-
-                <div class="mt-4">
-
-                    <label
-                        for="comentarios-baja"
-                        class="mb-1.5 block text-xs font-medium text-[var(--theme-text)]"
-                    >
-                        Comentarios de baja
-                    </label>
-
-                    <textarea
-                        id="comentarios-baja"
-                        wire:model.live.debounce.350ms="comentariosBaja"
-                        rows="3"
-                        maxlength="2000"
-                        placeholder="Ingresa comentarios o detalles adicionales sobre la baja del equipo"
-                        class="min-h-[88px] w-full resize-y rounded-lg border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 py-2.5 text-sm text-[var(--theme-text)] outline-none placeholder:text-[var(--theme-text-muted)] focus:border-[var(--theme-primary)]"
-                    ></textarea>
-
-                    @error('comentariosBaja')
-                        <p class="mt-1 text-xs text-[var(--theme-danger)]">
-                            {{ $message }}
-                        </p>
-                    @enderror
 
                 </div>
 
@@ -846,7 +817,7 @@
 
                     <p class="mt-0.5 text-xs text-[var(--theme-text)]">
                         Para procesar la baja se requiere el motivo
-                        y la autorización. Las fotografías que adjuntes
+                        la fecha y el solicitante. Las fotografías que adjuntes
                         se guardarán como evidencias del equipo.
                     </p>
 
@@ -878,317 +849,17 @@
 
                 <div class="h-[600px] min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain pr-1 [scrollbar-width:thin] [scrollbar-color:#64748b_transparent] mx-auto w-full border border-[var(--theme-border)] bg-white shadow-md">
 
-                    <article class="baja-documento p-[5%]">
-
-                        {{-- LOGO --}}
-
-                        <img
-                            src="{{ app(\App\Services\OrganizacionService::class)->logoDocumentosUrl() }}"
-                            alt="{{ app(\App\Services\OrganizacionService::class)->nombre() }}"
-                            style="max-width:150px; max-height:45px; margin-bottom:8px;"
-                        >
-
-                        <div class="institucion">
-                            {{ app(\App\Services\OrganizacionService::class)->nombre() }}
-                            | CONTROL DE ACTIVOS TI
-                        </div>
-
-                        <h2>ORDEN DE DECOMISO DE ACTIVOS</h2>
-
-                        <div class="subtitulo">
-                            Baja de equipo tecnológico ·
-                            Control documental y autorización
-                        </div>
-
-                        {{-- 01 DATOS DE LA BAJA --}}
-
-                        <div class="seccion">
-                            <span class="numero">01</span>
-                            DATOS DE LA BAJA
-                        </div>
-
-                        <div class="campos tres">
-
-                            <div class="campo">
-
-                                <span class="etiqueta">
-                                    Fecha de baja
-                                </span>
-
-                                <span class="valor">
-                                    {{ $fechaBaja
-                                        ? \Carbon\Carbon::parse($fechaBaja)->format('d/m/Y')
-                                        : '—'
-                                    }}
-                                </span>
-
-                            </div>
-
-                            <div class="campo">
-
-                                <span class="etiqueta">
-                                    N° Tiket:
-                                </span>
-
-                                <span class="valor">
-                                    {{ trim($numeroTicket) !== '' ? trim($numeroTicket) : 'Por capturar' }}
-                                </span>
-
-                            </div>
-
-                            <div class="campo">
-
-                                <span class="etiqueta">
-                                    Código de inventario
-                                </span>
-
-                                <span class="valor">
-                                    {{ $dato($equipo['codigo_inventario'] ?? null) }}
-                                </span>
-
-                            </div>
-
-                        </div>
-
-                        {{-- 02 INFORMACIÓN GENERAL --}}
-
-                        <div class="seccion">
-                            <span class="numero">02</span>
-                            INFORMACIÓN GENERAL DEL EQUIPO
-                        </div>
-
-                        <div class="campos">
-
-                            <div class="campo">
-
-                                <span class="etiqueta">
-                                    Nombre del activo
-                                </span>
-
-                                <span class="valor">
-                                    {{ $dato($equipo['nombre_equipo'] ?? null) }}
-                                </span>
-
-                            </div>
-
-                            <div class="campo">
-
-                                <span class="etiqueta">
-                                    Número de serie
-                                </span>
-
-                                <span class="valor">
-                                    {{ $dato($equipo['numero_serie'] ?? null) }}
-                                </span>
-
-                            </div>
-
-                            <div class="campo">
-
-                                <span class="etiqueta">
-                                    Tipo de equipo
-                                </span>
-
-                                <span class="valor">
-                                    {{ $dato($equipo['tipo_equipo'] ?? null) }}
-                                </span>
-
-                            </div>
-
-                            <div class="campo">
-
-                                <span class="etiqueta">
-                                    Marca / Modelo
-                                </span>
-
-                                <span class="valor">
-                                    {{ $dato($marcaModelo) }}
-                                </span>
-
-                            </div>
-
-                            <div class="campo">
-
-                                <span class="etiqueta">
-                                    Fecha de registro
-                                </span>
-
-                                <span class="valor">
-                                    {{ $dato($equipo['fecha_registro'] ?? null) }}
-                                </span>
-
-                            </div>
-
-                            <div class="campo">
-
-                                <span class="etiqueta">
-                                    Factura
-                                </span>
-
-                                <span class="valor">
-                                    {{ $dato($equipo['numero_factura'] ?? null) }}
-                                </span>
-
-                            </div>
-
-                            <div class="campo">
-
-                                <span class="etiqueta">
-                                    Proveedor
-                                </span>
-
-                                <span class="valor">
-                                    {{ $dato($equipo['proveedor'] ?? null) }}
-                                </span>
-
-                            </div>
-
-                            <div class="campo">
-
-                                <span class="etiqueta">
-                                    Garantía
-                                </span>
-
-                                <span class="valor">
-                                    {{ $dato($equipo['fecha_fin_garantia'] ?? null) }}
-                                </span>
-
-                            </div>
-
-                        </div>
-
-                        {{-- 03 JUSTIFICACIÓN --}}
-
-                        <div class="seccion">
-                            <span class="numero">03</span>
-                            JUSTIFICACIÓN DE LA BAJA
-                        </div>
-
-                        <div class="campos">
-
-                            <div class="campo ancho">
-
-                                <span class="etiqueta">
-                                    Motivo de baja
-                                </span>
-
-                                <span class="valor">
-                                    {{ $dato($motivoBaja) }}
-                                </span>
-
-                            </div>
-
-                            <div class="campo ancho">
-
-                                <span class="etiqueta">
-                                    Comentarios y detalles adicionales
-                                </span>
-
-                                <span class="valor">
-                                    {{ $dato($comentariosBaja) }}
-                                </span>
-
-                            </div>
-
-                        </div>
-
-                        {{-- 04 FIRMAS --}}
-
-                        <div class="seccion">
-                            <span class="numero">04</span>
-                            AUTORIZACIÓN Y FIRMAS DE BAJA
-                        </div>
-
-                        @include('reportes.partials.firmas-baja', [
-                            'firmasDocumento' => $firmas,
-                            'fechaDocumento' => $fechaBaja,
-                        ])
-
-                        <div class="pie">
-                            Departamento de Sistemas · Página 1 de 2
-                        </div>
-
-                        {{-- EVIDENCIAS --}}
-
-                        <div class="pagina-evidencias">
-
-                            <div class="fotografias">
-
-                                @foreach ($fotografias as $fotografia)
-
-                                    <div class="fotografia">
-
-                                        <div class="foto-titulo">
-                                            {{ $fotografia['titulo'] }}
-                                        </div>
-
-                                        <div class="foto-cuerpo">
-
-                                            @if ($fotografia['foto'])
-
-                                                <img
-                                                    src="{{ $fotografia['foto']->temporaryUrl() }}"
-                                                    alt="{{ $fotografia['titulo'] }}"
-                                                >
-
-                                            @else
-
-                                                Evidencia fotográfica no registrada
-
-                                            @endif
-
-                                        </div>
-
-                                    </div>
-
-                                @endforeach
-
-                            </div>
-
-                        </div>
-
-                    </article>
+@include('reportes.partials.baja-documento', ['documento'=>['equipo'=>$equipo, 'fecha'=>$fechaBaja, 'solicitante'=>$solicitante, 'motivo'=>$motivoBaja]])
 
                 </div>
 
                 <p class="mt-3 text-center text-[11px] text-[var(--theme-text-muted)]">
-                    Vista preliminar. El tiket capturado se incluirá en el acta.
+                    Vista preliminar del acta de baja.
                 </p>
 
             </section>
 
-            {{-- FIRMAS DE BAJA --}}
 
-            @include('livewire.equipos.firmas-baja')
-
-            {{-- AUTORIZACIÓN --}}
-
-            <section class="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4">
-
-                <label
-                    for="autoriza"
-                    class="mb-1.5 block text-xs font-medium text-[var(--theme-text)]"
-                >
-                    Autoriza
-                    <span class="text-[var(--theme-danger)]">*</span>
-                </label>
-
-                <input
-                    id="autoriza"
-                    type="text"
-                    wire:model.live.debounce.350ms="autoriza"
-                    maxlength="255"
-                    placeholder="Nombre completo de la persona que autoriza la baja"
-                    class="h-10 w-full rounded-lg border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] px-3 text-sm text-[var(--theme-text)] outline-none placeholder:text-[var(--theme-text-muted)] focus:border-[var(--theme-primary)]"
-                >
-
-                @error('autoriza')
-                    <p class="mt-1 text-xs text-[var(--theme-danger)]">
-                        {{ $message }}
-                    </p>
-                @enderror
-
-            </section>
 
         </div>
 
