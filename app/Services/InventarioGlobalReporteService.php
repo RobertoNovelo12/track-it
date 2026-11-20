@@ -6,7 +6,19 @@ use Illuminate\Support\Facades\DB;
 
 class InventarioGlobalReporteService
 {
-    public const FORMATOS = ['global' => 'Inventario global de bienes muebles y equipos', 'intangibles' => 'Inventario de bienes intangibles', 'inmuebles' => 'Relación de bienes inmuebles', 'vehiculos' => 'Relación de vehículos al servicio de la institución'];
+    public const FIRMAS = [
+        'Elaboró:' => 'JEFE DEL DEPARTAMENTO DE RECURSOS MATERIALES, SERVICIO Y ARCHIVO',
+        'Vo.Bo.' => 'ENCARGADA DE LA SUBDIRECCION ADMINISTRATIVA DE ARCHIVOS Y MEJORA REGULATORIA',
+    ];
+
+    public const FORMATOS = ['comodato' => 'Bienes muebles y equipos en comodato', 'global' => 'Inventario global de bienes muebles y equipos', 'global_resumido' => 'Inventario global de bienes muebles — resumido', 'intangibles' => 'Inventario de bienes intangibles', 'inmuebles' => 'Relación de bienes inmuebles', 'vehiculos' => 'Relación de vehículos al servicio de la institución'];
+    public const COMODATO = [
+        'solicitante' => 'Solicitante', 'escuela' => 'Escuela', 'comodato' => 'Comodato',
+        'descripcion' => 'Descripción', 'inventario' => 'Inventario', 'serie' => 'Serie',
+        'modelo' => 'Modelo', 'marca' => 'Marca', 'costo_unitario' => 'Costo unitario',
+        'iva' => 'IVA', 'total' => 'Costo', 'partida' => 'Partida', 'periodo' => 'Periodo',
+    ];
+
     public const COMPLETAS = [
         'inventario' => 'N.º de inventario', 'descripcion' => 'Descripción del bien', 'marca' => 'Marca', 'modelo' => 'Modelo',
         'serie' => 'N.º de serie', 'factura' => 'Factura', 'adquisicion' => 'Fecha de adquisición', 'proveedor' => 'Proveedor',
@@ -18,6 +30,8 @@ class InventarioGlobalReporteService
     public function columnas(string $formato): array
     {
         return match ($formato) {
+            'comodato' => self::COMODATO,
+            'global_resumido' => ['inventario' => 'Código', 'descripcion' => 'Descripción del bien', 'valor_libros' => 'Valor en libros'],
             'resguardo' => ['inventario'=>'N.º de inventario', 'descripcion'=>'Descripción del bien', 'marca'=>'Marca', 'modelo'=>'Modelo', 'serie'=>'N.º de serie', 'fecha_resguardo'=>'Fecha de resguardo', 'motivo_resguardo'=>'Motivo de revisión', 'edificio'=>'Edificio', 'ubicacion'=>'Ubicación', 'unidad'=>'Departamento responsable', 'resguardatario'=>'Resguardatario', 'observaciones_resguardo'=>'Observaciones'],
             'global', 'intangibles' => self::COMPLETAS,
             'inmuebles' => ['descripcion_uso' => 'Descripción del inmueble y uso que se le da', 'institucion_responsable' => 'Institución a cargo del inmueble', 'domicilio_inmueble' => 'Domicilio del inmueble', 'tipo_posesion' => 'Tipo de posesión', 'titulo_propiedad' => 'Título que acredita la propiedad o posesión del bien'],
@@ -31,6 +45,9 @@ class InventarioGlobalReporteService
         $this->columnas($formato);
         $atributos = ['inventario_institucional', 'costo_unitario', 'iva', 'total', 'partida', 'procedimiento_adquisicion', 'fuente_financiamiento', 'institucion_responsable', 'domicilio_inmueble', 'tipo_posesion', 'titulo_propiedad', 'placas', 'anio_vehiculo', 'uso_destino', 'resguardatario'];
         $datos = DB::table('atributos_equipo as a')->leftJoin('campos_equipo as c', 'c.id_campo', '=', 'a.id_campo')->select('a.id_equipo')->groupBy('a.id_equipo');
+        if ($formato === 'comodato') {
+            $atributos = array_merge($atributos, ['solicitante', 'escuela', 'comodato', 'periodo']);
+        }
         foreach ($atributos as $clave) {
             $datos->selectRaw("MAX(CASE WHEN c.clave IN (?, ?) THEN NULLIF(a.valor, '') END) as {$clave}", [$clave, 'institucion_'.$clave]);
         }
@@ -41,6 +58,7 @@ class InventarioGlobalReporteService
             ->select(['e.id_equipo', DB::raw("COALESCE(datos.inventario_institucional, e.codigo_inventario) as inventario"), 'e.nombre_equipo as descripcion', 'ma.nombre as marca', 'mo.nombre as modelo', 'e.numero_serie as serie', 'e.numero_factura as factura', 'e.fecha_compra as adquisicion', 'p.nombre as proveedor', 'd.nombre as unidad'])
             ->selectRaw("COALESCE((SELECT a.nombre_colaborador FROM asignaciones a WHERE a.id_equipo = e.id_equipo AND a.fecha_fin IS NULL ORDER BY a.fecha_asignacion DESC, a.id_asignacion DESC LIMIT 1), datos.resguardatario) as resguardatario");
         foreach ($atributos as $clave) { if ($clave !== 'resguardatario') { $query->addSelect('datos.'.$clave); } }
+        if ($formato === 'global_resumido') { $query->addSelect('datos.total as valor_libros'); }
         $query->whereNotExists(function ($q) {
             $q->selectRaw('1')->from('bajas as baja_completada')->whereColumn('baja_completada.id_equipo', 'e.id_equipo');
         });
@@ -48,8 +66,8 @@ class InventarioGlobalReporteService
             $query->join('bajas_resguardo as br', 'br.id_equipo', '=', 'e.id_equipo')->whereNull('br.fecha_completada')
                 ->leftJoin('unidades_organizativas as u', 'u.id_unidad', '=', 'e.id_unidad')
                 ->leftJoin('ubicaciones as ubic', 'ubic.id_ubicacion', '=', 'e.id_ubicacion')
-                ->addSelect(['br.fecha_resguardo', 'br.motivo as motivo_resguardo', 'br.observaciones as observaciones_resguardo', 'u.nombre as edificio', 'ubic.nombre as ubicacion']);
-        } else { $query->where('t.clasificacion_bien', $formato); }
+                ->addSelect(['br.solicitante', 'br.fecha_resguardo', 'br.motivo as motivo_resguardo', 'br.observaciones as observaciones_resguardo', 'u.nombre as edificio', 'ubic.nombre as ubicacion']);
+        } else { $query->where('t.clasificacion_bien', in_array($formato, ['global_resumido', 'comodato'], true) ? 'global' : $formato); }
         foreach (['tipo_equipo' => 'e.id_tipo_equipo', 'estado' => 'e.id_estado_activo', 'marca' => 'e.id_marca', 'modelo' => 'e.id_modelo'] as $filtro => $columna) {
             if (!empty($filtros[$filtro])) { $query->where($columna, $filtros[$filtro]); }
         }
@@ -74,13 +92,17 @@ class InventarioGlobalReporteService
             $valor = collect([data_get($fila, 'descripcion'), data_get($fila, 'uso_destino')])->filter()->implode(' · ');
         }
         if ($valor === null || $valor === '') { return 'Sin dato'; }
-        if (in_array($clave, ['costo_unitario', 'iva', 'total']) && is_numeric($valor)) { return number_format((float) $valor, 2, '.', ','); }
+        if (in_array($clave, ['costo_unitario', 'iva', 'total', 'valor_libros']) && is_numeric($valor)) { return number_format((float) $valor, 2, '.', ','); }
         if (in_array($clave, ['adquisicion', 'fecha_resguardo'])) { return \Carbon\Carbon::parse($valor)->format('d/m/Y'); }
         return (string) $valor;
     }
 
-    public function titulo(string $formato): string
+    public function titulo(string $formato, ?string $fechaCorte = null): string
     {
+        if ($formato === 'global_resumido') {
+            $fecha = $fechaCorte ? \Carbon\Carbon::parse($fechaCorte) : now();
+            return 'Inventario global de bienes muebles al '.$fecha->locale('es')->translatedFormat('j \\d\\e F \\d\\e Y');
+        }
         return $formato === 'resguardo' ? 'Bajas en resguardo · pendientes de revisión' : self::FORMATOS[$formato];
     }
 }

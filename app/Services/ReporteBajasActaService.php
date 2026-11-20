@@ -64,7 +64,8 @@ class ReporteBajasActaService
                 '=',
                 'e.id_proveedor'
             )
-            ->whereIn('b.id_baja', $ids->all())
+            ->whereIn('b.id_baja',
+                'b.solicitante', $ids->all())
             ->select([
                 'b.id_baja',
                 'b.id_equipo',
@@ -89,6 +90,7 @@ class ReporteBajasActaService
             ->get()
             ->keyBy('id_baja');
 
+        $detalles = app(DatosDocumentoBajaService::class)->equipos($bajas->pluck('id_equipo')->map(fn ($id) => (int) $id)->all());
         $evidencias = collect();
 
         if ($this->existeTablaEvidencias()) {
@@ -107,6 +109,7 @@ class ReporteBajasActaService
         return $ids
             ->map(function (int $id) use (
                 $bajas,
+                $detalles,
                 $evidencias,
                 $miniaturas
             ) {
@@ -120,6 +123,7 @@ class ReporteBajasActaService
 
                 return [
                     'id' => $id,
+                    'solicitante' => $baja->solicitante,
                     'id_equipo' => (int) $baja->id_equipo,
                     'fecha_baja' => $baja->fecha_baja,
                     'folio' => $baja->folio,
@@ -135,6 +139,7 @@ class ReporteBajasActaService
                     'firmas' => json_decode($baja->firmas ?? '{}', true) ?: [],
 
                     'equipo' => [
+                        ...($detalles[$baja->id_equipo] ?? []),
                         'codigo' => $baja->codigo_inventario,
                         'nombre' => $baja->nombre_equipo,
                         'serie' => $baja->numero_serie,

@@ -28,8 +28,6 @@ class ReporteDataService
 
         'reasignaciones',
 
-        'mantenimientos',
-
     ];
 
     public function query(
@@ -50,7 +48,6 @@ class ReporteDataService
 
             'reasignaciones' => $this->queryReasignaciones($filtros),
 
-            'mantenimientos' => $this->queryMantenimientos($filtros),
 
         };
 
@@ -104,11 +101,7 @@ class ReporteDataService
                                 ->orWhereRaw("LOWER(COALESCE(tipo_mov.nombre, '')) LIKE ?", ['%reasign%']);
                         });
                 });
-            } elseif ($tipo === 'mantenimientos') {
-                $consulta->whereExists(function (Builder $sub): void {
-                    $sub->selectRaw('1')->from('mantenimientos as mt')
-                        ->whereColumn('mt.id_equipo', 'e.id_equipo');
-                });
+
             }
         }
 
@@ -308,7 +301,6 @@ class ReporteDataService
 
             'reasignaciones' => 'Reasignaciones',
 
-            'mantenimientos' => 'Mantenimientos',
 
         };
 
@@ -1077,164 +1069,6 @@ class ReporteDataService
             'e.id_estado_activo'
 
         )->orderByDesc('mv.fecha_hora');
-
-    }
-
-    private function queryMantenimientos(array $filtros): Builder
-
-    {
-
-        $query = DB::table('mantenimientos as mt')
-
-            ->join(
-
-                'equipos as e',
-
-                'e.id_equipo',
-
-                '=',
-
-                'mt.id_equipo'
-
-            )
-
-            ->leftJoin(
-
-                'tipos_equipo as te',
-
-                'te.id_tipo_equipo',
-
-                '=',
-
-                'e.id_tipo_equipo'
-
-            )
-
-            ->leftJoin(
-
-                'marcas as ma',
-
-                'ma.id_marca',
-
-                '=',
-
-                'e.id_marca'
-
-            )
-
-            ->leftJoin(
-
-                'modelos as mo',
-
-                'mo.id_modelo',
-
-                '=',
-
-                'e.id_modelo'
-
-            )
-
-            ->leftJoin(
-
-                'catalogo_valores as estado',
-
-                'estado.id_valor',
-
-                '=',
-
-                'mt.id_estado_mantenimiento'
-
-            )
-
-            ->leftJoin(
-
-                'catalogo_valores as tipo_mant',
-
-                'tipo_mant.id_valor',
-
-                '=',
-
-                'mt.id_tipo_mantenimiento'
-
-            )
-
-            ->leftJoin(
-
-                'usuarios as tecnico',
-
-                'tecnico.id_usuario',
-
-                '=',
-
-                'mt.id_tecnico'
-
-            )
-
-            ->leftJoin('proveedores as proveedor_mantenimiento', 'proveedor_mantenimiento.id_proveedor', '=', 'mt.id_proveedor')
-
-            ->select([
-
-                'mt.id_mantenimiento as registro_id',
-
-                'mt.folio as codigo',
-
-                'e.nombre_equipo as elemento',
-
-                'te.nombre as tipo',
-
-                'ma.nombre as marca',
-
-                'mo.nombre as modelo',
-
-                'e.numero_serie as serie',
-
-                'estado.nombre as estado',
-
-                'mt.fecha_intervencion as fecha',
-
-                DB::raw("
-
-                    concat_ws(
-
-                        ' · ',
-
-                        tipo_mant.nombre,
-                        CASE WHEN proveedor_mantenimiento.nombre IS NOT NULL
-                            THEN 'Proveedor: ' || proveedor_mantenimiento.nombre END,
-                        CASE WHEN e.fecha_fin_garantia IS NOT NULL
-                            THEN 'Fin de garantía del equipo: ' || CAST(e.fecha_fin_garantia AS TEXT) END,
-
-                        NULLIF(mt.falla_reportada, ''),
-
-                        concat_ws(
-
-                            ' ',
-
-                            tecnico.nombres,
-
-                            tecnico.apellido_paterno
-
-                        )
-
-                    ) as detalle
-
-                "),
-
-            ]);
-
-        $query = $this->soloEquiposVigentes($query);
-
-        return $this->aplicarFiltros(
-
-            $query,
-
-            $filtros,
-
-            'mt.fecha_intervencion',
-
-            'mt.id_estado_mantenimiento'
-
-        )->orderByDesc('mt.fecha_intervencion');
 
     }
 

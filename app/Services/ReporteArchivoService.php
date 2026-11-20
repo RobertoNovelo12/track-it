@@ -201,7 +201,7 @@ class ReporteArchivoService
                     $documento['fotos'][$titulo] = $imagen;
                 }
             }
-            return Pdf::loadView('reportes.baja-multiple-pdf', compact('documento'))->setPaper('letter')->output();
+            return Pdf::loadView('reportes.baja-multiple-pdf', compact('documento'))->setPaper('letter', count($documento['equipos']) >= 2 ? 'landscape' : 'portrait')->output();
         }
 
         $reportes = app(ReporteDataService::class);
@@ -217,13 +217,10 @@ class ReporteArchivoService
 
         if ($esUnSoloTipo && $tipo === 'bajas') {
             $datos = app(ReporteBajasActaService::class)->obtener($filtros);
-            $vista = ['reportes.baja-acta-pdf', ['bajas' => $datos], 'letter', 'portrait'];
+            $vista = ['reportes.baja-acta-pdf', ['bajas' => $datos], 'letter', $datos->sum(fn ($b) => !empty($b['conjunta']) ? count($b['documento']['equipos']) : 1) >= 2 ? 'landscape' : 'portrait'];
         } elseif ($esUnSoloTipo && in_array($tipo, ['asignaciones', 'reasignaciones'], true)) {
             $datos = app(ReporteActasService::class)->obtener($tipo, $filtros);
             $vista = ['reportes.actas-pdf', ['actas' => $datos, 'tipoActa' => $tipo], 'letter', 'portrait'];
-        } elseif ($esUnSoloTipo && $tipo === 'mantenimientos') {
-            $datos = app(ReporteMantenimientoActaService::class)->obtener($filtros);
-            $vista = ['reportes.mantenimiento-pdf', ['mantenimientos' => $datos], 'letter', 'portrait'];
         } elseif ($esUnSoloTipo && $tipo === 'altas') {
             $datos = app(ReporteAltasActaService::class)->obtener($filtros);
             $vista = ['reportes.alta-pdf', ['altas' => $datos], 'letter', 'portrait'];

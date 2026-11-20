@@ -66,7 +66,8 @@ class ActaBajaIndividualService
             'numero_ticket' => trim((string) $datos['numeroTicket']),
             'logo' => $logoData,
             'organizacion' => $organizacion->nombre(),
-            'equipo' => $equipo,
+            'solicitante' => $datos['solicitante'] ?? '',
+            'equipo' => array_merge($equipo, app(DatosDocumentoBajaService::class)->equipos([(int) $equipo['id_equipo']])[(int) $equipo['id_equipo']] ?? []),
             'fecha' => $datos['fechaBaja'],
             'motivo' => trim(
                 (string) $datos['motivoBaja']

@@ -213,6 +213,8 @@
         </table>
     @endif
 
+    @include('reportes.partials.firmas-inventario')
+
     <div class="footer">
         Grand Palladium Riviera Maya · Departamento de Sistemas · {{ $titulo }}
     </div>

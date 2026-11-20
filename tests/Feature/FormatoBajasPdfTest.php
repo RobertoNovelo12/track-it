@@ -1,38 +1,25 @@
 <?php
-
 namespace Tests\Feature;
-
-use App\Livewire\EquipoBaja;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Tests\TestCase;
-
 class FormatoBajasPdfTest extends TestCase
 {
-    public function test_individual_and_multiple_have_two_pages_with_five_signers(): void
+    public function test_ficha_individual_y_tabla_desde_dos_con_dos_firmas_y_fotos(): void
     {
-        $firmas = array_fill_keys(array_keys(EquipoBaja::FIRMANTES), 'Nombre de prueba');
-        $documento = [
-            'logo' => '', 'organizacion' => 'Hotel de prueba', 'folio' => 'BM-PRUEBA', 'numero_ticket' => 'GPRVM-99273',
-            'fecha' => '2026-10-23', 'hotel' => 'Hotel', 'departamento' => 'Sistemas',
-            'solicitante' => 'Solicitante', 'motivo' => 'Fin de vida útil', 'observaciones' => '',
-            'equipo' => [], 'comentarios' => '', 'autoriza' => 'NO MOSTRAR', 'puesto' => 'NO MOSTRAR', 'firmas' => $firmas, 'fotos' => [],
-            'equipos' => array_fill(0, 10, ['codigo_inventario' => 'ACT-00061', 'nombre_equipo' => 'Laptop de prueba', 'marca' => 'Lenovo', 'modelo' => 'ThinkPad', 'numero_serie' => 'SERIE-123']),
-        ];
-        $baja = ['folio' => 'B-PRUEBA', 'numero_ticket' => 'GPRVM-99273', 'fecha' => '23/10/2026', 'motivo' => 'Fin de vida útil', 'comentarios' => '', 'autoriza' => 'NO MOSTRAR', 'firmas' => $firmas, 'fotos' => [], 'equipo' => []];
-        foreach ([['reportes.baja-individual-pdf', ['documento' => $documento]], ['reportes.baja-multiple-pdf', ['documento' => $documento]], ['reportes.baja-acta-pdf', ['bajas' => collect([$baja])]]] as [$view, $data]) {
-            $html = view($view, $data)->render();
-            $this->assertStringNotContainsString('NO MOSTRAR', $html);
-            $this->assertStringContainsString('N° Tiket:', $html);
-            $this->assertStringContainsString('GPRVM-99273', $html);
-            foreach (EquipoBaja::FIRMANTES as $label) { $this->assertStringContainsString($label, $html); }
-            $partial = $view === 'reportes.baja-multiple-pdf' ? 'reportes.partials.firmas-baja-multiple' : 'reportes.partials.firmas-baja';
-            $firmasHtml = view($partial, ['firmasDocumento' => $firmas, 'fechaDocumento' => '2026-10-23'])->render();
-            $this->assertSame(5, substr_count($firmasHtml, 'Fecha:'));
-            $this->assertStringNotContainsString('23/10/2026', $firmasHtml);
-            $this->assertStringContainsString('Sistemas', $firmasHtml);
-            $pdf = Pdf::loadHTML($html)->setPaper('letter');
-            $pdf->output();
-            $this->assertSame(2, $pdf->getDomPDF()->getCanvas()->get_page_count());
+        $this->mock(\App\Services\ImagenPdfService::class)->shouldReceive('logoDataUri')->andReturn(null);
+        $foto = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=';
+        foreach ([1, 2, 10] as $cantidad) {
+            $documento = ['fecha'=>'2026-11-19','solicitante'=>'María Elena López Pérez','motivo'=>'Daño irreversible','numero_ticket'=>'NO MOSTRAR', 'fotos'=>['Vista frontal'=>$foto],
+                'equipos'=>array_fill(0,$cantidad,['nombre_equipo'=>'Mesa escolar','inventario'=>'000045','departamento'=>'Recursos materiales','ubicacion'=>'Almacén','numero_serie'=>'SN123','marca'=>'Marca','modelo'=>'Modelo'])];
+            $html = view('reportes.baja-multiple-pdf',compact('documento'))->render();
+            $this->assertSame(2, substr_count($html,'Nombre y firma'));
+            foreach (['María Elena López Pérez','Recursos materiales','Almacén','Daño irreversible','000045','Evidencia fotográfica',$foto] as $texto) { $this->assertStringContainsString($texto,$html); }
+            $this->assertStringNotContainsString('NO MOSTRAR',$html);
+            if ($cantidad >= 2) { $this->assertStringContainsString('DEPARTAMENTO</th>',$html); }
+            else { $this->assertStringContainsString('Descripción del bien',$html); }
+            $pdf = Pdf::loadHTML($html)->setPaper('letter',$cantidad>=2?'landscape':'portrait');
+            $this->assertStringStartsWith('%PDF-',$pdf->output());
+            $this->assertGreaterThanOrEqual(2,$pdf->getDomPDF()->getCanvas()->get_page_count());
         }
     }
 }

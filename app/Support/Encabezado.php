@@ -101,17 +101,9 @@ class Encabezado
                 self::miga('Historial'),
             ]],
 
-            // Mantenimientos
-            'mantenimientos.index' => ['Mantenimientos', [
-                self::miga('Mantenimientos'),
-            ]],
-            'mantenimientos.create' => ['Mantenimientos', [
-                self::miga('Mantenimientos', 'mantenimientos.index'),
-                self::miga('Nuevo mantenimiento'),
-            ]],
-            'mantenimientos.edit' => ['Mantenimientos', [
-                self::miga('Mantenimientos', 'mantenimientos.index'),
-                self::miga('Editar'),
+            'asignaciones.bajas' => ['Movimientos · Bajas', [
+                self::miga('Movimientos', 'asignaciones.index'),
+                self::miga('Bajas'),
             ]],
 
             // Reportes

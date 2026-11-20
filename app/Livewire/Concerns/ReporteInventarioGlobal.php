@@ -9,8 +9,8 @@ use Illuminate\Support\Facades\Storage;
 
 trait ReporteInventarioGlobal
 {
-    public string $formatoInventario = 'global';
-    public string $formatoBaja = 'completadas';
+    public string $formatoInventario = '';
+    public string $formatoBaja = '';
 
     public function esBajaEnResguardo(): bool
     {
@@ -19,8 +19,15 @@ trait ReporteInventarioGlobal
 
     private function validarFormatoInventario(): void
     {
-        $this->validate(['formatoInventario' => ['required', \Illuminate\Validation\Rule::in(array_keys(InventarioGlobalReporteService::FORMATOS))]]);
-        $this->validate(['formatoBaja' => ['required', 'in:completadas,resguardo']]);
+        if (! $this->esBajaEnResguardo()) {
+            $this->validate(['formatoInventario' => ['required', \Illuminate\Validation\Rule::in(array_keys(InventarioGlobalReporteService::FORMATOS))]], [
+                'formatoInventario.required' => 'Selecciona un formato de inventario para generar el reporte.',
+                'formatoInventario.in' => 'Selecciona un formato de inventario válido.',
+            ]);
+        }
+        if (($this->tiposReporte[0] ?? '') === 'bajas') {
+            $this->validate(['formatoBaja' => ['required', 'in:completadas,resguardo']]);
+        }
     }
 
     private function consultarInventarioGlobal(): void
@@ -54,9 +61,10 @@ trait ReporteInventarioGlobal
             if ($filas->isEmpty()) { $this->errorMessage = 'No hay bienes para generar este inventario con los filtros seleccionados.'; return null; }
             $nombre = 'inventario-'.$formato.'-'.now()->format('Ymd-His').'-'.\Illuminate\Support\Str::lower(\Illuminate\Support\Str::random(6)).'.'.$extension;
             $ruta = 'reportes/'.$nombre;
+            $fechaCorte = $this->fechaFin ?: now()->toDateString();
             $contenido = $extension === 'pdf'
-                ? \Barryvdh\DomPDF\Facade\Pdf::loadView('reportes.inventario-global-pdf', compact('filas', 'formato'))->setPaper(in_array($formato, ['global', 'intangibles']) ? 'a3' : 'a4', 'landscape')->output()
-                : \Maatwebsite\Excel\Facades\Excel::raw(new InventarioGlobalReporteExport($filas, $formato), $extension === 'xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV);
+                ? \Barryvdh\DomPDF\Facade\Pdf::loadView('reportes.inventario-global-pdf', compact('filas', 'formato', 'fechaCorte'))->setPaper(in_array($formato, ['global', 'intangibles', 'comodato']) ? 'a3' : 'a4', $formato === 'global_resumido' ? 'portrait' : 'landscape')->output()
+                : \Maatwebsite\Excel\Facades\Excel::raw(new InventarioGlobalReporteExport($filas, $formato, $fechaCorte, $extension !== 'csv'), $extension === 'xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV);
             if (!Storage::disk('local')->put($ruta, $contenido)) { throw new \RuntimeException('No se pudo guardar el reporte.'); }
             $registro = ReporteGenerado::create(['id_usuario' => auth()->id(), 'tipo_reporte' => $formato === 'resguardo' ? 'bajas_resguardo' : 'inventario_global', 'formato' => strtoupper($extension),
                 'fecha_desde' => $this->fechaInicio ?: null, 'fecha_hasta' => $this->fechaFin ?: null,

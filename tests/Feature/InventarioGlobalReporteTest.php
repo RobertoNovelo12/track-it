@@ -11,6 +11,102 @@ use Tests\TestCase;
 
 class InventarioGlobalReporteTest extends TestCase
 {
+    public function test_comodato_exporta_columnas_importes_y_datos_faltantes_sin_inventarlos(): void
+    {
+        $servicio = new InventarioGlobalReporteService;
+        $this->assertSame(['solicitante', 'escuela', 'comodato', 'descripcion', 'inventario', 'serie', 'modelo', 'marca', 'costo_unitario', 'iva', 'total', 'partida', 'periodo'], array_keys($servicio->columnas('comodato')));
+        $filas = collect([
+            (object) ['descripcion' => 'Mesa escolar', 'inventario' => '000012', 'costo_unitario' => '1000', 'iva' => '160', 'total' => '1160'],
+            (object) ['descripcion' => 'Silla escolar', 'costo_unitario' => '500', 'iva' => '80', 'total' => '580'],
+        ]);
+        $export = new InventarioGlobalReporteExport($filas, 'comodato');
+        $this->assertSame('Sin dato', $export->array()[2][0]);
+        $this->assertSame('000012', $export->array()[2][4]);
+        $this->assertSame(['1,500.00', '240.00', '1,740.00'], array_slice($export->array()[4], 8, 3));
+        $datos = ['filas' => $filas, 'formato' => 'comodato'];
+        $html = view('reportes.inventario-global-tabla', $datos)->render();
+        $this->assertStringContainsString('$ 1,740.00', $html);
+        foreach ($servicio->columnas('comodato') as $columna) { $this->assertStringContainsString($columna, $html); }
+        $this->assertStringStartsWith('%PDF-', \Barryvdh\DomPDF\Facade\Pdf::loadView('reportes.inventario-global-pdf', $datos)->setPaper('a3', 'landscape')->output());
+        $this->assertStringStartsWith('PK', \Maatwebsite\Excel\Facades\Excel::raw($export, \Maatwebsite\Excel\Excel::XLSX));
+    }
+
+    public function test_entrada_sin_formato_no_consulta_inventario_y_limpia_la_previa(): void
+    {
+        $componente = new \App\Livewire\ReportesIndex;
+        $this->assertSame('', $componente->formatoInventario);
+        $componente->mount();
+        $componente->previewReady = true;
+        $componente->previewDocument = ['filas' => [['inventario' => 'Anterior']]];
+        $componente->buscarAutomaticamente();
+        $this->assertFalse($componente->previewReady);
+        $this->assertSame([], $componente->previewDocument);
+        $this->assertSame(['registros' => [], 'hayMas' => false], $componente->obtenerSugerenciasRapidas('altas'));
+    }
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->mock(\App\Services\ImagenPdfService::class)->shouldReceive('logoDataUri')->andReturn(null);
+    }
+
+    public function test_inventarios_usen_logo_actual_y_dos_firmas_sin_agregarlas_al_csv(): void
+    {
+        $this->travelTo(\Carbon\Carbon::parse('2026-02-11 12:00:00'));
+        $this->mock(\App\Services\ImagenPdfService::class)->shouldReceive('logoDataUri')->twice()->andReturn('data:image/png;base64,primero', 'data:image/png;base64,segundo');
+        $datos = ['filas' => [], 'formato' => 'global'];
+        $primero = view('reportes.inventario-global-tabla', $datos)->render();
+        $segundo = view('reportes.inventario-global-tabla', $datos)->render();
+        $this->assertStringContainsString('base64,primero', $primero);
+        $this->assertStringContainsString('base64,segundo', $segundo);
+        $this->assertStringNotContainsString('Almacén', $segundo);
+        $this->assertStringNotContainsString('Quien verifica', $segundo);
+        $this->assertSame(2, substr_count($segundo, 'Nombre y firma'));
+        foreach (InventarioGlobalReporteService::FIRMAS as $tituloFirma => $cargoFirma) {
+            $this->assertStringContainsString($tituloFirma, $segundo);
+            $this->assertStringContainsString($cargoFirma, $segundo);
+        }
+        $this->assertStringContainsString('Fecha de generación: 11/02/2026', $segundo);
+        $export = new InventarioGlobalReporteExport(collect(), 'global_resumido');
+        $hoja = (new \PhpOffice\PhpSpreadsheet\Spreadsheet)->getActiveSheet();
+        $hoja->fromArray($export->array());
+        $export->styles($hoja);
+        $this->assertSame('Fecha de generación: 11/02/2026', $hoja->getCell('B1')->getValue());
+        $this->assertSame('Nombre y firma', $hoja->getCell('A8')->getValue());
+        $this->assertSame('Nombre y firma', $hoja->getCell('A14')->getValue());
+        $this->assertSame(InventarioGlobalReporteService::FIRMAS['Elaboró:'], $hoja->getCell('A9')->getValue());
+        $this->assertSame(InventarioGlobalReporteService::FIRMAS['Vo.Bo.'], $hoja->getCell('A15')->getValue());
+        $this->assertSame([1, 3], $hoja->getPageSetup()->getRowsToRepeatAtTop());
+        $csv = new InventarioGlobalReporteExport(collect(), 'global_resumido', null, false);
+        $this->assertSame([], $csv->drawings());
+        $this->assertSame([], $csv->styles(new \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet));
+        $this->assertCount(2, $csv->array());
+        $this->travelBack();
+    }
+
+    public function test_resumen_con_fecha_y_tres_columnas_en_pdf_y_excel(): void
+    {
+        $servicio = new InventarioGlobalReporteService;
+        $this->assertSame(['inventario' => 'Código', 'descripcion' => 'Descripción del bien', 'valor_libros' => 'Valor en libros'], $servicio->columnas('global_resumido'));
+        $titulo = 'Inventario global de bienes muebles al 31 de diciembre de 2024';
+        $this->assertSame($titulo, $servicio->titulo('global_resumido', '2024-12-31'));
+        $this->travelTo(\Carbon\Carbon::parse('2026-11-18'));
+        $this->assertSame('Inventario global de bienes muebles al 18 de noviembre de 2026', $servicio->titulo('global_resumido'));
+        $filas = collect([(object) ['inventario' => '000123', 'descripcion' => 'Gabinete universal', 'valor_libros' => '4139.05']]);
+        $export = new InventarioGlobalReporteExport($filas, 'global_resumido', '2024-12-31');
+        $this->assertSame([$titulo], $export->array()[0]);
+        $this->assertSame(['000123', 'Gabinete universal', '4,139.05'], $export->array()[2]);
+        $datos = ['filas' => $filas, 'formato' => 'global_resumido', 'fechaCorte' => '2024-12-31'];
+        $html = view('reportes.inventario-global-tabla', $datos)->render();
+        $this->assertStringContainsString($titulo, $html);
+        $this->assertStringContainsString('$ 4,139.05', $html);
+        $this->assertStringNotContainsString('Factura', $html);
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reportes.inventario-global-pdf', $datos)->setPaper('a4', 'portrait')->output();
+        $this->assertStringStartsWith('%PDF-', $pdf);
+        $this->assertStringStartsWith('PK', \Maatwebsite\Excel\Facades\Excel::raw($export, \Maatwebsite\Excel\Excel::XLSX));
+        $this->travelBack();
+    }
+
     public function test_livewire_puede_validar_el_formato_y_leer_las_reglas_del_componente(): void
     {
         $componente = new \App\Livewire\ReportesIndex;
@@ -79,6 +175,10 @@ class InventarioGlobalReporteTest extends TestCase
         DB::table('atributos_equipo')->insert(['id_equipo' => 4, 'id_campo' => 2, 'valor' => 'Responsable registrado']);
         $this->assertSame('Responsable registrado', $s->query('vehiculos')->first()->resguardatario);
         $fila = $s->query('global')->first();
+        $resumen = $s->query('global_resumido')->first();
+        $this->assertSame($fila->id_equipo, $resumen->id_equipo);
+        $this->assertSame('4139.05', $resumen->valor_libros);
+        $this->assertCount(0, $s->query('global_resumido', ['fecha_fin' => '2026-10-31'])->get());
         $this->assertSame('Actual', $fila->resguardatario);
         $this->assertSame('4,139.05', $s->celda($fila, 'total'));
         $this->assertNull($fila->iva);
@@ -88,7 +188,7 @@ class InventarioGlobalReporteTest extends TestCase
         Schema::table('equipos', function (Blueprint $t) { $t->integer('id_unidad')->nullable(); $t->integer('id_ubicacion')->nullable(); });
         Schema::create('unidades_organizativas', function (Blueprint $t) { $t->integer('id_unidad'); $t->string('nombre'); });
         Schema::create('ubicaciones', function (Blueprint $t) { $t->integer('id_ubicacion'); $t->string('nombre'); });
-        Schema::create('bajas_resguardo', function (Blueprint $t) { $t->integer('id_equipo'); $t->date('fecha_resguardo'); $t->string('motivo'); $t->text('observaciones')->nullable(); $t->timestamp('fecha_completada')->nullable(); });
+        Schema::create('bajas_resguardo', function (Blueprint $t) { $t->integer('id_equipo'); $t->string('solicitante')->nullable(); $t->date('fecha_resguardo'); $t->string('motivo'); $t->text('observaciones')->nullable(); $t->timestamp('fecha_completada')->nullable(); });
         DB::table('bajas_resguardo')->insert(['id_equipo'=>4,'fecha_resguardo'=>'2026-11-11','motivo'=>'Revisar motor']);
         $pendientes = $s->query('resguardo')->get();
         $this->assertCount(1, $pendientes);

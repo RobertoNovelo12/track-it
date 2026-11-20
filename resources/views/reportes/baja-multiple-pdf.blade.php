@@ -1,4 +1,3 @@
-<!DOCTYPE html>
-<html lang="es"><head><meta charset="UTF-8"><title>{{ $documento['folio'] }}</title><style>@page { margin:24px; } body { margin:0; }</style></head><body>
-@include('reportes.partials.baja-multiple-documento', ['documento' => $documento])
-</body></html>
+<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Acta de baja</title><style>@page { margin:90px 28px 28px; } body { margin:0; } tr { page-break-inside:avoid; }</style></head><body>@php($logoPdf = app(\App\Services\ImagenPdfService::class)->logoDataUri())
+@if($logoPdf)<div style="position:fixed;top:-65px;left:12px;"><img src="{{ $logoPdf }}" style="max-width:120px;max-height:60px;"></div>@endif
+@include('reportes.partials.baja-documento', ['documento'=>$documento, 'mostrarLogo'=>false])</body></html>

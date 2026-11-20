@@ -599,7 +599,7 @@
 
 
         {{-- ========================================================
-            RESPONSABLE / MANTENIMIENTO
+            RESPONSABLE / SISTEMAS
         ======================================================== --}}
         <table class="signature-table">
 
@@ -625,7 +625,7 @@
                 <td class="signature-cell">
 
                     <div class="signature-title">
-                        Mantenimiento (si aplica)
+                        Sistemas (si aplica)
                     </div>
 
                     <div class="signature-body">
