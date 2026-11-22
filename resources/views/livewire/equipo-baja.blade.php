@@ -1,4 +1,3 @@
-
 <div
     data-avisar-cambios
     wire:key="formulario-baja-{{ $equipoId }}"
@@ -358,7 +357,7 @@
                 </p>
 
                 <p class="text-xs text-[var(--theme-text-muted)]">
-                    Al confirmar se genera el PDF.
+                    Cada equipo se guarda en resguardo.
                     Para el siguiente equipo solo se conserva la fecha.
                 </p>
 
@@ -468,17 +467,13 @@
     <div class="mb-4 rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 text-sm">
         @if ($resguardoPendiente)
             <strong>Baja en resguardo desde {{ \Carbon\Carbon::parse($resguardoPendiente->fecha_resguardo)->format('d/m/Y') }}.</strong>
-            El equipo sigue en la institución. Completa la baja únicamente después de revisarlo y confirmar su salida.
+            El equipo sigue en la institución. Completa la baja desde Bajas › En resguardo únicamente después de revisarlo y confirmar su salida.
         @else
             <strong>Resguardo:</strong> guarda el motivo, la fecha y las observaciones para mantener el equipo pendiente de revisión.
-            Las firmas, fotografías y el acta se registran al completar la baja.
+            El equipo pasará a Bajas › En resguardo, donde se completa la baja después de revisarlo.
         @endif
     </div>
     <div class="mb-5 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-end">
-        @if (!$resguardoPendiente)
-            <button type="button" wire:click="guardarEnResguardo" wire:loading.attr="disabled" data-guardar class="inline-flex h-10 items-center rounded-lg border border-[var(--theme-border)] px-4 text-sm font-medium">Guardar baja en resguardo</button>
-        @endif
-
         <div class="flex flex-wrap items-center gap-3">
 
             {{-- CANCELAR --}}
@@ -488,81 +483,59 @@
                 Cancelar
             </button>
 
-            {{-- DAR DE BAJA Y GENERAR PDF --}}
+            @if ($resguardoPendiente)
 
-            <button
-                type="button"
-                wire:click="confirmar"
-                wire:confirm="¿Confirmas que el equipo fue revisado y que su salida de la institución está autorizada? Se completará la baja y se conservará el acta en el historial."
-                wire:loading.attr="disabled"
-                wire:target="confirmar"
-                data-guardar
-                class="
-                    inline-flex
-                    h-10
-                    items-center
-                    justify-center
-                    gap-2
-                    rounded-md
-                    bg-[var(--theme-danger-soft)]
-                    px-5
-                    text-sm
-                    font-medium
-                    text-[var(--theme-danger)]
-                    transition-all
-                    duration-200
-                    hover:opacity-80
-                    disabled:cursor-not-allowed
-                    disabled:opacity-50
-                "
-            >
-                {{-- ICONO NORMAL --}}
+                {{-- YA EN RESGUARDO: se completa desde Bajas > En resguardo --}}
 
-                <svg
-                    wire:loading.remove
-                    wire:target="confirmar"
-                    class="h-4 w-4 shrink-0"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.7"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    aria-hidden="true"
-                ><use href="{{ \App\Support\Icono::url('i-0a879ac') }}"></use></svg>
-
-                {{-- ICONO CARGANDO --}}
-
-                <svg
-                    wire:loading
-                    wire:target="confirmar"
-                    class="h-4 w-4 animate-spin"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    aria-hidden="true"
-                ><use href="{{ \App\Support\Icono::url('i-5387e71') }}"></use></svg>
-
-                {{-- TEXTO NORMAL --}}
-
-                <span
-                    wire:loading.remove
-                    wire:target="confirmar"
+                <a
+                    wire:navigate
+                    href="{{ route('asignaciones.bajas') }}"
+                    class="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-[var(--theme-danger-soft)] px-5 text-sm font-medium text-[var(--theme-danger)] transition-all duration-200 hover:opacity-80"
                 >
-                    Completar baja y generar PDF
-                </span>
+                    Ver bajas en resguardo
+                </a>
 
-                {{-- TEXTO CARGANDO --}}
+            @else
 
-                <span
-                    wire:loading
-                    wire:target="confirmar"
+                {{-- GUARDAR BAJA EN RESGUARDO --}}
+
+                <button
+                    type="button"
+                    wire:click="guardarEnResguardo"
+                    wire:loading.attr="disabled"
+                    wire:target="guardarEnResguardo"
+                    data-guardar
+                    class="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-[var(--theme-danger-soft)] px-5 text-sm font-medium text-[var(--theme-danger)] transition-all duration-200 hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                    Generando PDF...
-                </span>
+                    <svg
+                        wire:loading.remove
+                        wire:target="guardarEnResguardo"
+                        class="h-4 w-4 shrink-0"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.7"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                    ><use href="{{ \App\Support\Icono::url('i-0a879ac') }}"></use></svg>
 
-            </button>
+                    <svg
+                        wire:loading
+                        wire:target="guardarEnResguardo"
+                        class="h-4 w-4 animate-spin"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        aria-hidden="true"
+                    ><use href="{{ \App\Support\Icono::url('i-5387e71') }}"></use></svg>
+
+                    <span wire:loading.remove wire:target="guardarEnResguardo">Guardar baja en resguardo</span>
+                    <span wire:loading wire:target="guardarEnResguardo">Guardando...</span>
+                </button>
+
+            @endif
 
         </div>
     </div>

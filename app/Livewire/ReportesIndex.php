@@ -357,7 +357,7 @@ class ReportesIndex extends Component
 
             ->contains(fn ($valor) => filled($valor));
 
-        if (!$hayFiltros && $this->tipoReporte !== 'altas' && !$this->esBajaEnResguardo()) {
+        if (!$hayFiltros && $this->tipoReporte !== 'altas' && $this->tipoReporte !== 'bajas' && !$this->esBajaEnResguardo()) {
 
             $this->vaciarVistaPrevia();
 

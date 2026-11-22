@@ -8,6 +8,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Locked;
@@ -192,7 +193,7 @@ class EquipoBaja extends Component
             ->all();
 
         // Identificar equipos ya dados de baja.
-        $yaDeBaja = $this->idsDadosDeBaja($ids);
+        $yaDeBaja = $this->idsResueltos($ids);
 
         // Equipos pendientes.
         $this->pendientes = array_values(
@@ -241,6 +242,29 @@ class EquipoBaja extends Component
             ->pluck('e.id_equipo')
             ->map(fn ($id) => (int) $id)
             ->all();
+    }
+
+    /**
+     * Equipos de la selección que ya no requieren captura:
+     * con baja definitiva o con baja pendiente en resguardo.
+     */
+    protected function idsResueltos(array $ids): array
+    {
+        $enResguardo = [];
+
+        if ($ids !== [] && Schema::hasTable('bajas_resguardo')) {
+            $enResguardo = DB::table('bajas_resguardo')
+                ->whereIn('id_equipo', $ids)
+                ->whereNull('fecha_completada')
+                ->pluck('id_equipo')
+                ->map(fn ($id) => (int) $id)
+                ->all();
+        }
+
+        return array_values(array_unique(array_merge(
+            $this->idsDadosDeBaja($ids),
+            $enResguardo
+        )));
     }
 
     public function enCola(): bool
@@ -336,7 +360,7 @@ class EquipoBaja extends Component
 
         $posicion = array_search($this->equipoId, $this->cola, true);
         $restantes = $posicion === false ? [] : array_slice($this->cola, $posicion + 1);
-        $restantes = array_values(array_diff($restantes, $this->idsDadosDeBaja($restantes)));
+        $restantes = array_values(array_diff($restantes, $this->idsResueltos($restantes)));
 
         if ($restantes === []) {
             return $this->redirectRoute('equipos.index', navigate: true);
@@ -1105,13 +1129,35 @@ class EquipoBaja extends Component
         return view('livewire.equipo-baja', ['resguardoPendiente' => app(\App\Services\BajaResguardoService::class)->pendiente($this->equipoId)]);
     }
 
-    public function guardarEnResguardo(): void
+    public function guardarEnResguardo()
     {
         Gate::authorize('gestionar');
         $datos = $this->validate(['solicitante' => ['required', 'string', 'max:255'], 'motivoBaja'=>'required|string|max:500', 'fechaBaja'=>'required|date|before_or_equal:today', 'comentariosBaja'=>'nullable|string|max:2000']);
         app(\App\Services\BajaResguardoService::class)->guardar($this->equipoId, $datos['fechaBaja'], $datos['motivoBaja'], $datos['comentariosBaja'] ?? null, (int) auth()->id(), $datos['solicitante']);
         app(SystemCacheService::class)->refreshModule('equipos');
         app(SystemCacheService::class)->refreshModule('reportes');
-        $this->dispatch('baja-formulario-validado', message: 'Equipo en resguardo. Permanece en la institución, pendiente de revisión.');
+        app(SystemCacheService::class)->refreshModule('dashboard');
+
+        $codigo = $this->equipo['codigo_inventario'] ?: 'El equipo';
+
+        // Si se seleccionaron varios equipos, continuar con el siguiente pendiente.
+        $posicion = array_search($this->equipoId, $this->cola, true);
+        $restantes = $posicion === false ? [] : array_slice($this->cola, $posicion + 1);
+        $restantes = array_values(array_diff($restantes, $this->idsResueltos($restantes)));
+
+        if ($restantes !== []) {
+            session()->flash('baja_lote_fecha', $this->fechaBaja);
+            session()->flash('toast', ['type' => 'success', 'message' => $codigo.' quedó en resguardo. Continúa con el siguiente equipo.']);
+
+            return $this->redirectRoute('equipos.baja', [
+                'equipo' => $restantes[0],
+                'cola' => implode(',', $this->cola),
+            ], navigate: true);
+        }
+
+        // Último (o único) equipo: ir a Bajas > En resguardo.
+        session()->flash('toast', ['type' => 'success', 'message' => $codigo.' quedó en resguardo. Permanece en la institución, pendiente de revisión.']);
+
+        return $this->redirectRoute('asignaciones.bajas', navigate: true);
     }
 }

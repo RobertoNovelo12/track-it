@@ -64,10 +64,10 @@ class ReporteBajasActaService
                 '=',
                 'e.id_proveedor'
             )
-            ->whereIn('b.id_baja',
-                'b.solicitante', $ids->all())
+            ->whereIn('b.id_baja', $ids->all())
             ->select([
                 'b.id_baja',
+                'b.solicitante',
                 'b.id_equipo',
                 'b.folio',
                 'b.numero_ticket',

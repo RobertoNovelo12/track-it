@@ -33,6 +33,13 @@ class BajasIndex extends Component
     {
         Gate::authorize('gestionar');
         $this->fechaBaja = now()->toDateString();
+
+        // Las tarjetas del dashboard abren la pestaña indicada (?estado=resguardo|completadas).
+        $estadoInicial = request()->query('estado');
+
+        if (in_array($estadoInicial, ['resguardo', 'completadas'], true)) {
+            $this->estado = $estadoInicial;
+        }
     }
 
     public function updated(string $property): void
@@ -173,6 +180,17 @@ class BajasIndex extends Component
             $this->procesando = false;
             $this->seleccionados = [];
             $this->resetPage();
+
+            if ($this->completadas > 0 && !$this->getErrorBag()->any()) {
+                $this->dispatch(
+                    'toast',
+                    type: 'success',
+                    title: 'Baja completada',
+                    message: $this->completadas === 1
+                        ? 'Se completó la baja del equipo. Su historial se conserva.'
+                        : 'Se completó la baja de '.$this->completadas.' equipos. Su historial se conserva.'
+                );
+            }
         }
     }
 

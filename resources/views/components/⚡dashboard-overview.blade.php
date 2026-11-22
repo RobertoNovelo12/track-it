@@ -33,6 +33,8 @@ new class extends Component
     public int $garantiasVencidas = 0;
 
     public int $garantiasPorVencer = 0;
+    public int $bajasResguardo = 0;
+    public int $bajasFinalizadas = 0;
 
 
     /*
@@ -51,7 +53,7 @@ new class extends Component
     |--------------------------------------------------------------------------
     */
 
-    public array $antiguedadEquipos = [];
+    public array $recuentoInventario = [];
 
 
 
@@ -146,13 +148,13 @@ new class extends Component
         $this->aplicarKpis(
             $this->systemCache()->rememberSimple(
                 self::CACHE_MODULE,
-                'kpis-sin-mantenimiento',
+                'kpis-v2',
                 fn () => $this->buildKpiData(),
                 self::CACHE_TTL_HOURS
             )
         );
 
-        $claveSecciones = $this->systemCache()->key(self::CACHE_MODULE, 'secciones-v5');
+        $claveSecciones = $this->systemCache()->key(self::CACHE_MODULE, 'secciones-v6');
 
         if (\Illuminate\Support\Facades\Cache::has($claveSecciones)) {
             $this->cargarSecciones();
@@ -172,7 +174,7 @@ new class extends Component
         try {
             $data = $this->systemCache()->rememberSimple(
                 self::CACHE_MODULE,
-                'secciones-v5',
+                'secciones-v6',
                 fn () => $this->buildSeccionesData(),
                 self::CACHE_TTL_HOURS
             );
@@ -185,7 +187,7 @@ new class extends Component
             return;
         }
 
-        $this->antiguedadEquipos = $data['antiguedadEquipos'] ?? [];
+        $this->recuentoInventario = $data['recuentoInventario'] ?? [];
         $this->equiposPorTipo = $data['equiposPorTipo'] ?? [];
         $this->bajas = $data['bajas'] ?? [];
         $this->actividadReciente = $data['actividadReciente'] ?? [];
@@ -207,6 +209,8 @@ new class extends Component
         $this->equiposDisponibles = (int) ($data['equiposDisponibles'] ?? 0);
         $this->garantiasVencidas = (int) ($data['garantiasVencidas'] ?? 0);
         $this->garantiasPorVencer = (int) ($data['garantiasPorVencer'] ?? 0);
+        $this->bajasResguardo = (int) ($data['bajasResguardo'] ?? 0);
+        $this->bajasFinalizadas = (int) ($data['bajasFinalizadas'] ?? 0);
         $this->porcentajeAsignados = (int) ($data['porcentajeAsignados'] ?? 0);
         $this->alertas = $data['alertas'] ?? [];
     }
@@ -239,8 +243,8 @@ new class extends Component
      */
     public function precalentar(): void
     {
-        $this->systemCache()->rememberSimple(self::CACHE_MODULE, 'kpis-sin-mantenimiento', fn () => $this->buildKpiData(), self::CACHE_TTL_HOURS);
-        $this->systemCache()->rememberSimple(self::CACHE_MODULE, 'secciones-v5', fn () => $this->buildSeccionesData(), self::CACHE_TTL_HOURS);
+        $this->systemCache()->rememberSimple(self::CACHE_MODULE, 'kpis-v2', fn () => $this->buildKpiData(), self::CACHE_TTL_HOURS);
+        $this->systemCache()->rememberSimple(self::CACHE_MODULE, 'secciones-v6', fn () => $this->buildSeccionesData(), self::CACHE_TTL_HOURS);
     }
 
     protected function buildKpiData(): array
@@ -302,6 +306,32 @@ new class extends Component
         $equiposAsignados = (int) ($kpi->asignados ?? 0);
         $garantiasVencidas = (int) ($kpi->garantias_vencidas ?? 0);
         $garantiasPorVencer = (int) ($kpi->garantias_por_vencer ?? 0);
+
+        /*
+         * Bajas (mismos criterios que Movimientos › Bajas, adonde lleva
+         * cada tarjeta):
+         * - En resguardo: pendientes de revisión; el equipo sigue en la
+         *   institución y por eso aún cuenta en el inventario.
+         * - Finalizadas: baja definitiva registrada.
+         */
+        $bajasResguardo = 0;
+
+        if (\App\Support\Esquema::tieneTabla('bajas_resguardo')) {
+            $bajasResguardo = (int) DB::table('bajas_resguardo as br')
+                ->join('equipos as e', 'e.id_equipo', '=', 'br.id_equipo')
+                ->whereNull('br.fecha_completada')
+                ->whereNotExists(
+                    fn ($q) => $q->selectRaw('1')
+                        ->from('bajas as bf')
+                        ->whereColumn('bf.id_equipo', 'e.id_equipo')
+                )
+                ->count();
+        }
+
+        $bajasFinalizadas = (int) DB::table('bajas as b')
+            ->join('equipos as e', 'e.id_equipo', '=', 'b.id_equipo')
+            ->distinct()
+            ->count('b.id_equipo');
 
 
         /*
@@ -416,6 +446,8 @@ new class extends Component
             'equiposDisponibles' => $equiposDisponibles,
             'garantiasVencidas' => $garantiasVencidas,
             'garantiasPorVencer' => $garantiasPorVencer,
+            'bajasResguardo' => $bajasResguardo,
+            'bajasFinalizadas' => $bajasFinalizadas,
             'porcentajeAsignados' => $porcentajeAsignados,
             'alertas' => $alertas,
         ];
@@ -454,83 +486,65 @@ new class extends Component
 
         /*
         |--------------------------------------------------------------------------
-        | ANTIGÜEDAD
+        | RECUENTO DE INVENTARIO
         |--------------------------------------------------------------------------
+        |
+        | Altas menos bajas, por clasificación del bien (tipos_equipo.
+        | clasificacion_bien). Solo lo que existe físicamente suma al
+        | inventario: bienes muebles y equipos + vehículos. Los inmuebles
+        | (edificios) y los intangibles se cuentan aparte y no se suman.
+        | Una baja en resguardo todavía no resta: el equipo sigue en la
+        | institución hasta completar la baja.
+        |
         */
+        $clasificacion = \App\Support\Esquema::tieneColumna('tipos_equipo', 'clasificacion_bien')
+            ? "COALESCE(te.clasificacion_bien, 'global')"
+            : "'global'";
 
-        // Los 4 rangos en una sola consulta (antes, una por rango).
-        $antiguedad = DB::selectOne(
-            "WITH vig AS (
-                SELECT e.id_equipo, e.fecha_fin_garantia, e.fecha_compra
-                FROM equipos e
-                WHERE NOT EXISTS (SELECT 1 FROM bajas b WHERE b.id_equipo = e.id_equipo)
-                AND NOT EXISTS (
-                    SELECT 1 FROM estados_equipo ee
-                    WHERE ee.id_estado_equipo = e.id_estado_activo AND ee.clave = 'BAJA'
-                )
-            )
-            SELECT
-                COUNT(*) FILTER (WHERE fecha_compra IS NOT NULL AND fecha_compra::date >= ?) AS reciente,
-                COUNT(*) FILTER (WHERE fecha_compra IS NOT NULL AND fecha_compra::date < ? AND fecha_compra::date >= ?) AS media,
-                COUNT(*) FILTER (WHERE fecha_compra IS NOT NULL AND fecha_compra::date < ?) AS antigua,
-                COUNT(*) FILTER (WHERE fecha_compra IS NULL) AS sin_fecha
-            FROM vig",
-            [
-                $today->copy()->subYears(2)->toDateString(),
-                $today->copy()->subYears(2)->toDateString(),
-                $today->copy()->subYears(5)->toDateString(),
-                $today->copy()->subYears(5)->toDateString(),
-            ]
+        $filasRecuento = DB::select(
+            "SELECT {$clasificacion} AS clasificacion,
+                COUNT(*) AS registrados,
+                COUNT(*) FILTER (WHERE
+                    EXISTS (SELECT 1 FROM bajas b WHERE b.id_equipo = e.id_equipo)
+                    OR EXISTS (
+                        SELECT 1 FROM estados_equipo ee
+                        WHERE ee.id_estado_equipo = e.id_estado_activo AND ee.clave = 'BAJA'
+                    )
+                ) AS bajas
+            FROM equipos e
+            LEFT JOIN tipos_equipo te ON te.id_tipo_equipo = e.id_tipo_equipo
+            GROUP BY 1"
         );
 
-        $antiguedadBase = [
-            ['label' => '0 - 2 años', 'count' => (int) ($antiguedad->reciente ?? 0), 'color' => '#3BA5D9'],
-            ['label' => '3 - 5 años', 'count' => (int) ($antiguedad->media ?? 0), 'color' => '#6BB38E'],
-            ['label' => '6+ años', 'count' => (int) ($antiguedad->antigua ?? 0), 'color' => '#D9A441'],
-            ['label' => 'Sin fecha', 'count' => (int) ($antiguedad->sin_fecha ?? 0), 'color' => '#94A3B8'],
+        $porClasificacion = [];
+
+        foreach ($filasRecuento as $fila) {
+            $porClasificacion[(string) $fila->clasificacion] = [
+                'registrados' => (int) $fila->registrados,
+                'bajas' => (int) $fila->bajas,
+            ];
+        }
+
+        $filaRecuento = static function (string $clave) use ($porClasificacion): array {
+            $registrados = $porClasificacion[$clave]['registrados'] ?? 0;
+            $bajasClase = $porClasificacion[$clave]['bajas'] ?? 0;
+
+            return [
+                'clave' => $clave,
+                'nombre' => \App\Services\ClasificacionBienService::OPCIONES[$clave] ?? $clave,
+                'registrados' => $registrados,
+                'bajas' => $bajasClase,
+                'vigentes' => max($registrados - $bajasClase, 0),
+            ];
+        };
+
+        $fisicos = [$filaRecuento('global'), $filaRecuento('vehiculos')];
+
+        $recuentoInventario = [
+            'fisicos' => $fisicos,
+            'aparte' => [$filaRecuento('inmuebles'), $filaRecuento('intangibles')],
+            'total' => array_sum(array_column($fisicos, 'vigentes')),
         ];
-
-
-        $maxAntiguedad =
-            max(
-                collect(
-                    $antiguedadBase
-                )
-                    ->pluck('count')
-                    ->max() ?? 0,
-                1
-            );
-
-
-        $antiguedadEquipos =
-            collect(
-                $antiguedadBase
-            )
-
-                ->map(
-                    function (
-                        $item
-                    ) use (
-                        $maxAntiguedad
-                    ) {
-
-                        $item['percentage'] =
-                            (int) round(
-                                (
-                                    $item['count']
-                                    / $maxAntiguedad
-                                ) * 100
-                            );
-
-
-                        return $item;
-                    }
-                )
-
-                ->values()
-
-                ->all();
-
 
         /*
         |--------------------------------------------------------------------------
@@ -765,7 +779,7 @@ new class extends Component
         return [
             'bajas' => $bajas,
             'equiposPorTipo' => $equiposPorTipo,
-            'antiguedadEquipos' => $antiguedadEquipos,
+            'recuentoInventario' => $recuentoInventario,
             'actividadReciente' => $actividadReciente,
         ];
     }
@@ -903,6 +917,26 @@ new class extends Component
 
 
             [
+                'valor' => $bajasResguardo,
+                'etiqueta' => 'Bajas en resguardo',
+                'detalle' => 'Pendientes de revisión',
+                'href' => \Illuminate\Support\Facades\Gate::allows('gestionar')
+                    ? route('asignaciones.bajas', ['estado' => 'resguardo'])
+                    : null,
+                'estado' => 'info',
+                'icono' => '<path d="M3 7h18v4H3z"/><path d="M5 11v8h14v-8M10 15h4"/>',
+            ],
+            [
+                'valor' => $bajasFinalizadas,
+                'etiqueta' => 'Bajas finalizadas',
+                'detalle' => 'Fuera del inventario',
+                'href' => \Illuminate\Support\Facades\Gate::allows('gestionar')
+                    ? route('asignaciones.bajas', ['estado' => 'completadas'])
+                    : null,
+                'estado' => 'info',
+                'icono' => '<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16 9.5"/>',
+            ],
+            [
                 'valor' => $garantiasVencidas,
                 'etiqueta' => 'Garantías vencidas',
                 'detalle' => $garantiasPorVencer > 0
@@ -948,12 +982,19 @@ new class extends Component
             @php
                 $estiloKpi = $estilosKpi[$kpi['estado']];
                 $destacada = in_array($kpi['estado'], ['peligro', 'aviso'], true);
+                // Sin «href» propio, la tarjeta lleva a Equipos filtrados por situación.
+                $destinoKpi = array_key_exists('href', $kpi)
+                    ? $kpi['href']
+                    : route('equipos.index', ['situacion' => $kpi['situacion']]);
+                $enlaceKpi = filled($destinoKpi);
             @endphp
 
-            <a
-                href="{{ route('equipos.index', ['situacion' => $kpi['situacion']]) }}"
-                wire:navigate
-                title="Ver: {{ mb_strtolower($kpi['etiqueta']) }}"
+            <{{ $enlaceKpi ? 'a' : 'div' }}
+                @if ($enlaceKpi)
+                    href="{{ $destinoKpi }}"
+                    wire:navigate
+                    title="Ver: {{ mb_strtolower($kpi['etiqueta']) }}"
+                @endif
                 class="group relative flex min-h-[104px] items-center gap-4 rounded-xl border px-4 py-3.5 transition-colors hover:border-[var(--theme-border-strong)] {{ $estiloKpi['tarjeta'] }} {{ $destacada ? 'shadow-sm' : '' }}"
             >
                 <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl {{ $estiloKpi['icono'] }}" aria-hidden="true">
@@ -980,8 +1021,10 @@ new class extends Component
                     <span class="mt-0.5 block truncate text-[11px] text-[var(--theme-text-muted)]">{{ $kpi['detalle'] }}</span>
                 </span>
 
-                <svg class="h-4 w-4 shrink-0 text-[var(--theme-text-muted)] opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-352d1b3') }}"></use></svg>
-            </a>
+                @if ($enlaceKpi)
+                    <svg class="h-4 w-4 shrink-0 text-[var(--theme-text-muted)] opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{{ \App\Support\Icono::url('i-352d1b3') }}"></use></svg>
+                @endif
+            </{{ $enlaceKpi ? 'a' : 'div' }}>
         @endforeach
     </div>
 
@@ -992,7 +1035,7 @@ new class extends Component
         ------------------------------------------------------------
         Rejilla de 3 columnas (escritorio):
         · Asignación (1) + Mantenimientos por mes (2)
-        · Equipos por tipo + Estado de mantenimientos + Antigüedad
+        · Equipos por tipo + Estado de mantenimientos + Recuento de inventario
         Las alertas y la actividad (abajo) usan la misma rejilla.
     ============================================================ --}}
     @php
@@ -1033,7 +1076,7 @@ new class extends Component
         // Secciones que dependen de la segunda carga (para error / skeleton).
         $seccionesDiferidas = [
             'tipos' => ['titulo' => 'Equipos por tipo', 'descripcion' => 'Inventario vigente agrupado por tipo de equipo.', 'clase' => '', 'forma' => 'barras'],
-            'antiguedad' => ['titulo' => 'Antigüedad de equipos', 'descripcion' => 'Según la fecha de compra registrada.', 'clase' => 'md:col-span-2 xl:col-span-1', 'forma' => 'columnas'],
+            'recuento' => ['titulo' => 'Recuento de inventario', 'descripcion' => 'Bienes que existen físicamente: altas menos bajas.', 'clase' => 'md:col-span-2 xl:col-span-1', 'forma' => 'barras'],
             'bajas' => ['titulo' => 'Bajas de equipos', 'descripcion' => 'Equipos dados de baja en los últimos 12 meses.', 'clase' => 'md:col-span-2 xl:col-span-3', 'forma' => 'columnas'],
         ];
     @endphp
@@ -1139,40 +1182,47 @@ new class extends Component
             </section>
 
             {{-- ====================================================
-                ANTIGÜEDAD
+                RECUENTO DE INVENTARIO
+                Solo lo que existe físicamente suma (muebles y equipos
+                + vehículos). Inmuebles e intangibles van aparte.
             ==================================================== --}}
             @php
-                $totalAntiguedad = array_sum(array_column($antiguedadEquipos, 'count'));
+                $filasFisicas = $recuentoInventario['fisicos'] ?? [];
+                $filasAparte = $recuentoInventario['aparte'] ?? [];
+                $totalFisico = (int) ($recuentoInventario['total'] ?? 0);
             @endphp
-
             <section class="{{ $claseTarjeta }} md:col-span-2 xl:col-span-1">
-                <h3 class="text-sm font-semibold text-[var(--theme-text-strong)]">Antigüedad de equipos</h3>
-                <p class="mt-1 text-xs text-[var(--theme-text-muted)]">Según la fecha de compra registrada.</p>
-
-                <div class="mt-4 grid min-h-[170px] flex-1 grid-cols-4 gap-3">
-                    @foreach ($antiguedadEquipos as $item)
-                        <div class="flex min-w-0 flex-col items-center" title="{{ $item['label'] }}: {{ $item['count'] }}">
-                            <span class="text-sm font-semibold tabular-nums text-[var(--theme-text-strong)]">{{ number_format($item['count']) }}</span>
-                            <span class="text-[10px] tabular-nums text-[var(--theme-text-muted)]">
-                                {{ $totalAntiguedad > 0 ? (int) round($item['count'] / $totalAntiguedad * 100) : 0 }}%
+                <h3 class="text-sm font-semibold text-[var(--theme-text-strong)]">Recuento de inventario</h3>
+                <p class="mt-1 text-xs text-[var(--theme-text-muted)]">Bienes que existen físicamente: altas menos bajas.</p>
+                <div class="mt-4 flex items-baseline justify-between gap-3 rounded-lg bg-[var(--theme-surface-soft)] px-3 py-2.5">
+                    <span class="text-xs font-medium text-[var(--theme-text)]">Inventario físico</span>
+                    <span class="text-2xl font-semibold tabular-nums text-[var(--theme-text-strong)]">{{ number_format($totalFisico) }}</span>
+                </div>
+                <ul class="mt-3 space-y-2.5">
+                    @foreach ($filasFisicas as $fila)
+                        <li class="flex items-center justify-between gap-3" title="{{ $fila['nombre'] }}: {{ $fila['registrados'] }} registrados, {{ $fila['bajas'] }} bajas">
+                            <span class="min-w-0">
+                                <span class="block truncate text-xs font-medium text-[var(--theme-text)]">{{ $fila['nombre'] }}</span>
+                                <span class="block truncate text-[11px] text-[var(--theme-text-muted)]">
+                                    {{ number_format($fila['registrados']) }} registrados · {{ number_format($fila['bajas']) }} {{ (int) $fila['bajas'] === 1 ? 'baja' : 'bajas' }}
+                                </span>
                             </span>
-
-                            <div class="mt-1.5 flex w-full flex-1 items-end justify-center rounded-md bg-[var(--theme-surface-soft)]">
-                                <div
-                                    x-data="dashboardColumn({{ $item['count'] > 0 ? max((int) $item['percentage'], 4) : 0 }})"
-                                    x-init="init()"
-                                    x-bind:style="{ height: height + '%' }"
-                                    class="w-full rounded-md transition-[height] duration-1000 ease-out"
-                                    style="background: {{ $item['color'] }};"
-                                ></div>
-                            </div>
-
-                            <span class="mt-2 w-full truncate text-center text-[11px] text-[var(--theme-text)]">{{ $item['label'] }}</span>
-                        </div>
+                            <span class="shrink-0 text-lg font-semibold tabular-nums text-[var(--theme-text-strong)]">{{ number_format($fila['vigentes']) }}</span>
+                        </li>
                     @endforeach
+                </ul>
+                <div class="mt-4 border-t border-[var(--theme-border)] pt-3">
+                    <p class="text-[11px] font-medium text-[var(--theme-text-muted)]">No se suman al inventario</p>
+                    <ul class="mt-2 space-y-1.5">
+                        @foreach ($filasAparte as $fila)
+                            <li class="flex items-center justify-between gap-3 text-xs">
+                                <span class="min-w-0 truncate text-[var(--theme-text)]">{{ $fila['nombre'] }}</span>
+                                <span class="shrink-0 font-semibold tabular-nums text-[var(--theme-text-strong)]">{{ number_format($fila['vigentes']) }}</span>
+                            </li>
+                        @endforeach
+                    </ul>
                 </div>
             </section>
-
             {{-- ====================================================
                 BAJAS DE EQUIPOS (ancho completo)
                 Columnas por mes + tipos con más bajas.
