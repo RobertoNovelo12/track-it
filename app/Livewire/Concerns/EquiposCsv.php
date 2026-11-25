@@ -864,6 +864,11 @@ trait EquiposCsv
             return;
         }
 
+        // Los bienes inmuebles (edificios y terrenos) no se asignan.
+        if (! app(\App\Services\ClasificacionBienService::class)->esAsignable((int) $idEquipo)) {
+            return;
+        }
+
         $colaboradores = app(\App\Services\ColaboradoresService::class);
         $colaborador = $colaboradores->resolver($seleccion, $seleccion);
 

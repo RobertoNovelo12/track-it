@@ -900,7 +900,7 @@ new class extends Component
         $tarjetasKpi = [
             [
                 'valor' => $totalEquipos,
-                'etiqueta' => 'Total de equipos',
+                'etiqueta' => 'Total de equipos y muebles',
                 'detalle' => 'Inventario vigente',
                 'situacion' => 'vigentes',
                 'estado' => 'info',
@@ -908,7 +908,7 @@ new class extends Component
             ],
             [
                 'valor' => $equiposAsignados,
-                'etiqueta' => 'Equipos asignados',
+                'etiqueta' => 'Equipos y muebles asignados',
                 'detalle' => $porcentajeDe($equiposAsignados) . '% del inventario',
                 'situacion' => 'asignados',
                 'estado' => 'info',
@@ -1017,8 +1017,8 @@ new class extends Component
                         @endif
                     </span>
 
-                    <span class="mt-2 block truncate text-xs font-medium {{ $destacada ? 'text-[var(--theme-text-strong)]' : 'text-[var(--theme-text)]' }}">{{ $kpi['etiqueta'] }}</span>
-                    <span class="mt-0.5 block truncate text-[11px] text-[var(--theme-text-muted)]">{{ $kpi['detalle'] }}</span>
+                    <span class="mt-2 block text-xs font-medium leading-snug {{ $destacada ? 'text-[var(--theme-text-strong)]' : 'text-[var(--theme-text)]' }}">{{ $kpi['etiqueta'] }}</span>
+                    <span class="mt-0.5 block text-[11px] leading-snug text-[var(--theme-text-muted)]">{{ $kpi['detalle'] }}</span>
                 </span>
 
                 @if ($enlaceKpi)

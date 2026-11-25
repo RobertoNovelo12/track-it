@@ -1011,6 +1011,97 @@ class EquipoBajaMultiple extends Component
 
     /*
     |--------------------------------------------------------------------------
+    | BAJA CONJUNTA EN RESGUARDO
+    |--------------------------------------------------------------------------
+    |
+    | Toda baja pasa primero por «En resguardo»: los equipos siguen en la
+    | institución, pendientes de revisión, hasta completar la baja desde
+    | Movimientos › Bajas. Se guarda todo o nada.
+    |
+    */
+
+    public function guardarEnResguardo()
+    {
+        Gate::authorize('gestionar');
+
+        if ($this->modo !== 'conjunta') {
+            return null;
+        }
+
+        $equipos = $this->validarSeleccion();
+
+        $this->validate([
+            'solicitante' => ['required', 'string', 'max:255'],
+            'fechaBaja' => ['required', 'date_format:Y-m-d'],
+            'motivoBaja' => ['required', 'string', 'max:500'],
+            'observaciones' => ['nullable', 'string', 'max:500'],
+        ], $this->mensajesValidacion());
+
+        $ids = $equipos->pluck('id_equipo')->map(fn ($id) => (int) $id)->all();
+
+        $yaEnResguardo = DB::table('bajas_resguardo')
+            ->whereIn('id_equipo', $ids)
+            ->pluck('id_equipo')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        if ($yaEnResguardo !== []) {
+            $codigos = $equipos
+                ->filter(fn ($equipo) => in_array((int) $equipo->id_equipo, $yaEnResguardo, true))
+                ->pluck('codigo_inventario')
+                ->sort()
+                ->implode(', ');
+
+            throw ValidationException::withMessages([
+                'seleccionados' => 'Ya están en resguardo: '.$codigos.'. Quítalos de la selección.',
+            ]);
+        }
+
+        try {
+            DB::transaction(function () use ($ids): void {
+                $resguardo = app(\App\Services\BajaResguardoService::class);
+
+                foreach ($ids as $id) {
+                    $resguardo->guardar(
+                        $id,
+                        $this->fechaBaja,
+                        $this->motivoBaja,
+                        $this->observaciones,
+                        (int) auth()->id(),
+                        trim($this->solicitante)
+                    );
+                }
+            });
+        } catch (ValidationException $exception) {
+            throw $exception;
+        } catch (Throwable $exception) {
+            report($exception);
+
+            $this->addError(
+                'guardar',
+                'No fue posible guardar las bajas en resguardo. Consulta el registro de errores del sistema.'
+            );
+
+            return null;
+        }
+
+        $cache = app(\App\Services\SystemCacheService::class);
+        $cache->refreshModule('equipos');
+        $cache->refreshModule('reportes');
+        $cache->refreshModule('dashboard');
+
+        session()->flash('toast', [
+            'type' => 'success',
+            'message' => count($ids) === 1
+                ? 'El equipo quedó en resguardo. Permanece en la institución, pendiente de revisión.'
+                : count($ids).' equipos quedaron en resguardo. Permanecen en la institución, pendientes de revisión.',
+        ]);
+
+        return $this->redirectRoute('asignaciones.bajas', navigate: true);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
     | MENSAJES DE VALIDACIÓN
     |--------------------------------------------------------------------------
     */

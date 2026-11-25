@@ -1,4 +1,3 @@
-
 <div class="space-y-5">
     @php
         $panel = 'rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 sm:p-5';
@@ -149,7 +148,7 @@
     @else
 
         <form
-            wire:submit="guardar"
+            wire:submit="{{ $modo === 'conjunta' ? 'guardarEnResguardo' : 'guardar' }}"
             class="grid grid-cols-1 items-start gap-5 xl:grid-cols-2"
         >
             <div class="space-y-4">
@@ -377,26 +376,31 @@
 
                 {{-- GENERAR EL ACTA --}}
                 <div class="flex items-center justify-end gap-3">
+                    @php
+                        // En baja conjunta todo pasa primero por «En resguardo».
+                        $enResguardo = $modo === 'conjunta';
+                    @endphp
+
                     <x-ui.button
                         type="submit"
-                        variant="secondary"
-                        target="guardar"
-                        disable-target="guardar,fotoFrontal,fotoTrasera,fotoLateral1,fotoLateral2"
-                        loading-text="Generando PDF…"
+                        :variant="$enResguardo ? 'danger-soft' : 'secondary'"
+                        :target="$enResguardo ? 'guardarEnResguardo' : 'guardar'"
+                        :disable-target="$enResguardo ? 'guardarEnResguardo' : 'guardar,fotoFrontal,fotoTrasera,fotoLateral1,fotoLateral2'"
+                        :loading-text="$enResguardo ? 'Guardando…' : 'Generando PDF…'"
                     >
                         <x-slot:icon>
                             <svg
-                                class="h-4 w-4 shrink-0 text-[var(--theme-danger)]"
+                                class="h-4 w-4 shrink-0 {{ $enResguardo ? '' : 'text-[var(--theme-danger)]' }}"
                                 viewBox="0 0 24 24"
                                 fill="none"
                                 stroke="currentColor"
                                 stroke-width="1.7"
                                 aria-hidden="true"
-                            ><use href="{{ \App\Support\Icono::url('i-6c5b6b4') }}"></use></svg>
+                            ><use href="{{ \App\Support\Icono::url($enResguardo ? 'i-0a879ac' : 'i-6c5b6b4') }}"></use></svg>
                         </x-slot:icon>
 
-                        {{ $modo === 'conjunta'
-                            ? 'Dar de baja y generar PDF'
+                        {{ $enResguardo
+                            ? 'Guardar baja en resguardo'
                             : 'Generar PDF'
                         }}
                     </x-ui.button>

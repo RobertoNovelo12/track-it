@@ -1735,6 +1735,7 @@ class EquipoCreate extends Component
                 if (
                     $colaboradorPropietario
                     && $colaboradorPropietario['nombre'] !== ''
+                    && app(\App\Services\ClasificacionBienService::class)->esAsignable((int) $idEquipo)
                 ) {
                     $idTipoAsignacion =
                         DB::table('catalogo_valores')

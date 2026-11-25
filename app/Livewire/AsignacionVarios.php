@@ -157,6 +157,18 @@ class AsignacionVarios extends AsignacionCreate
                 throw ValidationException::withMessages(['equipos' => 'Están dados de baja: '.$etiqueta($deBaja).'. Quítalos de la lista.']);
             }
 
+            $noAsignables = DB::table('equipos as e')
+                ->join('tipos_equipo as t', 't.id_tipo_equipo', '=', 'e.id_tipo_equipo')
+                ->whereIn('e.id_equipo', $ids)
+                ->whereIn('t.clasificacion_bien', \App\Services\ClasificacionBienService::NO_ASIGNABLES)
+                ->pluck('e.id_equipo')
+                ->map(fn ($id) => (int) $id)
+                ->all();
+
+            if ($noAsignables !== []) {
+                throw ValidationException::withMessages(['equipos' => 'Son bienes inmuebles y no se pueden asignar: '.$etiqueta($noAsignables).'. Quítalos de la lista.']);
+            }
+
             $responsable = $colaborador !== null
                 ? $colaboradores->columnasAsignacion($colaborador)
                 : ['nombre_colaborador' => null, 'numero_colaborador' => null] + ($colaboradores->disponible() ? ['id_usuario' => null] : []);

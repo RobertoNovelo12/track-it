@@ -4,8 +4,10 @@ use App\Models\User;
 
 return [
 
-    // Interruptor temporal: conserva los secretos y códigos para reactivar 2FA.
-    'two_factor_enabled' => (bool) env('AUTH_TWO_FACTOR_ENABLED', false),
+    // Verificación en dos pasos activa por defecto. Si algún entorno define
+    // AUTH_TWO_FACTOR_ENABLED=false, ese valor la suspende (los secretos y
+    // códigos se conservan para reactivarla).
+    'two_factor_enabled' => (bool) env('AUTH_TWO_FACTOR_ENABLED', true),
 
     /*
     |--------------------------------------------------------------------------

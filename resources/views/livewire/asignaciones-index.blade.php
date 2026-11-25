@@ -348,7 +348,7 @@
                         text-[var(--theme-text-muted)]
                     "
                 >
-                    Equipos Asignados
+                    Equipos y muebles asignados
                 </p>
 
                 <p
@@ -459,7 +459,7 @@
                         text-[var(--theme-text-muted)]
                     "
                 >
-                    Equipos No Asignados
+                    Equipos y muebles no asignados
                 </p>
 
                 <p

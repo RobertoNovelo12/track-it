@@ -338,6 +338,14 @@ class AsignacionesIndex extends Component
                 }
 
 
+                // Los bienes inmuebles (edificios y terrenos) no se asignan.
+                if (! app(\App\Services\ClasificacionBienService::class)->esAsignable((int) $equipoId)) {
+                    throw ValidationException::withMessages([
+                        'idEquipoAsignar' => \App\Services\ClasificacionBienService::MENSAJE_NO_ASIGNABLE,
+                    ]);
+                }
+
+
                 /*
                  * Evitar asignar un equipo dado de baja.
                  */
@@ -1755,7 +1763,7 @@ class AsignacionesIndex extends Component
         return $cache->remember(
             self::CACHE_MODULE,
 
-            'index.equipos_disponibles',
+            'index.equipos_disponibles-v2',
 
             [
                 'equipos_version' =>
@@ -1832,6 +1840,9 @@ class AsignacionesIndex extends Component
                                 );
                         }
                     )
+
+                    // Los bienes inmuebles no se asignan: no aparecen en la lista.
+                    ->tap(fn ($consulta) => \App\Services\ClasificacionBienService::soloAsignables($consulta))
 
                     ->orderBy(
                         'e.codigo_inventario'

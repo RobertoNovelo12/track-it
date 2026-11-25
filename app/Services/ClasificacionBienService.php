@@ -14,6 +14,35 @@ class ClasificacionBienService
         'vehiculos' => 'Vehículos',
     ];
 
+    /*
+     * Bienes que nunca se asignan: edificios y terrenos. Los intangibles
+     * (p. ej. una licencia) sí se asignan a una persona; solo el comodato
+     * queda reservado a bienes muebles y equipos.
+     */
+    public const NO_ASIGNABLES = ['inmuebles'];
+
+    public const MENSAJE_NO_ASIGNABLE = 'Los bienes inmuebles (edificios y terrenos) no se pueden asignar.';
+
+    /** Deja fuera de la consulta los bienes que no se pueden asignar (alias de equipos: «e»). */
+    public static function soloAsignables($query, string $alias = 'e')
+    {
+        return $query->whereNotExists(function ($sub) use ($alias) {
+            $sub->selectRaw('1')
+                ->from('tipos_equipo as te_asignable')
+                ->whereColumn('te_asignable.id_tipo_equipo', $alias.'.id_tipo_equipo')
+                ->whereIn('te_asignable.clasificacion_bien', self::NO_ASIGNABLES);
+        });
+    }
+
+    public function esAsignable(int $equipoId): bool
+    {
+        return ! DB::table('equipos as e')
+            ->join('tipos_equipo as t', 't.id_tipo_equipo', '=', 'e.id_tipo_equipo')
+            ->where('e.id_equipo', $equipoId)
+            ->whereIn('t.clasificacion_bien', self::NO_ASIGNABLES)
+            ->exists();
+    }
+
     public function porTipo(): array
     {
         return DB::table('tipos_equipo')->pluck('clasificacion_bien', 'id_tipo_equipo')->all();

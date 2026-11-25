@@ -92,7 +92,7 @@
                         text-[var(--theme-text-muted)]
                     "
                 >
-                    Equipos Asignados
+                    Equipos y muebles asignados
                 </p>
 
                 {{-- Solo el dato es desconocido --}}
@@ -180,7 +180,7 @@
                         text-[var(--theme-text-muted)]
                     "
                 >
-                    Equipos No Asignados
+                    Equipos y muebles no asignados
                 </p>
 
                 <div class="mt-1 animate-pulse">
